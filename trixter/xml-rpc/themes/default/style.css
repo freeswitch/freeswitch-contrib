@@ -1,0 +1,92 @@
+body {
+ font: normal 10px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+ color: #4f6b72;
+ background: #fff;
+}
+
+a {
+ color: #c75f3e;
+}
+
+#fstable {
+ width: 800px;
+ padding: 0;
+ margin: 0;
+}
+
+caption {
+ padding: 0 0 5px 0;
+ width: 800px;
+ font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+ text-align: center;
+ background: #CAE8EA;
+}
+
+th {
+ font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+ color: #4f6b72;
+ border-right: 1px solid #C1DAD7;
+ border-bottom: 1px solid #C1DAD7;
+ border-top: 1px solid #C1DAD7;
+ letter-spacing: 2px;
+ text-transform: uppercase;
+ text-align: left;
+ padding: 6px 6px 6px 12px;
+ background: #CAE8EA;
+}
+
+
+td {
+	border-right: 1px solid #C1DAD7;
+	border-bottom: 1px solid #C1DAD7;
+ padding: 6px 6px 6px 12px;
+}
+
+
+tr.alt {
+ background: #F5FAFA;
+ color: #797268;
+}
+tr.normal {
+ background: #E6EAE9;
+ color: #4f6b72;
+}
+
+
+
+input.submit {
+ vertical-align: middle;
+ font:0.9em "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+ color:#666;
+ margin:0 0 20px 0;
+ height:20px;
+ border:solid 0px #fff;
+    
+ background: transparent url(images/submit.gif) no-repeat;
+ width: 47px;
+    
+ text-transform:uppercase;
+ outline: none;
+}
+
+input.submit:hover {
+ color: #f00;
+}
+
+
+
+.boxit {
+  width: 785px;
+  margin-left: 0px;
+  margin-right: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #CAE8EA;
+}
+fieldset legend {
+  font-size: 1.7em;
+  color: #f00;
+  padding: 2px 6px;
+  padding-bottom: 0px;
+  margin: 0 0 10px 10px;
+}

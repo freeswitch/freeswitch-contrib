@@ -1,0 +1,14 @@
+To use this you need to have the mod_xml_cdr loaded and configured.
+
+<configuration name="xml_cdr.conf" description="XML CDR CURL logger">
+<settings>
+    <param name="cred" value="user:pass"/>
+    <param name="url" value="http://myhost/cdr.php"/>
+    <param name="retries" value="2"/>
+    <param name="delay" value="120"/>
+
+<!-- optional: if not present we do not log every record to disk -->
+<!-- per original code base /xml_cdr is appended to the directory name -->
+<param name="logDir" value="/usr/local/freeswitch/log"/>
+
+</settings>
