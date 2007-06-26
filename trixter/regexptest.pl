@@ -11,10 +11,13 @@ $value = <STDIN>;
 chomp($value);
 
 if ($value =~ m/$regexp/) {
-  print "Regexp matches\n";
+  print "$value matches $regexp\n";
   $x=1;
   while (defined $$x) {
     print "capture $x: $$x\n";
     $x++;
   }
+} else {
+  print "$value does not match $regexp\n";
 }
+
