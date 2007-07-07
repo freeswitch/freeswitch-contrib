@@ -20,7 +20,7 @@ function dialplan()
         $smarty->assign('ACTION',$ACTION);
 
     } // end - they were logged in
-	$smarty->display($_SERVER['DOCUMENT_ROOT']."/templates/".$_SERVER['REMOTE_USER']."/".$template);
+	$smarty->display($_SERVER['DOCUMENT_ROOT']."/templates/".$_SERVER['REMOTE_USER']."/dialplan/".$template);
 
     return TRUE;
 }

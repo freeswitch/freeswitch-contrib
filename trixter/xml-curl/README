@@ -14,6 +14,22 @@ as giving you the ability to have different templates for different switches.
 
 
 
+
+
+If you do configuration via mod_xml_curl you only need to load and configure 
+mod_xml_curl from freeswitch.xml, all other modules and their configs do not 
+need to be present.  I do suggest that you load loggers before xml_curl though.
+
+If you load modules *before* loading xml_curl they will be loaded from the static
+xml file, only *after* loading xml_curl will stuff start to be pulled from the 
+webserver.  Seems logical but some people dont think about it and wonder why
+it doesnt work.
+
+
+
+
+
+
 PREREQUISITES
 You will need to get smarty from http://smarty.php.net to make this work
 

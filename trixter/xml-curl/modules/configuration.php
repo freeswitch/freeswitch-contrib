@@ -6,6 +6,8 @@ function configuration()
 
     $smarty = new Smarty();
     $template = $_POST['key_value'].".tpl";
+
+    // only stuff that we dynamically set gets done here, if its not here the file is sent as is
     switch($_POST['key_value']) {
     case "conference.conf":
         // simulate data from a database, perhaps a table with 3 columns did,value,args
@@ -32,8 +34,9 @@ function configuration()
         $smarty->assign('digits',$digits);
         $smarty->assign('params',$params);
     }
-    if($smarty->template_exists($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/".$template)) {
-        $smarty->display($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/".$template);
+
+    if($smarty->template_exists($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/configuration/".$template)) {
+        $smarty->display($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/configuration/".$template);
     } else {
         error_log("Unable to locate configuration file " . $_POST['key_value'] . " for " . $_SERVER['REMOTE_USER']);
         return FALSE;
