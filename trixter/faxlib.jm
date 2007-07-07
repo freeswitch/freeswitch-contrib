@@ -1,5 +1,13 @@
 //  -*- mode:c; tab-width:4; c-basic-offset:4; c-indent-level:4; indent-tabs-mode:nil;  -*-
 /*
+ *
+ * THIS IS DEPRECATED NOW - THERE IS A FUNCTION IN DPTOOLS THAT LETS YOU DO MOST
+ * OF THIS WITHOUT USING THIS SCRIPT.  DIRECT TRANSFER ON FAX CNG DETECT
+ * THIS IS HERE FOR REFERENCE AND HOW YOU MIGHT EMAIL A PDF OF A FAX
+ *
+ */
+
+/*
  * Version: MPL 1.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
