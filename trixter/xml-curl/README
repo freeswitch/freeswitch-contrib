@@ -30,6 +30,17 @@ it doesnt work.
 
 
 
+The default examples require a .htaccess user to be authed with.  If you dont 
+want to do this (I recommend that you do password protect it) you can optionally
+just add the following somewhere near the top of curlrouting.php
+
+$_SERVER['REMOTE_USER']='switch1';
+
+which will set the username to 'switch1' which is the default user in this example
+
+
+
+
 PREREQUISITES
 You will need to get smarty from http://smarty.php.net to make this work
 
