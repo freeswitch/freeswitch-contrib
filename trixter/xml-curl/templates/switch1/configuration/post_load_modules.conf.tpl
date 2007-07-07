@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <document type="freeswitch/xml">
   <section name="configuration" description="Various Configuration">
-    <configuration name="modules.conf" description="Modules">
+    <configuration name="post_load_modules.conf" description="Modules">
       <modules>
         <!-- Multi-Faceted -->
         <!-- mod_enum is a dialplan interface, an application interface and an api command interface -->
@@ -11,9 +11,10 @@
         <load module="mod_xml_rpc"/>
 
         <!-- Event Handlers -->
+	<load module="mod_xml_cdr"/>
         <!-- <load module="mod_cdr"/> -->
         <!-- <load module="mod_event_multicast"/> -->
-        <!-- <load module="mod_event_socket"/> -->
+        <load module="mod_event_socket"/>
         <!-- <load module="mod_xmpp_event"/> -->
         <!-- <load module="mod_zeroconf"/> -->
 
@@ -29,13 +30,9 @@
         <!-- <load module="mod_woomera"/> -->
 
         <!-- Applications -->
-        <load module="mod_bridgecall"/>
         <load module="mod_commands"/>
         <load module="mod_conference"/>
         <load module="mod_dptools"/>
-        <load module="mod_echo"/>
-        <!--<load module="mod_park"/>-->
-        <load module="mod_playback"/>
 
         <!-- Dialplan Interfaces -->
         <!-- <load module="mod_dialplan_directory"/> -->
@@ -62,7 +59,6 @@
         <!-- ASR /TTS -->
         <load module="mod_cepstral"/>
         <!-- <load module="mod_rss"/> -->
-
 
       </modules>
     </configuration>
