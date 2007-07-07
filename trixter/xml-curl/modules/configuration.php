@@ -9,22 +9,22 @@ function configuration()
     switch($_POST['key_value']) {
     case "conference.conf":
         // simulate data from a database, perhaps a table with 3 columns did,value,args
-        $digits['pin'] = '1234';
-        $digits['anounce-count'] = '2';
-        $digits['max-mmebers'] = '15';
-        $digits['energy-level'] = '300';
-        $params['0'] = 'event';
-        $params['1'] = 'event';
-        $params['2'] = 'event';
-        $params['3'] = 'event';
-        $params['4'] = 'event';
-        $params['5'] = 'event';
-        $params['6'] = 'event';
-        $params['7'] = 'event';
-        $params['8'] = 'event';
-        $params['9'] = 'event';
-        $params['#'] = 'event';
-        $params['*'] = 'event';
+        $params['pin'] = '1234';
+        $params['anounce-count'] = '2';
+        $params['max-mmebers'] = '15';
+        $params['energy-level'] = '300';
+        $digits['0'] = 'event';
+        $digits['1'] = 'event';
+        $digits['2'] = 'event';
+        $digits['3'] = 'event';
+        $digits['4'] = 'event';
+        $digits['5'] = 'event';
+        $digits['6'] = 'event';
+        $digits['7'] = 'event';
+        $digits['8'] = 'event';
+        $digits['9'] = 'event';
+        $digits['#'] = 'event';
+        $digits['*'] = 'event';
 
         $smarty->assign('CONFNAME',$_POST['conf_name']);
         $smarty->assign('digits',$digits);
