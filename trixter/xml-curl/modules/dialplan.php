@@ -2,6 +2,7 @@
 function dialplan()
 {
     global $_SERVER;
+    global $_POST;
 
 
     // create a new smarty object
@@ -20,6 +21,8 @@ function dialplan()
 
     } // end - they were logged in
 	$smarty->display($_SERVER['DOCUMENT_ROOT']."/templates/".$_SERVER['REMOTE_USER']."/".$template);
+
+    return TRUE;
 }
 
 

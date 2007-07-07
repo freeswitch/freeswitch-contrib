@@ -16,8 +16,9 @@ while ($file = readdir($dh)) {
 
 if(isset($_POST['section'])) {
     if(isset($callBacks[$_POST['section']])) {
-        call_user_func($callBacks[$_POST['section']]);
-        exit;
+        if(call_user_func($callBacks[$_POST['section']])==TRUE) {
+            exit;
+        }
     }
 }
 Header("HTTP/1.0 404 Not Found");

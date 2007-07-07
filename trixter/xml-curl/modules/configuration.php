@@ -13,6 +13,8 @@ function configuration()
         $params['anounce-count'] = '2';
         $params['max-mmebers'] = '15';
         $params['energy-level'] = '300';
+        $params['member-flags'] = 'waste';
+
         $digits['0'] = 'event';
         $digits['1'] = 'event';
         $digits['2'] = 'event';
@@ -33,11 +35,10 @@ function configuration()
     if($smarty->template_exists($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/".$template)) {
         $smarty->display($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/".$template);
     } else {
-        //			//logCallData();
-        error_log("Unable to locate template $template");
-        $smarty->assign('CONFNAME',$_POST['key_value']);
-        $smarty->display($_SERVER['DOCUMENT_ROOT'].dirname($_SERVER['PHP_SELF'])."/templates/".$_SERVER['REMOTE_USER']."/default.conf.tpl");
+        error_log("Unable to locate configuration file " . $_POST['key_value'] . " for " . $_SERVER['REMOTE_USER']);
+        return FALSE;
     }
+    return TRUE;
 }
 
 // register the callback
