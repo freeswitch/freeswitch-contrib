@@ -9,6 +9,7 @@ class Parse_CDR_XML {
     var $_level = 0;
     
     function Parse_CDR_XML(&$data,$showattribs = false) {
+        $data = preg_replace("/<(.*?)><(.*?)><\/(.*?)>/","<\\1>\\2</\\3>",$data);
         $this->_showAttribs = $showattribs;
         $this->_parser = xml_parser_create();
         
@@ -74,6 +75,8 @@ class Parse_CDR_XML {
             if (!isset($start[$name])) $start[$name] = '';
             $add = '';
         }
+
+
         $update = &$start[$name];
 
         if ($isattribs && !$this->_showAttribs) return;
