@@ -20,11 +20,8 @@ if(isset($_POST['section'])) {
         exit;
     }
 }
-$_SERVER['REMOTE_USER']="switch1";
-$_POST['key_value']='conference.conf';
-call_user_func($callBacks['configuration']);
-//Header("HTTP/1.0 404 Not Found");
-//echo "Not Found";
+Header("HTTP/1.0 404 Not Found");
+echo "Not Found";
 exit;
 
 ?>
