@@ -15,13 +15,11 @@ function dialplan()
         // we might check a database for  the route, but in this example we hardcode it
         $template = 'frompstn.tpl'; // one can exist for each profile or channel type or ...
 
-
-        $ACTION['answer']='';
-
-        $ACTION['phrase']='spell,abcdef';
-
-        $ACTION['javascript']="somethingcool.js";
-        $ACTION['bridge']="sofia/external/".$_POST['destination_number']."@myprovider.tld";
+        // simulate a database query for the dialplan
+        $ACTION[]=Array('answer','');
+        $ACTION[]=Array('phrase','spell,abcdef');
+        $ACTION[]=Array('javascript','somethingcool.js');
+        $ACTION[]=Array('bridge','sofia/external/$_POST[destination_number]@myprovider.tld');
         $smarty->assign('ACTION',$ACTION);
 
     } // end - they were logged in

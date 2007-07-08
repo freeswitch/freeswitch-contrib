@@ -5,7 +5,7 @@
       <extension name="myextension">
       <condition field="destination_number" expression="^.*$">
 {foreach key=k item=v from=$ACTION}
-          <action application="{$k}" data="{$v}"/>
+          <action application="{$v[0]}" data="{$v[1]}"/>
 {/foreach}
         </condition>
       </extension>
