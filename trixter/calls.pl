@@ -11,6 +11,9 @@
 use FreeSWITCH::Client;
 use POSIX ':signal_h'; # used for alarm to ensure we get heartbeats
 use Data::Dumper; # used to print out myhash debug info
+
+# use DBI instead of these two for direct database inserts/deletes 
+# which is likely to be more efficient, this is however just an example
 use LWP::UserAgent; # for posting to the webserver
 use URI::Escape ('uri_escape');  # to html encode values
 
