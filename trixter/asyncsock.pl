@@ -66,7 +66,6 @@ $o = $fs->call_command("answer");
 $o = $fs->raw_command("myevents");
 
 $timer = threads->new(\&timeoutHandler);
-$timer->detach;
 
 
 # event-date-timestamp
@@ -100,5 +99,5 @@ while(my $r = $fs->readhash(undef)) {
 
 $done=1;
 $fs->disconnect();
-sleep 3; # wait for the other thread to exit
+$timer->join;
 print "done\n";
