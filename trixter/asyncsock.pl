@@ -10,7 +10,6 @@
 use FreeSWITCH::Client;
 use threads;
 use threads::shared;
-use POSIX ':signal_h'; # used for alarm to ensure we get heartbeats
 use Data::Dumper;
 
 # configure these
