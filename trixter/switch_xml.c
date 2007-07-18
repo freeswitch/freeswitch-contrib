@@ -968,13 +968,13 @@ static int preprocess(const char *file, int write_fd, int rlevel)
 
 		if ((cmd = strstr(bp, "<!--#"))) {
 			if(write(write_fd, bp, (unsigned) (cmd - bp)) != (cmd - bp)) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n", err);
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n");
 			}
 			if ((e = strstr(cmd, "-->"))) {
 				*e = '\0';
 				e += 3;
 				if(write(write_fd, e, (unsigned) strlen(e)) != (unsigned) strlen(e)) {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n", err);
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n");
 				}
 			} else {
 				ml++;
@@ -1033,7 +1033,7 @@ static int preprocess(const char *file, int write_fd, int rlevel)
 		}
 
 		if(write(write_fd, bp, (unsigned) cur) != (unsigned) cur) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n", err);
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Short write!\n");
 		}
 
 	}
