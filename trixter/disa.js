@@ -44,7 +44,7 @@ var CLID_name = "The Omega Corporation"; // will use inbound caller's info if co
 var CLID_num  = "18005551212";           // will use inbound caller's info if commented
 
 // Sound files that are required - if they are commented they will be skipped
-var snd_prefix      = "/sounds";         // sound directory prefix
+var snd_prefix      = "/sounds/";        // sound directory prefix - end in /
 var snd_getpin      = "get-pin.raw";     // prompt asking for their pin number
                                          // cannot be commented - disable by seeing pinmax=0
 var snd_blacklisted = "blacklisted.raw"; // inform them to go away
@@ -125,7 +125,7 @@ function main_cb(type,digits,args)
 
 if(CIDMatch(blacklisted)) {
     if(typeof snd_blacklisted != "undefined") {
-        session.streamFile(snd_blacklsited);
+        session.streamFile(snd_prefix+snd_blacklsited);
     }
     console_log(session.caller_id_num + " is blacklisted\n");
     exit();
@@ -139,7 +139,7 @@ if(!CIDMatch(whitelisted)) {
         var isAuthed=false;
         for(var curpintry=0; isAuthed == false && curpintry < pinmaxtry; curpintry++) {
             session.flushDigits(); // clear out input buffers
-            if((pin=session.streamFile(snd_getpin,main_cb,""))==false) {
+            if((pin=session.streamFile(snd_prefix+snd_getpin,main_cb,""))==false) {
                 pin=session.getDigits(pinmax,pinterm,pinwait);
             } else {
                 pin+=session.getDigits(pinmax-1,pinterm,pinwait);
@@ -158,7 +158,7 @@ if(!CIDMatch(whitelisted)) {
 
             if(isAuthed == false) {
                 if(typeof snd_pinfail != "undefined") {
-                    session.streamFile(snd_pinfail);
+                    session.streamFile(snd_prefix+snd_pinfail);
                 }
             }
             
@@ -166,7 +166,7 @@ if(!CIDMatch(whitelisted)) {
 
         if(isAuthed == false) {
             if(typeof snd_pinbye != "undefined") {
-                session.streamFile(snd_pinbye);
+                session.streamFile(snd_prefix+snd_pinbye);
             }
             console_log(session.caller_id_num + " failed to authenticate\n");
             exit();
@@ -182,7 +182,7 @@ if(!CIDMatch(whitelisted)) {
 
 // Get destination number
 session.flushDigits();
-if((destnum=session.streamFile(snd_getdest,main_cb,""))==false) {
+if((destnum=session.streamFile(snd_prefix+snd_getdest,main_cb,""))==false) {
     destnum=session.getDigits(nummaxlen,numterm,numwait);
 } else {
     destnum+=session.getDigits(nummaxlen-1,numterm,numwait);
