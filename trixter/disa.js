@@ -34,6 +34,7 @@ var numterm   = "#";  // terminator for destination number
 var numwait   = 5000; // ms for them to enter the destination number
 
 var dialprefix = "sofia/default/"; // prefix for outbound calls
+var dialpostfix = "@somehost.tld"; // postfix for outbound calls, set to "" if not needed
 var timeout    = 60;               // outbound calling timeout in seconds
 
 
@@ -189,14 +190,17 @@ if((destnum=session.streamFile(snd_getdest,main_cb,""))==false) {
 destnum = removeChr(destnum,numterm);
 
 if(destnum.length>0) {
+    var Bleg = new Session();
+
     if(typeof CLID_name != "undefined") {
-        session.setVariable("effective_caller_id_name",CLID_name);
+        Bleg.setCallerData("caller_id_name",CLID_name);
     }
     if(typeof CLID_num != "undefined") {
-        session.setVariable("effective_caller_id_num",CLID_num);
+        Bleg.setCallerData("caller_id_number",CLID_num);
     }
 
-    session.originate("",dialprefix+destnum,timeout);
+    Bleg.originate(session,dialprefix+destnum+dialpostfix,timeout);
+    bridge(session,Bleg);
 }
 
 exit();
