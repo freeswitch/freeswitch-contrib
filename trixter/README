@@ -32,6 +32,8 @@ validate-ivr.pl
 	debugging existing IVR menus and ensuring that it will do 
 	what you want.
 
+	usage:  validate-ivr.pl ivr.conf.xml main
+	where the first arg is the xml file and the 2nd arg is the menu name
 
 asyncsock.pl
 	Perl app utilizing EVENT SOCKET that will bind to a port and 
