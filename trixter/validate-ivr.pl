@@ -51,11 +51,6 @@ sub printMenu($) {
             print "\n";
         }
     }
-    
-#    my $common_name = $name_node[0]->getFirstChild->getData;
-#    my @c_node  = $menu->getElementsByTagName('conservation');
-#    my $status =  $c_node[0]->getAttribute('status');
-    
 }
 
 
