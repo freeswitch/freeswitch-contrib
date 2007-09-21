@@ -23,6 +23,16 @@ with the programs whether commercial or FOSS.
 
 == FILE LIST ==
 
+validate-ivr.pl
+	Perl app that does not connect to FreeSWITCH[tm] in any way
+	but will walk through the IVR xml.  This lets you debug them
+	with only a text based display (ssh, cmd.exe, whatever) and
+	see what is going on.  Timeouts are honored as are all other
+	flags and variables in the XML.  Its really only useful for
+	debugging existing IVR menus and ensuring that it will do 
+	what you want.
+
+
 asyncsock.pl
 	Perl app utilizing EVENT SOCKET that will bind to a port and 
 	is called via the dialplan 'socket' application.  It will read
