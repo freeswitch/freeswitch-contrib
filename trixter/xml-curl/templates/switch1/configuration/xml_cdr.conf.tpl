@@ -1,6 +1,3 @@
-<?xml version="1.0"?>
-<document type="freeswitch/xml">
-  <section name="configuration" description="Various Configuration">
 <configuration name="xml_cdr.conf" description="XML CDR CURL logger">
   <settings>
     <!-- the url to post to if blank web posting is disabled  -->
@@ -13,17 +10,22 @@
     <!-- <param name="retries" value="2"/> -->
 
     <!-- delay between retries in seconds, default is 5 seconds -->
-    <!-- <param name="retries" value="1"/> -->
-
-    <!-- optional: full path to the error log dir for failed web posts if not specified its <freeswitch>/logs/xml_cdr_curl -->
-    <!-- <param name="errLogDir" value="/tmp"/> -->
+    <!-- <param name="delay" value="1"/> -->
 
     <!-- optional: if not present we do not log every record to disk -->
-    <!-- per original code base /xml_cdr is appended to the directory name -->
-    <!-- defined but blank value will default to freeswitchdir/log -->
-    <param name="logDir" value=""/>
+    <!-- either an absolute path, a relative path assuming ${prefix}/logs or a blank value will default to ${prefix}/logs/xml_cdr -->
+    <param name="log-dir" value=""/>
+    
+    <!-- encode the post data may be 'true' for url encoding, 'false' for no encoding or 'base64' for base64 encoding -->
+    <!--<param name="encode" value="true"/>-->
+    
+    <!-- optional: full path to the error log dir for failed web posts if not specified its the same as log-dir -->
+    <!-- either an absolute path, a relative path assuming ${prefix}/logs or a blank or omitted value will default to ${prefix}/logs/xml_cdr -->
+    <!-- <param name="err-log-dir" value="/tmp"/> -->
+
+    <!-- optional: if enabled this will disable CA root certificate checks by libcurl -->
+    <!-- note: default value is disabled. only enable if you want this! -->
+    <!-- <param name="ignore-cacert-check" value="true" /> -->
 
   </settings>
 </configuration>
-</section>
-</document>
