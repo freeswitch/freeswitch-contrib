@@ -7,8 +7,13 @@ class Parse_CDR_XML {
     var $_parser = 0;
     var $_showAttribs;
     var $_level = 0;
+    var $currentTag;
+    var $_CDR=array();
+    var $_callflowcnt=0;
+    var $_iscallflow=0;
     
     function Parse_CDR_XML(&$data,$showattribs = false) {
+        $data = stripslashes(preg_replace('/<.xml (.*?)>(.*)/',"\\2",$data));
         $data = preg_replace("/<(.*?)><(.*?)><\/(.*?)>/","<\\1>\\2</\\3>",$data);
         $this->_showAttribs = $showattribs;
         $this->_parser = xml_parser_create();
@@ -30,7 +35,7 @@ class Parse_CDR_XML {
     
     
     function & ReturnArray() {
-        return $this->_data[0];
+        return $this->_CDR;
     }
     
     
@@ -40,52 +45,88 @@ class Parse_CDR_XML {
     
     
     function _startElement($parser, $name, $attrs){
+        $this->_ElementName="";
         if (!isset($this->_rep[$name])) $this->_rep[$name] = 0;
-        if ($name != "cdr") {
-            $this->_addElement($name,$this->_data[$this->_level],$attrs,true);
-            $this->_name[$this->_level] = $name;
-            $this->_level++;
+        switch ($name) {
+        case "cdr":
+            break;
+        case "app_log":
+        case "variables":
+            if(!isset($this->_CDR[$name])) {
+                $this->_CDR[$name]=array();
+            }
+            $this->currentTag = $name;
+            break;
+        case "application":
+            if($this->_iscallflow) {
+                $this->_CDR[$this->currentTag][$this->_callflowcnt]['extension']['application'][]=$attrs;
+            } else {
+                $this->_CDR[$this->currentTag][]=$attrs;
+            }
+            break;
+        case "callflow":
+            $this->_CDR[$name]=array();
+            $this->currentTag = $name;
+            foreach ($attrs as $key => $value) {
+                $this->_CDR[$this->currentTag][$this->_callflowcnt][$key]=$value;
+            }
+            $this->_iscallflow=1;
+            break;
+        case "extension":
+            foreach ($attrs as $key => $value) {
+                $this->_CDR[$this->currentTag][$this->_callflowcnt]['extension'][$key]=$value;
+            }
+            break;
+        case "caller_profile":
+        case "times":
+            $this->currentTag = $name;
+            break;
+        default:
+            $this->_ElementName=$name;
+            break;
         }
         
     }
     
     
     function _endElement($parser,$name){
-        if (isset($this->_name[$this->_level - 1])) {
-            if (isset($this->_data[$this->_level])){
-                $this->_addElement($this->_name[$this->_level - 1],$this->_data[$this->_level - 1],$this->_data[$this->_level],false);
-            }
-            unset($this->_data[$this->_level]);
-            $this->_level--;
-            $this->_rep[$name]++;
+        $this->_ElementName="";
+        switch ($name) {
+        case "callflow":
+            $this->_callflowcnt++;
+            $this->_iscallflow=0;
+            break;
         }
+        
     }
     
     
     
     function _cdata($parser, $data) {
-        if ($this->_name[$this->_level - 1]) {
-            $this->_addElement($this->_name[$this->_level - 1],$this->_data[$this->_level - 1],$data,false);
+        switch($this->currentTag) {
+        case "cdr":
+            return;
+            break;
+        case "app_log":
+            return;
+            break;
+        case "caller_profile":
+        case "times":
+            if(isset($data) && $this->_ElementName != "" &&
+               !isset($this->_CDR[$this->currentTag][$this->_ElementName])
+               ) {
+
+                $this->_CDR['callflow'][$this->_callflowcnt][$this->currentTag][$this->_ElementName]=$data;
+            }
+            return;
+            break;
+        }
+        if(isset($data) && $this->_ElementName != "" &&
+           !isset($this->_CDR[$this->currentTag][$this->_ElementName])
+           ) {
+            $this->_CDR[$this->currentTag][$this->_ElementName]=$data;
         }
     }
     
-    
-    function _addElement(&$name,&$start,$add = array(),$isattribs = false) {
-        if (((sizeof($add) == 0 && is_array($add)) || !$add) && !is_numeric($add)) {
-            if (!isset($start[$name])) $start[$name] = '';
-            $add = '';
-        }
-
-
-        $update = &$start[$name];
-
-        if ($isattribs && !$this->_showAttribs) return;
-        elseif ($isattribs) $this->_data['_Attributes_'][$this->_level][$name][] = $add;
-        elseif (is_array($add) && is_array($update)) $update += $add;
-        elseif (is_array($update)) return;
-        elseif (is_array($add)) $update = $add;
-        elseif ($add || is_numeric($add)) $update .= "$add";
-    }
-
 }
 ?>
