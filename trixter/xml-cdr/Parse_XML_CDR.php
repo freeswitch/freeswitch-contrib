@@ -79,6 +79,8 @@ class Parse_CDR_XML {
             break;
         case "caller_profile":
         case "times":
+        case "originator":
+        case "originator_caller_profile":
             $this->currentTag = $name;
             break;
         default:
@@ -108,6 +110,15 @@ class Parse_CDR_XML {
             return;
             break;
         case "app_log":
+            return;
+            break;
+        case "originator_caller_profile":
+            if(isset($data) && $this->_ElementName != "" &&
+               !isset($this->_CDR[$this->currentTag][$this->_ElementName])
+               ) {
+
+                $this->_CDR['callflow'][$this->_callflowcnt]['originator'][$this->currentTag][$this->_ElementName]=$data;
+            }
             return;
             break;
         case "caller_profile":
