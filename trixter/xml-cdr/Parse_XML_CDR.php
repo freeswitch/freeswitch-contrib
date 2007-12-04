@@ -77,9 +77,15 @@ class Parse_CDR_XML {
                 $this->_CDR[$this->currentTag][$this->_callflowcnt]['extension'][$key]=$value;
             }
             break;
+        case "originator":
+            if($this->_iscallflow) {
+                $this->currentTag = $name;
+            } else {
+                $this->_ElementName=$name;
+            }
+            break;
         case "caller_profile":
         case "times":
-        case "originator":
         case "originator_caller_profile":
             $this->currentTag = $name;
             break;
