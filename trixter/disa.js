@@ -199,7 +199,8 @@ if(destnum.length>0) {
         Bleg.setCallerData("caller_id_number",CLID_num);
     }
 
-    Bleg.originate(session,dialprefix+destnum+dialpostfix,timeout);
+    session.execute("transfer",destnum);
+    //    Bleg.originate(session,dialprefix+destnum+dialpostfix,timeout);
     bridge(session,Bleg);
 }
 
