@@ -115,6 +115,7 @@ function main_cb(type,digits,args)
         if(digits!='false') { return digits; }
         return false; // stop playback if any
     }
+    return true; // we can be here if we got an event perhaps text chat
 }
 
 
