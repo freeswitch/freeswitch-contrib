@@ -1,0 +1,25 @@
+<!-- include this in the USER DIRECTORY variables section -->
+
+<!-- this is the default gateway to send calls to if enum fails -->
+<variable name="default_gateway" value="asterlink.com"/>
+
+<!-- the country code, only numeric -->
+<variablename="default_country_code" value="31"/>
+
+<!-- variable for international dialing -->
+<variable name="default_international_prefix" value="00"/>
+
+<!-- variable for local prefix -->
+<variablename="default_local_prefix" value="20"/>
+
+<!-- What matches international dialing -->
+<variable name="default_international_regexp" value="^${international_prefix}(\d+)$"/>
+
+<!-- What matches a domestic out of area call -->
+<variable name="default_domestic_regexp" value="^0([1-9]\d+)$"/>
+
+<!-- What matches a local same area call -->
+<variable name="default_local_regexp" value="^([1-9]\d+)$"/>
+
+<!-- What is dialed for direct routed stuff like emergency numbers -->
+<variable name="default_emergency_number" value="^112$"/>

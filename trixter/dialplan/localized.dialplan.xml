@@ -1,0 +1,65 @@
+<!--
+    This is a fairly generic dialing plan for emergency, local, national and international calling
+    The user is required to have regexps defined as variables, either globals or per user
+
+    VARS:
+    default_gateway                telco.com
+    default_country_code           31
+    default_international_prefix   00 for EU  011 for US
+
+    default_international_regexp   ^${international_prefix}(\d+)$
+    default_domestic_regexp        ^0([1-9\d+)$
+    default_local_regexp           ^([1-9]\d+)$
+    default_emergency_number       ^112$ in EU  ^911$ in NANPA (or looser ^\d11$ to get 611, 411, etc)
+    
+-->
+<context name="INT-Numbering-Plan">
+
+ <!--
+  For international
+ -->
+ <extension name="INT-International">
+   <condition field="destination_number" expression="^${default_international_regexp}$">
+     <action application="set" data="continue_on_fail=true"/>
+     <action application="set" data="hangup_after_bridge=true"/>
+     <action application="enum" data="$1"/>
+     <action application="bridge" data="${enum_auto_route}"/>
+     <action application="bridge" data="sofia/gateway/${default_gateway}/${default_international_prefix}$1"/>
+   </condition>
+ </extension>
+
+ <!--
+  For in country but out of area
+ -->
+ <extension name="INT-Domestic_out_of_area">
+   <condition field="destination_number" expression="${default_domestic_regexp}">
+     <action application="set" data="continue_on_fail=true"/>
+     <action application="set" data="hangup_after_bridge=true"/>
+     <action application="enum" data="${default_country_code}$1"/>
+     <action application="bridge" data="${enum_auto_route}"/>
+     <action application="bridge" data="sofia/gateway/${default_gateway}/${default_country_code}$1"/>
+   </condition>
+ </extension>
+
+ <!--
+     For same city calls
+ -->
+ <extension name="INT_Local">
+   <condition field="destination_number" expression="${default_local_regexp}">
+     <action application="set" data="continue_on_fail=true"/>
+     <action application="set" data="hangup_after_bridge=true"/>
+     <action application="enum" data="${default_country_code}${default_local_prefix}$1"/>
+     <action application="bridge" data="${enum_auto_route}"/>
+     <action application="bridge" data="sofia/gateway/${default_gateway}/${default_country_code}${default_local_prefix}$1"/>
+   </condition>
+ </extension>
+
+ <!--
+     Emergency service - verify your provider really supports this
+ -->
+ <extension name="INT_Emergency_Service">
+   <condition field="destination_number" expression="${default_emergency_number}">
+     <action application="bridge" data="sofia/gateway/${default_gateway}/$1"/>
+   </condition>
+ </extension>
+</context>
