@@ -13,7 +13,7 @@
 <variable name="default_local_prefix" value="20"/>
 
 <!-- What matches international dialing -->
-<variable name="default_international_regexp" value="^${international_prefix}(\d+)$"/>
+<variable name="default_international_regexp" value="^${default_international_prefix}(\d+)$"/>
 
 <!-- What matches a domestic out of area call -->
 <variable name="default_domestic_regexp" value="^0([1-9]\d+)$"/>
