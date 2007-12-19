@@ -19,7 +19,7 @@
   For international
  -->
  <extension name="INT-International">
-   <condition field="destination_number" expression="^${default_international_regexp}$">
+   <condition field="destination_number" expression="${default_international_regexp}">
      <action application="set" data="continue_on_fail=true"/>
      <action application="set" data="hangup_after_bridge=true"/>
      <action application="enum" data="$1"/>
