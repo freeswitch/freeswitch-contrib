@@ -65,7 +65,7 @@ class Parse_CDR_XML {
             }
             break;
         case "callflow":
-            $this->_CDR[$name]=array();
+            if(!is_array($this->_CDR[$name])) { $this->_CDR[$name]=array(); }
             $this->currentTag = $name;
             foreach ($attrs as $key => $value) {
                 $this->_CDR[$this->currentTag][$this->_callflowcnt][$key]=$value;
