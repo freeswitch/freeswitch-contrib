@@ -1,0 +1,38 @@
+<!-- include this in the USER DIRECTORY variables section -->
+<!--                      VENEZUELA                       -->
+
+<!-- Created by David Villasmil, davidcsi@hotmail.com -->
+<!-- anything we need to send to the provider before we send the number -->
+<variable name="dial_prefix" value=""/>
+
+<!-- do we use enum? -->
+<variable name="use_enum" value="true"/>
+
+<!-- this is the default gateway to send calls to if enum fails -->
+<variable name="default_gateway" value="asterlink.com"/>
+
+<!-- the country code, only numeric -->
+<variablename="default_country_code" value="58"/>
+
+<!-- variable for international dialing -->
+<variable name="default_international_prefix" value="00"/>
+
+<!-- variable for local prefix/area code -->
+<variablename="default_local_prefix" value="^[2-9]\d+$"/>
+
+<!-- variable for cell prefix/area code UNUSED CURRENTLY -->
+<variablename="default_cell_prefix" value="041\d+"/>
+
+<!-- What matches international dialing -->
+<variable name="default_international_regexp" value="^00(\d+)$"/>
+
+<!-- What matches a domestic out of area call -->
+<variable name="default_domestic_regexp" value="^02\d+$"/>
+
+<!-- What matches a local same area call -->
+<variable name="default_local_regexp" value="^[2-9]\d+$"/>
+
+<!-- What is dialed for direct routed stuff like emergency numbers -->
+<variable name="default_emergency_number" value="^091$/>
+
+
