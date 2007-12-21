@@ -44,7 +44,18 @@ install directory (eg /usr/local/freeswitch on unix like systems).
 If you want this to be used *with* your default context you must remove
 the lines
 
-<context name="INT-Numbering-Plan">
+
+
+-=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
+
+dont just leave regexps undefined that may cause matches to occur that 
+shouldnt.  Instead use the regexp DONT_MATCH_ME or something similar that will 
+never cause a match.  dialplan.es.xml uses this if you need an example 
+
+-=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
+
+
+<context name="default">
 </context>
 
 and place the remainder in the default context tags.  
