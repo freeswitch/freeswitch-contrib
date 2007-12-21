@@ -48,23 +48,4 @@
     </condition>
   </extension>
 
-  <extension name="callreturn">
-    <condition field="${destination_number}" expression="^\*69$|^869$">
-      <action application="transfer" data="${db(select/call_return/ata)}"/>
-    </condition>
-  </extension>
-
-  <extension name="echo">
-    <condition field="${destination_number}" expression="^\*\d+$">
-      <action application="echo"/>
-    </condition>
-  </extension>
-
-  <extension name="callme">
-    <condition>
-      <action application="db" data="insert/call_return/ata/${caller_id_number}"/>
-      <action application="bridge" data="${sofia_contact(ata@192.168.5.100)}"/>
-    </condition>
-  </extension>
-  
 </context>
