@@ -1,5 +1,8 @@
 <!-- include this in the USER DIRECTORY variables section -->
 
+<!-- do we use enum? -->
+<variable name="use_enum" value="true"/>
+
 <!-- this is the default gateway to send calls to if enum fails -->
 <variable name="default_gateway" value="asterlink.com"/>
 

@@ -76,13 +76,18 @@ and regexps.  Due to the way variables are used you should not
 attempt to use a regexp unless it is indicated that it is a regexp.
 
 
+<!--
+TYPE: static
+Whether or not to use enum
+-->
+<variable name="use_enum" value="true"/>
 
 <!--
 TYPE: static
 The name for the gateway to send calls to if ENUM fails
 This name would be defined in your sip profile.
 -->
-<variable name="default_gateway" value="asterlink.com"/>
+<variable name="default_gateway" value="telco.com"/>
 
 
 
