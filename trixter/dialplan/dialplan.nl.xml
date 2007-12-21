@@ -1,5 +1,8 @@
 <!-- include this in the USER DIRECTORY variables section -->
 
+<!-- anything we need to send to the provider before we send the number -->
+<variable name="dial_prefix" value=""/>
+
 <!-- do we use enum? -->
 <variable name="use_enum" value="true"/>
 

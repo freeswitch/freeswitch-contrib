@@ -52,7 +52,7 @@
       <action application="bridge" data="${enum_auto_route}"/>
     </condition>
     <condition>
-      <action application="bridge" data="sofia/gateway/${default_gateway}/${e164number}"/>
+      <action application="bridge" data="sofia/gateway/${dial_prefix}${default_gateway}/${e164number}"/>
     </condition>
   </extension>
 
