@@ -1,0 +1,40 @@
+<!-- include this in the USER DIRECTORY variables section -->
+<!--                        SPAIN                         -->
+
+
+<!-- Created by David Villasmil, davidcsi@hotmail.com -->
+
+<!-- anything we need to send to the provider before we send the number -->
+<variable name="dial_prefix" value=""/>
+
+<!-- do we use enum? -->
+<variable name="use_enum" value="true"/>
+
+<!-- this is the default gateway to send calls to if enum fails -->
+<variable name="default_gateway" value="asterlink.com"/>
+
+<!-- the country code, only numeric -->
+<variablename="default_country_code" value="34"/>
+
+<!-- variable for international dialing -->
+<variable name="default_international_prefix" value="00"/>
+
+<!-- variable for local prefix/area code -->
+<variablename="default_local_prefix" value="^[89]\d+$"/>
+
+<!-- variable for cell prefix/area code -- UNUSED CURRENTLY -->
+<variablename="default_cell_prefix" value="^6\d+$"/>
+
+<!-- What matches international dialing -->
+<variable name="default_international_regexp" value="^00(\d+)$"/>
+
+<!-- What matches a domestic out of area call -->
+<!-- Doesn't apply to Spain, all calls are local calls, meaning all numbers begin with 9/8 -->
+<variable name="default_domestic_regexp" value="^DONT_MATCH_ME$"/>
+
+<!-- What matches a local same area call -->
+<!-- Doesn't apply to Spain, all calls are local calls, meaning all numbers begin with 9 -->
+<variable name="default_local_regexp" value="^DONT_MATCH_ME$"/>
+
+<!-- What is dialed for direct routed stuff like emergency numbers -->
+<variable name="default_emergency_number" value="^091$/>
