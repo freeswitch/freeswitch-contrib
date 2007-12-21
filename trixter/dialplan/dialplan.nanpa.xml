@@ -10,13 +10,13 @@
 <variable name="default_gateway" value="asterlink.com"/>
 
 <!-- the country code, only numeric -->
-<variablename="default_country_code" value="1"/>
+<variable name="default_country_code" value="1"/>
 
 <!-- variable for international dialing -->
 <variable name="default_international_prefix" value="011"/>
 
 <!-- variable for local prefix/area code -->
-<variablename="default_local_prefix" value="800"/>
+<variable name="default_local_prefix" value="800"/>
 
 <!-- What matches international dialing -->
 <variable name="default_international_regexp" value="^011(\d+)$"/>
