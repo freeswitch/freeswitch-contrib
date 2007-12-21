@@ -29,8 +29,7 @@
     <!--
 	Dial the call
       -->
-    <!--    <condition field="${e164number}" expression="^\d+$" continue="true"> -->
-    <condition>
+    <condition field="${e164number}" expression="^\d+$" continue="true">
       <action application="info"/>
       <action application="export" data="nolocal:jitterbuffer_msec=180"/>
       <action application="set" data="continue_on_fail=true"/>
