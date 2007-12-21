@@ -45,16 +45,6 @@ If you want this to be used *with* your default context you must remove
 the lines
 
 
-
--=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
-
-dont just leave regexps undefined that may cause matches to occur that 
-shouldnt.  Instead use the regexp DONT_MATCH_ME or something similar that will 
-never cause a match.  dialplan.es.xml uses this if you need an example 
-
--=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
-
-
 <context name="default">
 </context>
 
@@ -64,10 +54,17 @@ and place the remainder in the default context tags.
 They have their own context tags so that they may be used seperately
 should you opt to do that.  
 
-You should not have to edit anything else to get this to work, unless
-your provider requires you to prefix numbers with something.  This
-is often not the case, so it should work with the majority of providers.
 
+
+
+
+-=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
+
+dont just leave regexps undefined that may cause matches to occur that 
+shouldnt.  Instead use the regexp DONT_MATCH_ME or something similar that will 
+never cause a match.  dialplan.es.xml uses this if you need an example 
+
+-=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- IMPORTANT -=- 
 
 
 
@@ -79,8 +76,9 @@ so far.  These variables are used by the dialplan to figure out how to
 deal with a call.  An attempt is made to query enum, if that fails
 then it will use the default gateway that is defined.
 
-You may set these variables globally, or you may set them on a per user 
-basis from the user directory.  The option is yours.
+You may set these variables globally by setting it for the domain, or you
+may set them on a per user basis from the user directory.  Or a mix, user vars
+override the domain.  The option is yours.
 
 There are two types of variables, static which are simply strings, 
 and regexps.  Due to the way variables are used you should not 

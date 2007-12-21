@@ -22,10 +22,10 @@
 <variable name="default_international_regexp" value="^00(\d+)$"/>
 
 <!-- What matches a domestic out of area call -->
-<variable name="default_domestic_regexp" value="^0([1-9]\d+)$"/>
+<variable name="default_domestic_regexp" value="^0([1-9]\d{8})$"/>
 
 <!-- What matches a local same area call -->
-<variable name="default_local_regexp" value="^([1-9]\d+)$"/>
+<variable name="default_local_regexp" value="^([1-9]\d(6,7})$"/>
 
 <!-- What is dialed for direct routed stuff like emergency numbers -->
 <variable name="default_emergency_number" value="^112$"/>
