@@ -1,5 +1,11 @@
 <context name="default">
   <extension name="localized-dialplan">
+    <!-- make sure that stuff is set or abort -->
+    <condition field="${default_emergency_number}" expression="^$" break="on-true"/>
+    <condition field="${default_international_regexp}" expression="^$" break="on-true"/>
+    <condition field="${default_domestic_regexp}" expression="^$" break="on-true"/>
+    <condition field="${default_local_regexp}" expression="^$" break="on-true"/>
+
     <!--
 	Emergency service - verify your provider really supports this
       -->
