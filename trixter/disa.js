@@ -33,6 +33,9 @@ var nummaxlen = 11;   // maximum length of a dialed numner
 var numterm   = "#";  // terminator for destination number
 var numwait   = 5000; // ms for them to enter the destination number
 
+/* these are used only if we bridge and not transfer */
+var newSession = false;            // set to true to make a new session and bridge
+                                   // set to false to use 'transfer' instead
 var dialprefix = "sofia/default/"; // prefix for outbound calls
 var dialpostfix = "@somehost.tld"; // postfix for outbound calls, set to "" if not needed
 var timeout    = 60;               // outbound calling timeout in seconds
@@ -191,18 +194,21 @@ if((destnum=session.streamFile(snd_prefix+snd_getdest,main_cb,""))==false) {
 destnum = removeChr(destnum,numterm);
 
 if(destnum.length>0) {
-    var Bleg = new Session();
+    if(newSession == false) {
+        session.execute("transfer",destnum);
+    } else {
+        var Bleg = new Session();
 
-    if(typeof CLID_name != "undefined") {
-        Bleg.setCallerData("caller_id_name",CLID_name);
-    }
-    if(typeof CLID_num != "undefined") {
-        Bleg.setCallerData("caller_id_number",CLID_num);
-    }
+        if(typeof CLID_name != "undefined") {
+            Bleg.setCallerData("caller_id_name",CLID_name);
+        }
+        if(typeof CLID_num != "undefined") {
+            Bleg.setCallerData("caller_id_number",CLID_num);
+        }
 
-    session.execute("transfer",destnum);
-    //    Bleg.originate(session,dialprefix+destnum+dialpostfix,timeout);
-    bridge(session,Bleg);
+        Bleg.originate(session,dialprefix+destnum+dialpostfix,timeout);
+        bridge(session,Bleg);
+    }
 }
 
 exit();
