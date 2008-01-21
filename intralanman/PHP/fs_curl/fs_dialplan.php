@@ -75,6 +75,9 @@ class fs_dialplan extends fs_curl {
     private function writeDialplan($dpArray) {
         //print_r($dpArray);
         if (is_array($dpArray)) {
+            $this -> xmlw -> startElement('section');
+            $this -> xmlw -> writeAttribute('name', 'dialplan');
+            $this -> xmlw -> writeAttribute('description', 'FreeSWITCH Dialplan');
             //$this -> comment('dpArray is an array');
             foreach ($dpArray as $context => $extensions_array) {
                 //$this -> comment($context);
@@ -121,6 +124,8 @@ class fs_dialplan extends fs_curl {
                 // </context>
                 $this -> xmlw -> endElement();
             }
+            // </section>
+            $this -> xmlw -> endElement();
         }
     }
 }
