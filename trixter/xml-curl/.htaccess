@@ -1,0 +1,6 @@
+<files "*">
+AuthUserFile /www/default/htdocs/xml-curl/.htpasswd
+AuthName "TRXTel"
+AuthType basic
+Require valid-user
+</files>

@@ -1,0 +1,41 @@
+To use this you need to have the mod_xml_cdr loaded and configured.
+
+If you use either errLogDir or logDir then make sure that the directories
+exist.  In the case of logDir the original code appended "/xml_cdr" onto
+the value, so I do that as well.  If logDir is set but empty (value="")
+it will use the FreeSWITCH default log dir and appent "/xml_cdr" onto
+that.
+
+<configuration name="xml_cdr.conf" description="XML CDR CURL logger">
+<settings>
+    <!-- the credentials we may optionally use when POSTing ->
+    <param name="cred" value="user:pass"/>
+    <!-- url to log to -->
+    <param name="url" value="http://myhost/cdr.php"/>
+    <!-- how many times we retry not counting the inital try -->
+    <param name="retries" value="2"/>
+    <!-- how many seconds before we try again -->
+    <param name="delay" value="120"/>
+    <!-- this is where we log failed POSTs to the webserver -->
+    <param name="errLogDir" value="/usr/local/freeswitch/log/xml_cdr_errors"/>
+
+<!-- optional: if not present we do not log every record to disk -->
+<!-- per original code base /xml_cdr is appended to the directory name -->
+<param name="logDir" value="/usr/local/freeswitch/log"/>
+
+</settings>
+
+
+
+TO TEST
+there is an example XML_CDR record testcdr.xml which you can parse
+
+Web method:
+cp testcdr.php Parse_XML_CDR.php testcdr.xml /path/to/htdocs
+goto http://host/testcdr.php
+
+CLI method:
+php testcdr.php
+
+The XML record is quite long and has many transfers, but this should
+let you know how the array is formed so you can reference elements

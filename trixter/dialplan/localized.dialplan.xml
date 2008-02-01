@@ -1,0 +1,65 @@
+<context name="default">
+  <extension name="localized-dialplan">
+    <!-- make sure that stuff is set or abort -->
+    <condition field="${default_emergency_number}" expression="^$" break="on-true"/>
+    <condition field="${default_international_regexp}" expression="^$" break="on-true"/>
+    <condition field="${default_domestic_regexp}" expression="^$" break="on-true"/>
+    <condition field="${default_local_regexp}" expression="^$" break="on-true"/>
+
+    <!--
+	Emergency service - verify your provider really supports this
+      -->
+    <condition field="${destination_number}" expression="${default_emergency_number}" continue="true" break="never">
+      <action application="set" data="hangup_after_bridge=true"/>
+      <action application="export" data="nolocal:jitterbuffer_msec=180"/>
+      <action application="bridge" data="sofia/gateway/${default_gateway}/$1"/>
+    </condition>
+    <!--
+	For international
+      -->
+    <condition field="${destination_number}" expression="${default_international_regexp}" continue="true" break="never">
+      <action application="set" data="e164number=$1"/>
+    </condition>
+    <!--
+	For in country but out of area
+      -->
+    <condition field="${destination_number}" expression="${default_domestic_regexp}" continue="true" break="never">
+      <action application="set" data="e164number=${default_country_code}$1"/>
+    </condition>
+    <!--
+	For same city calls
+      -->
+    <condition field="${destination_number}" expression="${default_local_regexp}" continue="true" break="never">
+      <action application="set" data="e164number=${default_country_code}${default_local_prefix}$1"/>
+    </condition>
+
+
+    <!-- 
+	 this is a kluge to get around a limitation in the dialplan logic
+	 variables are expanded in the condition tags *before* any applications are processed
+	 as a result we cant set a variable in the dialplan that is used as a condition
+	 so we cheat here
+      -->
+    <condition field="${destination_number}" expression="${default_international_regexp}|${default_domestic_regexp}|${default_local_regexp}" continue="true" break="false"/>
+
+    <!--
+	Dial the call
+      -->
+    <condition>
+      <action application="export" data="nolocal:jitterbuffer_msec=180"/>
+      <action application="set" data="continue_on_fail=true"/>
+      <action application="set" data="hangup_after_bridge=true"/>
+      <action application="set" data="call_timeout=45"/>
+      <action application="set" data="hangup_after_bridge=true"/>
+      <action application="set" data="continue_on_fail=true"/>
+    </condition>
+    <condition field="${use_enum}" expression="^yes$" continue="true" break="never">
+      <action application="enum" data="${e164number}"/>
+      <action application="bridge" data="${enum_auto_route}"/>
+    </condition>
+    <condition>
+      <action application="bridge" data="sofia/gateway/${dial_prefix}${default_gateway}/${e164number}"/>
+    </condition>
+  </extension>
+
+</context>
