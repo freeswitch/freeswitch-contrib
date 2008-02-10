@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use LWP::UserAgent;
+use Getopt::Long;
+#use Data::Dumper;
+
+my $ua = new LWP::UserAgent;
+my $url = 'http://pastebin.freeswitch.org/';
+my $line;
+my $text;
+
+my @getopt_args = (
+    'n=s',
+    'h=s',
+);
+Getopt::Long::config("noignorecase", "bundling");
+GetOptions(\%options, @getopt_args);
+my $nick = length($options{n}) > 0 ? $options{n} : `whoami`;
+my $highlighting = length($options{h}) > 0 ? $options{h} : 'text';
+#print "Nick is $nick\nhighlighting is $highlighting\n\n"; 
+#exit;
+
+while($line = <STDIN>) {
+    $text .= $line;
+}
+push @{ $ua->requests_redirectable }, 'POST';
+$ua ->credentials(
+    'pastebin.freeswitch.org:80', 
+    'pastebin/freeswitch',
+    'pastebin' => 'freeswitch'
+    );
+my $response = $ua -> post(
+    $url, 
+    {
+        poster => "$nick", 
+	format => "$highlighting",
+	paste => 'Send',
+	remember => '0',
+	code2 => "$text",
+	expiry => 'd'
+    }
+);
+
+#print $response -> content;
+#print "---- Dumper Start ----\n";
+#print Dumper $response;
+#print "---- Dumper Stop ----\n";
+#print Dumper \@{$ua};
+print "Your Post can be seen at: " 
+.  $response->{_previous}->{_headers}->{location} . "\n";
