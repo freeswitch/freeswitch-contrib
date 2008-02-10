@@ -1,23 +1,43 @@
 #!/usr/bin/perl
 use LWP::UserAgent;
 use Getopt::Long;
+use Sys::Hostname;
 #use Data::Dumper;
+
+sub usage() {
+    print "Options:\n";
+    print "    -h This message \n";
+    print "    -l Use long hostname (i.e. user\@host)\n";
+    print "    -n Nick to use for post\n";
+    print "    -r Length of time to keep the post d, m, or f \n\tfor day, month, or forever respectively\n";
+    exit;
+}
 
 my $ua = new LWP::UserAgent;
 my $url = 'http://pastebin.freeswitch.org/';
 my $line;
 my $text;
-
+my $login = getlogin() || getpwuid($<) || "Anonymous";
+my $host = hostname();
 my @getopt_args = (
-    'n=s',
-    'h=s',
+    'n=s', #nick to use for paste
+    'H=s', #highlighting to use 
+    'r=s', #how long to keep the paste [dmf]
+    'l', #use long name user@host
+    'h' # help, shows usage()
 );
+
+# Options Stuff
 Getopt::Long::config("noignorecase", "bundling");
 GetOptions(\%options, @getopt_args);
-my $nick = length($options{n}) > 0 ? $options{n} : `whoami`;
-my $highlighting = length($options{h}) > 0 ? $options{h} : 'text';
-#print "Nick is $nick\nhighlighting is $highlighting\n\n"; 
+usage() if $options{h};
+my $nick = length($options{n}) > 0 ? $options{n} : $login;
+$nick = $options{l} ? $nick . "_AT_" . $host : $nick;
+my $highlighting = length($options{H}) > 0 ? $options{H} : 'text';
+my $keep = length($options{r}) > 0 ? $options{r} : 'd';
+#print "Nick is $nick\nhighlighting is $highlighting\nKeep for $keep\n"; 
 #exit;
+
 
 while($line = <STDIN>) {
     $text .= $line;
@@ -28,15 +48,14 @@ $ua ->credentials(
     'pastebin/freeswitch',
     'pastebin' => 'freeswitch'
     );
-my $response = $ua -> post(
-    $url, 
+my $response = $ua -> post($url, 
     {
+	paste => 'Send',
+	remember => "0",
         poster => "$nick", 
 	format => "$highlighting",
-	paste => 'Send',
-	remember => '0',
 	code2 => "$text",
-	expiry => 'd'
+	expiry => "$keep"
     }
 );
 
