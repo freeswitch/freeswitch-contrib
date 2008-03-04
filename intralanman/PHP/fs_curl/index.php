@@ -15,6 +15,9 @@
  * @return void
 */
 function file_not_found($no=false, $str=false, $file=false, $line=false) {
+    if ($no == E_STRICT) {
+    	return;
+    }
     header('Content-Type: text/xml');
     $xmlw = new XMLWriter();
     $xmlw -> openMemory();
@@ -31,13 +34,21 @@ function file_not_found($no=false, $str=false, $file=false, $line=false) {
     $xmlw -> endElement();
     $xmlw -> endElement();
     $xmlw -> endElement();
+    if (!empty($no) && !empty($str) && !empty($file) &&!empty($line)) {
+        $xmlw -> writeComment("ERROR: $no - ($str) on line $line of $file");
+    }
     echo $xmlw -> outputMemory();
     exit();
 }
+error_reporting(E_ALL);
+set_error_handler('file_not_found');
 
 if (!(@include_once('fs_curl.php'))
 || !(@include_once('global_defines.php'))) {
-    file_not_found();
+    trigger_error('could not include fs_curl.php or global_defines.php');
+}
+if (!is_array($_REQUEST)) {
+    trigger_error('$_REQUEST is not an array');
 }
 $section = $_REQUEST['section'];
 $section_file = sprintf('fs_%s.php', $section);
@@ -45,10 +56,13 @@ $section_file = sprintf('fs_%s.php', $section);
  * this include will differ based on the section that's passed
  */
 if (!(@include_once($section_file))) {
-    file_not_found();
+    trigger_error("unable to include $section_file");
 }
 switch ($section) {
     case 'configuration':
+        if (!array_key_exists('key_value', $_REQUEST)) {
+            trigger_error('key_value does not exist in $_REQUEST');
+        }
         $config = $_REQUEST['key_value'];
         $processor = sprintf('configuration/%s.php', $config);
         $class = str_replace('.', '_', $config);

@@ -24,7 +24,7 @@ class fs_dialplan extends fs_curl {
 
     public function main() {
         $this -> comment($this -> request);
-        $context = $this -> request['context'];
+        $context = $this -> request['Caller-Context'];
         $dp_array = $this -> get_dialplan($context);
         $this -> writeDialplan($dp_array);
         $this -> output_xml();

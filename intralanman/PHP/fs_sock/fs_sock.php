@@ -176,7 +176,8 @@ class fs_sock {
      *
      * @param string $input command to write to the socket
      */
-    private function sock_put($input) {
+    private function sock_put($input, $sock=null) {
+        $sock = is_null($sock) ? $this -> sock : $sock;
         fputs($this -> sock, $input);
     }
 
@@ -185,7 +186,8 @@ class fs_sock {
      *
      * @return array multi-dimentional array of the event
      */
-    private function sock_get() {
+    private function sock_get($sock=null) {
+        $sock = is_null($sock) ? $this -> sock : $sock;
         $this -> debug('----   Event Start ----');
         while ($orig_line = fgets($this -> sock, BUFFER_SIZE)) {
             $trim_line = trim($orig_line);
@@ -253,7 +255,8 @@ class fs_sock {
      * @param string $cmd command string to send to socket excluding any \r or \n
      * @return boolean
      */
-    public function send_command($cmd) {
+    public function send_command($cmd, $sock) {
+        $sock = is_null($sock) ? $this -> sock : $sock;
         $this -> debug('command is ' . $cmd);
         $cmd_split = split(' ', $cmd);
         //$this -> debug($cmd_split);
@@ -263,9 +266,9 @@ class fs_sock {
             return false;
         }
         $this -> debug("sending command: '$cmd'");
-        $this -> sock_put("$cmd\r\n\r\n");
+        $this -> sock_put("$cmd\r\n\r\n", $sock);
         if ($this -> command != 'exit') {
-            $reply = $this -> sock_get();
+            $reply = $this -> sock_get($sock);
             //$this -> debug($reply);
         } else {
             unset($this -> command);
@@ -287,8 +290,9 @@ class fs_sock {
      * @param string $cmd_str
      * @return array of the response or false
      */
-    function api_command($cmd_str) {
-        $reply = $this -> send_command("api $cmd_str");
+    function api_command($cmd_str, $sock=null) {
+        $sock = is_null($sock) ? $this -> sock : $sock;
+        $reply = $this -> send_command("api $cmd_str", $sock);
         while ($reply['Content-Type'] != 'api/response') {
             if (count($reply) > 0) {
                 $debug_text = sprintf(
@@ -352,7 +356,7 @@ class fs_sock {
     function wait_for_event() {
         $event = array();
         while (count($event) < 1) {
-        	$event = $this -> read_event();
+            $event = $this -> read_event();
         }
         return $event;
     }
