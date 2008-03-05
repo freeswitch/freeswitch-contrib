@@ -183,7 +183,11 @@ class fs_curl {
         for ($i = 0; $i < $comment_count; $i++) {
             $this -> xmlw -> writeComment($this -> comments[$i]);
         }
-        echo $this -> xmlw -> outputMemory();
+        $xml_out = $this -> xmlw -> outputMemory();
+        $this -> debug('---- Start XML Output ----');
+        $this -> debug($xml_out);
+        $this -> debug('---- End XML Output ----');
+        echo $xml_out;
         exit();
     }
 
@@ -198,7 +202,7 @@ class fs_curl {
                 $this -> comment("$spaces$key => Array");
                 $this -> comment_array($val, $spacepad+2);
             } else {
-            	$this -> comment("$spaces$key => $val");
+                $this -> comment("$spaces$key => $val");
             }
         }
     }
@@ -246,27 +250,9 @@ class fs_curl {
      * @todo add other defines that control what, if any, comments gets output
     */
     public function error_handler($no, $str, $file, $line) {
-        /*
-        $this -> comment("USER_ERROR " . E_USER_ERROR);
-        $this -> comment("USER_NOTICE " . E_USER_NOTICE);
-        $this -> comment("USER_WARNING " . E_USER_WARNING);
-        $this -> comment("ALL " . E_ALL);
-        $this -> comment("COMPILE_ERROR " . E_COMPILE_ERROR);
-        $this -> comment("COMPILE_WARNING " . E_COMPILE_WARNING);
-        $this -> comment("CORE_ERROR " . E_CORE_ERROR);
-        $this -> comment("CORE_WARNING " . E_CORE_WARNING);
-        $this -> comment("ERROR " . E_ERROR);
-        $this -> comment("NOTICE " . E_NOTICE);
-        $this -> comment("WARNING " . E_WARNING);
-        $this -> comment("PARSE " . E_PARSE);
-        $this -> comment("RECOVERABLE_ERROR " . E_RECOVERABLE_ERROR);
-        $this -> comment("STRICT " . E_STRICT);
-        //$this -> comment(E);
-        */
         if ($no == E_STRICT) {
             return true;
         }
-
         $file = ereg_replace('\.(inc|php)$', '', $file);
         $this -> comment(basename($file) . ":$line - $no:$str");
 
@@ -285,6 +271,51 @@ class fs_curl {
                 $this -> file_not_found();
         }
         return true;
+    }
+
+    /**
+     * Function to print out debugging info
+     * This method will recieve arbitrary data and send it using your method of
+     * choice.... enable/disable by defining FS_CURL_DEBUG to and arbitrary integer
+     * @param mixed $input what to debug, arrays and strings tested, objects MAY work
+     * @param integer $debug_level debug if $debug_level <= FS_CURL_DEBUG
+     * @param integer $spaces
+     */
+    public function debug($input, $debug_level=0, $spaces=0) {
+        if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
+            if (is_array($input)) {
+                $this -> debug('Array (', $debug_level, $spaces);
+                foreach ($input as $key=>$val) {
+                    if (is_array($val) || is_object($val)) {
+                        $this -> debug("[$key] => $val", $debug_level, $spaces+4);
+                        $this -> debug('(', $debug_level, $spaces + 8);
+                        $this -> debug($val, $debug_level, $spaces + 8);
+                    } else {
+                        $this -> debug("[$key] => '$val'", $debug_level, $spaces + 4);
+                    }
+                }
+                $this -> debug(")", $debug_level, $spaces);
+            } else {
+                $debug_str = sprintf("%s%s"
+                , str_repeat(' ', $spaces), $input
+                );
+                switch (FS_DEBUG_TYPE) {
+                    case 0:
+                        syslog(LOG_NOTICE, $debug_str);
+                        break;
+                    case 1:
+                        $this -> comment($debug_str);
+                        break;
+                    case 2:
+                        $ptr = fopen(FS_DEBUG_FILE, 'a');
+                        fputs($ptr, "$debug_str\r\n");
+                        fclose($ptr);
+                        break;
+                    default:
+                        return;
+                }
+            }
+        }
     }
 }
 ?>

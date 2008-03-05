@@ -80,6 +80,11 @@ switch ($section) {
         $conf = new fs_directory();
         break;
 }
+
+$conf -> debug('---- Start _REQUEST ----');
+$conf -> debug($_REQUEST);
+$conf -> debug('---- End _REQUEST ----');
 $conf -> main();
 $conf -> output_xml();
+
 ?>

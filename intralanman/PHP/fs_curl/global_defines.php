@@ -40,6 +40,25 @@ define('RETURN_ON_WARN', true);
  */
 define('GLOBAL_USERS', true);
 
+/**
+ * Define debug level... should not be used in production for performance reasons
+ */
+define('FS_CURL_DEBUG', 0);
+
+/**
+ * define how debugging should be done (depends on FS_CURL_DEBUG)
+ * 0 syslog
+ * 1 xml comment
+ * 2 file (named in FS_DEBUG_FILE), take care when using this option as there's currently nothing to watch the file's size
+ */
+define('FS_DEBUG_TYPE', 0);
+
+/**
+ * File to use for debugging to file
+ */
+define('FS_DEBUG_FILE', '/tmp/fs_curl.debug');
+
+
 
 
 //define('', '');

@@ -54,14 +54,17 @@ class fs_dialplan extends fs_curl {
             $ec = $row['ext_continue'];
             $app = $row['application_name'];
             $data = $row['application_data'];
+            $app_cdata = $row['app_cdata'];
             $type = $row['type'];
             $cf = $row['condition_field'];
             $ce = $row['condition_expression'];
+            $rcd = $row['re_cdata'];
             $cc = empty($row['condition_continue']) ? '0' : $row['condition_continue'];
-            $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc"][] = array(
+            $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc;$rcd"][] = array(
             'type'=>$type,
             'application'=>$app,
-            'data'=>$data
+            'data'=>$data,
+            'is_cdata'=>$app_cdata
             );
         }
         return $dp_array;
@@ -71,6 +74,8 @@ class fs_dialplan extends fs_curl {
      * Write XML dialplan from the array returned by get_dialplan
      * @see fs_dialplan::get_dialplan
      * @param array $dpArray Multi-dimentional array from which we write the XML
+     * @todo this method should REALLY be broken down into several smaller methods
+     * 
      */
     private function writeDialplan($dpArray) {
         //print_r($dpArray);
@@ -93,6 +98,7 @@ class fs_dialplan extends fs_curl {
                         if ($ex_split[1] > 0) {
                             $this -> xmlw -> writeAttribute('continue', $ex_split[1]);
                         }
+                        $this -> debug($conditions);
                         foreach ($conditions as $condition => $app_array) {
                             $c_split = split(';', $condition);
                             $this -> xmlw -> startElement('condition');
@@ -100,17 +106,40 @@ class fs_dialplan extends fs_curl {
                                 $this -> xmlw -> writeAttribute('field', $c_split[0]);
                             }
                             if (!empty($c_split[1])) {
-                                $this -> xmlw -> writeAttribute('expression', $c_split[1]);
+                                if (array_key_exists(3, $c_split)
+                                && $c_split[3] == true) {
+                                    $this -> xmlw -> startElement('expression');
+                                    $this -> xmlw -> writeCdata($c_split[1]);
+                                    $this -> xmlw -> endElement();
+                                } else {
+                                    $this -> xmlw -> writeAttribute(
+                                    'expression', $c_split[1]
+                                    );
+                                }
                             }
-                            //$this -> comment($c_split[2]);
+                            //$this -> debug($c_split[2]);
                             if ($c_split[2] != '0') {
-                                $this -> xmlw -> writeAttribute('continue', $c_split[2]);
+                                $this -> xmlw -> writeAttribute(
+                                'continue', $c_split[2]
+                                );
                             }
+                            //$this -> debug($app_array);
                             foreach ($app_array as $app) {
                                 $this -> xmlw -> startElement($app['type']);
-                                $this -> xmlw -> writeAttribute('application', $app['application']);
+                                $this -> xmlw -> writeAttribute(
+                                'application', $app['application']
+                                );
                                 if (!empty($app['data'])) {
-                                    $this -> xmlw -> writeAttribute('data', $app['data']);
+                                    if (array_key_exists('is_cdata', $app)
+                                    && $app['is_cdata'] == true) {
+                                        $this -> xmlw -> startElement('data');
+                                        $this -> xmlw -> writeCdata($app['data']);
+                                        $this -> xmlw -> endElement();
+                                    } else {
+                                        $this -> xmlw -> writeAttribute(
+                                        'data', $app['data']
+                                        );
+                                    }
                                 }
                                 $this -> xmlw -> endElement();
                             }
