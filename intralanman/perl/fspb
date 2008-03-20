@@ -24,18 +24,22 @@ my @getopt_args = (
     'H=s', #highlighting to use 
     'r=s', #how long to keep the paste [dmf]
     'l', #use long name user@host
-    'h' # help, shows usage()
+    'h', # help, shows usage()
+    'd' #debug
 );
 
 # Options Stuff
 Getopt::Long::config("noignorecase", "bundling");
 GetOptions(\%options, @getopt_args);
 usage() if $options{h};
+$debug = 1 if $options{d};
 my $nick = length($options{n}) > 0 ? $options{n} : $login;
 $nick = $options{l} ? $nick . "_AT_" . $host : $nick;
 my $highlighting = length($options{H}) > 0 ? $options{H} : 'text';
 my $keep = length($options{r}) > 0 ? $options{r} : 'd';
-#print "Nick is $nick\nhighlighting is $highlighting\nKeep for $keep\n"; 
+if($debug) {
+    print "Nick is $nick\nhighlighting is $highlighting\nKeep for $keep\n"; 
+}
 #exit;
 
 
@@ -43,9 +47,11 @@ while($line = <STDIN>) {
     $text .= $line;
 }
 push @{ $ua->requests_redirectable }, 'POST';
+# this should be smart enough to get the realm on its own.... 
+# maybe in a future version, i'll add that
 $ua ->credentials(
     'pastebin.freeswitch.org:80', 
-    'pastebin/freeswitch',
+    'the login and password is pastebin/freeswitch',
     'pastebin' => 'freeswitch'
     );
 my $response = $ua -> post($url, 
@@ -59,10 +65,11 @@ my $response = $ua -> post($url,
     }
 );
 
-#print $response -> content;
-#print "---- Dumper Start ----\n";
-#print Dumper $response;
-#print "---- Dumper Stop ----\n";
-#print Dumper \@{$ua};
+if($debug) {
+    print $response -> content;
+    print "---- Dumper Start ----\n";
+    print Dumper $response;
+    print "---- Dumper Stop ----\n";
+}
 print "Your Post can be seen at: " 
 .  $response->{_previous}->{_headers}->{location} . "\n";
