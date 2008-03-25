@@ -183,6 +183,64 @@ class fs_directory extends fs_curl {
     }
 
     /**
+     * This method will write out XML for global directory params
+     *
+     */
+    function write_global_params() {
+        $query = sprintf('%s %s %s;',
+        'SELECT * FROM directory_global_params dgp',
+        'JOIN directory_domains dd ON dd.id=dgp.domain_id',
+        "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
+        );
+        $res = $this -> db -> queryAll($query);
+        if (MDB2::isError($res)) {
+            $this -> comment($query);
+            $error_msg = sprintf("Error while selecting global params - %s"
+            , $this -> db -> getMessage()
+            );
+            trigger_error($error_msg);
+        }
+        $param_count = count($res);
+        $this -> xmlw -> startElement('params');
+        for ($i=0; $i<$param_count; $i++) {
+            $this -> xmlw -> startElement('param');
+            $this -> xmlw -> writeAttribute('name', $res[$i]['param_name']);
+            $this -> xmlw -> writeAttribute('value', $res[$i]['param_value']);
+            $this -> xmlw -> endElement();
+        }
+        $this -> xmlw -> endElement();
+    }
+
+    /**
+     * This method will write out XML for global directory variables
+     *
+     */
+    function write_global_vars() {
+        $query = sprintf('%s %s %s;',
+        'SELECT * FROM directory_global_vars dgv',
+        'JOIN directory_domains dd ON dd.id=dgv.domain_id',
+        "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
+        );
+        $res = $this -> db -> queryAll($query);
+        if (MDB2::isError($res)) {
+            $this -> comment($query);
+            $error_msg = sprintf("Error while selecting global vars - %s"
+            , $this -> db -> getMessage()
+            );
+            trigger_error($error_msg);
+        }
+        $param_count = count($res);
+        $this -> xmlw -> startElement('variables');
+        for ($i=0; $i<$param_count; $i++) {
+            $this -> xmlw -> startElement('variable');
+            $this -> xmlw -> writeAttribute('name', $res[$i]['var_name']);
+            $this -> xmlw -> writeAttribute('value', $res[$i]['var_value']);
+            $this -> xmlw -> endElement();
+        }
+        $this -> xmlw -> endElement();
+    }
+
+    /**
      * Write XML directory from the array returned by get_directory
      * @see fs_directory::get_directory
      * @param array $directory Multi-dimentional array from which we write the XML
@@ -199,6 +257,9 @@ class fs_directory extends fs_curl {
         $this -> xmlw -> writeAttribute('description', 'FreeSWITCH Dialplan');
         $this -> xmlw -> startElement('domain');
         $this -> xmlw -> writeAttribute('name', $this -> request['domain']);
+        $this -> write_global_params();
+        $this -> write_global_vars();
+
         for ($i=0; $i<$directory_count; $i++) {
             $this -> xmlw -> startElement('user');
             $this -> xmlw -> writeAttribute('id', $directory[$i]['username']);

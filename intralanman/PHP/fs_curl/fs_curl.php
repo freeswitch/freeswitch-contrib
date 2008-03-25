@@ -155,10 +155,12 @@ class fs_curl {
     private function comments2xml($xml_obj, $comments, $space_pad=0) {
         $comment_count = count($comments);
         for ($i = 0; $i < $comment_count; $i++) {
-            if (!is_array($comments[$i])) {
-                $xml_obj -> writeComment($comments[$i]);
-            } else {
-                $this -> comments2xml($xml_obj, $comments[$i], $space_pad + 2);
+            if (array_key_exists($i, $comments)) {
+                if (!is_array($comments[$i])) {
+                    $xml_obj -> writeComment($comments[$i]);
+                } else {
+                    $this -> comments2xml($xml_obj, $comments[$i], $space_pad + 2);
+                }
             }
         }
     }
