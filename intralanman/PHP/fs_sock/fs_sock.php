@@ -255,7 +255,7 @@ class fs_sock {
      * @param string $cmd command string to send to socket excluding any \r or \n
      * @return boolean
      */
-    public function send_command($cmd, $sock) {
+    public function send_command($cmd, $sock=null) {
         $sock = is_null($sock) ? $this -> sock : $sock;
         $this -> debug('command is ' . $cmd);
         $cmd_split = split(' ', $cmd);
