@@ -3,11 +3,16 @@
 -- Host: localhost    Database: freeswitch
 -- ------------------------------------------------------
 -- Server version	5.0.32-Debian_7etch5-log
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO,MYSQL40' */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
@@ -21,7 +26,7 @@ CREATE TABLE `carrier_gateway` (
   `gateway` varchar(32) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `gateway` (`gateway`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `carriers`
@@ -32,7 +37,7 @@ CREATE TABLE `carriers` (
   `id` int(11) NOT NULL auto_increment,
   `Carrier_Name` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `conference_advertise`
@@ -45,7 +50,7 @@ CREATE TABLE `conference_advertise` (
   `status` varchar(128) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_room` (`room`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `conference_controls`
@@ -58,8 +63,8 @@ CREATE TABLE `conference_controls` (
   `action` varchar(64) NOT NULL,
   `digits` varchar(16) NOT NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `unique_group_action` (`conf_group`,`action`)
-) TYPE=InnoDB;
+  UNIQUE KEY `unique_group_action` USING BTREE (`conf_group`,`action`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `conference_profiles`
@@ -73,7 +78,7 @@ CREATE TABLE `conference_profiles` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `unique_profile_param` (`profile_name`,`param_name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `db_data`
@@ -85,7 +90,7 @@ CREATE TABLE `db_data` (
   `realm` varchar(255) default NULL,
   `data_key` varchar(255) default NULL,
   `data` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `dialplan`
@@ -106,7 +111,20 @@ CREATE TABLE `dialplan` (
   `global_weight` int(11) NOT NULL default '10000',
   `cond_break` varchar(8) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `dialplan_special`
+--
+
+DROP TABLE IF EXISTS `dialplan_special`;
+CREATE TABLE `dialplan_special` (
+  `id` int(11) NOT NULL auto_increment,
+  `context` varchar(255) NOT NULL,
+  `class_file` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `unique_context` (`context`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `dingaling_profile_params`
@@ -121,7 +139,7 @@ CREATE TABLE `dingaling_profile_params` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_type_name` (`dingaling_id`,`param_name`),
   CONSTRAINT `dingaling_profile` FOREIGN KEY (`dingaling_id`) REFERENCES `dingaling_profiles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `dingaling_profiles`
@@ -134,7 +152,7 @@ CREATE TABLE `dingaling_profiles` (
   `type` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_name` (`profile_name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `dingaling_settings`
@@ -147,7 +165,7 @@ CREATE TABLE `dingaling_settings` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_param` (`param_name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory`
@@ -160,7 +178,7 @@ CREATE TABLE `directory` (
   `mailbox` varchar(255) NOT NULL,
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `directory_domains`
@@ -171,7 +189,7 @@ CREATE TABLE `directory_domains` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `domain_name` varchar(128) NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_gateway_params`
@@ -185,7 +203,7 @@ CREATE TABLE `directory_gateway_params` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_gw_param` (`d_gw_id`,`param_name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_gateways`
@@ -197,7 +215,7 @@ CREATE TABLE `directory_gateways` (
   `directory_id` int(10) unsigned NOT NULL,
   `gateway_name` varchar(128) NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_global_params`
@@ -210,7 +228,7 @@ CREATE TABLE `directory_global_params` (
   `param_value` varchar(128) NOT NULL,
   `domain_id` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_global_vars`
@@ -223,7 +241,7 @@ CREATE TABLE `directory_global_vars` (
   `var_value` varchar(128) NOT NULL,
   `domain_id` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_params`
@@ -236,7 +254,7 @@ CREATE TABLE `directory_params` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `directory_vars`
@@ -249,7 +267,7 @@ CREATE TABLE `directory_vars` (
   `var_name` varchar(255) default NULL,
   `var_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `group_data`
@@ -260,7 +278,7 @@ CREATE TABLE `group_data` (
   `hostname` varchar(255) default NULL,
   `groupname` varchar(255) default NULL,
   `url` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `iax_conf`
@@ -271,7 +289,7 @@ CREATE TABLE `iax_conf` (
   `id` int(11) NOT NULL auto_increment,
   `profile_name` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `iax_settings`
@@ -284,7 +302,7 @@ CREATE TABLE `iax_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `ivr_conf`
@@ -304,7 +322,7 @@ CREATE TABLE `ivr_conf` (
   `tts_voice` varchar(64) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_name` (`name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `ivr_entries`
@@ -318,8 +336,8 @@ CREATE TABLE `ivr_entries` (
   `digits` varchar(16) NOT NULL,
   `params` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `unique_ivr_digits` (`ivr_id`,`digits`)
-) TYPE=InnoDB;
+  UNIQUE KEY `unique_ivr_digits` USING BTREE (`ivr_id`,`digits`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `jabber_subscriptions`
@@ -331,7 +349,7 @@ CREATE TABLE `jabber_subscriptions` (
   `sub_to` varchar(255) default NULL,
   `show_pres` varchar(255) default NULL,
   `status` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `lcr`
@@ -348,7 +366,7 @@ CREATE TABLE `lcr` (
   `prefix` varchar(16) NOT NULL,
   `suffix` varchar(16) NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB AUTO_INCREMENT=6;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `limit_conf`
@@ -360,7 +378,7 @@ CREATE TABLE `limit_conf` (
   `name` varchar(255) default NULL,
   `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `limit_data`
@@ -372,7 +390,7 @@ CREATE TABLE `limit_data` (
   `realm` varchar(255) default NULL,
   `id` varchar(255) default NULL,
   `uuid` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `local_stream_conf`
@@ -386,7 +404,7 @@ CREATE TABLE `local_stream_conf` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `post_load_modules_conf`
@@ -400,7 +418,7 @@ CREATE TABLE `post_load_modules_conf` (
   `priority` int(10) unsigned NOT NULL default '1000',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_mod` (`module_name`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `rss_conf`
@@ -415,7 +433,7 @@ CREATE TABLE `rss_conf` (
   `description` text,
   `priority` int(11) NOT NULL default '1000',
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `sip_authentication`
@@ -425,7 +443,7 @@ DROP TABLE IF EXISTS `sip_authentication`;
 CREATE TABLE `sip_authentication` (
   `nonce` varchar(255) default NULL,
   `expires` int(8) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `sip_dialogs`
@@ -444,7 +462,7 @@ CREATE TABLE `sip_dialogs` (
   `state` varchar(255) default NULL,
   `direction` varchar(255) default NULL,
   `user_agent` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sip_registrations`
@@ -460,7 +478,7 @@ CREATE TABLE `sip_registrations` (
   `rpid` varchar(255) default NULL,
   `expires` int(11) default NULL,
   `user_agent` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sip_subscriptions`
@@ -481,7 +499,7 @@ CREATE TABLE `sip_subscriptions` (
   `expires` int(11) default NULL,
   `user_agent` varchar(255) default NULL,
   `accept` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sofia_aliases`
@@ -493,7 +511,7 @@ CREATE TABLE `sofia_aliases` (
   `sofia_id` int(10) unsigned NOT NULL,
   `alias_name` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sofia_conf`
@@ -504,7 +522,7 @@ CREATE TABLE `sofia_conf` (
   `id` int(11) NOT NULL auto_increment,
   `profile_name` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sofia_domains`
@@ -517,7 +535,7 @@ CREATE TABLE `sofia_domains` (
   `domain_name` varchar(255) default NULL,
   `parse` tinyint(1) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sofia_gateways`
@@ -531,7 +549,7 @@ CREATE TABLE `sofia_gateways` (
   `gateway_param` varchar(255) default NULL,
   `gateway_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sofia_settings`
@@ -544,7 +562,7 @@ CREATE TABLE `sofia_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `voicemail_conf`
@@ -556,7 +574,7 @@ CREATE TABLE `voicemail_conf` (
   `vm_profile` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_profile` (`vm_profile`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `voicemail_data`
@@ -575,7 +593,7 @@ CREATE TABLE `voicemail_data` (
   `file_path` varchar(255) default NULL,
   `flags` varchar(255) default NULL,
   `read_flags` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `voicemail_email`
@@ -589,7 +607,7 @@ CREATE TABLE `voicemail_email` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_profile_param` (`param_name`,`voicemail_id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `voicemail_prefs`
@@ -601,7 +619,7 @@ CREATE TABLE `voicemail_prefs` (
   `domain` varchar(255) default NULL,
   `name_path` varchar(255) default NULL,
   `greeting_path` varchar(255) default NULL
-) TYPE=InnoDB;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `voicemail_settings`
@@ -614,12 +632,15 @@ CREATE TABLE `voicemail_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2008-04-10  4:45:50
+-- Dump completed on 2008-04-10 15:11:05

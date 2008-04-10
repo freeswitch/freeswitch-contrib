@@ -16,6 +16,30 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `carrier_gateway`
+--
+
+DROP TABLE IF EXISTS `carrier_gateway`;
+CREATE TABLE `carrier_gateway` (
+  `id` int(11) NOT NULL auto_increment,
+  `carrier_id` int(11) default NULL,
+  `gateway` varchar(32) default NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `gateway` (`gateway`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Table structure for table `carriers`
+--
+
+DROP TABLE IF EXISTS `carriers`;
+CREATE TABLE `carriers` (
+  `id` int(11) NOT NULL auto_increment,
+  `Carrier_Name` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
 -- Table structure for table `conference_advertise`
 --
 
@@ -66,7 +90,7 @@ CREATE TABLE `db_data` (
   `realm` varchar(255) default NULL,
   `data_key` varchar(255) default NULL,
   `data` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `dialplan`
@@ -86,10 +110,21 @@ CREATE TABLE `dialplan` (
   `ext_continue` smallint(1) NOT NULL default '0',
   `global_weight` int(11) NOT NULL default '10000',
   `cond_break` varchar(8) default NULL,
-  `app_cdata` tinyint(1) NOT NULL default '0',
-  `re_cdata` tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=386 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `dialplan_special`
+--
+
+DROP TABLE IF EXISTS `dialplan_special`;
+CREATE TABLE `dialplan_special` (
+  `id` int(11) NOT NULL auto_increment,
+  `context` varchar(255) NOT NULL,
+  `class_file` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `unique_context` (`context`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `dingaling_profile_params`
@@ -143,7 +178,18 @@ CREATE TABLE `directory` (
   `mailbox` varchar(255) NOT NULL,
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `directory_domains`
+--
+
+DROP TABLE IF EXISTS `directory_domains`;
+CREATE TABLE `directory_domains` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `domain_name` varchar(128) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `directory_gateway_params`
@@ -172,6 +218,32 @@ CREATE TABLE `directory_gateways` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
+-- Table structure for table `directory_global_params`
+--
+
+DROP TABLE IF EXISTS `directory_global_params`;
+CREATE TABLE `directory_global_params` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `param_name` varchar(64) NOT NULL,
+  `param_value` varchar(128) NOT NULL,
+  `domain_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Table structure for table `directory_global_vars`
+--
+
+DROP TABLE IF EXISTS `directory_global_vars`;
+CREATE TABLE `directory_global_vars` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `var_name` varchar(64) NOT NULL,
+  `var_value` varchar(128) NOT NULL,
+  `domain_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
 -- Table structure for table `directory_params`
 --
 
@@ -195,7 +267,7 @@ CREATE TABLE `directory_vars` (
   `var_name` varchar(255) default NULL,
   `var_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `group_data`
@@ -206,7 +278,7 @@ CREATE TABLE `group_data` (
   `hostname` varchar(255) default NULL,
   `groupname` varchar(255) default NULL,
   `url` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `iax_conf`
@@ -277,7 +349,24 @@ CREATE TABLE `jabber_subscriptions` (
   `sub_to` varchar(255) default NULL,
   `show_pres` varchar(255) default NULL,
   `status` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
+
+--
+-- Table structure for table `lcr`
+--
+
+DROP TABLE IF EXISTS `lcr`;
+CREATE TABLE `lcr` (
+  `id` int(11) NOT NULL auto_increment,
+  `digits` varchar(15) default NULL,
+  `rate` int(11) NOT NULL,
+  `carrier_id` int(11) NOT NULL,
+  `lead_strip` int(11) NOT NULL,
+  `trail_strip` int(11) NOT NULL,
+  `prefix` varchar(16) NOT NULL,
+  `suffix` varchar(16) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `limit_conf`
@@ -289,7 +378,7 @@ CREATE TABLE `limit_conf` (
   `name` varchar(255) default NULL,
   `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `limit_data`
@@ -344,7 +433,7 @@ CREATE TABLE `rss_conf` (
   `description` text,
   `priority` int(11) NOT NULL default '1000',
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `sip_authentication`
@@ -354,7 +443,7 @@ DROP TABLE IF EXISTS `sip_authentication`;
 CREATE TABLE `sip_authentication` (
   `nonce` varchar(255) default NULL,
   `expires` int(8) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `sip_dialogs`
@@ -504,7 +593,7 @@ CREATE TABLE `voicemail_data` (
   `file_path` varchar(255) default NULL,
   `flags` varchar(255) default NULL,
   `read_flags` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `voicemail_email`
@@ -530,7 +619,7 @@ CREATE TABLE `voicemail_prefs` (
   `domain` varchar(255) default NULL,
   `name_path` varchar(255) default NULL,
   `greeting_path` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB;
 
 --
 -- Table structure for table `voicemail_settings`
@@ -554,4 +643,4 @@ CREATE TABLE `voicemail_settings` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2008-03-05  1:16:13
+-- Dump completed on 2008-04-10 15:11:05
