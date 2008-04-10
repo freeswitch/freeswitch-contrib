@@ -26,7 +26,7 @@ class spidermonkey_conf extends fs_configuration {
 
     private function get_params() {
         return array(
-        'mod_spidermonkey_teleone',
+        'mod_spidermonkey_teletone',
         'mod_spidermonkey_odbc',
         'mod_spidermonkey_core_db'
         );

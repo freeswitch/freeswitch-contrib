@@ -59,7 +59,7 @@ class fs_dialplan extends fs_curl {
             $cf = $row['condition_field'];
             $ce = $row['condition_expression'];
             $rcd = $row['re_cdata'];
-            $cc = empty($row['condition_continue']) ? '0' : $row['condition_continue'];
+            $cc = empty($row['cond_break']) ? '0' : $row['cond_break'];
             $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc;$rcd"][] = array(
             'type'=>$type,
             'application'=>$app,
@@ -120,7 +120,7 @@ class fs_dialplan extends fs_curl {
                             //$this -> debug($c_split[2]);
                             if ($c_split[2] != '0') {
                                 $this -> xmlw -> writeAttribute(
-                                'continue', $c_split[2]
+                                'break', $c_split[2]
                                 );
                             }
                             //$this -> debug($app_array);

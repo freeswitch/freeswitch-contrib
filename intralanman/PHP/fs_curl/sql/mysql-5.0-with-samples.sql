@@ -103,9 +103,9 @@ CREATE TABLE `dialplan` (
   `type` varchar(16) NOT NULL default 'action',
   `ext_continue` smallint(1) NOT NULL default '0',
   `global_weight` int(11) NOT NULL default '10000',
-  `condition_continue` varchar(8) default NULL,
+  `cond_break` varchar(8) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=385 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=385 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `dialplan`
@@ -196,9 +196,10 @@ DROP TABLE IF EXISTS `directory`;
 CREATE TABLE `directory` (
   `id` int(11) NOT NULL auto_increment,
   `username` varchar(255) NOT NULL,
+  `mailbox` varchar(255) NOT NULL,
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `directory`
@@ -206,7 +207,7 @@ CREATE TABLE `directory` (
 
 LOCK TABLES `directory` WRITE;
 /*!40000 ALTER TABLE `directory` DISABLE KEYS */;
-INSERT INTO `directory` VALUES (1,'1000','example.com'),(2,'1001','example.org'),(3,'1002','example.net'),(5,'1003','example.info'),(6,'1004','example.com'),(7,'1005','example.org'),(8,'1006','example.net'),(9,'1007','example.info'),(10,'1008','$${domain}'),(11,'1009','$${local_ip_v4}');
+INSERT INTO `directory` VALUES (1,'1000','','example.com'),(2,'1001','','example.org'),(3,'1002','','example.net'),(5,'1003','','example.info'),(6,'1004','','example.com'),(7,'1005','','example.org'),(8,'1006','','example.net'),(9,'1007','','example.info'),(10,'1008','','$${domain}'),(11,'1009','','$${local_ip_v4}'),(12,'tester','1000','$${domain}');
 /*!40000 ALTER TABLE `directory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -354,7 +355,7 @@ CREATE TABLE `directory_vars` (
   `var_name` varchar(255) default NULL,
   `var_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `directory_vars`
@@ -475,7 +476,7 @@ CREATE TABLE `limit_conf` (
   `name` varchar(255) default NULL,
   `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `limit_conf`
@@ -496,7 +497,7 @@ CREATE TABLE `limit_data` (
   `realm` varchar(255) default NULL,
   `id` varchar(255) default NULL,
   `uuid` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `limit_data`
@@ -519,7 +520,7 @@ CREATE TABLE `local_stream_conf` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `local_stream_conf`
@@ -567,7 +568,7 @@ CREATE TABLE `rss_conf` (
   `description` text,
   `priority` int(11) NOT NULL default '1000',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `rss_conf`

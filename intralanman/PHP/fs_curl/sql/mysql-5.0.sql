@@ -66,7 +66,7 @@ CREATE TABLE `db_data` (
   `realm` varchar(255) default NULL,
   `data_key` varchar(255) default NULL,
   `data` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `dialplan`
@@ -85,11 +85,11 @@ CREATE TABLE `dialplan` (
   `type` varchar(16) NOT NULL default 'action',
   `ext_continue` smallint(1) NOT NULL default '0',
   `global_weight` int(11) NOT NULL default '10000',
-  `condition_continue` varchar(8) default NULL,
+  `cond_break` varchar(8) default NULL,
   `app_cdata` tinyint(1) NOT NULL default '0',
   `re_cdata` tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=386 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=386 DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `dingaling_profile_params`
@@ -140,9 +140,10 @@ DROP TABLE IF EXISTS `directory`;
 CREATE TABLE `directory` (
   `id` int(11) NOT NULL auto_increment,
   `username` varchar(255) NOT NULL,
+  `mailbox` varchar(255) NOT NULL,
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `directory_gateway_params`
@@ -194,7 +195,7 @@ CREATE TABLE `directory_vars` (
   `var_name` varchar(255) default NULL,
   `var_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `group_data`
@@ -205,7 +206,7 @@ CREATE TABLE `group_data` (
   `hostname` varchar(255) default NULL,
   `groupname` varchar(255) default NULL,
   `url` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `iax_conf`
@@ -276,7 +277,7 @@ CREATE TABLE `jabber_subscriptions` (
   `sub_to` varchar(255) default NULL,
   `show_pres` varchar(255) default NULL,
   `status` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `limit_conf`
@@ -288,7 +289,7 @@ CREATE TABLE `limit_conf` (
   `name` varchar(255) default NULL,
   `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `limit_data`
@@ -300,7 +301,7 @@ CREATE TABLE `limit_data` (
   `realm` varchar(255) default NULL,
   `id` varchar(255) default NULL,
   `uuid` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `local_stream_conf`
@@ -314,7 +315,7 @@ CREATE TABLE `local_stream_conf` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `post_load_modules_conf`
@@ -343,7 +344,7 @@ CREATE TABLE `rss_conf` (
   `description` text,
   `priority` int(11) NOT NULL default '1000',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `sip_authentication`
@@ -353,7 +354,7 @@ DROP TABLE IF EXISTS `sip_authentication`;
 CREATE TABLE `sip_authentication` (
   `nonce` varchar(255) default NULL,
   `expires` int(8) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `sip_dialogs`
@@ -503,7 +504,7 @@ CREATE TABLE `voicemail_data` (
   `file_path` varchar(255) default NULL,
   `flags` varchar(255) default NULL,
   `read_flags` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `voicemail_email`
@@ -529,7 +530,7 @@ CREATE TABLE `voicemail_prefs` (
   `domain` varchar(255) default NULL,
   `name_path` varchar(255) default NULL,
   `greeting_path` varchar(255) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `voicemail_settings`

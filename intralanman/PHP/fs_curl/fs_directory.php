@@ -261,8 +261,11 @@ class fs_directory extends fs_curl {
         $this -> write_global_vars();
 
         for ($i=0; $i<$directory_count; $i++) {
+            $username = $directory[$i]['username'];
+            $mailbox = empty($directory[$i]['mailbox']) ? $username : $directory[$i]['mailbox'];
             $this -> xmlw -> startElement('user');
-            $this -> xmlw -> writeAttribute('id', $directory[$i]['username']);
+            $this -> xmlw -> writeAttribute('id', $username);
+            $this -> xmlw -> writeAttribute('mailbox', $mailbox);
             $this -> write_params($directory[$i]['id']);
             $this -> write_variables($directory[$i]['id']);
             $this -> write_gateways($directory[$i]['id']);
