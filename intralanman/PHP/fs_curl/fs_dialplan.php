@@ -18,16 +18,61 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * Class for XML dialplan
 */
 class fs_dialplan extends fs_curl {
+    private $special_class_file;
+
     public function fs_dialplan() {
         $this -> fs_curl();
     }
 
+    /**
+     * This is the method that determines the XML output. Customized dialplans can
+     * be easily created by adding a record to the dialplan_special table with the 
+     * appropriate values. The php class MUST contain a "main()" method. The method
+     * should write directly to the xmlw obj that's pased or take care of writing
+     * out the xml itself and exiting as to not return.
+     *
+     */
     public function main() {
         $this -> comment($this -> request);
         $context = $this -> request['Caller-Context'];
-        $dp_array = $this -> get_dialplan($context);
-        $this -> writeDialplan($dp_array);
+        if ($this -> is_specialized_dialplan($context)) {
+            if (!include_once($this -> special_class_file)) {
+                $this -> file_not_found();
+            }
+            $class = sprintf('dialplan_%s', $context);
+            if (!class_exists($class)) {
+                $this -> comment("No Class of name $class");
+                $this -> file_not_found();
+            }
+            $obj = new $class;
+            /**
+             * recieving method should take incoming parameter as &$something
+             */
+            $obj -> main($this);
+        } else {
+            $dp_array = $this -> get_dialplan($context);
+            $this -> writeDialplan($dp_array);
+        }
         $this -> output_xml();
+    }
+
+    public function is_specialized_dialplan($context) {
+        $query = sprintf(
+        "SELECT * FROM dialplan_special WHERE context='%s'", $context
+        );
+        $res = $this -> db -> query($query);
+        if (MDB2::isError($res)) {
+            $this -> comment($query);
+            $this -> comment($res -> getMessage());
+            $this -> file_not_found();
+        }
+        if ($res -> numRows() == 1) {
+            $row = $res -> fetchRow();
+            $this -> special_class_file = $row['class_file'];
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

@@ -196,7 +196,7 @@ class fs_directory extends fs_curl {
         if (MDB2::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global params - %s"
-            , $this -> db -> getMessage()
+            , $res -> getMessage()
             );
             trigger_error($error_msg);
         }
@@ -225,7 +225,7 @@ class fs_directory extends fs_curl {
         if (MDB2::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global vars - %s"
-            , $this -> db -> getMessage()
+            , $res -> getMessage()
             );
             trigger_error($error_msg);
         }
