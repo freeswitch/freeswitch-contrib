@@ -170,6 +170,9 @@ class fs_dialplan extends fs_curl {
                             }
                             //$this -> debug($app_array);
                             foreach ($app_array as $app) {
+                                if (empty($app['application'])) {
+                                	continue;
+                                }
                                 $this -> xmlw -> startElement($app['type']);
                                 $this -> xmlw -> writeAttribute(
                                 'application', $app['application']
@@ -177,9 +180,9 @@ class fs_dialplan extends fs_curl {
                                 if (!empty($app['data'])) {
                                     if (array_key_exists('is_cdata', $app)
                                     && $app['is_cdata'] == true) {
-                                        $this -> xmlw -> startElement('data');
+                                        //$this -> xmlw -> startElement('data');
                                         $this -> xmlw -> writeCdata($app['data']);
-                                        $this -> xmlw -> endElement();
+                                        //$this -> xmlw -> endElement();
                                     } else {
                                         $this -> xmlw -> writeAttribute(
                                         'data', $app['data']

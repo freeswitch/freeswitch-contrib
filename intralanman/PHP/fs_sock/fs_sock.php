@@ -220,6 +220,8 @@ class fs_sock {
      * @return array
      */
     private function sock_get_length($content_len) {
+        $len = 0;
+        $content = null;
         $this -> debug("calling sock_get_length with length of $content_len");
         //for ($i=0; $i<$content_len; $i+=strlen($orig_line)) {
         while ($orig_line = fgets($this -> sock, BUFFER_SIZE)) {
@@ -409,7 +411,7 @@ class fs_sock {
             } else {
                 if (is_array($_SERVER)
                 && array_key_exists('HTTP_HOST', $_SERVER)) {
-                    printf("<pre>%s%s</pre>\r\n"
+                    printf("<!--%s%s-->\r\n"
                     , str_repeat(' ', $spaces)
                     , htmlentities($input)
                     );
