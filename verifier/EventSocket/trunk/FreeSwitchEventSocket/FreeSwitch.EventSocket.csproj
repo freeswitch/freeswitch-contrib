@@ -1,0 +1,123 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3F8895F6-F710-4323-B96A-4EFB6BC97E08}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FreeSwitch.EventSocket</RootNamespace>
+    <AssemblyName>FreeSwitch.EventSocket</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>EventSocket.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Tiny.Net, Version=1.0.0.1, Culture=neutral, PublicKeyToken=15480ee9e0247fcb, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\dlls\Debug\Tiny.Net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ChannelEvents\EventChannelApplication.cs" />
+    <Compile Include="ChannelEvents\EventChannelExecuteComplete.cs" />
+    <Compile Include="ChannelEvents\EventChannelOriginate.cs" />
+    <Compile Include="ChannelEvents\EventChannelBridge.cs" />
+    <Compile Include="ChannelEvents\ChannelEvent.cs" />
+    <Compile Include="ChannelEvents\EventChannelAnswer.cs" />
+    <Compile Include="ChannelEvents\EventChannelProgress.cs" />
+    <Compile Include="ChannelEvents\EventChannelUnbridge.cs" />
+    <Compile Include="ChannelEvents\EventChannelUnpark.cs" />
+    <Compile Include="ChannelEvents\EventCodec.cs" />
+    <Compile Include="ChannelInfo.cs" />
+    <Compile Include="Commands\AnyCommand.cs">
+    </Compile>
+    <Compile Include="Commands\Api.cs" />
+    <Compile Include="Commands\AuthCommand.cs" />
+    <Compile Include="Commands\CmdBase.cs" />
+    <Compile Include="Commands\CommandReply.cs" />
+    <Compile Include="Commands\ExecuteJavascript.cs" />
+    <Compile Include="Commands\GetVariable.cs" />
+    <Compile Include="Commands\HoldCmd.cs" />
+    <Compile Include="Commands\Originate.cs" />
+    <Compile Include="Commands\ParkCmd.cs" />
+    <Compile Include="Commands\Playback.cs" />
+    <Compile Include="Commands\RecordCmd.cs" />
+    <Compile Include="Commands\SendMsg.cs" />
+    <Compile Include="Commands\SetVariable.cs" />
+    <Compile Include="Commands\SleepCmd.cs" />
+    <Compile Include="EventManager.cs" />
+    <Compile Include="ChannelEvents\EventDtmfStatus.cs" />
+    <Compile Include="Ivr\IvrInterface.cs" />
+    <Compile Include="PlainEventMsg.cs" />
+    <Compile Include="EventParser.cs" />
+    <Compile Include="Events.cs" />
+    <Compile Include="Events\EventApiCommand.cs" />
+    <Compile Include="Events\EventBase.cs" />
+    <Compile Include="ChannelEvents\EventChannelCreate.cs" />
+    <Compile Include="ChannelEvents\EventChannelDestroy.cs" />
+    <Compile Include="ChannelEvents\EventChannelExecute.cs" />
+    <Compile Include="ChannelEvents\EventChannelHangup.cs" />
+    <Compile Include="ChannelEvents\EventChannelOutgoing.cs" />
+    <Compile Include="ChannelEvents\EventChannelState.cs" />
+    <Compile Include="EventSocket.cs" />
+    <Compile Include="Events\EventHeartbeat.cs" />
+    <Compile Include="Events\EventReSchedule.cs" />
+    <Compile Include="General\Address.cs" />
+    <Compile Include="General\ChannelVariable.cs" />
+    <Compile Include="General\SipAddress.cs" />
+    <Compile Include="General\SofiaSipAddress.cs" />
+    <Compile Include="PartyInfo.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Events\EventMessageQuery.cs" />
+    <Compile Include="ChannelEvents\EventDtmf.cs" />
+    <Compile Include="SipEvents\EventPresenceIn.cs" />
+    <Compile Include="SipEvents\EventPresenceOut.cs" />
+    <Compile Include="SipEvents\EventPresenceProbe.cs" />
+    <Compile Include="SipEvents\EventRoster.cs" />
+    <Compile Include="Events\EventMessageWaiting.cs" />
+    <Compile Include="SipEvents\SipEvent.cs" />
+    <Compile Include="SipEvents\EventPresence.cs" />
+    <Compile Include="SipEvents\EventSofiaExpire.cs" />
+    <Compile Include="SipEvents\EventSofiaRegister.cs" />
+    <Compile Include="StringHelper.cs" />
+    <Compile Include="StringParser.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EventSocket.pfx" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>copy $(TargetPath) $(SolutionDir)..\..\dlls\$(ConfigurationName)</PostBuildEvent>
+  </PropertyGroup>
+</Project>
