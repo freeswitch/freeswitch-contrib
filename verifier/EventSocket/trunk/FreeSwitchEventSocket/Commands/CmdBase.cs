@@ -8,7 +8,7 @@ namespace FreeSwitch.EventSocket.Commands
 
     public abstract class CmdBase
     {
-        public event ReplyHandler OnReply;
+        public event ReplyHandler ReplyReceived;
 
         private object _contextData;
 
@@ -35,16 +35,21 @@ namespace FreeSwitch.EventSocket.Commands
         public virtual void HandleReply(CommandReply reply)
         {
             // a command is only invoked once.
-            if (OnReply != null)
+            if (ReplyReceived != null)
             {
-                OnReply(this, reply);
-                OnReply = null;                
+                ReplyReceived(this, reply);
+                ReplyReceived = null;                
             }
         }
 
         public virtual CommandReply CreateReply(string dataToParse)
         {
-            return null;
+            if (string.IsNullOrEmpty(dataToParse.Trim()))
+                return new CommandReply(false);
+
+            CommandReply reply = new CommandReply(dataToParse.Trim()[0] == '+');
+            reply.ErrorMessage = dataToParse;
+            return reply;
         }
 
         public override string ToString()

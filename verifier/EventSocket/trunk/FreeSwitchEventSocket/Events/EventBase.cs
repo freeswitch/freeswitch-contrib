@@ -19,7 +19,27 @@ namespace FreeSwitch.EventSocket
 
         public string Name
         {
-            get { return m_name; }
+            get
+            {
+                lock (this)
+                {
+                    if (string.IsNullOrEmpty(m_name))
+                    {
+                        string name = GetType().Name.Substring(5); //remove (Event)
+                        m_name = string.Empty;
+                        m_name += char.ToUpper(name[0]);
+                        for (int i = 1; i < name.Length; ++i)
+                        {
+                            if (char.IsUpper(name[i]))
+                                m_name += '_';
+                            else
+                                m_name += char.ToUpper(name[i]);
+                        }
+                    }
+                }
+
+                return m_name;
+            }
             set { m_name = value; }
         }
 

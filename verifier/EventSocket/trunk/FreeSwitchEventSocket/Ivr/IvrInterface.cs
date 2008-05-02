@@ -8,16 +8,19 @@ namespace FreeSwitch.EventSocket.Ivr
     {
         public const string AllDigits = "*#0123456789";
         private readonly string _uuid;
-        private readonly string _baseSoundPath = "sounds\\";
+        private string _baseSoundPath = "sounds\\";
         private string _dtmf = string.Empty;
         private EventManager _mgr;
         public event DtmfHandler DtmfReceived;
-        private readonly int _dtmfWaitCount = 0;
-        private ManualResetEvent _dtmfWaitEvent;
+        private int _dtmfWaitCount = 0;
         private bool _abortSpeechOnDtmf;
         private bool _answered;
         private IvrInterfaceHandler _handler = null;
         private string _lastAbortDigits = "*";
+        private int _defaultTimeout = 10000;
+        private readonly ManualResetEvent _dtmfTimeout = new ManualResetEvent(false);
+        private IvrQueue _queue;
+
 
         public IvrInterface(EventManager mgr, string uuid)
         {
@@ -26,6 +29,7 @@ namespace FreeSwitch.EventSocket.Ivr
             if (string.IsNullOrEmpty(uuid))
                 throw new ArgumentNullException("uuid");
 
+            _queue = new IvrQueue(mgr);
             _mgr = mgr;
             mgr.EventReceived += OnEvent;
             _uuid = uuid;
@@ -54,34 +58,64 @@ namespace FreeSwitch.EventSocket.Ivr
             set { _abortSpeechOnDtmf = value; }
         }
 
+        /// <summary>
+        /// True if IVR call have been answered.
+        /// </summary>
         public bool Answered
         {
             get { return _answered; }
         }
 
+        /// <summary>
+        /// Number of seconds to wait on DTMF
+        /// </summary>
+        public int DefaultTimeout
+        {
+            get { return _defaultTimeout; }
+            set { _defaultTimeout = value; }
+        }
+
+        /// <summary>
+        /// Relative path under FreeSWITCH to where the sound files resides
+        /// </summary>
+        /// <remarks>default is "sounds\"</remarks>
+        public string BaseSoundPath
+        {
+            get { return _baseSoundPath; }
+            set { _baseSoundPath = value; }
+        }
+
         private void OnEvent(EventBase receivedEvent)
         {
+            if (!receivedEvent.IsChannelEvent)
+                return;
+
+            ChannelEvent channelEvent = (ChannelEvent) receivedEvent;
+            if (channelEvent.UniqueId != _uuid)
+                return;
+
             if (receivedEvent is EventChannelAnswer)
             {
                 _answered = true;
             }
-/*            else if (receivedEvent is EventDtmfStatus)
-            {
-                // Let's always dequeue dtmf.
-                EventDtmfStatus evt = (EventDtmfStatus) receivedEvent;
-                if (evt.UniqueId == _uuid)
-                    _mgr.Send(new GetDtmfCmd(_uuid, evt.Count));
-            }*/
             else if (receivedEvent is EventDtmf)
             {
                 EventDtmf evt = (EventDtmf) receivedEvent;
-                lock (_dtmf)
-                    _dtmf += evt.Digit;
-                if (_dtmfWaitCount >= _dtmf.Length)
-                    _dtmfWaitEvent.Set();
+                Console.WriteLine("DTMF Event: " + evt.Digit);
+                if (_queue.GotDtmf(evt.Digit))
+                {
+                    lock (_dtmf)
+                        _dtmf += evt.Digit;
 
-                if (DtmfReceived != null)
-                    DtmfReceived(this, new DtmfEventArgs(_dtmf));
+                    if (_dtmfWaitCount != 0 && _dtmf.Length >= _dtmfWaitCount)
+                    {
+                        Console.WriteLine("Got all DTMF: " + _dtmfWaitCount + "/" + _dtmf.Length);
+                        _dtmfTimeout.Set();
+                    }
+
+                    if (DtmfReceived != null)
+                        DtmfReceived(this, new DtmfEventArgs(_dtmf));
+                }
             }
             else if (receivedEvent is EventChannelDestroy || receivedEvent is EventChannelHangup)
             {
@@ -90,6 +124,16 @@ namespace FreeSwitch.EventSocket.Ivr
                     _mgr.EventReceived -= OnEvent;
                     _mgr = null;
                 }
+            }
+            else if (receivedEvent is EventChannelExecute)
+            {
+                EventChannelExecute exec = (EventChannelExecute)receivedEvent;
+                _queue.Execute(exec);
+            }
+            else if (receivedEvent is EventChannelExecuteComplete)
+            {
+                EventChannelExecuteComplete exec = (EventChannelExecuteComplete)receivedEvent;
+                _queue.ExecuteComplete(exec);
             }
         }
 
@@ -104,15 +148,26 @@ namespace FreeSwitch.EventSocket.Ivr
         {
             if (_mgr == null)
                 return string.Empty;
-            if (_dtmfWaitEvent != null)
-                throw new InvalidOperationException("Already waiting on an event.");
+
+            lock (_dtmf)
+            {
+                if (_dtmfWaitCount > 0)
+                    throw new InvalidOperationException("Already waiting on an event.");
+                _dtmfWaitCount = 1;
+                _dtmfTimeout.Reset();
+            }
 
             if (_dtmf.Length < count)
             {
-                _dtmfWaitEvent = new ManualResetEvent(false);
-                if (!_dtmfWaitEvent.WaitOne(timeout * 1000, true))
+                if (_queue.CommandRunning)
+                        _queue.Add(new PrivateWaitDtmf(OnDtmfTimeout, timeout));
+
+                _dtmfWaitCount = count - _dtmf.Length;
+                if (!_dtmfTimeout.WaitOne(timeout, true))
                 {
+                    Console.WriteLine("Didn't get any DTMF: " + _dtmf);
                     _dtmf = string.Empty;
+                    _dtmfWaitCount = 0;
                     return string.Empty;
                 }
             }
@@ -122,14 +177,54 @@ namespace FreeSwitch.EventSocket.Ivr
                 if (_dtmf.Length >= count)
                 {
                     string dtmf = _dtmf.Substring(0, count);
-                    _dtmf = _dtmf.Remove(count);
+                    if (_dtmf.Length == count)
+                        _dtmf = string.Empty;
+                    else
+                        _dtmf = _dtmf.Remove(count);
+                    _dtmfWaitCount = 0;
                     return dtmf;
                 }
             }
 
+            _dtmfWaitCount = 0;
             return string.Empty;
         }
 
+        private void OnDtmfTimeout(PrivateWaitDtmf dtmf)
+        {
+            dtmf.Dispose();
+            _dtmfTimeout.Set();
+        }
+
+        /// <summary>
+        /// Wait on dtmf.
+        /// </summary>
+        /// <param name="count">Number of digits to get</param>
+        /// <remarks>You can also used the Dtmf event if you want to use asynchrounous programming.</remarks>
+        /// <seealso cref="DtmfReceived"/>
+        /// <seealso cref="DefaultTimeout"/>
+        public string GetDtmf(int count)
+        {
+            return GetDtmf(count, _defaultTimeout);
+        }
+
+        /// <summary>
+        /// Play a sound file
+        /// </summary>
+        /// <param name="path">Path to sound file.</param>
+        /// <seealso cref="AllDigits"/>
+        /// <remarks>Prepends <see cref="BaseSoundPath"/> to path.</remarks>
+        public void Play(string path)
+        {
+            Play(path, AllDigits);
+        }
+
+        /// <summary>
+        /// Play a sound file
+        /// </summary>
+        /// <param name="path">Path to sound file.</param>
+        /// <param name="digitsToAbortOn">DTMF digits that can abort speech.</param>
+        /// <remarks>Prepends <see cref="BaseSoundPath"/> to path.</remarks>
         public void Play(string path, string digitsToAbortOn)
         {
             if (_mgr == null)
@@ -144,69 +239,61 @@ namespace FreeSwitch.EventSocket.Ivr
                 _lastAbortDigits = digitsToAbortOn;
             }
 
-            _mgr.Send(new PlaybackCmd(_uuid, _baseSoundPath + path));
+            _queue.Add(new PlaybackCmd(_uuid, GetSoundPath(path, false), digitsToAbortOn));
         }
 
-        public void Record(string path, bool stop, int limit)
+
+
+        /// <summary>
+        /// Record a sound file
+        /// </summary>
+        /// <param name="path">Where to store the sound</param>
+        /// <param name="limit">Maximum number of seconds that can be recorded.</param>
+        /// <param name="stop">stop an ongoing recording</param>
+        public void Record(string path, int limit, bool stop)
         {
             if (_mgr == null)
                 return;
-            _mgr.Send(new RecordCmd(_uuid, _baseSoundPath + path, stop, limit));
+
+            _queue.Add(new RecordCmd(_uuid, GetSoundPath(path, true), stop, limit));
         }
 
+        /// <summary>
+        /// Record a sound file
+        /// </summary>
+        /// <param name="path">Where to store the sound</param>
+        /// <param name="limit">Maximum number of seconds that can be recorded.</param>
         public void Record(string path, int limit)
         {
-            if (_mgr == null)
-                return;
-            _mgr.Send(new RecordCmd(_uuid, _baseSoundPath + path, limit));
+            Record(path, limit, false);
         }
 
+        /// <summary>
+        /// This method can be used to build paths for different languages and such.
+        /// </summary>
+        /// <param name="fileName">soundfile</param>
+        /// <param name="isRecording">path is to a file being recorded</param>
+        /// <returns>Path to sound file</returns>
+        protected virtual string GetSoundPath(string fileName, bool isRecording)
+        {
+            return BaseSoundPath + fileName;
+        }
+
+        /// <summary>
+        /// Tell script to sleep for a while.
+        /// </summary>
+        /// <param name="ms">number of milliseconds</param>
         public void Sleep(int ms)
         {
             if (_mgr == null)
                 return;
-            _mgr.Send(new SleepCmd(_uuid, ms));
+
+            _queue.Add(new SleepCmd(_uuid, ms));
         }
+
+
     }
 
-    public class DtmfEventArgs : EventArgs
-    {
-        private string _dtmf;
-        private string _dtmfCopy;
-
-        public DtmfEventArgs(string dtmf)
-        {
-            _dtmf = dtmf;
-            _dtmfCopy = (string) _dtmf.Clone();
-        }
-
-        /// <summary>
-        /// You cannot remove digits from the buffer (since it's a copy of the real buffer).
-        /// </summary>
-        /// <seealso cref="RemoveDigits"/>
-        public string Dtmf
-        {
-            get { return _dtmfCopy; }
-        }
-
-        /// <summary>
-        /// Remove digits from the real buffer.
-        /// </summary>
-        /// <param name="count">number of digits to remove.</param>
-        public void RemoveDigits(int count)
-        {
-            lock (_dtmf)
-            {
-                if (count > _dtmf.Length)
-                    _dtmf = string.Empty;
-                else
-                    _dtmf = _dtmf.Remove(0, count);
-                _dtmfCopy = (string)_dtmf.Clone();
-            }
-        }
-    }
-
-    public delegate void DtmfHandler(object source, DtmfEventArgs args);
 
     public delegate void IvrInterfaceHandler(IvrInterface app);
 }

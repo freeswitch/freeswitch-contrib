@@ -97,9 +97,9 @@ namespace FreeSwitch.EventSocket.Commands
             {
                 OriginateReply reply = new OriginateReply(false, string.Empty);
                 if (nameValue.Length > 1)
-                    reply.ErrCode = nameValue[1];
+                    reply.ErrorMessage = nameValue[1];
                 else
-                    reply.ErrCode = dataToParse;
+                    reply.ErrorMessage = dataToParse;
                 return reply;
             }
         }

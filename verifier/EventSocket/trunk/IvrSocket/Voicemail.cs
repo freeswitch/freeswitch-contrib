@@ -21,6 +21,10 @@ namespace IvrSocket
         private void OnIvr(IvrInterface app)
         {
             _ivr.Play("sv\\system\\record_after_beep.wav", IvrInterface.AllDigits);
+            _ivr.Play("sv\\system\\record_after_beep.wav", IvrInterface.AllDigits);
+            _ivr.Play("sv\\system\\record_after_beep.wav", "2");
+            string dtmf = _ivr.GetDtmf(4);
+            Console.WriteLine("Got DTMF: " + dtmf);
             //_ivr.Sleep(5000);
             //_ivr.Record("voicemails\\" + Guid.NewGuid() + ".wav", 60);
         }

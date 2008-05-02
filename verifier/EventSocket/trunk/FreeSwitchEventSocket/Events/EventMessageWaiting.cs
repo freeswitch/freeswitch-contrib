@@ -8,6 +8,18 @@ namespace FreeSwitch.EventSocket
         private int _totalMessages;
         private int _totalUrgentMessages;
 
+        public EventMessageWaiting()
+        {
+            
+        }
+
+        public EventMessageWaiting(string account, int newMessages, int totalMessages)
+        {
+            _account = account;
+            _newMessages = newMessages;
+            _totalMessages = totalMessages;
+        }
+
         /// <summary>
         /// Messages are for this account
         /// </summary>

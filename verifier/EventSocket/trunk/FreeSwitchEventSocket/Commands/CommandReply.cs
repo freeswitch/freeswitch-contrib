@@ -6,7 +6,7 @@ namespace FreeSwitch.EventSocket.Commands
     public class CommandReply
     {
         private bool _success;
-        private string _errCode;
+        private string _ErrorMessage;
 
         public CommandReply(bool success)
         {
@@ -18,10 +18,10 @@ namespace FreeSwitch.EventSocket.Commands
             get { return _success; }
         }
 
-        public string ErrCode
+        public string ErrorMessage
         {
-            get { return _errCode; }
-            set { _errCode = value; }
+            get { return _ErrorMessage; }
+            set { _ErrorMessage = value; }
         }
 
         public override string ToString()
@@ -29,7 +29,7 @@ namespace FreeSwitch.EventSocket.Commands
             if (_success)
                 return "Success";
             else
-                return "Failed: " + _errCode;
+                return "Failed: " + _ErrorMessage;
         }
     }
 }

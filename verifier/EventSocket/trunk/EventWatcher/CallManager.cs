@@ -222,20 +222,20 @@ namespace EventWatcher
         {
             GetVariableReply gvr = (GetVariableReply) reply;
             if (!gvr.Success)
-                Debug.WriteLine("OnBridgeCallId " + reply.ErrCode);
+                Debug.WriteLine("OnBridgeCallId " + reply.ErrorMessage);
 
             string otherChannelId = (string) command.ContextData;
             SetVariable sv = new SetVariable(otherChannelId, "gate_callid", gvr.Value);
-            sv.OnReply += OnCallIdReply;
+            sv.ReplyReceived += OnCallIdReply;
             _eventMgr.Send(sv);
-            command.OnReply -= OnBridgeCallId;
+            command.ReplyReceived -= OnBridgeCallId;
         }
 
         private void OnCallIdReply(CmdBase command, CommandReply reply)
         {
             if (!reply.Success)
-                Debug.WriteLine("OnCallIdReply " + reply.ErrCode);
-            command.OnReply -= OnCallIdReply;
+                Debug.WriteLine("OnCallIdReply " + reply.ErrorMessage);
+            command.ReplyReceived -= OnCallIdReply;
         }
 
         #region Nested type: ExtensionMapper

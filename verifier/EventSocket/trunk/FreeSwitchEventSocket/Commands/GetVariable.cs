@@ -39,7 +39,7 @@ namespace FreeSwitch.EventSocket.Commands
             else
             {
                 GetVariableReply reply = new GetVariableReply(false, string.Empty);
-                reply.ErrCode = dataToParse;
+                reply.ErrorMessage = dataToParse;
                 return reply;
             }
         }

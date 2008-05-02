@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using FreeSwitch.EventSocket;
+using FreeSwitch.EventSocket.Commands;
 
 namespace IvrSocket
 {
@@ -12,17 +14,13 @@ namespace IvrSocket
             mgr.EventReceived += IvrManager;
             mgr.Subscribe(Event.All);
             mgr.Start("localhost");
+            Thread.Sleep(1000);
+            //mgr.Send(new SendEventCmd(new EventMessageWaiting("jonas@192.168.0.58", 1, 2)));
             Console.ReadLine();
         }
 
         private static void IvrManager(EventBase receivedEvent)
         {
-            Console.WriteLine(receivedEvent.Name);
-            if (receivedEvent is ChannelEvent)
-            {
-                ChannelEvent evt = (ChannelEvent) receivedEvent;
-                Console.WriteLine(evt.Name + ": " + evt.UniqueId);
-            }
             if (receivedEvent is EventChannelAnswer)
             {
                 EventChannelAnswer answer = (EventChannelAnswer)receivedEvent;

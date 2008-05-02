@@ -28,7 +28,7 @@ namespace FreeSwitch.EventSocket.Commands
             else
             {
                 CommandReply reply = new CommandReply(false);
-                reply.ErrCode = dataToParse;
+                reply.ErrorMessage = dataToParse;
                 return reply;
             }
         }

@@ -25,7 +25,17 @@ namespace FreeSwitch.EventSocket.Commands
 
         public override string Arguments
         {
-            get { return _channelId + " " + _name + " " + _value; }
+            get { return _channelId + " " + Name + " " + Value; }
+        }
+
+        public string Name
+        {
+            get { return _name; }
+        }
+
+        public string Value
+        {
+            get { return _value; }
         }
 
         public override CommandReply CreateReply(string dataToParse)
@@ -35,7 +45,7 @@ namespace FreeSwitch.EventSocket.Commands
             else
             {
                 CommandReply reply = new CommandReply(false);
-                reply.ErrCode = dataToParse;
+                reply.ErrorMessage = dataToParse;
                 return reply;
             }
         }

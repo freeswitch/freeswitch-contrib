@@ -35,10 +35,6 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tiny.Net, Version=1.0.0.1, Culture=neutral, PublicKeyToken=15480ee9e0247fcb, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\dlls\Debug\Tiny.Net.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChannelEvents\EventChannelApplication.cs" />
@@ -65,12 +61,16 @@
     <Compile Include="Commands\ParkCmd.cs" />
     <Compile Include="Commands\Playback.cs" />
     <Compile Include="Commands\RecordCmd.cs" />
+    <Compile Include="Commands\SendEventCmd.cs" />
     <Compile Include="Commands\SendMsg.cs" />
     <Compile Include="Commands\SetVariable.cs" />
     <Compile Include="Commands\SleepCmd.cs" />
     <Compile Include="EventManager.cs" />
     <Compile Include="ChannelEvents\EventDtmfStatus.cs" />
+    <Compile Include="Ivr\DtmfEventArgs.cs" />
     <Compile Include="Ivr\IvrInterface.cs" />
+    <Compile Include="Ivr\IvrQueue.cs" />
+    <Compile Include="Ivr\PrivateWaitDtmf.cs" />
     <Compile Include="PlainEventMsg.cs" />
     <Compile Include="EventParser.cs" />
     <Compile Include="Events.cs" />
@@ -118,6 +118,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) $(SolutionDir)..\..\dlls\$(ConfigurationName)</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

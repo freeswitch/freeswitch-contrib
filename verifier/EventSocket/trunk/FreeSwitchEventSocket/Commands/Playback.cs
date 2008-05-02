@@ -6,6 +6,7 @@ namespace FreeSwitch.EventSocket.Commands
     public class PlaybackCmd : SendMsg
     {
         private readonly string _fileName;
+        private readonly string _dtmfAbort = string.Empty;
 
         /// <summary>
         /// 
@@ -21,6 +22,12 @@ namespace FreeSwitch.EventSocket.Commands
             _fileName = fileName;
         }
 
+        public PlaybackCmd(string uuid, string fileName, string dtmfAbort) : base(uuid)
+        {
+            _fileName = fileName;
+            _dtmfAbort = dtmfAbort;
+        }
+
         public override string Command
         {
             get { return "playback"; }
@@ -29,6 +36,11 @@ namespace FreeSwitch.EventSocket.Commands
         public override string Arguments
         {
             get { return _fileName; }
+        }
+
+        public string DtmfAbort
+        {
+            get { return _dtmfAbort; }
         }
     }
 }

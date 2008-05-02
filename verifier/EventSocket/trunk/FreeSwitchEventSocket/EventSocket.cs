@@ -79,7 +79,6 @@ namespace FreeSwitch.EventSocket
             }
             catch (SocketException)
             {
-                Console.WriteLine("EventSocket: Connect failed");
                 HandleDisconnect();
             }
         }
@@ -88,8 +87,6 @@ namespace FreeSwitch.EventSocket
         {
             lock (_lockobj)
             {
-                Console.WriteLine("EventSocket.TryConnect: Connecting to " + _hostName + ":" + _port);
-                
                 _socket.Connect(_hostName, _port);
                 if (_stream == null)
                     _stream = new NetworkStream(_socket, false);
@@ -167,9 +164,7 @@ namespace FreeSwitch.EventSocket
             {
                 try
                 {
-                    Console.WriteLine("EventSocket.Write: Trying to connect eventsocket.");
                     TryConnect();
-                    Console.WriteLine("EventSocket.Write: Connected.");
                 }
                 catch (SocketException)
                 {
@@ -189,7 +184,7 @@ namespace FreeSwitch.EventSocket
                 if (msg.ContentType == "auth/request")
                 {
                     AuthCommand cmd = new AuthCommand(_password);
-                    cmd.OnReply += OnAuthed;
+                    cmd.ReplyReceived += OnAuthed;
                     _commands.Enqueue(cmd);
                     Write(cmd + "\n\n");
                 }
@@ -199,7 +194,6 @@ namespace FreeSwitch.EventSocket
                     if (_commands.Count > 0)
                     {
                         CmdBase cmd = _commands.Dequeue();
-                        Console.WriteLine("Reply to " + cmd.GetType().Name + ": " + msg.Body);
                         cmd.HandleReply(cmd.CreateReply(msg.Body));
                     }
                     else
@@ -285,14 +279,11 @@ namespace FreeSwitch.EventSocket
             EventSocket client = (EventSocket) state;
             try
             {
-                Console.WriteLine("EventSocket.Timer: Trying to connect eventsocket.");
                 client.TryConnect();
                 Console.WriteLine("EventSocket.Timer: Connected.");
             }
-            catch (SocketException err)
-            {
-                Console.WriteLine("Eventsocket.TryConnect: " + err.Message);
-            }
+            catch (SocketException)
+            {}
         }
     }
 }
