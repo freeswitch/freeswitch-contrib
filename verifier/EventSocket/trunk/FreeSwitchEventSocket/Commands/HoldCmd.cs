@@ -20,10 +20,5 @@ namespace FreeSwitch.EventSocket.Commands
         {
             get { return (_activate ? string.Empty : "off ") + _sessionId; }
         }
-
-        public override CommandReply CreateReply(string dataToParse)
-        {
-            return base.CreateReply(dataToParse);
-        }
     }
 }

@@ -8,6 +8,10 @@ namespace FreeSwitch.EventSocket.Commands
 
     public abstract class CmdBase
     {
+        /// <summary>
+        /// Node that the reply handler is removed after it have been invoked.
+        /// This is to make sure that the command can be garbage collected when it's done.
+        /// </summary>
         public event ReplyHandler ReplyReceived;
 
         private object _contextData;
