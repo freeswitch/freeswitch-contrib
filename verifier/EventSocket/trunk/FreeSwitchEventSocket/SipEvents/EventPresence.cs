@@ -34,7 +34,7 @@ namespace FreeSwitch.EventSocket
         }
 
         /// <summary>
-        /// Caller is only specified on state CS_RING
+        /// Caller is only specified on state CS_ROUTING
         /// and not on CS_HANGUP
         /// </summary>
         public PartyInfo Caller

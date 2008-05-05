@@ -138,7 +138,7 @@ while (1) {
 	    } elsif (watchedChannel($myhash->{'channel-name'})) {
           if ($myhash->{'event-name'} eq "CHANNEL_ANSWER") {   ## deal with answers
             do_answer($myhash);
-          } elsif ($myhash->{'event-name'} eq "CHANNEL_STATE" && $myhash->{'channel-state'} eq "CS_RING") {
+          } elsif ($myhash->{'event-name'} eq "CHANNEL_STATE" && $myhash->{'channel-state'} eq "CS_ROUTING") {
             do_ring($myhash);
           } elsif ($myhash->{'event-name'} eq "CHANNEL_HANGUP") { ## last thing done on a channel
             do_hangup($myhash);

@@ -60,7 +60,7 @@ namespace EventWatcher
             if (theEvent is EventPresenceIn)
             {
                 EventPresenceIn ep = (EventPresenceIn) theEvent;
-                //Channel-State: CS_RING
+                //Channel-State: CS_ROUTING
                 //Channel-Name: sofia/default/jonas%40192.168.1.102%3A5070
                 //Unique-ID: 2f87ba27-2f71-d64d-8c64-9966ee894eac
                 //Call-Direction: inbound
@@ -68,7 +68,7 @@ namespace EventWatcher
                 //Event-Name: PRESENCE_IN
                 CallState state = CallState.Unknown;
                 string destination = string.Empty;
-                if (ep.ChannelState.ChannelInfo.State == ChannelState.Ring)
+                if (ep.ChannelState.ChannelInfo.State == ChannelState.Routing)
                 {
                     if (IsInbound(ep))
                     {

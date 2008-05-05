@@ -3,16 +3,16 @@ namespace FreeSwitch.EventSocket
     #region enum ChannelState
     public enum ChannelState
     {
-        New,       // Channel is newly created 
-        Init,      // Channel has been initilized
-        Ring,      // Channel is looking for a dialplan
-        Transmit,  // Channel is in a passive transmit state
-        Execute,   // Channel is executing it's dialplan 
-        Loopback,  // Channel is in loopback
-        Hold,	  // Channel is on hold
-        Hibernate, // Channel is in a sleep state
-        Hangup,    // Channel is flagged for hangup and ready to end
-        Done,      // Channel is ready to be destroyed and out of the state machine
+        New,           // Channel is newly created 
+        Init,          // Channel has been initilized
+        Routing,       // Channel is looking for a dialplan
+        SoftExecute    // Channel is in a passive transmit state
+        Execute,       // Channel is executing it's dialplan 
+        ExchangeMedia, // Channel is exchanging media
+        ConsumeMedia,  // Channel is consuming media
+        Hibernate,     // Channel is in a sleep state
+        Hangup,        // Channel is flagged for hangup and ready to end
+        Done,          // Channel is ready to be destroyed and out of the state machine
         Unknown
     }
     #endregion
@@ -205,11 +205,11 @@ namespace FreeSwitch.EventSocket
             {
                 case "CS_NEW": return ChannelState.New;
                 case "CS_INIT": return ChannelState.Init;
-                case "CS_RING": return ChannelState.Ring;
-                case "CS_TRANSMIT": return ChannelState.Transmit;
+                case "CS_ROUTING": return ChannelState.Routing;
+                case "CS_SOFT_EXECUTE": return ChannelState.SoftExecute;
                 case "CS_EXECUTE": return ChannelState.Execute;
-                case "CS_LOOPBACK": return ChannelState.Loopback;
-                case "CS_HOLD": return ChannelState.Hold;
+                case "CS_EXCHANGE_MEDIA": return ChannelState.ExchangeMedia;
+                case "CS_CONSUME_MEDIA": return ChannelState.ConsumeMedia;
                 case "CS_HIBERNATE": return ChannelState.Hibernate;
                 case "CS_HANGUP": return ChannelState.Hangup;
                 case "CS_DONE": return ChannelState.Done;
