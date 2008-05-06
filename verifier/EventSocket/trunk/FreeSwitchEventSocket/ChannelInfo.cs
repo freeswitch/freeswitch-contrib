@@ -6,7 +6,7 @@ namespace FreeSwitch.EventSocket
         New,           // Channel is newly created 
         Init,          // Channel has been initilized
         Routing,       // Channel is looking for a dialplan
-        SoftExecute    // Channel is in a passive transmit state
+        SoftExecute,   // Channel is in a passive transmit state
         Execute,       // Channel is executing it's dialplan 
         ExchangeMedia, // Channel is exchanging media
         ConsumeMedia,  // Channel is consuming media
