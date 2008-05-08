@@ -54,6 +54,7 @@
     <Compile Include="Commands\AuthCommand.cs" />
     <Compile Include="Commands\CmdBase.cs" />
     <Compile Include="Commands\CommandReply.cs" />
+    <Compile Include="Commands\DeflectCmd.cs" />
     <Compile Include="Commands\ExecuteJavascript.cs" />
     <Compile Include="Commands\GetVariable.cs" />
     <Compile Include="Commands\HoldCmd.cs" />

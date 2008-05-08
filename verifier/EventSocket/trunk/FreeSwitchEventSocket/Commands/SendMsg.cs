@@ -1,3 +1,5 @@
+using System;
+
 namespace FreeSwitch.EventSocket.Commands
 {
     public abstract class SendMsg : CmdBase
@@ -7,11 +9,18 @@ namespace FreeSwitch.EventSocket.Commands
 
         public SendMsg(string uuid)
         {
+            if (string.IsNullOrEmpty(uuid))
+                throw new ArgumentNullException("uuid");
             _uuid = uuid;
         }
 
         public SendMsg(string uuid, string callCommand)
         {
+            if (string.IsNullOrEmpty(uuid))
+                throw new ArgumentNullException("uuid");
+            if (string.IsNullOrEmpty(callCommand))
+                throw new ArgumentNullException("callCommand");
+
             _callCommand = callCommand;
             _uuid = uuid;
         }

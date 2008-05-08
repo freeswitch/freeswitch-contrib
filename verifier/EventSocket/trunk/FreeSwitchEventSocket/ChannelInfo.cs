@@ -19,16 +19,16 @@ namespace FreeSwitch.EventSocket
 
     public class ChannelInfo
     {
-        private ChannelState m_state;
-        private int m_stateNumber;
+        private ChannelState _state;
+        private int _stateNumber;
         private string _profile;
-        private string m_address;
+        private string _address;
         private string _hostName;
-        private string m_protocol = string.Empty;
-        private string m_readCodecName;
-        private int m_readCodecRate;
-        private string m_writeCodecName;
-        private int m_writeCodecRate;
+        private string _protocol = string.Empty;
+        private string _readCodecName;
+        private int _readCodecRate;
+        private string _writeCodecName;
+        private int _writeCodecRate;
 
         /// <summary>
         /// Coded used to read information from the channel.
@@ -36,8 +36,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public string ReadCodecName
         {
-            get { return m_readCodecName; }
-            set { m_readCodecName = value; }
+            get { return _readCodecName; }
+            set { _readCodecName = value; }
         }
 
         /// <summary>
@@ -46,8 +46,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public int ReadCodecRate
         {
-            get { return m_readCodecRate; }
-            set { m_readCodecRate = value; }
+            get { return _readCodecRate; }
+            set { _readCodecRate = value; }
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public string WriteCodecName
         {
-            get { return m_writeCodecName; }
-            set { m_writeCodecName = value; }
+            get { return _writeCodecName; }
+            set { _writeCodecName = value; }
         }
 
         /// <summary>
@@ -66,8 +66,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public int WriteCodecRate
         {
-            get { return m_writeCodecRate; }
-            set { m_writeCodecRate = value; }
+            get { return _writeCodecRate; }
+            set { _writeCodecRate = value; }
         }
 
         /// <summary>
@@ -75,8 +75,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public ChannelState State
         {
-            get { return m_state; }
-            set { m_state = value; }
+            get { return _state; }
+            set { _state = value; }
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public int StateNumber
         {
-            get { return m_stateNumber; }
-            set { m_stateNumber = value; }
+            get { return _stateNumber; }
+            set { _stateNumber = value; }
         }
 
         /// <summary>
@@ -98,22 +98,22 @@ namespace FreeSwitch.EventSocket
         /// <seealso cref="HostName"/>
         public string Name
         {
-            get { return m_protocol + "/" + _profile + "/" + m_address + "@" + _hostName; }
+            get { return _protocol + "/" + _profile + "/" + _address + "@" + _hostName; }
             set 
             { 
                 string[] bits = value.Split('/');
                 if (bits.Length == 3)
                 {
-                    m_protocol = bits[0];
+                    _protocol = bits[0];
                     _profile = bits[1];
                     string[] userParts = bits[2].Split('@');
                     if (userParts.Length == 2)
                     {
-                        m_address = userParts[0];
+                        _address = userParts[0];
                         HostName = userParts[1];
                     }
                     else
-                        m_address = bits[2];
+                        _address = bits[2];
                 }
                 
             }
@@ -133,8 +133,8 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public string Address
         {
-            get { return m_address; }
-            set { m_address = value; }
+            get { return _address; }
+            set { _address = value; }
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace FreeSwitch.EventSocket
         /// </summary>
         public string Protocol
         {
-            get { return m_protocol;  }
+            get { return _protocol;  }
         }
 
         public bool Parse(string name, string value)
@@ -173,25 +173,25 @@ namespace FreeSwitch.EventSocket
             switch (name)
             {
                 case "channel-state":
-                    m_state = StateFromString(value);
+                    _state = StateFromString(value);
                     break;
                 case "channel-state-number":
-                    int.TryParse(value, out m_stateNumber);
+                    int.TryParse(value, out _stateNumber);
                     break;
                 case "channel-name":
                     Name = value;
                     break;
                 case "channel-read-codec-name":
-                    m_readCodecName = value;
+                    _readCodecName = value;
                     break;
                 case "channel-read-codec-rate":
-                    int.TryParse(value, out m_readCodecRate);
+                    int.TryParse(value, out _readCodecRate);
                     break;
                 case "channel-write-codec-name":
-                    m_writeCodecName = value;
+                    _writeCodecName = value;
                     break;
                 case "channel-write-codec-rate":
-                    int.TryParse(value, out m_writeCodecRate);
+                    int.TryParse(value, out _writeCodecRate);
                     break;
                 default:
                     return false;
