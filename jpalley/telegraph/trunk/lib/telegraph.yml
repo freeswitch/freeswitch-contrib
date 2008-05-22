@@ -1,0 +1,18 @@
+development:
+    server: 192.168.1.27
+    model:
+        port: 8080
+        username: freeswitch
+        password: works
+    events:
+        port: 8021
+        
+
+production:
+    server: voip1.lan
+    model:
+        port: 8080
+        username: freeswitch
+        password: works
+    events:
+        port: 8021

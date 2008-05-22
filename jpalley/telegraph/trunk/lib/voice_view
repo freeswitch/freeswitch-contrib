@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require File.dirname(__FILE__) + '/../vendor/plugins/telegraph/lib/core/script_base'
+
+Telegraph::ScriptHandler.new('voice_view') do |v, d|
+   files = ['core/voice_view/dispatcher','core/voice_view/request', 'core/voice_view/template', 'core/voice_view/response',
+     'core/voice_view/interface', 'core/voice_view/action_controller_extensions', 'freeswitch/voice_view_interface', 'freeswitch/voice_view_server']
+   
+   plugin_path = File.join(RAILS_ROOT, 'vendor/plugins/telegraph/lib')
+   
+   files.each do |file|
+     require File.join(plugin_path, file)
+   end
+   
+   
+   EventMachine::run {
+         EventMachine::start_server "0.0.0.0", 8084, VoiceViewServer do |server|
+           server.set_modes v, d
+          end
+          puts "Now Accept Connections on Port 8084"
+         
+      }
+ end
+    

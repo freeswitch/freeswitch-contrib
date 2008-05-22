@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+require File.dirname(__FILE__) + '/../vendor/plugins/telegraph/lib/core/script_base'
+
+Telegraph::ScriptHandler.new('voice_events') do |v, d|
+
+  telegraph_path = 'vendor/plugins/telegraph/lib'
+  require File.join(RAILS_ROOT, telegraph_path, 'core/voice_events/voice_events_base')
+  require File.join(RAILS_ROOT, telegraph_path, 'core/voice_events/router')
+
+  require File.join(RAILS_ROOT, telegraph_path, 'freeswitch/voice_events_server')
+
+
+  config = Telegraph.config
+
+  EventMachine::run {
+     EventMachine::connect config['server'], config['events']['port'], Telegraph::FreeSWITCH::VoiceEventsServer do |conn|
+       conn.set_modes v, d
+    end
+  }
+  
+end

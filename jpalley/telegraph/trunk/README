@@ -1,0 +1,30 @@
+Telegraph for FreeSWITCH
+Please see http://code.google.com/p/telegraph for more information
+
+Telegraph allows you to write MVC voice application in Ruby on Rails that tightly integrate with the web.  In our second release we go FreeSWITCH (the new OSS carrier grade switch) and Rails 2.  Here's the details:
+
+For the FreeSWITCH fan:
+ - Complete implementation of Outbound Socket, Event (Inbound) Socket and XML-RPC
+ - ORM (ActiveRecord) like wrappings around the XML-RPC.  Do things like VoiceChannel.find(uuid).destroy to hangup a channel or Conference.find(conf_id).members.first.mute? to see if the first member of a conference is muted.
+ - Event socket routing to different code modules. Allows events related to one set business logic go to one codebase and another set go to another.  No more if..thens..
+ - Easy to read "voice view" syntax for outbound socket.
+ - Complete integration with Ruby on Rails and all of its database logic.
+ - Easy to deploy, log and maintain.
+
+For the Ruby/Rails fan:
+  - Voice code fits right into your usual MVC patterns.  
+		- Originate/destroy/change calls, conferences and sip settings just like you'd manipulate database tables.
+		- Write voice_views like you write html/js/xml views.  Use respond_to blocks to share application logic between web/voice interfaces.
+	- Write a callback application in only a few lines of code.
+	- Need to understand VoIP kept to a minimum.
+	
+For The Sys Admin:
+	- Easy to deploy, daemonize
+	- Based on EventMachine - the super solid and fast networking library
+	
+  
+		
+		
+
+
+
