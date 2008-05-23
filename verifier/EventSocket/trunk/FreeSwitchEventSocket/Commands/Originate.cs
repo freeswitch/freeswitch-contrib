@@ -89,9 +89,8 @@ namespace FreeSwitch.EventSocket.Commands
 
         public override CommandReply CreateReply(string dataToParse)
         {
-            dataToParse = dataToParse.Replace(" ", string.Empty);
-            string[] nameValue = dataToParse.Split(':');
-            if (nameValue[0].ToLower() == "success")
+            string[] nameValue = dataToParse.Split(' ');
+            if (nameValue[0].Length > 0 && nameValue[0][0] == '+')
                 return new OriginateReply(true, nameValue[1]);
             else
             {
