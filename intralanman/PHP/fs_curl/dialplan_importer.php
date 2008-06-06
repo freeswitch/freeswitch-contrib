@@ -118,14 +118,14 @@ foreach ($xml_obj -> context as $context) {
         foreach ($extension -> condition as $condition) {
             //print_r($condition);
             $cf = $condition['field'];
-            $ce = str_replace('\\', '\\\\', $condition['expression']);
+            $ce = addslashes($condition['expression']);
             //echo "<pre>Condidtion Expression for $en:\n    before: " . $condition['expression'] . "\n    after: $ce</pre>";
             $cb = $condition['break'];
             $weight = 0;
             foreach ($condition as $type => $action) {
                 //echo "-------------------$type-----------------------------\n";
                 $app_name = $action['application'];
-                $app_data = str_replace('\\', '\\\\', $action['data']);
+                $app_data = addslashes($action['data']);
                 $weight++;
                 //echo "$cn\t$en\t$cf\t$ce\t$cc\t$app_name\t$app_data\t$ec\t$global_weight\t$weight\n";
                 $query = sprintf('%s %s %s %s %s %s;',
