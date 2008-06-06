@@ -43,7 +43,7 @@ define('GLOBAL_USERS', true);
 /**
  * Define debug level... should not be used in production for performance reasons
  */
-define('FS_CURL_DEBUG', 0);
+define('FS_CURL_DEBUG', 9);
 
 /**
  * define how debugging should be done (depends on FS_CURL_DEBUG)

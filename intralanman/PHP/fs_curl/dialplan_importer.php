@@ -39,12 +39,13 @@ function upload_form() {
  * @return null
 */
 function run_query($db, $query) {
+    syslog(LOG_INFO, $query);
     $affected = $db -> exec($query);
     if (MDB2::isError($affected)) {
         if (!defined('UNSUCCESSFUL_QUERY')) {
             define('UNSUCCESSFUL_QUERY', true);
         }
-        echo "$query\n";
+        echo "$query<br>\n";
         echo $affected -> getMessage() . "\n";
     }
 }
@@ -96,7 +97,7 @@ if (check_uploaded_file($_FILES['file'])) {
     $xml_file = $_FILES['file']['tmp_name'];
     move_uploaded_file($tmp_file, $xml_file);
     //echo $xml_file . "\n<br>";
-    $xml_str = sprintf('<?xml version="1.0" encoding="UTF-8" standalone="no"?>%s', file_get_contents($xml_file));
+    $xml_str = sprintf('%s', file_get_contents($xml_file));
     //echo $xml_str;
 }
 
@@ -111,27 +112,29 @@ foreach ($xml_obj -> context as $context) {
     $global_weight = 100;
     foreach ($context -> extension as $extension) {
         $en = $extension['name'];
-        $ec = is_numeric($extension['continue']) ? $extension['continue'] : '0';
+        //printf("<pre>%s</pre>", print_r($extension, true));
+        $ec = $extension['continue'];
         $global_weight+=100;
         foreach ($extension -> condition as $condition) {
             //print_r($condition);
             $cf = $condition['field'];
-            $ce = $condition['expression'];
-            $cc = $condition['continue'];
+            $ce = str_replace('\\', '\\\\', $condition['expression']);
+            //echo "<pre>Condidtion Expression for $en:\n    before: " . $condition['expression'] . "\n    after: $ce</pre>";
+            $cb = $condition['break'];
             $weight = 0;
             foreach ($condition as $type => $action) {
                 //echo "-------------------$type-----------------------------\n";
                 $app_name = $action['application'];
-                $app_data = $action['data'];
+                $app_data = str_replace('\\', '\\\\', $action['data']);
                 $weight++;
                 //echo "$cn\t$en\t$cf\t$ce\t$cc\t$app_name\t$app_data\t$ec\t$global_weight\t$weight\n";
                 $query = sprintf('%s %s %s %s %s %s;',
-                "INSERT INTO curl_dialplan SET",
+                "INSERT INTO dialplan SET",
                 "context='$cn', extension='$en', condition_field='$cf',",
                 "condition_expression='$ce', application_name='$app_name',",
                 "application_data='$app_data', weight='$weight', type='$type',",
                 "ext_continue='$ec', global_weight='$global_weight',",
-                "condition_continue='$cc'"
+                "cond_break='$cb'"
                 );
                 run_query($db, $query);
             }
@@ -144,4 +147,6 @@ if (defined(UNSUCCESSFUL_QUERY) && UNSUCCESSFUL_QUERY == true) {
     echo "<h2>File Successfully Imported</h2>";
 }
 upload_form();
+
+//printf("<pre>%s</pre>", print_r($xml_obj, true);
 ?>

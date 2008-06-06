@@ -30,19 +30,34 @@ class console_conf extends fs_configuration {
         $this -> xmlw -> writeAttribute('name', basename(__FILE__, '.php'));
         $this -> xmlw -> writeAttribute('description', 'Console configuration');
 
-        $this -> xmlw -> startElement('settings');
-        $this -> xmlw -> startElement('param');
-        $this -> xmlw -> writeAttribute('name', 'colorize');
-        $this -> xmlw -> writeAttribute('value', 'true');
-        $this -> xmlw -> endElement();
+        $this -> xmlw -> startElement('mappings');
+	
+	$this -> xmlw -> startElement('map');
+        $this -> xmlw -> writeAttribute('name', 'all');
+        $this -> xmlw -> writeAttribute('value', 'notice,warning,error,crit,alert,info,debug');
+	$this -> xmlw -> endElement();
+
         $this -> xmlw -> endElement();
 
-        $this -> xmlw -> startElement('mappings');
-        $this -> xmlw -> startElement('map');
-        $this -> xmlw -> writeAttribute('name', 'all');
-        $this -> xmlw -> writeAttribute('value', 'notice,warning,error,crit,alert');
-        $this -> xmlw -> endElement();
-        $this -> xmlw -> endElement();
+
+
+
+        $this -> xmlw -> startElement('settings');
+
+	$this -> xmlw -> startElement('param');
+        $this -> xmlw -> writeAttribute('name', 'colorize');
+        $this -> xmlw -> writeAttribute('value', 'true');
+	$this -> xmlw -> endElement();
+
+	$this -> xmlw -> startElement('param');
+        $this -> xmlw -> writeAttribute('name', 'loglevel');
+        $this -> xmlw -> writeAttribute('value', 'debug');
+	$this -> xmlw -> endElement();
+
+	$this -> xmlw -> endElement();
+
+
+
 
         $this -> xmlw -> endElement();
     }

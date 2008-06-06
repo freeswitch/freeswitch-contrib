@@ -26,7 +26,7 @@ class fs_dialplan extends fs_curl {
 
     /**
      * This is the method that determines the XML output. Customized dialplans can
-     * be easily created by adding a record to the dialplan_special table with the 
+     * be easily created by adding a record to the dialplan_special table with the
      * appropriate values. The php class MUST contain a "main()" method. The method
      * should write directly to the xmlw obj that's pased or take care of writing
      * out the xml itself and exiting as to not return.
@@ -120,7 +120,7 @@ class fs_dialplan extends fs_curl {
      * @see fs_dialplan::get_dialplan
      * @param array $dpArray Multi-dimentional array from which we write the XML
      * @todo this method should REALLY be broken down into several smaller methods
-     * 
+     *
      */
     private function writeDialplan($dpArray) {
         //print_r($dpArray);
@@ -140,7 +140,7 @@ class fs_dialplan extends fs_curl {
                         $ex_split = split(';', $extension);
                         $this -> xmlw -> startElement('extension');
                         $this -> xmlw -> writeAttribute('name', $ex_split[0]);
-                        if ($ex_split[1] > 0) {
+                        if (strlen($ex_split[1]) > 0) {
                             $this -> xmlw -> writeAttribute('continue', $ex_split[1]);
                         }
                         $this -> debug($conditions);
