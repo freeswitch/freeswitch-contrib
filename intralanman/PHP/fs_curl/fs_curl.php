@@ -51,6 +51,7 @@ class fs_curl {
      * @return void
     */
     public function fs_curl() {
+	openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_LOCAL0);
         header('Content-Type: text/xml');
         $this -> open_xml();
         $this -> generate_request_array();
@@ -187,7 +188,7 @@ class fs_curl {
         }
         $xml_out = $this -> xmlw -> outputMemory();
         $this -> debug('---- Start XML Output ----');
-        $this -> debug($xml_out);
+        $this -> debug(explode("\n", $xml_out));
         $this -> debug('---- End XML Output ----');
         echo $xml_out;
         exit();
