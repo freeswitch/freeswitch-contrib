@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace FreeSwitch.EventSocket
 {
     public class EventChannelOriginate : ChannelEvent
     {
-
+        public override string ToString()
+        {
+            return "ChannelOriginate." + base.ToString();
+        }
     }
 }

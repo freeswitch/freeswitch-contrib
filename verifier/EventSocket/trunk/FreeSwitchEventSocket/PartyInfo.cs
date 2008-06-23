@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace FreeSwitch.EventSocket
 {
     public class PartyInfo
     {
-        private string m_userName = string.Empty;
+        public static PartyInfo Empty = new PartyInfo();
+        private string _userName = string.Empty;
         private string m_dialplan = string.Empty;
         private string m_callerIdName = string.Empty;
         private string m_callerIdNumber = string.Empty;
@@ -14,14 +11,14 @@ namespace FreeSwitch.EventSocket
         private string m_uniqueId = string.Empty;
         private string m_source = string.Empty;
         private string m_context = string.Empty;
-        private string m_channelName = string.Empty;
+        private string _channelName = string.Empty;
         private bool m_screenBit;
         private bool m_privacyHideName;
         private bool m_privacyHideNumber;
 
         public PartyInfo()
         {
-            m_userName = string.Empty;
+            _userName = string.Empty;
             m_dialplan = string.Empty;
             m_callerIdName = string.Empty;
         }
@@ -70,8 +67,8 @@ namespace FreeSwitch.EventSocket
 
         public string ChannelName
         {
-            get { return m_channelName; }
-            set { m_channelName = value; }
+            get { return _channelName; }
+            set { _channelName = value; }
         }
 
         public bool ScreenBit
@@ -94,8 +91,8 @@ namespace FreeSwitch.EventSocket
 
         public string UserName
         {
-            get { return m_userName; }
-            set { m_userName = value; }
+            get { return _userName; }
+            set { _userName = value; }
         }
 
         public bool Parse(string name, string value)
@@ -103,7 +100,7 @@ namespace FreeSwitch.EventSocket
             switch (name)
             {
                 case "username":
-                    m_userName = value;
+                    _userName = value;
                     break;
                 case "dialplan":
                     Dialplan = value;
@@ -144,6 +141,12 @@ namespace FreeSwitch.EventSocket
 
             return true;
 
+        }
+
+        public override string ToString()
+        {
+            return _channelName + "(" + CallerIdName + "/" + CallerIdNumber + ") id: "+UniqueId+", destination: " + DestinationNumber;
+            
         }
 
     }

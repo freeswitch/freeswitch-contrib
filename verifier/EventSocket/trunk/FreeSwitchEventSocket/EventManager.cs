@@ -13,8 +13,8 @@ namespace FreeSwitch.EventSocket
     {
         private readonly EventSocket _socket = new EventSocket();
         public event EventHandler EventReceived;
-        private EventsWriter _writer;
-        private TextWriter _myWriter;
+        private readonly EventsWriter _writer;
+        private readonly TextWriter _rawLog;
         public string Password
         {
             set { _socket.Password = value; }
@@ -22,13 +22,14 @@ namespace FreeSwitch.EventSocket
 
         public EventManager()
         {
-            _writer = MyWriter;
-            _myWriter = new StreamWriter(new FileStream("C:\\temp\\WatcherRow.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite));
+            _writer = RawWriter;
+            _rawLog = new StreamWriter(new FileStream("C:\\temp\\WatcherRaw.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite));
         }
 
-        private void MyWriter(string text)
+        private void RawWriter(string text)
         {
-            _myWriter.Write(text);
+            _rawLog.Write(text);
+            _rawLog.Flush();
         }
 
 
@@ -68,7 +69,7 @@ namespace FreeSwitch.EventSocket
 
         protected void OnMessage(PlainEventMsg msg)
         {
-            NameValueCollection parameters = msg.BodyToNameValue(true);
+            NameValueCollection parameters = msg.ParseBody(true);
             string eventName = parameters["event-name"];
             if (eventName == null)
                 return;

@@ -1,10 +1,10 @@
 namespace FreeSwitch.EventSocket
 {
-    public class EventChannelBridge : EventChannelState
+    public class EventChannelPark : EventChannelState
     {
         public override string ToString()
         {
-            return "ChannelBridge." + base.ToString();
+            return "ChannelPark." + base.ToString();
         }
     }
 }

@@ -59,5 +59,10 @@ namespace FreeSwitch.EventSocket
             return true;
 
         }
+
+        public override string ToString()
+        {
+            return "SofiaExpire(" + _userName + "@" + _domain + ")." + base.ToString();
+        }
     }
 }

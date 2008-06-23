@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace EventSocketParser
+namespace FreeSwitch.EventSocket
 {
     internal class StringParser
     {
@@ -44,12 +44,8 @@ namespace EventSocketParser
 
         public void RestorePos()
         {
-            _pos = _savedPositions.Pop();
-        }
-
-        public void RemoveSavedPos()
-        {
-            _savedPositions.Pop();
+            if (_savedPositions.Count > 0)
+                _pos = _savedPositions.Pop();
         }
 
         public void ClearSavedPositions()
@@ -59,17 +55,19 @@ namespace EventSocketParser
 
         private bool IsEOF(int pos)
         {
-            return pos >= _text.Length - 1;
+            return pos >= _text.Length;
         }
 
         public bool IsEmptyLine(bool skipWhitespaces)
         {
             if (EOF)
                 return false;
-            else if (_pos == _text.Length - 1)
+            else if (_pos < _text.Length - 1)
                 return _text[_pos] == '\n';
-            else
+            else if (_pos < _text.Length - 2)
                 return _text[_pos] == '\r' && _text[_pos + 1] == '\n';
+
+            return false;
         }
 
         public string PeekWord(bool skipWS, bool stopAtEOL)
@@ -126,10 +124,10 @@ namespace EventSocketParser
             int endpos = _pos;
             _pos = pos;
 
-            // Move to after new line chars            
-            if (_text[_pos] == '\r')
-                _pos += 2;
-            else
+            // Move to after new line chars   
+            if (!EOF && _text[_pos] == '\r')
+                ++_pos;
+            if (!EOF && _text[_pos] == '\n')
                 ++_pos;
 
             // .. and the result is line without whitespaces at the end and without new line chars.
@@ -196,6 +194,9 @@ namespace EventSocketParser
 
         private int TrimEnd()
         {
+            if (EOF)
+                return _pos;
+
             int pos = _pos;
             while (IsWS(_text[pos]))
                 --pos;
@@ -216,7 +217,9 @@ namespace EventSocketParser
 
         private bool IsEOL()
         {
-            if (_text[_pos] == '\r' && _text[_pos + 1] == '\n')
+            if (EOF)
+                return true;
+            if (_text[_pos] == '\r')
                 return true;
             else if (_text[_pos] == '\n')
                 return true;

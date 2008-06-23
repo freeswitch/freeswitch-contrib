@@ -35,5 +35,10 @@ namespace FreeSwitch.EventSocket
             }
             return true;
         }
+
+        public override string ToString()
+        {
+            return "Sip(" + _from + ")." + base.ToString();
+        }
     }
 }

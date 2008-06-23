@@ -2,8 +2,15 @@ namespace FreeSwitch.EventSocket
 {
     public class EventChannelState : ChannelEvent
     {
-        private PartyInfo _caller = new PartyInfo();
-        private PartyInfo _originator = new PartyInfo();
+        private const string Yes = "yes";
+        private const string CallerTag = "caller-";
+        private const string OriginatorTag = "originator-";
+        private const string OriginateeTag = "originatee-";
+        private const string OtherLegTag = "other-leg-";
+        private const string ScreenBitTag = "screen-bit";
+        private PartyInfo _caller = PartyInfo.Empty;
+        private PartyInfo _originator = PartyInfo.Empty;
+        private PartyInfo _otherLeg = PartyInfo.Empty;
         private bool _screenBit = false;
 
         /// <summary>
@@ -34,30 +41,58 @@ namespace FreeSwitch.EventSocket
             set { _screenBit = value; }
         }
 
+        /// <summary>
+        /// Other leg of call.
+        /// </summary>
+        public PartyInfo OtherLeg
+        {
+            get { return _otherLeg; }
+            set { _otherLeg = value; }
+        }
+
         public override bool ParseCommand(string name, string value)
         {
-            if (name == "screen-bit")
+            if (name == ScreenBitTag)
             {
-                ScreenBit = value == "yes";
+                ScreenBit = value == Yes;
                 return true;
             }
-            else if (name.Length > 11 && name.Substring(0, 11) == "originator-"
-                     || name.Length > 11 && name.Substring(0, 11) == "originatee-")
+            else if (name.Length > 11 && name.Substring(0, 11) == OriginatorTag
+                     || name.Length > 11 && name.Substring(0, 11) == OriginateeTag)
             {
-                if (_originator == null)
+                if (_originator == PartyInfo.Empty)
                     _originator = new PartyInfo();
 
                 return _originator.Parse(name.Substring(11), value);
             }
-            else if (name.Length > 7 && name.Substring(0, 7) == "caller-")
+            else if (name.Length > 7 && name.Substring(0, 7) == CallerTag)
             {
-                if (_caller == null)
+                if (_caller == PartyInfo.Empty)
                     _caller = new PartyInfo();
 
                 return _caller.Parse(name.Substring(7), value);
             }
+            else if (name.Length > 10 && name.Substring(0, 10) == OtherLegTag)
+            {
+                if (_otherLeg == PartyInfo.Empty)
+                    _otherLeg = new PartyInfo();
+
+                return _otherLeg.Parse(name.Substring(10), value);
+            }
             else
                 return base.ParseCommand(name, value);
+        }
+
+        public override string ToString()
+        {
+            string temp = "ChannelState(";
+            if (Caller != PartyInfo.Empty)
+                temp += " Caller{" + Caller + "}";
+            if (Originator != PartyInfo.Empty)
+                temp += " Originator{" + Originator + "}";
+            if (OtherLeg != PartyInfo.Empty)
+                temp += " OtherLeg{" + OtherLeg + "}";
+            return temp + ")." + base.ToString();
         }
     }
 }

@@ -88,5 +88,12 @@ contact: %22Jonas%20Gauffin%22%20%3Csip%3Ajonas%40192.168.1.101%3A5060%3E
             }
             return true;
         }
+
+        public override string ToString()
+        {
+            return "SofiaRegister(" + _user + "@" + _domain + ", " + _expires + ")." + base.ToString();
+        }
     }
+
+
 }

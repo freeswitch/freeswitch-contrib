@@ -155,5 +155,10 @@ namespace FreeSwitch.EventSocket
             }
             return true;
         }
+
+        public override string ToString()
+        {
+            return "Base(" + m_name + ")";
+        }
     }
 }

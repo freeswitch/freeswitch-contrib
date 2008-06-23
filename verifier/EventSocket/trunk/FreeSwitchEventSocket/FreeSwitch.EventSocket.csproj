@@ -43,10 +43,12 @@
     <Compile Include="ChannelEvents\EventChannelBridge.cs" />
     <Compile Include="ChannelEvents\ChannelEvent.cs" />
     <Compile Include="ChannelEvents\EventChannelAnswer.cs" />
+    <Compile Include="ChannelEvents\EventChannelPark.cs" />
     <Compile Include="ChannelEvents\EventChannelProgress.cs" />
     <Compile Include="ChannelEvents\EventChannelUnbridge.cs" />
     <Compile Include="ChannelEvents\EventChannelUnpark.cs" />
     <Compile Include="ChannelEvents\EventCodec.cs" />
+    <Compile Include="ChannelEvents\EventSessionCrash.cs" />
     <Compile Include="ChannelInfo.cs" />
     <Compile Include="Commands\AnyCommand.cs">
     </Compile>

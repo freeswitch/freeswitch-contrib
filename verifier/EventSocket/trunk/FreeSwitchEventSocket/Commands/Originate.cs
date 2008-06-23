@@ -25,6 +25,7 @@ namespace FreeSwitch.EventSocket.Commands
         private readonly IList<ChannelVariable> _variables = new List<ChannelVariable>();
         private string _callerIdName = null;
         private string _callerIdNumber = null;
+        private bool _varsAdded = false;
 
         public Originate()
         {}
@@ -73,9 +74,13 @@ namespace FreeSwitch.EventSocket.Commands
         {
             get
             {
-                _variables.Add(new ChannelVariable("origination_caller_id_name", CallerIdName ?? _caller.Extension));
-                if (!string.IsNullOrEmpty(_callerIdNumber))
-                    _variables.Add(new ChannelVariable("origination_caller_id_number", _callerIdNumber));
+                if (!_varsAdded)
+                {
+                    _variables.Add(new ChannelVariable("origination_caller_id_name", CallerIdName ?? _caller.Extension));
+                    if (!string.IsNullOrEmpty(_callerIdNumber))
+                        _variables.Add(new ChannelVariable("origination_caller_id_number", _callerIdNumber));
+                    _varsAdded = true;
+                }
 
                 string variables = string.Empty;
                 foreach (ChannelVariable var in _variables)

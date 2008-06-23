@@ -24,18 +24,30 @@ namespace FreeSwitch.EventSocket
         private bool _autoConnect = true;
         private Events _events;
         private string _hostName;
-        private readonly EventParser _parser = new EventParser(string.Empty);
+        private readonly EventParser _parser = new EventParser();
         public event DataHandler DataReceived;
         private string _password = "ClueCon";
         private int _port = 8021;
-        private object _lockobj = new object();
+        private readonly object _lockobj = new object();
         private readonly byte[] _readBuffer = new byte[8192];
-        private string _temp = string.Empty;
-        private Socket _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private Socket _socket;
         private NetworkStream _stream;
         private Timer _timer;
         private bool _authed = false;
         const int RetryTimeout = 5000;
+        private bool _parsing = false;
+
+        public EventSocket()
+        {
+            CreateSocket();
+        }
+
+        private void CreateSocket()
+        {
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket.NoDelay = true;
+            _socket.ReceiveBufferSize = 65535;
+        }
 
         public string Password
         {
@@ -112,15 +124,18 @@ namespace FreeSwitch.EventSocket
 
         private void OnReadCompleted(IAsyncResult ar)
         {
-            int bytesRead;
+            string inbuffer;
             try
             {
-                bytesRead = _stream.EndRead(ar);
+                int bytesRead = _stream.EndRead(ar);
                 if (bytesRead == 0)
                 {
                     HandleDisconnect();
                     return;
                 }
+                inbuffer = Encoding.ASCII.GetString(_readBuffer, 0, bytesRead);
+                _parser.Append(inbuffer);
+                BeginRead();
             }
             catch (IOException)
             {
@@ -129,14 +144,22 @@ namespace FreeSwitch.EventSocket
                 return;
             }
 
-            string text = Encoding.ASCII.GetString(_readBuffer, 0, bytesRead);
             if (DataReceived != null)
-                DataReceived(text);
-            _temp += text;
-            _parser.Append(text);
-            ParseMessages();
+                DataReceived(inbuffer);
 
-            _stream.BeginRead(_readBuffer, 0, _readBuffer.Length, OnReadCompleted, null);
+            try
+            {
+                ParseMessages();
+            }
+            catch (InvalidDataException)
+            {
+                HandleDisconnect();
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine(_parser.Text);
+                HandleDisconnect();
+            }
         }
 
         /// <summary>
@@ -176,39 +199,56 @@ namespace FreeSwitch.EventSocket
             _stream.Write(bytes, 0, bytes.Length);
         }
 
+        static readonly object locker = new object();
         private void ParseMessages()
         {
-            PlainEventMsg msg = _parser.ParseMessage();
-            while (msg != null)
+            
+            lock (locker)
             {
-                if (msg.ContentType == "auth/request")
+                if (_parsing)
+                    return;
+                _parsing = true;
+            }
+
+            try
+            {
+                PlainEventMsg msg = _parser.ParseOne();
+                while (msg != null)
                 {
-                    AuthCommand cmd = new AuthCommand(_password);
-                    cmd.ReplyReceived += OnAuthed;
-                    _commands.Enqueue(cmd);
-                    Write(cmd + "\n\n");
-                }
-                else if (msg.ContentType == "command/reply"
-                         || msg.ContentType == "api/response")
-                {
-                    if (_commands.Count > 0)
+                    if (msg.ContentType == "auth/request")
                     {
-                        CmdBase cmd = _commands.Dequeue();
-                        cmd.HandleReply(cmd.CreateReply(msg.Body));
+                        AuthCommand cmd = new AuthCommand(_password);
+                        cmd.ReplyReceived += OnAuthed;
+                        _commands.Enqueue(cmd);
+                        Write(cmd + "\n\n");
+                    }
+                    else if (msg.ContentType == "command/reply"
+                             || msg.ContentType == "api/response")
+                    {
+                        if (_commands.Count > 0)
+                        {
+                            CmdBase cmd = _commands.Dequeue();
+                            cmd.HandleReply(cmd.CreateReply(msg.Body.Trim()));
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Got command reply or api response, but no actual command/api: " + msg.Body);
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                        }
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Got command reply or api response, but no actual command/api: " + msg.Body);
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                        if (MessageReceived != null)
+                            MessageReceived(msg);
                     }
-                }
-                else
-                {
-                    if (MessageReceived != null)
-                        MessageReceived(msg);
-                }
-                msg = _parser.ParseMessage();
+                    msg = _parser.ParseOne();
+                }                
+            }
+            finally
+            {
+                lock (locker)
+                    _parsing = false;
             }
         }
 
@@ -223,7 +263,7 @@ namespace FreeSwitch.EventSocket
             _parser.Clear();
             _authed = false;
             _socket.Close();
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            CreateSocket();
             if (_stream != null)
             {
                 _stream.Dispose();

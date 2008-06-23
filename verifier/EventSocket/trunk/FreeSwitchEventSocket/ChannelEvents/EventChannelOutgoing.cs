@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace FreeSwitch.EventSocket
 {
     public class EventChannelOutgoing : EventChannelState
     {
-
+        public override string ToString()
+        {
+            return "ChannelOutgoing." + base.ToString();
+        }
     }
 }

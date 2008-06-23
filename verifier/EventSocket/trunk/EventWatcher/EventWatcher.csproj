@@ -40,6 +40,12 @@
     <Compile Include="Call.cs" />
     <Compile Include="CallManager.cs" />
     <Compile Include="CallStateEvent.cs" />
+    <Compile Include="ChannelWatcher.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChannelWatcher.Designer.cs">
+      <DependentUpon>ChannelWatcher.cs</DependentUpon>
+    </Compile>
     <Compile Include="Extension.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -52,6 +58,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ChannelWatcher.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ChannelWatcher.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <SubType>Designer</SubType>
       <DependentUpon>Form1.cs</DependentUpon>

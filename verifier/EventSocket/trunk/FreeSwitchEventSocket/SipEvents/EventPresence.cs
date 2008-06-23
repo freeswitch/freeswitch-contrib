@@ -10,7 +10,7 @@ namespace FreeSwitch.EventSocket
         //private string _expires; //not "presencein/register", "presenceout/register"
         private string _eventType = string.Empty;
         private string _login = string.Empty;
-        private EventChannelState _channelState;
+        private EventChannelState _channelState = new EventChannelState();
 
         public string Login
         {
@@ -71,6 +71,7 @@ namespace FreeSwitch.EventSocket
          * */
         public override bool ParseCommand(string name, string value)
         {
+            bool res = _channelState.ParseCommand(name, value);
             switch (name)
             {
                 case "status":
@@ -87,6 +88,7 @@ namespace FreeSwitch.EventSocket
                     break;
 
                 default:
+
                     if (name.Length > 7 && name.Substring(0, 7) == "caller-")
                     {
                         if (Caller == null)
@@ -98,15 +100,16 @@ namespace FreeSwitch.EventSocket
                         if (base.ParseCommand(name, value))
                             return true;
                         else
-                        {
-                            if (_channelState == null)
-                                _channelState = new EventChannelState();
-                            return _channelState.ParseCommand(name, value);
-                        }
+                            return res;
                     }
                         
             }
             return true;
+        }
+
+        public override string ToString()
+        {
+            return "Presence(" + _login + ", " + _status + ")." + _channelState + "." + base.ToString();
         }
     }
 }

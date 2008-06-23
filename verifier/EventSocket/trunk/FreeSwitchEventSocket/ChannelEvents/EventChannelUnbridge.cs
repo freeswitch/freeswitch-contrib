@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace FreeSwitch.EventSocket
 {
     public class EventChannelUnbridge : EventChannelState
     {
+        public override string ToString()
+        {
+            return "ChannelUnbridge." + base.ToString();
+        }
     }
 }

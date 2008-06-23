@@ -28,6 +28,11 @@ namespace FreeSwitch.EventSocket
 
             return true;
         }
+
+        public override string ToString()
+        {
+            return "ExecuteComplete(" + _appName + ", '" + _arguments + "')." + base.ToString();
+        }
     }
 }
 

@@ -27,5 +27,10 @@ namespace FreeSwitch.EventSocket
 
             return base.ParseCommand(name, value);
         }
+
+        public override string ToString()
+        {
+            return "DtmfStatus." + base.ToString();
+        }
     }
 }

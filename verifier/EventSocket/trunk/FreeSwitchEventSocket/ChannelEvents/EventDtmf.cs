@@ -31,5 +31,10 @@ namespace FreeSwitch.EventSocket
 
             return base.ParseCommand(name, value);
         }
+
+        public override string ToString()
+        {
+            return "Dtmf(" + _digit + ")." + base.ToString();
+        }
     }
 }

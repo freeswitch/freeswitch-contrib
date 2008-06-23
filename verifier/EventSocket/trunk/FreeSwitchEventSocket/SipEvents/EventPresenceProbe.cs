@@ -6,5 +6,11 @@ namespace FreeSwitch.EventSocket.SipEvents
 {
     class EventPresenceProbe : EventPresence
     {
+        public override string ToString()
+        {
+            return "PresenceProbe." + base.ToString();
+        }
+
     }
+
 }

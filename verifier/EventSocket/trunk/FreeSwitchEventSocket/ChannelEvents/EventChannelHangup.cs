@@ -33,6 +33,10 @@ namespace FreeSwitch.EventSocket
             return true;
         }
 
+        public override string ToString()
+        {
+            return "ChannelHangup(" + _hangupCause + ")." + base.ToString();
+        }
     }
 
     public enum HangupCause

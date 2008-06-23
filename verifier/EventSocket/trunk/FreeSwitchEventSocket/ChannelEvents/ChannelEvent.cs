@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace FreeSwitch.EventSocket
 {
     public class ChannelEvent : EventBase
@@ -61,6 +57,13 @@ namespace FreeSwitch.EventSocket
                 return base.ParseCommand(name, value);
 
             return true;
+        }
+
+        public override string ToString()
+        {
+            return
+                "ChannelEvent(" + _uniqueId + " [" + _callDirection + "] " + _answerState +
+                ", channelInfo{" + _channelInfo + "})";
         }
     }
 }

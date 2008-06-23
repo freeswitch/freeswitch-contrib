@@ -9,8 +9,10 @@ namespace FreeSwitch.EventSocket
         SoftExecute,   // Channel is in a passive transmit state
         Execute,       // Channel is executing it's dialplan 
         ExchangeMedia, // Channel is exchanging media
+        Park,
         ConsumeMedia,  // Channel is consuming media
         Hibernate,     // Channel is in a sleep state
+        Reset,
         Hangup,        // Channel is flagged for hangup and ready to end
         Done,          // Channel is ready to be destroyed and out of the state machine
         Unknown
@@ -21,9 +23,9 @@ namespace FreeSwitch.EventSocket
     {
         private ChannelState _state;
         private int _stateNumber;
-        private string _profile;
-        private string _address;
-        private string _hostName;
+        private string _profile = string.Empty;
+        private string _address = string.Empty;
+        private string _hostName = string.Empty;
         private string _protocol = string.Empty;
         private string _readCodecName;
         private int _readCodecRate;
@@ -209,10 +211,12 @@ namespace FreeSwitch.EventSocket
                 case "CS_SOFT_EXECUTE": return ChannelState.SoftExecute;
                 case "CS_EXECUTE": return ChannelState.Execute;
                 case "CS_EXCHANGE_MEDIA": return ChannelState.ExchangeMedia;
+                case "CS_PARK": return ChannelState.Park;
                 case "CS_CONSUME_MEDIA": return ChannelState.ConsumeMedia;
                 case "CS_HIBERNATE": return ChannelState.Hibernate;
                 case "CS_HANGUP": return ChannelState.Hangup;
                 case "CS_DONE": return ChannelState.Done;
+                case "CS_RESET": return ChannelState.Reset;
                 default: return ChannelState.Unknown;
             }
         }
@@ -220,6 +224,11 @@ namespace FreeSwitch.EventSocket
         public string StateToString(ChannelState state)
         {
             return "Unknown";
+        }
+
+        public override string ToString()
+        {
+            return _address + "@" + _hostName + ": " + _state;
         }
     }
 }

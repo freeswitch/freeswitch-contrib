@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Specialized;
-using EventSocketParser;
 
 namespace FreeSwitch.EventSocket
 {
@@ -50,7 +49,7 @@ namespace FreeSwitch.EventSocket
         }
 
 
-        public NameValueCollection BodyToNameValue(bool urlDecodeValues)
+        public NameValueCollection ParseBody(bool urlDecodeValues)
         {
             NameValueCollection items = new NameValueCollection();
             StringParser parser = new StringParser(_body);
@@ -64,7 +63,7 @@ namespace FreeSwitch.EventSocket
                     {
                         items.Add(name.ToLower(), Uri.UnescapeDataString(value));
                     }
-                    catch (UriFormatException) 
+                    catch (UriFormatException)
                     {
                         // add the value unformatted
                         items.Add(name.ToLower(), value);

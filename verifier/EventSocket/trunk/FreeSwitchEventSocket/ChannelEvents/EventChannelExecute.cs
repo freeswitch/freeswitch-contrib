@@ -28,5 +28,10 @@ namespace FreeSwitch.EventSocket
 
             return true;
         }
+
+        public override string ToString()
+        {
+            return "EventChannelExecute(" + _appName + ", '" + _arguments + "')." + base.ToString();
+        }
     }
 }
