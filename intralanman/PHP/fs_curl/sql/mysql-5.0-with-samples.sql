@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: freeswitch
 -- ------------------------------------------------------
--- Server version	5.0.32-Debian_7etch5-log
+-- Server version	5.0.45-community-nt
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,47 +16,48 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `carrier_gateway`
+-- Table structure for table `acl_lists`
 --
 
-DROP TABLE IF EXISTS `carrier_gateway`;
-CREATE TABLE `carrier_gateway` (
-  `id` int(11) NOT NULL auto_increment,
-  `carrier_id` int(11) default NULL,
-  `gateway` varchar(32) default NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `gateway` (`gateway`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+DROP TABLE IF EXISTS `acl_lists`;
+CREATE TABLE `acl_lists` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `acl_name` varchar(128) NOT NULL,
+  `default_policy` varchar(45) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
--- Dumping data for table `carrier_gateway`
+-- Dumping data for table `acl_lists`
 --
 
-LOCK TABLES `carrier_gateway` WRITE;
-/*!40000 ALTER TABLE `carrier_gateway` DISABLE KEYS */;
-INSERT INTO `carrier_gateway` VALUES (1,1,'GX1783b'),(2,2,'L3285032k1'),(3,1,'GX2946h'),(4,2,'L3973865l2');
-/*!40000 ALTER TABLE `carrier_gateway` ENABLE KEYS */;
+LOCK TABLES `acl_lists` WRITE;
+/*!40000 ALTER TABLE `acl_lists` DISABLE KEYS */;
+INSERT INTO `acl_lists` VALUES (1,'rfc1918','deny'),(2,'lan','allow');
+/*!40000 ALTER TABLE `acl_lists` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `carriers`
+-- Table structure for table `acl_nodes`
 --
 
-DROP TABLE IF EXISTS `carriers`;
-CREATE TABLE `carriers` (
-  `id` int(11) NOT NULL auto_increment,
-  `Carrier_Name` varchar(255) default NULL,
+DROP TABLE IF EXISTS `acl_nodes`;
+CREATE TABLE `acl_nodes` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `cidr` varchar(45) NOT NULL,
+  `type` varchar(16) NOT NULL,
+  `list_id` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
--- Dumping data for table `carriers`
+-- Dumping data for table `acl_nodes`
 --
 
-LOCK TABLES `carriers` WRITE;
-/*!40000 ALTER TABLE `carriers` DISABLE KEYS */;
-INSERT INTO `carriers` VALUES (1,'Global Crossing'),(2,'Level 3 Communications');
-/*!40000 ALTER TABLE `carriers` ENABLE KEYS */;
+LOCK TABLES `acl_nodes` WRITE;
+/*!40000 ALTER TABLE `acl_nodes` DISABLE KEYS */;
+INSERT INTO `acl_nodes` VALUES (1,'192.168.0.0/16','allow',1),(2,'10.0.0.0/8','allow',1),(3,'172.16.0.0/12','allow',1);
+/*!40000 ALTER TABLE `acl_nodes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -70,7 +71,7 @@ CREATE TABLE `conference_advertise` (
   `status` varchar(128) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_room` (`room`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `conference_advertise`
@@ -94,7 +95,7 @@ CREATE TABLE `conference_controls` (
   `digits` varchar(16) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_group_action` USING BTREE (`conf_group`,`action`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `conference_controls`
@@ -118,7 +119,7 @@ CREATE TABLE `conference_profiles` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `unique_profile_param` (`profile_name`,`param_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `conference_profiles`
@@ -128,27 +129,6 @@ LOCK TABLES `conference_profiles` WRITE;
 /*!40000 ALTER TABLE `conference_profiles` DISABLE KEYS */;
 INSERT INTO `conference_profiles` VALUES (1,'default','domain','$${domain}'),(2,'default','rate','8000'),(3,'default','interval','20'),(4,'default','energy-level','300'),(5,'default','moh-sound','$${moh_uri}'),(6,'default','caller-id-name','$${outbound_caller_name}'),(7,'default','caller-id-number','$${outbound_caller_number}');
 /*!40000 ALTER TABLE `conference_profiles` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `db_data`
---
-
-DROP TABLE IF EXISTS `db_data`;
-CREATE TABLE `db_data` (
-  `hostname` varchar(255) default NULL,
-  `realm` varchar(255) default NULL,
-  `data_key` varchar(255) default NULL,
-  `data` varchar(255) default NULL
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `db_data`
---
-
-LOCK TABLES `db_data` WRITE;
-/*!40000 ALTER TABLE `db_data` DISABLE KEYS */;
-/*!40000 ALTER TABLE `db_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -166,11 +146,11 @@ CREATE TABLE `dialplan` (
   `application_data` text,
   `weight` int(11) NOT NULL,
   `type` varchar(16) NOT NULL default 'action',
-  `ext_continue` smallint(1) NOT NULL default '0',
+  `ext_continue` text NOT NULL,
   `global_weight` int(11) NOT NULL default '10000',
   `cond_break` varchar(8) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=388 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `dialplan`
@@ -178,7 +158,7 @@ CREATE TABLE `dialplan` (
 
 LOCK TABLES `dialplan` WRITE;
 /*!40000 ALTER TABLE `dialplan` DISABLE KEYS */;
-INSERT INTO `dialplan` VALUES (113,'public','public_extensions','destination_number','^(10[01][0-9])$','transfer','$1 XML default',1,'action',0,200,''),(114,'public','public_did','destination_number','^(5551212)$','transfer','$1 XML default',1,'action',0,300,''),(271,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','set','continue_on_fail=true',1,'action',0,200,''),(272,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','set','hangup_after_bridge=true',2,'action',0,200,''),(273,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','enum','1$1',3,'action',0,200,''),(274,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','bridge','${enum_auto_route}',4,'action',0,200,''),(275,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','bridge','sofia/gateway/${default_gateway}/011$1',5,'action',0,200,''),(276,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','set','continue_on_fail=true',1,'action',0,300,''),(277,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','set','hangup_after_bridge=true',2,'action',0,300,''),(278,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','enum','1$1',3,'action',0,300,''),(279,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','bridge','${enum_auto_route}',4,'action',0,300,''),(280,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','bridge','sofia/gateway/${default_gateway}/1$1',5,'action',0,300,''),(281,'US-Numbering-Plan','US_Local','${default_area_code}','\\d{3}','say','you must dial the area code to call this destination',1,'anti-action',0,400,'on-true'),(282,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','set','continue_on_fail=true',1,'action',0,400,''),(283,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','set','hangup_after_bridge=true',2,'action',0,400,''),(284,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','enum','1$1',3,'action',0,400,''),(285,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','bridge','${enum_auto_route}',4,'action',0,400,''),(286,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','bridge','sofia/gateway/${default_gateway}/1${default_area_code}$1',5,'action',0,400,''),(287,'US-Numbering-Plan','FCC_Services','^([4689]11)$','','bridge','sofia/gateway/${default_gateway}/$1',1,'action',0,500,''),(333,'default','intercept','destination_number','^886$','answer','',1,'action',0,200,''),(334,'default','intercept','destination_number','^886$','intercept','${db(select/last_dial/global)}',2,'action',0,200,''),(335,'default','intercept','destination_number','^886$','sleep','2000',3,'action',0,200,''),(336,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','answer','',1,'action',0,300,''),(337,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','intercept','${db(select/last_dial_ext/$1)}',2,'action',0,300,''),(338,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','sleep','2000',3,'action',0,300,''),(339,'default','redial','destination_number','^870$','transfer','${db(select/last_dial/${caller_id_number})}',1,'action',0,400,''),(340,'default','global','${network_addr}','','set','use_profile=${cond(${is_lan_addr($${local_ip_v4})} == yes ? nat : default)}',1,'action',1,500,''),(341,'default','global','${network_addr}','','set','use_profile=${cond(${is_lan_addr(${network_addr})} == yes ? nat : default)}',2,'anti-action',1,500,''),(342,'default','global','${numbering_plan}','','set_user','default@${domain}',1,'action',1,500,''),(343,'default','global','','','info','',1,'action',1,500,''),(344,'default','global','','','db','insert/spymap/${caller_id_number}/${uuid}',2,'action',1,500,''),(345,'default','global','','','db','insert/last_dial/${caller_id_number}/${destination_number}',3,'action',1,500,''),(346,'default','global','','','db','insert/last_dial/global/${uuid}',4,'action',1,500,''),(347,'default','eavesdrop','destination_number','^88(.*)$|^\\*0(.*)$','answer','',1,'action',0,600,''),(348,'default','eavesdrop','destination_number','^88(.*)$|^\\*0(.*)$','eavesdrop','${db(select/spymap/$1)}',2,'action',0,600,''),(349,'default','call_return','destination_number','^\\*69$|^869$','transfer','${db(select/call_return/${caller_id_number})}',1,'action',0,700,''),(350,'default','del-group','destination_number','^80(\\d{2})$','answer','',1,'action',0,800,''),(351,'default','del-group','destination_number','^80(\\d{2})$','group','delete:$1:${sofia_contact(${sip_from_user}@${domain})}',2,'action',0,800,''),(352,'default','del-group','destination_number','^80(\\d{2})$','gentones','%(1000, 0, 320)',3,'action',0,800,''),(353,'default','add-group','destination_number','^81(\\d{2})$','answer','',1,'action',0,900,''),(354,'default','add-group','destination_number','^81(\\d{2})$','group','insert:$1:${sofia_contact(${sip_from_user}@${domain})}',2,'action',0,900,''),(355,'default','add-group','destination_number','^81(\\d{2})$','gentones','%(1000, 0, 640)',3,'action',0,900,''),(356,'default','call-group-simo','destination_number','^82(\\d{2})$','bridge','${group(call:$1)}',1,'action',0,1000,''),(357,'default','call-group-order','destination_number','^83(\\d{2})$','set','call_timeout=10',1,'action',0,1100,''),(358,'default','call-group-order','destination_number','^83(\\d{2})$','bridge','${group(call:$1:order)}',2,'action',0,1100,''),(359,'default','Local_Extension','destination_number','^(10[01][0-9])$','set','dialed_ext=$1',1,'action',0,1200,'on-true'),(360,'default','Local_Extension','destination_number','^${caller_id_number}$','set','voicemail_authorized=${sip_authorized}',1,'action',0,1200,''),(361,'default','Local_Extension','destination_number','^${caller_id_number}$','answer','',2,'action',0,1200,''),(362,'default','Local_Extension','destination_number','^${caller_id_number}$','sleep','1000',3,'action',0,1200,''),(363,'default','Local_Extension','destination_number','^${caller_id_number}$','voicemail','check default $${domain} ${dialed_ext}',4,'action',0,1200,''),(364,'default','Local_Extension','destination_number','^${caller_id_number}$','ring_ready','',5,'anti-action',0,1200,''),(365,'default','Local_Extension','destination_number','^${caller_id_number}$','set','call_timeout=130',6,'anti-action',0,1200,''),(366,'default','Local_Extension','destination_number','^${caller_id_number}$','set','hangup_after_bridge=true',7,'anti-action',0,1200,''),(367,'default','Local_Extension','destination_number','^${caller_id_number}$','set','left_hanging_extension=5900',8,'anti-action',0,1200,''),(368,'default','Local_Extension','destination_number','^${caller_id_number}$','set','continue_on_fail=true',9,'anti-action',0,1200,''),(369,'default','Local_Extension','destination_number','^${caller_id_number}$','db','insert/call_return/${dialed_ext}/${caller_id_number}',10,'anti-action',0,1200,''),(370,'default','Local_Extension','destination_number','^${caller_id_number}$','db','insert/last_dial_ext/${dialed_ext}/${uuid}',11,'anti-action',0,1200,''),(371,'default','Local_Extension','destination_number','^${caller_id_number}$','bridge','{left_hanging_extension=5900,transfer_fallback_extension=${dialed_ext}}USER/${dialed_ext}@$${domain}',12,'anti-action',0,1200,''),(372,'default','Local_Extension','destination_number','^${caller_id_number}$','answer','',13,'anti-action',0,1200,''),(373,'default','Local_Extension','destination_number','^${caller_id_number}$','sleep','1000',14,'anti-action',0,1200,''),(374,'default','Local_Extension','destination_number','^${caller_id_number}$','voicemail','default $${domain} ${dialed_ext}',15,'anti-action',0,1200,''),(375,'default','sip_uri','destination_number','^sip:(.*)$','bridge','sofia/${use_profile}/$1',1,'action',0,1300,''),(376,'default','conferences','destination_number','^(3\\d{3})$','conference','$1@default',1,'action',0,1400,''),(377,'default','freeswitch_public_conf_via_sip','destination_number','^9(888|1616)$','bridge','sofia/${use_profile}/$1@conference.freeswitch.org',1,'action',0,1500,''),(378,'default','ivr_demo','destination_number','5000','ivr','demo',1,'action',0,1600,''),(379,'default','park','destination_number','^(590[0-9])$','fifo','$1@$${domain} in undef $${moh_uri}',1,'action',0,1700,''),(380,'default','unpark','destination_number','^\\*{0,2}park\\+(590[0-9])$','answer','',1,'action',0,1800,''),(381,'default','unpark','destination_number','^\\*{0,2}park\\+(590[0-9])$','fifo','$1@$${domain} out nowait',2,'action',0,1800,''),(382,'default','hold_music','destination_number','^9999$','answer','',1,'action',0,1900,''),(383,'default','hold_music','destination_number','^9999$','playback','$${moh_uri}',2,'action',0,1900,''),(384,'default','enum','destination_number','^(.*)$','transfer','$1 enum',1,'action',0,2000,'');
+INSERT INTO `dialplan` VALUES (273,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','enum','1$1',3,'action','0',200,''),(272,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','set','hangup_after_bridge=true',2,'action','0',200,''),(271,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','set','continue_on_fail=true',1,'action','0',200,''),(383,'default','hold_music','destination_number','^9999$','playback','$${moh_uri}',2,'action','0',1900,''),(384,'default','enum','destination_number','^(.*)$','transfer','$1 enum',1,'action','0',2000,''),(382,'default','hold_music','destination_number','^9999$','answer','',1,'action','0',1900,''),(378,'default','ivr_demo','destination_number','5000','ivr','demo',1,'action','0',1600,''),(379,'default','park','destination_number','^(590[0-9])$','fifo','$1@$${domain} in undef $${moh_uri}',1,'action','0',1700,''),(380,'default','unpark','destination_number','^\\*{0,2}park\\+(590[0-9])$','answer','',1,'action','0',1800,''),(381,'default','unpark','destination_number','^\\*{0,2}park\\+(590[0-9])$','fifo','$1@$${domain} out nowait',2,'action','0',1800,''),(375,'default','sip_uri','destination_number','^sip:(.*)$','bridge','sofia/${use_profile}/$1',1,'action','0',1300,''),(376,'default','conferences','destination_number','^(3\\d{3})$','conference','$1@default',1,'action','0',1400,''),(377,'default','freeswitch_public_conf_via_sip','destination_number','^9(888|1616)$','bridge','sofia/${use_profile}/$1@conference.freeswitch.org',1,'action','0',1500,''),(372,'default','Local_Extension','destination_number','^${caller_id_number}$','answer','',13,'anti-action','0',1200,''),(373,'default','Local_Extension','destination_number','^${caller_id_number}$','sleep','1000',14,'anti-action','0',1200,''),(374,'default','Local_Extension','destination_number','^${caller_id_number}$','voicemail','default $${domain} ${dialed_ext}',15,'anti-action','0',1200,''),(371,'default','Local_Extension','destination_number','^${caller_id_number}$','bridge','{left_hanging_extension=5900,transfer_fallback_extension=${dialed_ext}}USER/${dialed_ext}@$${domain}',12,'anti-action','0',1200,''),(367,'default','Local_Extension','destination_number','^${caller_id_number}$','set','left_hanging_extension=5900',8,'anti-action','0',1200,''),(368,'default','Local_Extension','destination_number','^${caller_id_number}$','set','continue_on_fail=true',9,'anti-action','0',1200,''),(369,'default','Local_Extension','destination_number','^${caller_id_number}$','db','insert/call_return/${dialed_ext}/${caller_id_number}',10,'anti-action','0',1200,''),(370,'default','Local_Extension','destination_number','^${caller_id_number}$','db','insert/last_dial_ext/${dialed_ext}/${uuid}',11,'anti-action','0',1200,''),(364,'default','Local_Extension','destination_number','^${caller_id_number}$','ring_ready','',5,'anti-action','0',1200,''),(365,'default','Local_Extension','destination_number','^${caller_id_number}$','set','call_timeout=130',6,'anti-action','0',1200,''),(366,'default','Local_Extension','destination_number','^${caller_id_number}$','set','hangup_after_bridge=true',7,'anti-action','0',1200,''),(361,'default','Local_Extension','destination_number','^${caller_id_number}$','answer','',2,'action','0',1200,''),(362,'default','Local_Extension','destination_number','^${caller_id_number}$','sleep','1000',3,'action','0',1200,''),(363,'default','Local_Extension','destination_number','^${caller_id_number}$','voicemail','check default $${domain} ${dialed_ext}',4,'action','0',1200,''),(359,'default','Local_Extension','destination_number','^(10[01][0-9])$','set','dialed_ext=$1',1,'action','0',1200,'on-true'),(360,'default','Local_Extension','destination_number','^${caller_id_number}$','set','voicemail_authorized=${sip_authorized}',1,'action','0',1200,''),(357,'default','call-group-order','destination_number','^83(\\d{2})$','set','call_timeout=10',1,'action','0',1100,''),(358,'default','call-group-order','destination_number','^83(\\d{2})$','bridge','${group(call:$1:order)}',2,'action','0',1100,''),(356,'default','call-group-simo','destination_number','^82(\\d{2})$','bridge','${group(call:$1)}',1,'action','0',1000,''),(355,'default','add-group','destination_number','^81(\\d{2})$','gentones','%(1000, 0, 640)',3,'action','0',900,''),(354,'default','add-group','destination_number','^81(\\d{2})$','group','insert:$1:${sofia_contact(${sip_from_user}@${domain})}',2,'action','0',900,''),(350,'default','del-group','destination_number','^80(\\d{2})$','answer','',1,'action','0',800,''),(351,'default','del-group','destination_number','^80(\\d{2})$','group','delete:$1:${sofia_contact(${sip_from_user}@${domain})}',2,'action','0',800,''),(352,'default','del-group','destination_number','^80(\\d{2})$','gentones','%(1000, 0, 320)',3,'action','0',800,''),(353,'default','add-group','destination_number','^81(\\d{2})$','answer','',1,'action','0',900,''),(349,'default','call_return','destination_number','^\\*69$|^869$','transfer','${db(select/call_return/${caller_id_number})}',1,'action','0',700,''),(348,'default','eavesdrop','destination_number','^88(.*)$|^\\*0(.*)$','eavesdrop','${db(select/spymap/$1)}',2,'action','0',600,''),(347,'default','eavesdrop','destination_number','^88(.*)$|^\\*0(.*)$','answer','',1,'action','0',600,''),(344,'default','global','','','db','insert/spymap/${caller_id_number}/${uuid}',2,'action','1',500,''),(345,'default','global','','','db','insert/last_dial/${caller_id_number}/${destination_number}',3,'action','1',500,''),(346,'default','global','','','db','insert/last_dial/global/${uuid}',4,'action','1',500,''),(340,'default','global','${network_addr}','','set','use_profile=${cond(${is_lan_addr($${local_ip_v4})} == yes ? nat : default)}',1,'action','1',500,''),(342,'default','global','${numbering_plan}','','set_user','default@${domain}',1,'action','1',500,''),(343,'default','global','','','info','',1,'action','1',500,''),(341,'default','global','${network_addr}','','set','use_profile=${cond(${is_lan_addr(${network_addr})} == yes ? nat : default)}',2,'anti-action','1',500,''),(338,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','sleep','2000',3,'action','0',300,''),(339,'default','redial','destination_number','^870$','transfer','${db(select/last_dial/${caller_id_number})}',1,'action','0',400,''),(337,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','intercept','${db(select/last_dial_ext/$1)}',2,'action','0',300,''),(335,'default','intercept','destination_number','^886$','sleep','2000',3,'action','0',200,''),(336,'default','intercept-ext','destination_number','^\\*\\*(\\d+)$','answer','',1,'action','0',300,''),(333,'default','intercept','destination_number','^886$','answer','',1,'action','0',200,''),(334,'default','intercept','destination_number','^886$','intercept','${db(select/last_dial/global)}',2,'action','0',200,''),(113,'public','public_extensions','destination_number','^(10[01][0-9])$','transfer','$1 XML default',1,'action','0',200,''),(114,'public','public_did','destination_number','^(5551212)$','transfer','$1 XML default',1,'action','0',300,''),(274,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','bridge','${enum_auto_route}',4,'action','0',200,''),(275,'US-Numbering-Plan','US_International','destination_number','^011(\\d+)$','bridge','sofia/gateway/${default_gateway}/011$1',5,'action','0',200,''),(276,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','set','continue_on_fail=true',1,'action','0',300,''),(277,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','set','hangup_after_bridge=true',2,'action','0',300,''),(278,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','enum','1$1',3,'action','0',300,''),(279,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','bridge','${enum_auto_route}',4,'action','0',300,''),(280,'US-Numbering-Plan','US_LD','destination_number','^1?([2-9]\\d{2}[2-9]\\d{6})$','bridge','sofia/gateway/${default_gateway}/1$1',5,'action','0',300,''),(281,'US-Numbering-Plan','US_Local','${default_area_code}','\\d{3}','say','you must dial the area code to call this destination',1,'anti-action','0',400,'on-true'),(282,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','set','continue_on_fail=true',1,'action','0',400,''),(283,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','set','hangup_after_bridge=true',2,'action','0',400,''),(284,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','enum','1$1',3,'action','0',400,''),(285,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','bridge','${enum_auto_route}',4,'action','0',400,''),(286,'US-Numbering-Plan','US_Local','destination_number','^([2-9]\\d{6})$','bridge','sofia/gateway/${default_gateway}/1${default_area_code}$1',5,'action','0',400,''),(287,'US-Numbering-Plan','FCC_Services','^([4689]11)$','','bridge','sofia/gateway/${default_gateway}/$1',1,'action','0',500,''),(385,'default','new_exten','destination_number','^(\\d+)$','bridge','sofia/gateway/gw1/number',0,'action','true',10000,'never'),(386,'default','new_exten','destination_number','^(\\d+)$','bridge','sofia/gateway/gw1/number',0,'action','true',10000,'never'),(387,'default','new_exten','destination_number','^(\\d+)$','bridge','sofia/gateway/gw2/number',0,'anti-action','true',10000,'never');
 /*!40000 ALTER TABLE `dialplan` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -201,7 +181,6 @@ CREATE TABLE `dialplan_special` (
 
 LOCK TABLES `dialplan_special` WRITE;
 /*!40000 ALTER TABLE `dialplan_special` DISABLE KEYS */;
-INSERT INTO `dialplan_special` VALUES (1,'lcr','dialplans/lcr.php'),(2,'lcr2','some/php/file.php');
 /*!40000 ALTER TABLE `dialplan_special` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -218,7 +197,7 @@ CREATE TABLE `dingaling_profile_params` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_type_name` (`dingaling_id`,`param_name`),
   CONSTRAINT `dingaling_profile` FOREIGN KEY (`dingaling_id`) REFERENCES `dingaling_profiles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `dingaling_profile_params`
@@ -241,7 +220,7 @@ CREATE TABLE `dingaling_profiles` (
   `type` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_name` (`profile_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `dingaling_profiles`
@@ -264,7 +243,7 @@ CREATE TABLE `dingaling_settings` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_param` (`param_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `dingaling_settings`
@@ -284,10 +263,9 @@ DROP TABLE IF EXISTS `directory`;
 CREATE TABLE `directory` (
   `id` int(11) NOT NULL auto_increment,
   `username` varchar(255) NOT NULL,
-  `mailbox` varchar(255) NOT NULL,
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `directory`
@@ -295,7 +273,7 @@ CREATE TABLE `directory` (
 
 LOCK TABLES `directory` WRITE;
 /*!40000 ALTER TABLE `directory` DISABLE KEYS */;
-INSERT INTO `directory` VALUES (1,'1000','','example.com'),(2,'1001','','example.org'),(3,'1002','','example.net'),(5,'1003','','example.info'),(6,'1004','','example.com'),(7,'1005','','example.org'),(8,'1006','','example.net'),(9,'1007','','example.info'),(10,'1008','','$${domain}'),(11,'1009','','$${local_ip_v4}'),(12,'tester','1000','$${domain}');
+INSERT INTO `directory` VALUES (1,'1000','example.com'),(2,'1001','example.org'),(3,'1002','example.net'),(5,'1003','example.info'),(6,'1004','example.com'),(7,'1005','example.org'),(8,'1006','example.net'),(9,'1007','example.info'),(10,'1008','$${domain}'),(11,'1009','$${local_ip_v4}');
 /*!40000 ALTER TABLE `directory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -308,7 +286,7 @@ CREATE TABLE `directory_domains` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `domain_name` varchar(128) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `directory_domains`
@@ -375,7 +353,7 @@ CREATE TABLE `directory_global_params` (
   `param_value` varchar(128) NOT NULL,
   `domain_id` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `directory_global_params`
@@ -420,7 +398,7 @@ CREATE TABLE `directory_params` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `directory_params`
@@ -443,7 +421,7 @@ CREATE TABLE `directory_vars` (
   `var_name` varchar(255) default NULL,
   `var_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `directory_vars`
@@ -456,26 +434,6 @@ INSERT INTO `directory_vars` VALUES (1,1,'numbering_plan','US'),(2,2,'numbering_
 UNLOCK TABLES;
 
 --
--- Table structure for table `group_data`
---
-
-DROP TABLE IF EXISTS `group_data`;
-CREATE TABLE `group_data` (
-  `hostname` varchar(255) default NULL,
-  `groupname` varchar(255) default NULL,
-  `url` varchar(255) default NULL
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `group_data`
---
-
-LOCK TABLES `group_data` WRITE;
-/*!40000 ALTER TABLE `group_data` DISABLE KEYS */;
-/*!40000 ALTER TABLE `group_data` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `iax_conf`
 --
 
@@ -484,7 +442,7 @@ CREATE TABLE `iax_conf` (
   `id` int(11) NOT NULL auto_increment,
   `profile_name` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `iax_conf`
@@ -507,7 +465,7 @@ CREATE TABLE `iax_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `iax_settings`
@@ -537,7 +495,7 @@ CREATE TABLE `ivr_conf` (
   `tts_voice` varchar(64) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `ivr_conf`
@@ -562,7 +520,7 @@ CREATE TABLE `ivr_entries` (
   `params` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_ivr_digits` USING BTREE (`ivr_id`,`digits`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `ivr_entries`
@@ -575,54 +533,6 @@ INSERT INTO `ivr_entries` VALUES (1,1,'menu-play-sound','1','soundfiles/features
 UNLOCK TABLES;
 
 --
--- Table structure for table `jabber_subscriptions`
---
-
-DROP TABLE IF EXISTS `jabber_subscriptions`;
-CREATE TABLE `jabber_subscriptions` (
-  `sub_from` varchar(255) default NULL,
-  `sub_to` varchar(255) default NULL,
-  `show_pres` varchar(255) default NULL,
-  `status` varchar(255) default NULL
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `jabber_subscriptions`
---
-
-LOCK TABLES `jabber_subscriptions` WRITE;
-/*!40000 ALTER TABLE `jabber_subscriptions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `jabber_subscriptions` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `lcr`
---
-
-DROP TABLE IF EXISTS `lcr`;
-CREATE TABLE `lcr` (
-  `id` int(11) NOT NULL auto_increment,
-  `digits` varchar(15) default NULL,
-  `rate` int(11) NOT NULL,
-  `carrier_id` int(11) NOT NULL,
-  `lead_strip` int(11) NOT NULL,
-  `trail_strip` int(11) NOT NULL,
-  `prefix` varchar(16) NOT NULL,
-  `suffix` varchar(16) NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `lcr`
---
-
-LOCK TABLES `lcr` WRITE;
-/*!40000 ALTER TABLE `lcr` DISABLE KEYS */;
-INSERT INTO `lcr` VALUES (1,'1407',23,2,0,0,'',''),(2,'1407',29,1,0,0,'',''),(3,'1407282',28,2,0,0,'',''),(4,'1434',29,1,0,0,'',''),(5,'1434315',21,1,0,0,'','');
-/*!40000 ALTER TABLE `lcr` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `limit_conf`
 --
 
@@ -632,7 +542,7 @@ CREATE TABLE `limit_conf` (
   `name` varchar(255) default NULL,
   `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `limit_conf`
@@ -653,7 +563,7 @@ CREATE TABLE `limit_data` (
   `realm` varchar(255) default NULL,
   `id` varchar(255) default NULL,
   `uuid` varchar(255) default NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `limit_data`
@@ -676,7 +586,7 @@ CREATE TABLE `local_stream_conf` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `local_stream_conf`
@@ -685,6 +595,27 @@ CREATE TABLE `local_stream_conf` (
 LOCK TABLES `local_stream_conf` WRITE;
 /*!40000 ALTER TABLE `local_stream_conf` DISABLE KEYS */;
 /*!40000 ALTER TABLE `local_stream_conf` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `modless_conf`
+--
+
+DROP TABLE IF EXISTS `modless_conf`;
+CREATE TABLE `modless_conf` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `conf_name` varchar(64) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `modless_conf`
+--
+
+LOCK TABLES `modless_conf` WRITE;
+/*!40000 ALTER TABLE `modless_conf` DISABLE KEYS */;
+INSERT INTO `modless_conf` VALUES (1,'acl.conf'),(2,'postload_switch.conf'),(3,'mod_post_load_modules.conf');
+/*!40000 ALTER TABLE `modless_conf` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -699,7 +630,7 @@ CREATE TABLE `post_load_modules_conf` (
   `priority` int(10) unsigned NOT NULL default '1000',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_mod` (`module_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `post_load_modules_conf`
@@ -724,7 +655,7 @@ CREATE TABLE `rss_conf` (
   `description` text,
   `priority` int(11) NOT NULL default '1000',
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `rss_conf`
@@ -742,8 +673,8 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `sip_authentication`;
 CREATE TABLE `sip_authentication` (
   `nonce` varchar(255) default NULL,
-  `expires` int(8) default NULL
-) ENGINE=InnoDB;
+  `expires` int(11) default NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sip_authentication`
@@ -847,7 +778,7 @@ CREATE TABLE `sofia_aliases` (
   `sofia_id` int(10) unsigned NOT NULL,
   `alias_name` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sofia_aliases`
@@ -868,7 +799,7 @@ CREATE TABLE `sofia_conf` (
   `id` int(11) NOT NULL auto_increment,
   `profile_name` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sofia_conf`
@@ -914,7 +845,7 @@ CREATE TABLE `sofia_gateways` (
   `gateway_param` varchar(255) default NULL,
   `gateway_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sofia_gateways`
@@ -937,7 +868,7 @@ CREATE TABLE `sofia_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sofia_settings`
@@ -959,7 +890,7 @@ CREATE TABLE `voicemail_conf` (
   `vm_profile` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_profile` (`vm_profile`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `voicemail_conf`
@@ -969,34 +900,6 @@ LOCK TABLES `voicemail_conf` WRITE;
 /*!40000 ALTER TABLE `voicemail_conf` DISABLE KEYS */;
 INSERT INTO `voicemail_conf` VALUES (1,'default');
 /*!40000 ALTER TABLE `voicemail_conf` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `voicemail_data`
---
-
-DROP TABLE IF EXISTS `voicemail_data`;
-CREATE TABLE `voicemail_data` (
-  `created_epoch` int(8) default NULL,
-  `read_epoch` int(8) default NULL,
-  `user` varchar(255) default NULL,
-  `domain` varchar(255) default NULL,
-  `uuid` varchar(255) default NULL,
-  `cid_name` varchar(255) default NULL,
-  `cid_number` varchar(255) default NULL,
-  `in_folder` varchar(255) default NULL,
-  `file_path` varchar(255) default NULL,
-  `flags` varchar(255) default NULL,
-  `read_flags` varchar(255) default NULL
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `voicemail_data`
---
-
-LOCK TABLES `voicemail_data` WRITE;
-/*!40000 ALTER TABLE `voicemail_data` DISABLE KEYS */;
-/*!40000 ALTER TABLE `voicemail_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1011,7 +914,7 @@ CREATE TABLE `voicemail_email` (
   `param_value` varchar(64) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `unique_profile_param` (`param_name`,`voicemail_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `voicemail_email`
@@ -1021,27 +924,6 @@ LOCK TABLES `voicemail_email` WRITE;
 /*!40000 ALTER TABLE `voicemail_email` DISABLE KEYS */;
 INSERT INTO `voicemail_email` VALUES (1,1,'template-file','voicemail.tpl'),(2,1,'date-fmt','%A, %B %d %Y, %I %M %p'),(3,1,'email-from','${voicemail_account}@${voicemail_domain}');
 /*!40000 ALTER TABLE `voicemail_email` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `voicemail_prefs`
---
-
-DROP TABLE IF EXISTS `voicemail_prefs`;
-CREATE TABLE `voicemail_prefs` (
-  `user` varchar(255) default NULL,
-  `domain` varchar(255) default NULL,
-  `name_path` varchar(255) default NULL,
-  `greeting_path` varchar(255) default NULL
-) ENGINE=InnoDB;
-
---
--- Dumping data for table `voicemail_prefs`
---
-
-LOCK TABLES `voicemail_prefs` WRITE;
-/*!40000 ALTER TABLE `voicemail_prefs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `voicemail_prefs` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1055,7 +937,7 @@ CREATE TABLE `voicemail_settings` (
   `param_name` varchar(255) default NULL,
   `param_value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `voicemail_settings`
@@ -1076,4 +958,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2008-04-10 15:11:05
+-- Dump completed on 2008-07-25  0:11:32

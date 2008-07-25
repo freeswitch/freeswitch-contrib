@@ -27,8 +27,9 @@ class fs_configuration extends fs_curl {
         $this -> fs_curl();
         $mod_name = sprintf('mod_%s', str_replace('.conf', '', $this -> request['key_value']));
         $this -> comment("module name is $mod_name");
-        if (!$this -> is_mod_enabled($mod_name)) {
-            $this -> comment('module not enabled');
+        if (!($this -> is_mod_enabled($mod_name))
+        && !($this -> is_modless_conf($this -> request['key_value']))) {
+            $this -> comment('module not enabled and not modless config file');
             $this -> file_not_found();
         }
         $this -> xmlw -> startElement('section');
@@ -47,9 +48,6 @@ class fs_configuration extends fs_curl {
      * @return bool
     */
     function is_mod_enabled($mod_name) {
-        if ($mod_name == 'mod_post_load_modules') {
-            return true;
-        }
         $query = sprintf('%s %s'
         , "SELECT * FROM post_load_modules_conf"
         , "WHERE module_name='$mod_name' AND load_module=1"
@@ -60,12 +58,34 @@ class fs_configuration extends fs_curl {
             $this -> comment($res -> getMessage());
             return true; //default allow policy
             return false; //comment previous line to default deny
-            $this -> file_not_found();
         } elseif ($res -> numRows() == 1) {
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * Allow config files that aren't tied to any module
+     *
+     * @param string $conf
+     * @return bool
+     */
+    private function is_modless_conf($conf) {
+        $this -> comment("conf is $conf");
+        $query = sprintf(
+        "SELECT COUNT(*) cnt FROM modless_conf WHERE conf_name = '$conf';"
+        );
+        $res = $this -> db -> query($query);
+        if (MDB2::isError($res)) {
+            $this -> comment($query);
+            $this -> comment($res -> getMessage());
+            return true; //default allow policy
+            return false; //comment previous line to default deny
+        }
+        $row = $res -> fetchRow();
+        //$this -> comment($row['cnt']);
+        return $row['cnt'];
     }
 }
 
