@@ -11,4 +11,9 @@ class VoiceEventsRouter
     map.default :<%= file_name %>
     
   end
+  
+  def self.filter(params)
+    return true
+  end
+  
 end

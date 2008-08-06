@@ -10,7 +10,7 @@ module Telegraph
     #
       def initialize(interface, cgi, query_parameters ={}, request_parameters = {}, session_opts = ActionController::CgiRequest::DEFAULT_SESSION_OPTIONS)
         @interface = interface      
-        @query_parameters   = query_parameters 
+        @query_parameters   = query_parameters
         @session_options            = session_opts
         @redirect = false
         @env = {}
@@ -24,7 +24,7 @@ module Telegraph
         @cgi = cgi
         @host                    = "voice_view"
         @request_uri             = "/"
-        @env['REQUEST_METHOD']   = "POST"
+        @env['REQUEST_METHOD']   = @interface.params['http_method'] || "GET"
 
         @path= @interface.url
         @session_options['session_id'] = @interface.params['session_id']

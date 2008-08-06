@@ -32,7 +32,7 @@ module Telegraph
         @@connector ||=VoiceConnector.new
         @@data_cache ||= Hash.new
         if @@data_cache[:set_at].nil? or @@data_cache[:set_at] < 3.second.ago.utc
-          data = @@connector.send_command("sofia", "status profile default")
+          data = @@connector.send_command("sofia", "status profile #{profile}")
           @@data_cache[:data] = data
           @@data_cache[:set_at] = Time.now.utc
         else

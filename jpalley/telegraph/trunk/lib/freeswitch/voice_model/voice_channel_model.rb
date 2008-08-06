@@ -12,10 +12,10 @@ module Telegraph
       @exists = nil
       @last_error = nil
       def initialize(params={})
-        @params = params
+        @params = params.with_indifferent_access
         @uuid = params[:uuid]
         @job_uuid = params[:job_uuid]
-        @@connector = params[:connector] || VoiceConnector.new
+        @@connector ||= params[:connector] || VoiceConnector.new
         @valid=true
       end
 
@@ -68,8 +68,12 @@ module Telegraph
       end
       
       def method_missing(method, *args)
-        properties = self.dump
-        properties[method] ? properties[method] : properties["channel_#{method}"]
+        if @params[method]
+          return @params[method]
+        else
+          properties = self.dump
+          properties[method] ? properties[method] : properties["channel_#{method}"]
+        end
       end
       
 
@@ -93,7 +97,8 @@ module Telegraph
         if meth == :all
           channels_csv = voice_connector.show(:channels)
           if args.empty?
-            return channels_csv.map{|c| VoiceChannelModel.new(c, voice_connector)}
+
+            return channels_csv.map{|c| VoiceChannelModel.new(c)}
           end
         else
           klass = self.new(:uuid=>meth)
@@ -115,14 +120,17 @@ module Telegraph
         variables[:origination_caller_id_name] = cid_name
         variables[:origination_caller_id_number] = cid_number
         variables[:ignore_early_media] = "true"
-        
+#        variables[:system_domain] = SiteConfig['global']['domain']
         variables = variables.map{|k,v| "#{k}=#{v}"}.join(',')
 
         if callback = opts[:callback]
-          port = opts[:port] || '8084'
+          #port = opts[:port] || '8084'
           #Remove http://blah/ if it exists
           callback.gsub!(/http:\/\/[\d\w\.:]+\//, '')
-          params = "&socket(${rails_server}:#{port}/#{callback} async full)"
+          callback.gsub!(/^\//, '')
+#          name_prefix = SiteConfig ? "#{SiteConfig['global']['domain']}_" : ''
+          name_prefix = ''
+          params = "&socket(${rails_#{name_prefix}server}/#{callback} async full)"
         else
           params = opts[:params]
         end

@@ -17,11 +17,11 @@ module Telegraph
       end
       
       def start_recording(filename)
-        @connector.send_command('conference', "#{@name} record #{filename}")
+        @@connector.send_command('conference', "#{@name} record #{filename}")
       end
 
       def stop_recording(filename)
-        @connector.send_command('conference', "#{@name} norecord #{filename}")
+        @@connector.send_command('conference', "#{@name} norecord #{filename}")
       end
       
       def self.find(id)
@@ -78,11 +78,8 @@ module Telegraph
       end
       
       def update_attributes(params)
-        puts "UPDATE"
-        pp params
+
         params.each do |k,v|
-          puts "param"
-          puts k.to_sym
           if [:mute, :deaf].include?(k.to_sym)
             tru = (v and not v == "0")
             prefix = tru ? '' : 'un'
@@ -92,7 +89,6 @@ module Telegraph
               end
             end
           elsif [:volume_in, :volume_out, :energy].include?(k.to_sym)
-            puts "in valume"
             if @connector.send_command('conference', "#{conf_name} #{k.to_s} #{id} #{v}")
               self.send("#{k}=", v)
             end

@@ -1,9 +1,9 @@
 Mime::Type.register "telegraph/voice", :voice
 module Telegraph
   def self.config
-    rails_config = File.join(RAILS_ROOT, 'config/telegraph')
+    rails_config = File.join(RAILS_ROOT, 'config/telegraph.yml')
     if File.exist?(rails_config)
-      yml = YAML.load(File.open(File.join(RAILS_ROOT, 'config/telegraph.yml')))
+      yml = YAML.load(File.open(rails_config))
     else
       yml = YAML.load(File.open(File.join(RAILS_ROOT, 'vendor/plugins/telegraph/lib/telegraph.yml')))
     end

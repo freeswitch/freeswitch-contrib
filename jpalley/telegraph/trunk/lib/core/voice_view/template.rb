@@ -28,8 +28,8 @@ module Telegraph
       #options = Haml::Template.options.dup
       puts "COMPILE"
       puts template
-
-      "controller.render_voice do |voice|\n #{template}\n end"
+      
+      "controller.render_voice do |voice|\n #{template.source}\n end"
 #      Haml::Engine.new(template, options).send(:precompiled_with_ambles, [])
     end
    
@@ -40,4 +40,4 @@ module Telegraph
 end
 end
 
-ActionView::Base.register_template_handler(:freeswitch, Telegraph::VoiceView::Template)
+ActionView::Template.register_template_handler(:freeswitch, Telegraph::VoiceView::Template)

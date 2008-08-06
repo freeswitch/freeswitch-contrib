@@ -1,9 +1,30 @@
 module Telegraph
   module VoiceView
+    class Form
+       attr_accessor :elements
+       def initialize
+         @elements = Array.new
+       end
+
+       def numeric_input(param, pars={})
+         @elements << {:type=>:get_dtmf, :sound=>pars[:sound], :param=>param, :timeout=>pars[:timeout] || 5000, :max_digits=>pars[:max_digits] || 7, :terminators=>pars[:terminators]}
+       end
+
+       def submit(args)
+         @elements << {:type=>'submit', :args=>args}
+       end
+
+       def record_input(label, filename, param, max_time=10, beep=true, silence_detect=10)
+         @elements << {:type=>'record_input',:label=>label, :filename=>filename,:param=>param, :max_time=>max_time, :beep=>beep, :silence_detect=>silence_detect}
+       end
+     end
     class Interface
-      def redirect(args)
-        @request.create_redirect args
+      attr_accessor :controller
+      
+      def redirect_to(args)
+        create_redirect @controller.url_for(args.merge(:only_path=>true))
       end
+      
 
       # The following has not been updated/tested with FreeSWITCH.
       # It should work with minor modifications for someone who needs the features
@@ -13,18 +34,20 @@ module Telegraph
       #   str.split(' ').each {|e| say_element(e)}
       # end
       # 
-      # def form (opts={})
-      #   form = Telegraph::CallForm.new
-      #   @params = {}
-      #   yield form
-      # 
-      #   for element in form.elements
-      #     build_form_element(element)
-      #   end
-      # 
-      #   @params.update(opts[:url])
-      #   @request.create_redirect @params
-      # end
+      def form (opts={})
+          form = Telegraph::VoiceView::Form.new
+          @params = {}
+          yield form
+        
+          for element in form.elements
+            build_form_element(element)
+          end
+        
+          url = opts[:url] || opts
+          url = @controller.url_for(args.merge(:only_path=>true)) unless url.is_a?(String)
+          method = opts[:method].to_s.upcase || "POST"
+          create_redirect url, method
+        end
       # 
       # def extract_hash(key, value)
       #   split_key=key.split('[')

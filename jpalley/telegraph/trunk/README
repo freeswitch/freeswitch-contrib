@@ -1,7 +1,7 @@
 Telegraph for FreeSWITCH
-Please see http://code.google.com/p/telegraph for more information
+Please see http://developer.idapted.com/plugins/telegraph for more information
 
-Telegraph allows you to write MVC voice application in Ruby on Rails that tightly integrate with the web.  In our second release we go FreeSWITCH (the new OSS carrier grade switch) and Rails 2.  Here's the details:
+Telegraph allows you to write MVC voice application in Ruby on Rails that tightly integrate with the web.  In our second release we go FreeSWITCH (the new OSS carrier grade switch) and Rails 2.1.  Here's the details:
 
 For the FreeSWITCH fan:
  - Complete implementation of Outbound Socket, Event (Inbound) Socket and XML-RPC

@@ -13,9 +13,12 @@ module Telegraph
         @routes << {:controller=>name, :block=>nil}
       end
       
+      
       def dispatch!(event_name, params)
         controller_name = @routes.detect{|r| 
-          r[:block].nil? || r[:block].call(params)}[:controller]
+          r[:block].nil? || r[:block].call(params)}
+        raise("No Route For Event: #{event_name}\n\nPARAMS:\n#{params.inspect}") if controller_name.nil?
+        controller_name=controller_name[:controller]
         controller = controller_from_name(controller_name)
         controller.params = params
         controller.send(event_name.to_sym)

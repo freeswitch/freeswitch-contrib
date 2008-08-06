@@ -1,6 +1,7 @@
 module ActionController
   class Base
     def render_voice(&block)
+      response.interface.controller = self
       begin
         yield response.interface
       end

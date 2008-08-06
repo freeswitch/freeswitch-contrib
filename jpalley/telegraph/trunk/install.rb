@@ -5,7 +5,9 @@ dir = File.dirname(__FILE__)
 
 #Copy script files
 %w{voice_view voice_events}.each do |f|
-  File.copy "#{dir}/lib/#{f}", "#{dir}/../../../script/#{f}"
+  dest = "#{dir}/../../../script/#{f}"
+  File.copy "#{dir}/lib/#{f}", dest
+  File.chmod 0755, dest
 end
 
 #Copy configuration

@@ -61,14 +61,22 @@ require 'eventmachine'
      def hashify data
        hsh = Hash.new
        data.split("\n").each do |line|
-         hsh[line.split(': ')[0].gsub('-', '_').downcase] = line.split(': ')[1] unless line.empty?
+         unless line.empty?
+           key,value = line.split(': ')
+           key = key.gsub('-', '_').downcase
+         
+           hsh[key] = value
+           non_variable_key = key.gsub(/^variable\_/, '') #remove variable_ from keys
+           hsh[non_variable_key] = value
+          end
        end
-       return hsh
+       return hsh.with_indifferent_access
     end
     
      def send_application app, params=nil
        msg = "SendMsg #{@connection_params['unique-id']}\ncall-command: execute\nexecute-app-name: #{app}"
        msg << "\nexecute-app-arg: #{params}" #if params
+       msg << "\nevent-lock: true"
        send msg
      end
      

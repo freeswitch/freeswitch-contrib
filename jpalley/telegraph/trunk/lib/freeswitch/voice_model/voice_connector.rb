@@ -22,7 +22,6 @@ module Telegraph
     
     def self.load_configuration_and_connect!
       config = Telegraph.config
-      
       Telegraph::FreeSWITCH::VoiceConnector.new.connect!(:server=>config['server'], :port=>config['model']['port'], :username=>config['model']['username'], :password=>config['model']['password'], :timeout=>10)
     end
     
@@ -57,10 +56,10 @@ module Telegraph
       name_array = []
       return_array = []
       result.split("\n").each do |line|
-        if name_array.empty?
+        if line =~ /Content-Type/ or line.empty? or line =~ /\d+ total\./
+          #Do nothing
+        elsif name_array.empty?
           name_array = line.split(',')
-        elsif line.empty?
-          break
         else
           item = Hash.new
           line.split(',').each_with_index{|v,i| item[name_array[i].to_sym]=v}

@@ -93,6 +93,31 @@ module Telegraph
         msg "export", val
       end
       
+      def speak(txt, engine="flite", voice="kal")
+  		  msg "set", "tts_engine=#{engine}"
+  		  msg "set", "tts_voice=#{voice}"
+        msg "speak", txt
+      end
+      
+      def transfer(extension, dialplan='', context='')
+        msg "transfer", "#{extension} #{dialplan} #{context}"
+      end
+      def dtmf_read(max = 10, sound = nil, fs_var_name = "dtmf_inputs", timeout = 10000, terminators = '#,*')
+        sound ||= 'misc/8000/silence.wav'
+        msg "read", "1 #{max} #{sound} #{fs_var_name} #{timeout} #{terminators}"
+      end
+      
+      ##############
+      # For FORMS
+      ##################
+      def build_form_element(element)
+        dtmf_read(element[:max_digits], element[:sound], element[:param], element[:timeout],  element[:terminators]) if element[:type]==:get_dtmf
+      end
+      
+      def create_redirect(url, method="GET")
+        set("http_method=#{method}")
+         transfer "'socket:${rails_server}#{url} async full'", "inline"
+      end
       private
       def msg(app, params='')
         @commands << {:type=>:msg, :app=>app, :params=>params}

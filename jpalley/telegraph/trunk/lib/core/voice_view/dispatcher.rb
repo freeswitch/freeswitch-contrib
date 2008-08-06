@@ -36,6 +36,7 @@ module Telegraph
             @request.next_action=nil
             ActionController::Dispatcher.new(StdOutEmulator.new, @request, @response).dispatch
             #Check for errors
+      
             if @response.headers['Status'] == "500 Internal Server Error" or @response.headers['Status'] == "406 Not Acceptable"
               @request.interface.hangup
               break

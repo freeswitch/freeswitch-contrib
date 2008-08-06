@@ -85,8 +85,9 @@ module Telegraph
             headers[:content] = data[2] if data[2]
 
             event_name = headers[:event_name].downcase
-           event_name = "custom_" + headers[:event_subclass].gsub('::', '_') if headers[:event_name] == "CUSTOM"
+             event_name = "custom_" + headers[:event_subclass].gsub('::', '_') if headers[:event_name] == "CUSTOM"
             begin
+               return unless VoiceEventsRouter.filter(headers)
                Telegraph.log "CALLING: #{event_name}"
                @routes.dispatch!(event_name.to_sym, headers)
                # @voice_events.params = headers
@@ -104,6 +105,7 @@ module Telegraph
              rescue Exception => e
                Telegraph.log "Error in sending event: #{headers[:event_name]}"
                Telegraph.log e.inspect
+               Telegraph.log e.backtrace
              else  
               @ar_reconnected_retried = false
              
