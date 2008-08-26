@@ -127,6 +127,9 @@ namespace FreeSwitch.EventSocket
             string inbuffer;
             try
             {
+                if (_stream == null)
+                    return; // closed socket.
+
                 int bytesRead = _stream.EndRead(ar);
                 if (bytesRead == 0)
                 {
@@ -144,7 +147,7 @@ namespace FreeSwitch.EventSocket
                 return;
             }
 
-            if (DataReceived != null)
+            if (DataReceived != null && !string.IsNullOrEmpty(inbuffer))
                 DataReceived(inbuffer);
 
             try

@@ -4,7 +4,7 @@ namespace FreeSwitch.EventSocket
     {
         public override string ToString()
         {
-            return "PresenceOut." + base.ToString();
+            return "Out." + base.ToString();
         }
 
 

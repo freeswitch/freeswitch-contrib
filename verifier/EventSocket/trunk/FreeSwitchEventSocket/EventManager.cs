@@ -15,6 +15,8 @@ namespace FreeSwitch.EventSocket
         public event EventHandler EventReceived;
         private readonly EventsWriter _writer;
         private readonly TextWriter _rawLog;
+        private object _logLocker = new object();
+
         public string Password
         {
             set { _socket.Password = value; }
@@ -47,7 +49,8 @@ namespace FreeSwitch.EventSocket
 
         private void OnData(string data)
         {
-            _writer(data);
+            lock (_logLocker)
+                _writer(data);
         }
 
         /// <summary>

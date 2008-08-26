@@ -61,7 +61,7 @@ namespace FreeSwitch.EventSocket
 
         private void IgnoreLineBreaks(ref int i)
         {
-            while (i < Text.Length && (Text[i] == '\n' || Text[i] == '\r'))
+            while (i < _text.Length && (_text[i] == '\n' || _text[i] == '\r'))
                 ++i;
         }
 
@@ -80,15 +80,15 @@ namespace FreeSwitch.EventSocket
             }
 
             PlainEventMsg plainEvent;
-            lock (Text)
+            lock (_text)
             {
                 int i = 0;
 
                 // find complete header
                 bool found = false;
-                for (; i < Text.Length - 1; ++i)
+                for (; i < _text.Length - 1; ++i)
                 {
-                    if (Text[i] == '\n' && Text[i+1] == '\n')
+                    if (_text[i] == '\n' && _text[i + 1] == '\n')
                     {
                         found = true;
                         break;
@@ -99,13 +99,8 @@ namespace FreeSwitch.EventSocket
 
                 // extract header
                 char[] chars = new char[i];
-                Text.CopyTo(0, chars, 0, i);
+                _text.CopyTo(0, chars, 0, i);
                 string headers = new string(chars);
-#if DEBUG
-                Console.WriteLine("====================================");
-                Console.WriteLine("Headers: ");
-                Console.WriteLine(headers);
-#endif
                 IgnoreLineBreaks(ref i);
 
                 plainEvent = new PlainEventMsg();
@@ -117,12 +112,12 @@ namespace FreeSwitch.EventSocket
                     // Start of Empty header bugfix
                     // FS seems to send a header with content-length without sending an actual body
                     // this will eat that kind of header.
-                    if (Text.Length >= BugWorkaround.Length + i)
+                    if (_text.Length >= BugWorkaround.Length + i)
                     {
                         found = true;
                         for (int index = 0; index < BugWorkaround.Length; ++index)
                         {
-                            if (Text[index + i] != BugWorkaround[index])
+                            if (_text[index + i] != BugWorkaround[index])
                             {
                                 found = false;
                                 break;
@@ -130,7 +125,7 @@ namespace FreeSwitch.EventSocket
                         }
                         if (found)
                         {
-                            Text.Remove(0, i);
+                            _text.Remove(0, i);
                             Console.WriteLine("Removing empty content header.");
                             return null;
                         }
@@ -138,12 +133,12 @@ namespace FreeSwitch.EventSocket
                     // end of bugfix.
 
                     // not enough data for body.
-                    if (plainEvent.ContentLength + i > Text.Length)
+                    if (plainEvent.ContentLength + i > _text.Length)
                         return null;
 
                     // extract body
                     chars = new char[plainEvent.ContentLength];
-                    Text.CopyTo(i, chars, 0, plainEvent.ContentLength);
+                    _text.CopyTo(i, chars, 0, plainEvent.ContentLength);
                     plainEvent.Body = new string(chars);
 
                     // check for errors.
@@ -156,14 +151,10 @@ namespace FreeSwitch.EventSocket
                         Console.WriteLine("Body");
                         Console.WriteLine(plainEvent.Body);
                         Console.WriteLine("=========================== EVERYTHING in _text ==============================");
-                        Console.WriteLine(Text);
-                        throw new InvalidDataException("Fucked up event: " + Text);
+                        Console.WriteLine(_text);
+                        throw new InvalidDataException("Fucked up event: " + _text);
                     }
 
-#if DEBUG
-                    Console.WriteLine("Body:");
-                    Console.WriteLine(plainEvent.Body);
-#endif
                     if (plainEvent.Body.Length < plainEvent.ContentLength)
                         throw new InvalidDataException("Body contents are too small!");
 
@@ -174,7 +165,7 @@ namespace FreeSwitch.EventSocket
 
 
                 // remove header( + body) from buffer
-                Text.Remove(0, i);
+                _text.Remove(0, i);
             }
 
             return plainEvent;

@@ -23,9 +23,10 @@ namespace FreeSwitch.EventSocket.Commands
         private SofiaSipAddress _caller;
         private Address _destination;
         private readonly IList<ChannelVariable> _variables = new List<ChannelVariable>();
-        private string _callerIdName = null;
-        private string _callerIdNumber = null;
-        private bool _varsAdded = false;
+        private string _callerIdName;
+        private string _callerIdNumber;
+        private bool _varsAdded;
+        private bool _autoAnswer;
 
         public Originate()
         {}
@@ -80,6 +81,9 @@ namespace FreeSwitch.EventSocket.Commands
                     if (!string.IsNullOrEmpty(_callerIdNumber))
                         _variables.Add(new ChannelVariable("origination_caller_id_number", _callerIdNumber));
                     _varsAdded = true;
+
+                    if (_autoAnswer)
+                        _variables.Add(new ChannelVariable("sip_auto_answer", "true"));
                 }
 
                 string variables = string.Empty;
@@ -92,20 +96,21 @@ namespace FreeSwitch.EventSocket.Commands
             }
         }
 
+        public bool AutoAnswer
+        {
+            get { return _autoAnswer; }
+            set { _autoAnswer = value; }
+        }
+
         public override CommandReply CreateReply(string dataToParse)
         {
             string[] nameValue = dataToParse.Split(' ');
             if (nameValue[0].Length > 0 && nameValue[0][0] == '+')
                 return new OriginateReply(true, nameValue[1]);
-            else
-            {
-                OriginateReply reply = new OriginateReply(false, string.Empty);
-                if (nameValue.Length > 1)
-                    reply.ErrorMessage = nameValue[1];
-                else
-                    reply.ErrorMessage = dataToParse;
-                return reply;
-            }
+            
+            OriginateReply reply = new OriginateReply(false, string.Empty);
+            reply.ErrorMessage = nameValue.Length > 1 ? nameValue[1] : dataToParse;
+            return reply;
         }
 
     }
