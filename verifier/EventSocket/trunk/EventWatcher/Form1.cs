@@ -17,7 +17,7 @@ namespace EventWatcher
         public Form1()
         {
             InitializeComponent();
-            _eventMgr = new EventManager();
+            _eventMgr = new EventManager(null);
             _callMgr = new CallManager(_eventMgr);
             _callMgr.OnCallState += OnCallState;
             _callMgr.ExtensionAdded += OnExtensionAdded;

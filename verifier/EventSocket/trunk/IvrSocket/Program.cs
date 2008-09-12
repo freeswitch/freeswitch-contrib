@@ -10,7 +10,7 @@ namespace IvrSocket
         private static EventManager mgr;
         static void Main(string[] args)
         {
-            mgr = new EventManager();
+            mgr = new EventManager(null);
             mgr.EventReceived += IvrManager;
             mgr.Subscribe(Event.All);
             mgr.Start("localhost");

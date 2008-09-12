@@ -74,6 +74,7 @@
     <Compile Include="Ivr\IvrInterface.cs" />
     <Compile Include="Ivr\IvrQueue.cs" />
     <Compile Include="Ivr\PrivateWaitDtmf.cs" />
+    <Compile Include="LogWriterHandler.cs" />
     <Compile Include="PlainEventMsg.cs" />
     <Compile Include="EventParser.cs" />
     <Compile Include="Events.cs" />

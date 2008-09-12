@@ -20,6 +20,7 @@ namespace FreeSwitch.EventSocket
 
         #endregion
 
+        private LogWriterHandler _logWriter;
         private readonly Queue<CmdBase> _commands = new Queue<CmdBase>();
         private bool _autoConnect = true;
         private Events _events;
@@ -33,12 +34,17 @@ namespace FreeSwitch.EventSocket
         private Socket _socket;
         private NetworkStream _stream;
         private Timer _timer;
-        private bool _authed = false;
+        private bool _authed;
         const int RetryTimeout = 5000;
-        private bool _parsing = false;
+        private bool _parsing;
 
-        public EventSocket()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventSocket"/> class.
+        /// </summary>
+        /// <param name="logWriter">The log writer.</param>
+        public EventSocket(LogWriterHandler logWriter)
         {
+            LogWriter = logWriter ?? NullWriter.Write;
             CreateSocket();
         }
 
@@ -49,23 +55,55 @@ namespace FreeSwitch.EventSocket
             _socket.ReceiveBufferSize = 65535;
         }
 
+        /// <summary>
+        /// Used to authenticate towards FreeSWITCH.
+        /// </summary>
+        /// <remarks>
+        /// Default is "ClueCon"
+        /// </remarks>
         public string Password
         {
             get { return _password; }
             set { _password = value; }
         }
 
+        /// <summary>
+        /// Connect automatically again if socket is disconnected.
+        /// </summary>
         public bool AutoConnect
         {
             get { return _autoConnect; }
             set { _autoConnect = value; }
         }
 
-        public event MessageHandler MessageReceived;
+        public LogWriterHandler LogWriter
+        {
+            get { return _logWriter; }
+            set { _logWriter = value ?? NullWriter.Write; }
+        }
 
-        public event EventSocketHandler Disconnected;
-        public event EventSocketHandler Connected;
+        /// <summary>
+        /// A event have been received
+        /// </summary>
+        public event MessageHandler MessageReceived = delegate{};
 
+        /// <summary>
+        /// Socket got disconnected (due to remote peer)
+        /// </summary>
+        public event EventSocketHandler Disconnected = delegate{};
+
+        /// <summary>
+        /// Socket is now connected
+        /// </summary>
+        public event EventSocketHandler Connected = delegate{};
+
+        /// <summary>
+        /// Connect to FreeSWITCH
+        /// </summary>
+        /// <param name="server">hostname/ipaddress colon port</param>
+        /// <example>
+        /// <code>eventSocket.Connect("localhost:1234");</code>
+        /// </example>
         public void Connect(string server)
         {
             int pos = server.IndexOf(':');
@@ -80,6 +118,9 @@ namespace FreeSwitch.EventSocket
             Connect();
         }
 
+        /// <summary>
+        /// Connect to the previously specified host.
+        /// </summary>
         public void Connect()
         {
             if (_hostName == null)
@@ -88,9 +129,11 @@ namespace FreeSwitch.EventSocket
             try
             {
                 TryConnect();
+                LogWriter(LogPrio.Debug, "Connected to freeswitch.");
             }
-            catch (SocketException)
+            catch (SocketException err)
             {
+                LogWriter(LogPrio.Debug, "Failed to connect to freeswitch, reason: " + err.Message);
                 HandleDisconnect();
             }
         }
@@ -103,17 +146,14 @@ namespace FreeSwitch.EventSocket
                 if (_stream == null)
                     _stream = new NetworkStream(_socket, false);
 
-                if (Connected != null)
-                    Connected(this);
+                Connected(this);
                 BeginRead();
 
-                if (_timer != null)
-                {
-                    Timer tmr = _timer;
-                    _timer = null;
-                    tmr.Change(Timeout.Infinite, Timeout.Infinite);
-                    tmr.Dispose();
-                }
+                if (_timer == null) return;
+                Timer tmr = _timer;
+                _timer = null;
+                tmr.Change(Timeout.Infinite, Timeout.Infinite);
+                tmr.Dispose();
             }
         }
 
@@ -133,6 +173,7 @@ namespace FreeSwitch.EventSocket
                 int bytesRead = _stream.EndRead(ar);
                 if (bytesRead == 0)
                 {
+                    LogWriter(LogPrio.Error, "Got disconnected (0 bytes read).");
                     HandleDisconnect();
                     return;
                 }
@@ -140,27 +181,29 @@ namespace FreeSwitch.EventSocket
                 _parser.Append(inbuffer);
                 BeginRead();
             }
-            catch (IOException)
+            catch (IOException err)
             {
+                LogWriter(LogPrio.Debug, "IO exception during read: " + err.Message);
                 // Remote end disconnected.
                 HandleDisconnect();
                 return;
             }
 
-            if (DataReceived != null && !string.IsNullOrEmpty(inbuffer))
+            if (!string.IsNullOrEmpty(inbuffer))
                 DataReceived(inbuffer);
 
             try
             {
                 ParseMessages();
             }
-            catch (InvalidDataException)
+            catch (InvalidDataException err)
             {
+                LogWriter(LogPrio.Warning, "Failed to parse event message (" + err.Message + "): " + Environment.NewLine + _parser.Text);
                 HandleDisconnect();
             }
-            catch (ArgumentException)
+            catch (ArgumentException err)
             {
-                Console.WriteLine(_parser.Text);
+                LogWriter(LogPrio.Warning, "Failed to parse event message ("+err.Message+"): " + Environment.NewLine +  _parser.Text);
                 HandleDisconnect();
             }
         }
@@ -191,6 +234,7 @@ namespace FreeSwitch.EventSocket
                 try
                 {
                     TryConnect();
+                    LogWriter(LogPrio.Info, "We've connected again");
                 }
                 catch (SocketException)
                 {
@@ -216,37 +260,35 @@ namespace FreeSwitch.EventSocket
             try
             {
                 PlainEventMsg msg = _parser.ParseOne();
+                LogWriter(LogPrio.Trace, "MessageType: " + msg.ContentType);
                 while (msg != null)
                 {
-                    if (msg.ContentType == "auth/request")
+                    switch (msg.ContentType)
                     {
-                        AuthCommand cmd = new AuthCommand(_password);
-                        cmd.ReplyReceived += OnAuthed;
-                        _commands.Enqueue(cmd);
-                        Write(cmd + "\n\n");
-                    }
-                    else if (msg.ContentType == "command/reply"
-                             || msg.ContentType == "api/response")
-                    {
-                        if (_commands.Count > 0)
-                        {
-                            CmdBase cmd = _commands.Dequeue();
-                            cmd.HandleReply(cmd.CreateReply(msg.Body.Trim()));
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Got command reply or api response, but no actual command/api: " + msg.Body);
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                        }
-                    }
-                    else
-                    {
-                        if (MessageReceived != null)
+                        case "auth/request":
+                            {
+                                AuthCommand cmd = new AuthCommand(_password);
+                                cmd.ReplyReceived += OnAuthed;
+                                _commands.Enqueue(cmd);
+                                Write(cmd + "\n\n");
+                            }
+                            break;
+                        case "api/response":
+                        case "command/reply":
+                            if (_commands.Count > 0)
+                            {
+                                CmdBase cmd = _commands.Dequeue();
+                                cmd.HandleReply(cmd.CreateReply(msg.Body.Trim()));
+                            }
+                            else
+                                LogWriter(LogPrio.Debug, "Got command reply or api response, but no actual command/api: " + msg.Body);
+                            break;
+                        default:
                             MessageReceived(msg);
+                            break;
                     }
                     msg = _parser.ParseOne();
-                }                
+                }
             }
             finally
             {
@@ -257,6 +299,7 @@ namespace FreeSwitch.EventSocket
 
         private void OnAuthed(CmdBase command, CommandReply reply)
         {
+            LogWriter(LogPrio.Trace, "We have not authenticated.");
             _authed = true;
             RequestEvents();
         }
@@ -273,13 +316,10 @@ namespace FreeSwitch.EventSocket
                 _stream = null;
             }
 
-            if (Disconnected != null)
-                Disconnected.Invoke(this);
-            if (AutoConnect && _timer == null)
-            {
-                Console.WriteLine("EventSocket: Launching timer.");
-                _timer = new Timer(TryConnect, this, RetryTimeout, RetryTimeout);
-            }
+            Disconnected(this);
+            if (!AutoConnect || _timer != null) return;
+            LogWriter(LogPrio.Info, "Launching autoconnect timer.");
+            _timer = new Timer(TryConnect, this, RetryTimeout, RetryTimeout);
         }
 
         private void RequestEvents()
@@ -309,7 +349,10 @@ namespace FreeSwitch.EventSocket
         public void Send(CmdBase command)
         {
             if (!_socket.Connected)
+            {
+                LogWriter(LogPrio.Debug, "Tried to send command when we are not connected: " + command);
                 throw new IOException("Socket is not connected.");
+            }
 
             _commands.Enqueue(command);
 
@@ -317,13 +360,13 @@ namespace FreeSwitch.EventSocket
             Write(command + "\n\n");
         }
 
-        private static void TryConnect(object state)
+        private void TryConnect(object state)
         {
             EventSocket client = (EventSocket) state;
             try
             {
                 client.TryConnect();
-                Console.WriteLine("EventSocket.Timer: Connected.");
+                LogWriter(LogPrio.Info, "Connected again.");
             }
             catch (SocketException)
             {}

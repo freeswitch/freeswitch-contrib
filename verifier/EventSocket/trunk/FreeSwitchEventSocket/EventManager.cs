@@ -5,41 +5,71 @@ using FreeSwitch.EventSocket.Commands;
 
 namespace FreeSwitch.EventSocket
 {
+    /// <summary>
+    /// Delegate used to receive a parsed event.
+    /// </summary>
+    /// <param name="receivedEvent">the event.</param>
     public delegate void EventHandler(EventBase receivedEvent);
 
+    /// <summary>
+    /// Delegate used to receive unparsed event messages
+    /// </summary>
+    /// <param name="text">text received from FreeSWITCH.</param>
     public delegate void EventsWriter(string text);
 
+    /// <summary>
+    /// Takes care of the event socket and parses the incoming events.
+    /// </summary>
     public class EventManager
     {
-        private readonly EventSocket _socket = new EventSocket();
-        public event EventHandler EventReceived;
+        private readonly EventSocket _socket;
+        /// <summary>
+        /// An event have been received from freeswitch.
+        /// </summary>
+        public event EventHandler EventReceived = delegate{};
         private readonly EventsWriter _writer;
-        private readonly TextWriter _rawLog;
-        private object _logLocker = new object();
+        private readonly object _logLocker = new object();
+        private readonly LogWriterHandler _logWriter;
 
+        /// <summary>
+        /// FreeSWITCH password, default is "ClueCon".
+        /// </summary>
         public string Password
         {
             set { _socket.Password = value; }
         }
 
-        public EventManager()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventManager"/> class.
+        /// </summary>
+        /// <param name="logWriter">Can be used for logging.</param>
+        public EventManager(LogWriterHandler logWriter)
         {
-            _writer = RawWriter;
-            _rawLog = new StreamWriter(new FileStream("C:\\temp\\WatcherRaw.log", FileMode.Create, FileAccess.Write, FileShare.ReadWrite));
+            _logWriter = logWriter ?? NullWriter.Write;
+            _socket = new EventSocket(_logWriter);
+            _writer = VoidWriter;
         }
 
-        private void RawWriter(string text)
+        private static void VoidWriter(string text)
         {
-            _rawLog.Write(text);
-            _rawLog.Flush();
         }
 
-
-        public EventManager(EventsWriter writer)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventManager"/> class.
+        /// </summary>
+        /// <param name="logWriter">Used to receive loggings.</param>
+        /// <param name="writer">Used to receive unparsed event messages.</param>
+        public EventManager(LogWriterHandler logWriter, EventsWriter writer)
         {
+            _logWriter = logWriter ?? NullWriter.Write;
+            _socket = new EventSocket(_logWriter);
             _writer = writer;
         }
 
+        /// <summary>
+        /// Starts event manger and connect to freeswitch.
+        /// </summary>
+        /// <param name="hostname">hostname/ipaddress colon port</param>
         public void Start(string hostname)
         {
             _socket.MessageReceived += OnMessage;
@@ -65,6 +95,10 @@ namespace FreeSwitch.EventSocket
             _socket.Send(cmd);
         }
 
+        /// <summary>
+        /// Sends the SendMsg command to FreeSWITCH
+        /// </summary>
+        /// <param name="cmd">The CMD.</param>
         public void Send(SendMsg cmd)
         {
             _socket.Send(cmd);
@@ -77,10 +111,9 @@ namespace FreeSwitch.EventSocket
             if (eventName == null)
                 return;
 
-            if (string.Compare(parameters["event-name"], "custom", true) == 0)
-                eventName = parameters["event-subclass"];
-            else
-                eventName = parameters["event-name"];
+            eventName = string.Compare(parameters["event-name"], "custom", true) == 0
+                            ? parameters["event-subclass"]
+                            : parameters["event-name"];
 
             //Quickhack for Sofia::Register (convert to sofia_register)
             eventName = eventName.Replace("::", "_");
@@ -94,51 +127,25 @@ namespace FreeSwitch.EventSocket
             {
                 eb.SetParameters(parameters);
                 eb.Parse(parameters);
-                if (EventReceived != null)
-                    EventReceived(eb);
-
-                /*
-                EventChannelState channel = eb as EventChannelState;
-                if (channel != null)
-                {
-                    Console.WriteLine("[" + eb.Name + "/" + channel.ChannelInfo.State + "] (uid: " +
-                                      channel.UniqueId + ")");
-                    Console.WriteLine("  ChannelInfo:");
-                    Console.WriteLine("    Name: " + channel.ChannelInfo.Name);
-                    Console.WriteLine("    State: " + channel.ChannelInfo.State);
-                    if (channel.Caller != null)
-                    {
-                        Console.WriteLine("  CallerInfo:");
-                        Console.WriteLine("    Id: " + channel.Caller.UniqueId);
-                        Console.WriteLine("    UserName: " + channel.Caller.UserName);
-                        Console.WriteLine("    CallerId: " + channel.Caller.CallerIdName + "/" +
-                                          channel.Caller.CallerIdNumber);
-                        Console.WriteLine("    ChannelName: " + channel.Caller.ChannelName);
-                        Console.WriteLine("    DestinationNumber: " + channel.Caller.DestinationNumber);
-                    }
-
-                    if (channel.Originator != null)
-                    {
-                        Console.WriteLine("  Originator:");
-                        Console.WriteLine("    Id: " + channel.Originator.UniqueId);
-                        Console.WriteLine("    UserName: " + channel.Originator.UserName);
-                        Console.WriteLine("    CallerId: " + channel.Originator.CallerIdName + "/" +
-                                          channel.Originator.CallerIdNumber);
-                        Console.WriteLine("    ChannelName: " + channel.Originator.ChannelName);
-                        Console.WriteLine("    DestinationNumber: " + channel.Originator.DestinationNumber);
-                    }
-                }
-                //}*/
+                EventReceived(eb);
             }
             else
-                Console.WriteLine("* Failed to load '" + eventName + "'.");
+                _logWriter(LogPrio.Warning, "Failed to load '" + eventName + "'.");
         }
 
+        /// <summary>
+        /// Subscribes the specified events.
+        /// </summary>
+        /// <param name="events">The events.</param>
         public void Subscribe(Events events)
         {
             _socket.Subscribe(events);
         }
 
+        /// <summary>
+        /// Subscribes the specified events.
+        /// </summary>
+        /// <param name="events">The events.</param>
         public void Subscribe(params Event[] events)
         {
             _socket.Subscribe(new Events(events));

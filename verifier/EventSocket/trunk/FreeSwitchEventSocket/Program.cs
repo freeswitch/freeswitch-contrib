@@ -25,7 +25,7 @@ namespace FreeSwitch.EventSocket
             Program p = new Program();
 
             /// Create a new FreeSwitch event socket.
-            EventManager eventManager = new EventManager();
+            EventManager eventManager = new EventManager(null);
 
             // Hook all events to the same delegate. Can also provide one delegate per event.
             eventManager.EventReceived += p.HandleEvent;

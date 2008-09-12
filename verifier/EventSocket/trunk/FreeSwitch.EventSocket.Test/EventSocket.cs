@@ -9,7 +9,7 @@ namespace FreeSwitch.EventSocket.Test
 {
     class EventSocket
     {
-        private FreeSwitch.EventSocket.EventSocket m_es = new FreeSwitch.EventSocket.EventSocket();
+        private FreeSwitch.EventSocket.EventSocket m_es = new FreeSwitch.EventSocket.EventSocket(null);
 
         public void Setup()
         {

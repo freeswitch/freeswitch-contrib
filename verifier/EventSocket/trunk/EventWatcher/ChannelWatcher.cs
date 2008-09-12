@@ -9,7 +9,7 @@ namespace EventWatcher
 {
     public partial class ChannelWatcher : Form
     {
-        private EventManager _mgr = new EventManager();
+        private EventManager _mgr = new EventManager(null);
         private Color _currentColor = 0;
         StringBuilder sb = new StringBuilder();
 
