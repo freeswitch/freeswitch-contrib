@@ -49,7 +49,7 @@ class fs_directory extends fs_curl {
         if (!empty($where_array)) {
             $this -> comment('where array has contents');
             if (count($where_array) > 1) {
-                $where_clause = sprintf('WHERE ', implode(' AND ', $where_array));
+                $where_clause = sprintf('WHERE %s', implode(' AND ', $where_array));
             } else {
                 $where_clause = sprintf('WHERE %s', $where_array[0]);
             }
