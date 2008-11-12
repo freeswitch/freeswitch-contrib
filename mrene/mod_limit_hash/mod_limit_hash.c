@@ -30,7 +30,7 @@
 
 #include <switch.h>
 
-#define LIMIT_SYNTAX "<realm> <id> <max> [transfer_destination_number]"
+#define LIMIT_SYNTAX "<realm> <id> <max>[/interval] [transfer_destination_number [transfer_destination_context]]"
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_limit_hash_load);
 SWITCH_MODULE_DEFINITION(mod_limit_hash, mod_limit_hash_load, NULL , NULL);
