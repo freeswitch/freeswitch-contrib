@@ -68,17 +68,17 @@ static switch_status_t state_handler(switch_core_session_t *session)
 		for(hi = switch_hash_first(NULL, channel_hash); hi; hi = switch_hash_next(hi))
 		{
 			void *val = NULL;
-			const char *key;
+			const void *key;
 			switch_ssize_t keylen;
 			limit_hash_item_t *item = NULL;
 			
-			switch_hash_this(hi, (const void**)&key, &keylen, &val);
+			switch_hash_this(hi, &key, &keylen, &val);
 			
 			item = (limit_hash_item_t*)val;
 			
 			/* We keep the structure even though the count is 0 so we do not allocate too often */
 			item->total_usage--;	
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Usage for %s is now %d\n", key, item->total_usage);	
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Usage for %s is now %d\n", (const char*)key, item->total_usage);	
 		}
 		switch_core_event_hook_remove_state_change(session, state_handler);
 		switch_mutex_unlock(globals.mutex);
