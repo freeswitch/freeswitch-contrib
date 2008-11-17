@@ -25,7 +25,8 @@
  * 
  * Anthony Minessale II <anthmct@yahoo.com>
  * Ken Rice <krice at suspicious dot org
- *
+ * Mathieu Rene <mathieu.rene@gmail.com>
+ * 
  * mod_limit.c -- Resource Limit Module
  *
  */
@@ -672,6 +673,7 @@ SWITCH_STANDARD_APP(limit_function)
 	char buf[80] = "";
 	callback_t cbt = { 0 };
 	switch_channel_t *channel = switch_core_session_get_channel(session);
+	switch_bool_t new_channel = SWITCH_FALSE;
 
 	if (!switch_strlen_zero(data)) {
 		mydata = switch_core_session_strdup(session, data);
@@ -698,7 +700,8 @@ SWITCH_STANDARD_APP(limit_function)
 	if (max < 0) {
 		max = 0;
 	}
-
+	
+	new_channel = !switch_channel_get_variable(channel, "limit_realm");
 	switch_channel_set_variable(channel, "limit_realm", realm);
 	switch_channel_set_variable(channel, "limit_id", id);
 	switch_channel_set_variable(channel, "limit_max", argv[2]);
@@ -714,7 +717,9 @@ SWITCH_STANDARD_APP(limit_function)
 		goto done;
 	}
 
-	switch_core_event_hook_add_state_change(session, db_state_handler);
+	if (new_channel) {
+		switch_core_event_hook_add_state_change(session, db_state_handler);
+	}
 	sql =
 		switch_mprintf("insert into limit_data (hostname, realm, id, uuid) values('%q','%q','%q','%q');", globals.hostname, realm, id,
 					   switch_core_session_get_uuid(session));
