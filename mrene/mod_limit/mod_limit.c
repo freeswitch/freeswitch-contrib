@@ -851,6 +851,44 @@ end:
 	switch_mutex_unlock(globals.limit_hash_mutex);
 }
 
+#define LIMIT_HASH_USAGE_USAGE "<realm> <id>"
+SWITCH_STANDARD_API(limit_hash_usage_function)
+{
+	int argc = 0;
+	char *argv[3] = { 0 };
+	char *mydata = NULL;
+	char *hash_key = NULL;
+	limit_hash_item_t *item = NULL;
+	uint32_t count = 0;
+
+	switch_mutex_lock(globals.limit_hash_mutex);
+	
+	if (!switch_strlen_zero(cmd)) {
+		switch_assert(mydata = strdup(cmd));
+		argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0])));
+	}
+	
+	if (argc < 2) {
+		stream->write_function(stream, "USAGE: limit_hash_usage %s\n", LIMIT_HASH_USAGE_USAGE);
+		goto end;
+	}
+	
+	hash_key = switch_mprintf("%s_%s", argv[0], argv[1]);
+	
+	if ((item = switch_core_hash_find(globals.limit_hash, hash_key))) {
+		count = item->total_usage;
+	} 
+	
+	stream->write_function(stream, "%d", count);
+	
+end:
+	switch_safe_free(mydata);
+	switch_safe_free(hash_key);
+	switch_mutex_unlock(globals.limit_hash_mutex);
+	
+	return SWITCH_STATUS_SUCCESS;
+}
+
 SWITCH_MODULE_LOAD_FUNCTION(mod_limit_load)
 {
 	switch_status_t status;
@@ -880,6 +918,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_limit_load)
 	SWITCH_ADD_APP(app_interface, "hash", "Insert into the hashtable", HASH_DESC, hash_function, HASH_USAGE, SAF_SUPPORT_NOMEDIA)
 	SWITCH_ADD_APP(app_interface, "group", "Manage a group", GROUP_DESC, group_function, GROUP_USAGE, SAF_SUPPORT_NOMEDIA);
 
+	SWITCH_ADD_API(commands_api_interface, "limit_hash_usage", "Gets the usage count of a limited resource", limit_hash_usage_function,  LIMIT_HASH_USAGE_USAGE);
 	SWITCH_ADD_API(commands_api_interface, "db", "db get/set", db_api_function, "[insert|delete|select]/<realm>/<key>/<value>");
 	switch_console_set_complete("add db insert");
 	switch_console_set_complete("add db delete");
