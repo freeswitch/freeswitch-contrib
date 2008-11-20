@@ -89,4 +89,3 @@ class fs_configuration extends fs_curl {
     }
 }
 
-?>

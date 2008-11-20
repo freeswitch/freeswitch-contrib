@@ -94,4 +94,3 @@ $conf -> debug('---- End _REQUEST ----');
 $conf -> main();
 $conf -> output_xml();
 
-?>

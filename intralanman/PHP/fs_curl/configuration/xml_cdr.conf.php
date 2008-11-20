@@ -23,7 +23,7 @@ class xml_cdr_conf extends fs_configuration {
 	}
 
 	function get_settings() {
-	    return array('url'=>'http://localhost/fs_curl/index_test.php', 'encode'=>'true');
+	    return array('url'=>'http://$${curl_host}/fs_curl/cdr.php', 'encode'=>'true');
 		return array(
 		'url'=>'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']
 		, 'encode'=>'true'

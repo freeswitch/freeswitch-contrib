@@ -275,5 +275,4 @@ class fs_directory extends fs_curl {
         $this -> xmlw -> endElement();
     }
 }
-?>
 
