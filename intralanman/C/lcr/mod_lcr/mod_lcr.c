@@ -166,42 +166,43 @@ void init_max_lens(max_len maxes) {
 
 switch_status_t process_max_lengths(max_obj_t *maxes, lcr_route routes, char *destination_number) {
 	lcr_route current = NULL;
-	init_max_lens(maxes);
-	if (routes == NULL ) {
+
+	if (routes == NULL) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "no routes\n");
 		return SWITCH_STATUS_FALSE;
 	}
-	if (maxes == NULL ) {
+	if (maxes == NULL) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "no maxes\n");
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if (routes != NULL && maxes != NULL) {
-		for (current = routes; current; current = current->next) {
-			size_t this_len;
-			 if (current->gateway_name != NULL) {
-				 this_len = strlen(current->gateway_name);
-				 if (this_len > maxes->gateway_name) {				
-					 maxes->gateway_name = this_len;
-				 }
-			 }
-			 if (current->carrier_name != NULL) {
-				 this_len = strlen(current->carrier_name);
-				 if (this_len > maxes->carrier_name) {
-					 maxes->carrier_name = this_len;
-				 }
-			 }
-			 if (current->dialstring != NULL) {
-				 this_len = strlen(current->dialstring);
-				 if (this_len > maxes->dialstring) {
-					 maxes->dialstring = this_len;
-				 }
-			 }
-			 if (current->digit_str != NULL) {
-				 if (current->digit_len > maxes->digit_str) {
-					 maxes->digit_str = current->digit_len;
-				 }
-			 }
+	init_max_lens(maxes);
+
+	for (current = routes; current; current = current->next) {
+		size_t this_len;
+
+		if (current->gateway_name != NULL) {
+			this_len = strlen(current->gateway_name);
+			if (this_len > maxes->gateway_name) {				
+				maxes->gateway_name = this_len;
+			}
+		}
+		if (current->carrier_name != NULL) {
+			this_len = strlen(current->carrier_name);
+			if (this_len > maxes->carrier_name) {
+				maxes->carrier_name = this_len;
+			}
+		}
+		if (current->dialstring != NULL) {
+			this_len = strlen(current->dialstring);
+			if (this_len > maxes->dialstring) {
+				maxes->dialstring = this_len;
+			}
+		}
+		if (current->digit_str != NULL) {
+			if (current->digit_len > maxes->digit_str) {
+				maxes->digit_str = current->digit_len;
+			} 
 		}
 	}
 	return SWITCH_STATUS_SUCCESS;
@@ -211,9 +212,8 @@ static switch_bool_t lcr_execute_sql_callback(char *sql, switch_core_db_callback
 	if (globals.odbc_dsn) {
 		switch_odbc_handle_callback_exec(globals.master_odbc, sql, callback, pdata);
 		return SWITCH_TRUE;
-	} else {
-		return SWITCH_FALSE;
 	}
+	return SWITCH_FALSE;
 }
 
 int route_add_callback(void *pArg, int argc, char **argv, char **columnNames) {
@@ -238,40 +238,40 @@ int route_add_callback(void *pArg, int argc, char **argv, char **columnNames) {
 	additional->tstrip = atoi(argv[LCR_TSTRIP_PLACE]);
 	additional->dialstring = get_bridge_data(cbt->lookup_number, additional);
 
-	if (cbt->head != NULL) {
-		for (current = cbt->head; current; current = current->next) {
-
-			if (switch_strlen_zero(additional->gateway_name) && switch_strlen_zero(additional->term_host) && switch_strlen_zero(additional->port) ) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING
-								  , "WTF?!? There's no way to dial this Gateway: %s IP:Port %s:%s\n"
-								  , additional->gateway_name, additional->term_host, additional->port
-								  );
-				break;
-			}
-			
-			if (!strcmp(current->gateway_name, additional->gateway_name)) {
-				if (!strcmp(current->term_host, additional->term_host) && !strcmp(current->port, additional->port)) {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG
-									  , "Ignoring Duplicate route for termination point (%s:%s)\n"
-									  , additional->term_host, additional->port
-									  );
-					switch_safe_free(additional);
-					break;
-				}
-			}
-			
-			if (current->next == NULL) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "adding route to end of list\n");
-				current->next = additional;
-				break;
-			}
-			
-		}
-	} else {
+	if (cbt->head == NULL) {
 		additional->next = cbt->head;
 		cbt->head = additional;
+
+		return SWITCH_STATUS_SUCCESS;
 	}
-	
+
+	for (current = cbt->head; current; current = current->next) {
+
+		if (switch_strlen_zero(additional->gateway_name) && switch_strlen_zero(additional->term_host) && switch_strlen_zero(additional->port) ) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING
+							  , "WTF?!? There's no way to dial this Gateway: %s IP:Port %s:%s\n"
+							  , additional->gateway_name, additional->term_host, additional->port
+							  );
+			break;
+		}
+			
+		if (!strcmp(current->gateway_name, additional->gateway_name)) {
+			if (!strcmp(current->term_host, additional->term_host) && !strcmp(current->port, additional->port)) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG
+								  , "Ignoring Duplicate route for termination point (%s:%s)\n"
+								  , additional->term_host, additional->port
+								  );
+				switch_safe_free(additional);
+				break;
+			}
+		}
+			
+		if (current->next == NULL) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "adding route to end of list\n");
+			current->next = additional;
+			break;
+		}
+	}
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -287,7 +287,7 @@ switch_status_t lcr_do_lookup(char *digits, callback_t *cb_struct) {
 
    	digits_copy = strdup(digits);
 
-    SWITCH_STANDARD_STREAM(sql_stream);
+	SWITCH_STANDARD_STREAM(sql_stream);
 
 	/* set up the query to be executed */
 	sql_stream.write_function(&sql_stream, 
@@ -299,9 +299,12 @@ switch_status_t lcr_do_lookup(char *digits, callback_t *cb_struct) {
 		sql_stream.write_function(&sql_stream, "%s digits='%s' ", (n==digit_len ? "WHERE" : "OR"), digits_copy);
 	}
 	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate;");
+
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "%s\n", (char *)sql_stream.data);    
+
 	lcr_execute_sql_callback((char *)sql_stream.data, route_add_callback, cb_struct);
 	switch_safe_free(sql_stream.data);
+
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -311,10 +314,12 @@ static switch_status_t lcr_load_config() {
 	switch_status_t status = SWITCH_STATUS_SUCCESS;
 	char *odbc_user = NULL;
 	char *odbc_pass = NULL;
+
 	if (!(xml = switch_xml_open_cfg(cf, &cfg, NULL))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "open of %s failed\n", cf);
 		return SWITCH_STATUS_TERM;
 	}
+
 	if ((settings = switch_xml_child(cfg, "settings"))) {
 		for (param = switch_xml_child(settings, "param"); param; param = param->next) {
 			char *var = NULL;
@@ -356,6 +361,7 @@ static switch_status_t lcr_load_config() {
 
 static void destroy_list(lcr_route *head) {
 	lcr_route cur = NULL, top = *head;
+
 	while (top) {
 		cur = top;
 		top = top->next;
@@ -391,6 +397,7 @@ SWITCH_STANDARD_DIALPLAN(lcr_dialplan_hunt) {
 
 		switch_channel_set_variable(channel, SWITCH_CONTINUE_ON_FAILURE_VARIABLE, "true");
 		switch_channel_set_variable(channel, SWITCH_HANGUP_AFTER_BRIDGE_VARIABLE, "true");
+
 		for (cur_route = routes.head; cur_route; cur_route = cur_route->next) {
 			//bridge_data = get_bridge_data(caller_profile->destination_number, cur_route);
 			switch_caller_extension_add_application(session, extension, "bridge", cur_route->dialstring);
@@ -407,11 +414,11 @@ SWITCH_STANDARD_DIALPLAN(lcr_dialplan_hunt) {
 
 void str_repeat(size_t how_many, char *what, switch_stream_handle_t *str_stream) {
 	size_t i;
+
 	//switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "repeating %d of '%s'\n", how_many, what);
-	if (how_many > 0) {
-		for (i=0; i<how_many; i++) {
-			str_stream->write_function(str_stream, "%s", what);
-		}
+
+	for (i=0; i<how_many; i++) {
+		str_stream->write_function(str_stream, "%s", what);
 	}
 }
 
@@ -422,17 +429,20 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 	char *dialstring = NULL;
 	char *destination_number = NULL;
 	lcr_route current = NULL;
-    max_obj_t maximum_lengths = { 0 };
+	max_obj_t maximum_lengths = { 0 };
 	callback_t cb_struct = { 0 };
 	//switch_malloc(maximum_lengths, sizeof(max_obj_t));
 
 	if (switch_strlen_zero(cmd)) {
 		goto usage;
 	}
+
 	mydata = switch_safe_strdup(cmd);
+
 	if ((argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0]))))) {
 		destination_number = strdup(argv[0]);
 		cb_struct.lookup_number = destination_number;
+
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
 						  , "data passed to lcr is [%s]\n", cmd
 						  );
@@ -441,30 +451,39 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 						  , lcr_do_lookup(destination_number, &cb_struct)
 						  );
 		if (cb_struct.head != NULL) {
+			size_t len;
+
 			process_max_lengths(&maximum_lengths, cb_struct.head, destination_number);
 
 			stream->write_function(stream, " | %s", headers[LCR_DIGITS_PLACE]);
-			str_repeat((maximum_lengths.digit_str - strlen(headers[LCR_DIGITS_PLACE])), " ", stream);
+			if ((len = (maximum_lengths.digit_str - strlen(headers[LCR_DIGITS_PLACE]))) > 0) {
+				str_repeat(len, " ", stream);
+			}
 
 			stream->write_function(stream, " | %s", headers[LCR_CARRIER_PLACE]);
-			str_repeat((maximum_lengths.carrier_name - strlen(headers[LCR_CARRIER_PLACE])), " ", stream);
+			if ((len = (maximum_lengths.carrier_name - strlen(headers[LCR_CARRIER_PLACE]))) > 0) {
+				str_repeat(len, " ", stream);
+			}
 
 			stream->write_function(stream, " | %s", headers[LCR_RATE_PLACE]);
-			str_repeat((maximum_lengths.rate - strlen(headers[LCR_RATE_PLACE])), " ", stream);
+			if ((len = (maximum_lengths.rate - strlen(headers[LCR_RATE_PLACE]))) > 0) {
+				str_repeat(len, " ", stream);
+			}
 
 			stream->write_function(stream, " | %s", headers[LCR_DIALSTRING_PLACE]);
-			str_repeat((maximum_lengths.dialstring - strlen(headers[LCR_DIALSTRING_PLACE])), " ", stream);
+			if ((len = (maximum_lengths.dialstring - strlen(headers[LCR_DIALSTRING_PLACE]))) > 0) {
+				str_repeat(len, " ", stream);
+			}
 
 			stream->write_function(stream, " |\n");
-
 
 			current = cb_struct.head;
 			while (current) {
 				char srate[10];
+
 				dialstring = get_bridge_data(destination_number, current);
 				switch_snprintf(srate, sizeof(srate), "%0.5f", current->rate);
 
-				
 				stream->write_function(stream, " | %s", current->digit_str);
 				str_repeat((maximum_lengths.digit_str - current->digit_len), " ", stream);
 				
@@ -481,7 +500,6 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 				
 				switch_safe_free(dialstring);
 				current = current->next;
-				
 			}
 
 			destroy_list(&cb_struct.head);
@@ -503,12 +521,15 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_lcr_load) {
 	switch_dialplan_interface_t *dp_interface;
 	
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+
 #ifndef SWITCH_HAVE_ODBC
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "\t./configure --enable-core-odbc-support\n");
 	return SWITCH_STATUS_FALSE;
 #endif
+
 	globals.pool = pool;
+
 	if (lcr_load_config() != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load lcr config file\n");
 		return SWITCH_STATUS_FALSE;
@@ -516,6 +537,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_lcr_load) {
 	if (switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "failed to initialize mutex\n");
 	}
+
 	SWITCH_ADD_API(dialplan_lcr_api_interface, "lcr", "Least Cost Routing Module", dialplan_lcr_function, LCR_SYNTAX);
 	SWITCH_ADD_DIALPLAN(dp_interface, "lcr", lcr_dialplan_hunt);
 	
