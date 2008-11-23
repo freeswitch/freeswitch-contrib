@@ -28,7 +28,8 @@ CREATE TABLE carrier_gateway
 
 CREATE UNIQUE INDEX gateway
   ON carrier_gateway
-  (gateway, term_host, port);
+  (prefix, suffix);
+
 
 -- Table: lcr
 
@@ -37,14 +38,14 @@ CREATE UNIQUE INDEX gateway
 CREATE TABLE lcr
 (
   id serial NOT NULL,
-  digits VARCHAR(15),
+  digits NUMERIC(20, 0),
   rate numeric(11,5) NOT NULL,
   carrier_id integer NOT NULL REFERENCES carriers(id),
   lead_strip integer NOT NULL DEFAULT 0,
   trail_strip integer NOT NULL DEFAULT 0,
   prefix VARCHAR(16) NOT NULL DEFAULT '',
   suffix VARCHAR(16) NOT NULL DEFAULT '',
-  lcr_profile VARCHAR(32),
+  lcr_profile INTEGER NOT NULL DEFAULT 0,
   date_start timestamp with time zone NOT NULL,
   date_end timestamp with time zone NOT NULL,
   quality numeric(10,6) NOT NULL DEFAULT 0,
@@ -76,4 +77,3 @@ CREATE INDEX profile_digits_15
 CREATE INDEX unique_route
   ON lcr
   (digits, carrier_id);
-

@@ -34,7 +34,7 @@
 #include <switch_odbc.h>
 
 
-#define LCR_SYNTAX "lcr <digits>"
+#define LCR_SYNTAX "lcr <digits> [<lcr profile>]"
 
 /* SQL Query places */
 #define LCR_DIGITS_PLACE 0
@@ -266,7 +266,7 @@ int route_add_callback(void *pArg, int argc, char **argv, char **columnNames) {
 	return SWITCH_STATUS_SUCCESS;
 }
 
-switch_status_t lcr_do_lookup(char *digits, callback_t *cb_struct) {
+switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_profile) {
 	/* instantiate the object/struct we defined earlier */
 	switch_stream_handle_t sql_stream = { 0 };
 	size_t n, digit_len = strlen(digits);
@@ -284,18 +284,22 @@ switch_status_t lcr_do_lookup(char *digits, callback_t *cb_struct) {
 	sql_stream.write_function(&sql_stream, 
 							  "SELECT l.digits, c.carrier_name, l.rate, cg.prefix AS gw_prefix, cg.suffix AS gw_suffix, l.lead_strip, l.trail_strip, l.prefix, l.suffix "
 							  );
-	sql_stream.write_function(&sql_stream, "FROM lcr l JOIN carriers c ON l.carrier_id=c.id JOIN carrier_gateway cg ON c.id=cg.carrier_id ");
+	sql_stream.write_function(&sql_stream, "FROM lcr l JOIN carriers c ON l.carrier_id=c.id JOIN carrier_gateway cg ON c.id=cg.carrier_id WHERE digits IN (");
 	for (n = digit_len; n > 0; n--) {
 		digits_copy[n] = '\0';
-		sql_stream.write_function(&sql_stream, "%s digits='%s' ", (n==digit_len ? "WHERE" : "OR"), digits_copy);
+		sql_stream.write_function(&sql_stream, "%s%s", (n==digit_len ? "" : ", "), digits_copy);
+	}
+	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end ");
+	if(lcr_profile > 0) {
+		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
 	}
 	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate;");
-
+	
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "%s\n", (char *)sql_stream.data);    
-
+	
 	lcr_execute_sql_callback((char *)sql_stream.data, route_add_callback, cb_struct);
 	switch_safe_free(sql_stream.data);
-
+	
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -373,7 +377,8 @@ SWITCH_STANDARD_DIALPLAN(lcr_dialplan_hunt) {
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	callback_t routes = { 0 };
 	lcr_route cur_route = { 0 };
-	char *bridge_data = NULL;;
+	char *bridge_data = NULL;
+	uint16_t lcr_profile = 0;
 
 	if (!caller_profile) {
 		caller_profile = switch_channel_get_caller_profile(channel);
@@ -381,7 +386,7 @@ SWITCH_STANDARD_DIALPLAN(lcr_dialplan_hunt) {
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "LCR Lookup on %s\n", caller_profile->destination_number);
 	routes.lookup_number = caller_profile->destination_number;
-	if (lcr_do_lookup(caller_profile->destination_number, &routes) == SWITCH_STATUS_SUCCESS) {
+	if (lcr_do_lookup(&routes, caller_profile->destination_number, lcr_profile) == SWITCH_STATUS_SUCCESS) {
 		if ((extension = switch_caller_extension_new(session, caller_profile->destination_number, caller_profile->destination_number)) == 0) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "memory error!\n");
 			destroy_list(&routes.head);
@@ -426,6 +431,7 @@ SWITCH_STANDARD_APP(lcr_app_function)
 	char *rbp = rbuf;
 	switch_size_t l = 0, rbl = sizeof(rbuf);
 	uint32_t cnt = 1;
+	uint16_t lcr_profile = 0;
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	char *last_delim = "|";
 	callback_t routes = { 0 };
@@ -437,10 +443,19 @@ SWITCH_STANDARD_APP(lcr_app_function)
 
 	if ((argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0]))))) {
 		dest = argv[0];
-
+		if(argc > 1) {
+			if((uint16_t)atoi(argv[1]) > 0 && (uint16_t)atoi(argv[1]) < 0xFFFF) {
+				lcr_profile = (uint16_t)atoi(argv[1]);
+			} else {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, 
+								  "lcr profile MUST be an integer NOT '%s'\n", argv[1]
+								  );				
+			}
+		}
+		
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "LCR Lookup on %s\n", dest);
 		routes.lookup_number = dest;
-		if (lcr_do_lookup(dest, &routes) == SWITCH_STATUS_SUCCESS) {
+		if (lcr_do_lookup(&routes, dest, lcr_profile) == SWITCH_STATUS_SUCCESS) {
 			for (cur_route = routes.head; cur_route; cur_route = cur_route->next) {
 				switch_snprintf(vbuf, sizeof(vbuf), "lcr_route_%d", cnt++);
 				switch_channel_set_variable(channel, vbuf, cur_route->dialstring);
@@ -467,6 +482,7 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 	char *mydata = NULL;
 	char *dialstring = NULL;
 	char *destination_number = NULL;
+	uint16_t lcr_profile = 0;
 	lcr_route current = NULL;
 	max_obj_t maximum_lengths = { 0 };
 	callback_t cb_struct = { 0 };
@@ -480,6 +496,16 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 
 	if ((argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0]))))) {
 		destination_number = strdup(argv[0]);
+		if(argc > 1) {
+			if((uint16_t)atoi(argv[1]) > 0 && (uint16_t)atoi(argv[1]) < 0xFFFF) {
+				lcr_profile = (uint16_t)atoi(argv[1]);
+			} else {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR
+								  , "lcr profile MUST be an integer, NOT '%s'\n", argv[1]
+								  );
+				goto usage;
+			}
+		}
 		cb_struct.lookup_number = destination_number;
 
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
@@ -487,7 +513,7 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 						  );
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
 						  , "lcr lookup returned [%d]\n"
-						  , lcr_do_lookup(destination_number, &cb_struct)
+						  , lcr_do_lookup(&cb_struct, destination_number, lcr_profile)
 						  );
 		if (cb_struct.head != NULL) {
 			size_t len;

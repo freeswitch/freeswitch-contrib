@@ -21,6 +21,7 @@
 
 DROP TABLE IF EXISTS `lcr`;
 CREATE TABLE `lcr` (
+  `id` int(11) NOT NULL auto_increment,
   `digits` varchar(15) default NULL,
   `rate` float(11,5) unsigned NOT NULL,
   `carrier_id` int(11) NOT NULL,
@@ -33,7 +34,6 @@ CREATE TABLE `lcr` (
   `date_end` datetime NOT NULL,
   `quality` float(10,6) NOT NULL,
   `reliability` float(10,6) NOT NULL,
-  `id` int(11) NOT NULL auto_increment,
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`),
   KEY `digits` (`digits`),
