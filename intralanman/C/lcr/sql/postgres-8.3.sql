@@ -6,6 +6,7 @@ CREATE TABLE carriers
 (
   id serial NOT NULL,
   carrier_name VARCHAR(255) NOT NULL,
+  enabled boolean NOT NULL DEFAULT 'true',
   CONSTRAINT carriers_pkey PRIMARY KEY (id)
 );
 
@@ -19,6 +20,7 @@ CREATE TABLE carrier_gateway
   carrier_id integer REFERENCES carriers(id),
   prefix VARCHAR(128) NOT NULL DEFAULT '',
   suffix VARCHAR(128) NOT NULL DEFAULT '',
+  enabled boolean NOT NULL DEFAULT 'true',
   CONSTRAINT carrier_gateway_pkey PRIMARY KEY (id)
 );
 

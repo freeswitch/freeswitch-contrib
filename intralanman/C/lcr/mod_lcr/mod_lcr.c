@@ -284,16 +284,16 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 	sql_stream.write_function(&sql_stream, 
 							  "SELECT l.digits, c.carrier_name, l.rate, cg.prefix AS gw_prefix, cg.suffix AS gw_suffix, l.lead_strip, l.trail_strip, l.prefix, l.suffix "
 							  );
-	sql_stream.write_function(&sql_stream, "FROM lcr l JOIN carriers c ON l.carrier_id=c.id JOIN carrier_gateway cg ON c.id=cg.carrier_id WHERE digits IN (");
+	sql_stream.write_function(&sql_stream, "FROM lcr l JOIN carriers c ON l.carrier_id=c.id JOIN carrier_gateway cg ON c.id=cg.carrier_id WHERE c.enabled = '1' AND cg.enabled = '1' AND l.enabled = '1' AND digits IN (");
 	for (n = digit_len; n > 0; n--) {
 		digits_copy[n] = '\0';
 		sql_stream.write_function(&sql_stream, "%s%s", (n==digit_len ? "" : ", "), digits_copy);
 	}
-	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end AND enabled='1' ");
+	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end ");
 	if(lcr_profile > 0) {
 		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
 	}
-	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate;");
+	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate, random();");
 	
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "%s\n", (char *)sql_stream.data);    
 	
