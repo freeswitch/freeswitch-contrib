@@ -289,7 +289,7 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 		digits_copy[n] = '\0';
 		sql_stream.write_function(&sql_stream, "%s%s", (n==digit_len ? "" : ", "), digits_copy);
 	}
-	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end ");
+	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end AND enabled='1' ");
 	if(lcr_profile > 0) {
 		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
 	}

@@ -30,10 +30,11 @@ CREATE TABLE `lcr` (
   `prefix` varchar(16) NOT NULL,
   `suffix` varchar(16) NOT NULL,
   `lcr_profile` varchar(32) default NULL,
-  `date_start` datetime NOT NULL,
-  `date_end` datetime NOT NULL,
+  `date_start` datetime NOT NULL DEFAULT '1970-01-01',
+  `date_end` datetime NOT NULL DEFAULT '2030-12-31',
   `quality` float(10,6) NOT NULL,
   `reliability` float(10,6) NOT NULL,
+  `enabled` boolean NOT NULL DEFAULT '1';
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`),
   KEY `digits` (`digits`),

@@ -46,10 +46,11 @@ CREATE TABLE lcr
   prefix VARCHAR(16) NOT NULL DEFAULT '',
   suffix VARCHAR(16) NOT NULL DEFAULT '',
   lcr_profile INTEGER NOT NULL DEFAULT 0,
-  date_start timestamp with time zone NOT NULL,
-  date_end timestamp with time zone NOT NULL,
+  date_start timestamp with time zone NOT NULL DEFAULT '1970-01-01',
+  date_end timestamp with time zone NOT NULL DEFAULT '2030-12-31',
   quality numeric(10,6) NOT NULL DEFAULT 0,
   reliability numeric(10,6) NOT NULL DEFAULT 0,
+  enabled boolean NOT NULL DEFAULT 'true',
   CONSTRAINT lcr_pkey PRIMARY KEY (id)
 );
 
