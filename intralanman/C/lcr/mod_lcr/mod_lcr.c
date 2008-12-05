@@ -293,7 +293,7 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 	if(lcr_profile > 0) {
 		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
 	}
-	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate, random();");
+	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate, rand();");
 	
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "%s\n", (char *)sql_stream.data);    
 	
