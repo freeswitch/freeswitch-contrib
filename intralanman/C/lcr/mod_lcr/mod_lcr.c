@@ -57,6 +57,9 @@ char headers[LCR_HEADERS_COUNT][32] = {
 	"Dialstring",
 };
 
+/* sql for random function */
+char *db_random = NULL;
+
 struct odbc_obj {
 	switch_odbc_handle_t *handle;
 	SQLHSTMT stmt;
@@ -198,10 +201,34 @@ switch_status_t process_max_lengths(max_obj_t *maxes, lcr_route routes, char *de
 	return SWITCH_STATUS_SUCCESS;
 }
 
+/* try each type of random until we suceed */
+static switch_bool_t set_db_random() {
+	char *sql = NULL;
+	if (globals.odbc_dsn) {
+		sql = "SELECT * FROM lcr ORDER BY rand() LIMIT 1";
+		if(switch_odbc_handle_exec(globals.master_odbc, sql, NULL)
+				== SWITCH_ODBC_SUCCESS) {
+			db_random = "rand()";
+			return SWITCH_TRUE;
+		}
+		sql = "SELECT * FROM lcr ORDER BY random() LIMIT 1";
+		if(switch_odbc_handle_exec(globals.master_odbc, sql, NULL)
+				== SWITCH_ODBC_SUCCESS) {
+			db_random = "random()";
+			return SWITCH_TRUE;
+		}
+	}
+	return SWITCH_FALSE;
+}
+
 static switch_bool_t lcr_execute_sql_callback(char *sql, switch_core_db_callback_func_t callback, void *pdata) {
 	if (globals.odbc_dsn) {
-		switch_odbc_handle_callback_exec(globals.master_odbc, sql, callback, pdata);
-		return SWITCH_TRUE;
+		if(switch_odbc_handle_callback_exec(globals.master_odbc, sql, callback, pdata)
+				== SWITCH_ODBC_FAIL) {
+			return SWITCH_FALSE;
+		} else {
+			return SWITCH_TRUE;
+		}
 	}
 	return SWITCH_FALSE;
 }
@@ -271,6 +298,7 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 	switch_stream_handle_t sql_stream = { 0 };
 	size_t n, digit_len = strlen(digits);
 	char *digits_copy;
+	switch_bool_t lookup_status;
 
 	if (switch_strlen_zero(digits)) {
 		return SWITCH_FALSE;
@@ -293,14 +321,22 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 	if(lcr_profile > 0) {
 		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
 	}
-	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate, rand();");
+	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate");
+	if(db_random) {
+		sql_stream.write_function(&sql_stream, ", %s", db_random);
+	}
+	sql_stream.write_function(&sql_stream, ";");
 	
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "%s\n", (char *)sql_stream.data);    
 	
-	lcr_execute_sql_callback((char *)sql_stream.data, route_add_callback, cb_struct);
+	lookup_status = lcr_execute_sql_callback((char *)sql_stream.data, route_add_callback, cb_struct);
 	switch_safe_free(sql_stream.data);
 	
-	return SWITCH_STATUS_SUCCESS;
+	if(lookup_status) {
+		return SWITCH_STATUS_SUCCESS;
+	} else {
+		return SWITCH_STATUS_GENERR;
+	}
 }
 
 static switch_status_t lcr_load_config() {
@@ -486,6 +522,7 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 	lcr_route current = NULL;
 	max_obj_t maximum_lengths = { 0 };
 	callback_t cb_struct = { 0 };
+	switch_status_t lookup_status = SWITCH_STATUS_SUCCESS;
 	//switch_malloc(maximum_lengths, sizeof(max_obj_t));
 
 	if (switch_strlen_zero(cmd)) {
@@ -511,9 +548,10 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
 						  , "data passed to lcr is [%s]\n", cmd
 						  );
+		lookup_status = lcr_do_lookup(&cb_struct, destination_number, lcr_profile);
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
 						  , "lcr lookup returned [%d]\n"
-						  , lcr_do_lookup(&cb_struct, destination_number, lcr_profile)
+						  , lookup_status
 						  );
 		if (cb_struct.head != NULL) {
 			size_t len;
@@ -568,7 +606,11 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 			destroy_list(&cb_struct.head);
 			switch_safe_free(dialstring);
 		} else {
-			stream->write_function(stream, "No Routes To Display\n");
+			if(lookup_status == SWITCH_STATUS_SUCCESS) {
+				stream->write_function(stream, "No Routes To Display\n");
+			} else {
+				stream->write_function(stream, "Error looking up routes\n");
+			}
 		}
 	}
 
@@ -601,6 +643,12 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_lcr_load) {
 	if (switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "failed to initialize mutex\n");
 	}
+	
+	if(set_db_random() == SWITCH_TRUE) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Database RANDOM function set to %s\n", db_random);
+	} else {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to determine database RANDOM function\n");
+	};
 
 	SWITCH_ADD_API(dialplan_lcr_api_interface, "lcr", "Least Cost Routing Module", dialplan_lcr_function, LCR_SYNTAX);
 	SWITCH_ADD_APP(app_interface, "lcr", "Perform an LCR lookup", "Perform an LCR lookup",
