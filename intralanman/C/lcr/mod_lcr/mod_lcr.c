@@ -101,6 +101,13 @@ typedef lcr_obj_t *lcr_route;
 typedef struct max_obj max_obj_t;
 typedef max_obj_t *max_len;
 
+struct profile_obj {
+	char *name;
+	uint16_t id;
+	char *order_by;
+};
+typedef struct profile_obj profile_t;
+
 struct callback_obj {
 	lcr_route head;
 	int matches;
@@ -114,6 +121,8 @@ static struct {
 	char *odbc_dsn;
 	switch_mutex_t *mutex;
 	switch_odbc_handle_t *master_odbc;
+	switch_hash_t *profile_hash;
+	profile_t *default_profile;
 	void *filler1;
 } globals;
 
@@ -293,15 +302,24 @@ int route_add_callback(void *pArg, int argc, char **argv, char **columnNames) {
 	return SWITCH_STATUS_SUCCESS;
 }
 
-switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_profile) {
+switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, char* profile_name) {
 	/* instantiate the object/struct we defined earlier */
 	switch_stream_handle_t sql_stream = { 0 };
 	size_t n, digit_len = strlen(digits);
 	char *digits_copy;
+	profile_t *profile;
 	switch_bool_t lookup_status;
 
 	if (switch_strlen_zero(digits)) {
 		return SWITCH_FALSE;
+	}
+	
+	/* locate the profile */
+	if(switch_strlen_zero(profile_name)) {
+		profile = globals.default_profile;
+	} else if (!(profile = switch_core_hash_find(globals.profile_hash, profile_name))) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error invalid profile %s\n", profile_name);
+		return SWITCH_STATUS_FALSE;
 	}
 
    	digits_copy = strdup(digits);
@@ -318,10 +336,10 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 		sql_stream.write_function(&sql_stream, "%s%s", (n==digit_len ? "" : ", "), digits_copy);
 	}
 	sql_stream.write_function(&sql_stream, ") AND CURRENT_TIMESTAMP BETWEEN date_start AND date_end ");
-	if(lcr_profile > 0) {
-		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", lcr_profile);
+	if(profile->id > 0) {
+		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", profile->id);
 	}
-	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, rate");
+	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, %s", profile->order_by);
 	if(db_random) {
 		sql_stream.write_function(&sql_stream, ", %s", db_random);
 	}
@@ -341,10 +359,11 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, uint16_t lcr_
 
 static switch_status_t lcr_load_config() {
 	char *cf = "lcr.conf";
-	switch_xml_t cfg, xml, settings, param;
+	switch_xml_t cfg, xml, settings, param, x_profile, x_profiles;
 	switch_status_t status = SWITCH_STATUS_SUCCESS;
 	char *odbc_user = NULL;
 	char *odbc_pass = NULL;
+	profile_t *profile = NULL;
 
 	if (!(xml = switch_xml_open_cfg(cf, &cfg, NULL))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "open of %s failed\n", cf);
@@ -369,6 +388,65 @@ static switch_status_t lcr_load_config() {
 			}
 		}
 	}
+	
+	/* define default profile  */
+	profile = switch_core_alloc(globals.pool, sizeof(*profile));
+	profile->name = "global_default";
+	profile->order_by = "rate";
+	globals.default_profile = profile;
+	
+	switch_core_hash_init(&globals.profile_hash, globals.pool);
+	if((x_profiles = switch_xml_child(cfg, "profiles"))) {
+		for (x_profile = switch_xml_child(x_profiles, "profile"); x_profile; x_profile = x_profile->next) {
+			char *name = (char *) switch_xml_attr_soft(x_profile, "name");
+			char *order_by = NULL;
+			char *id_s = NULL;
+			
+			for (param = switch_xml_child(x_profile, "param"); param; param = param->next) {
+				char *var, *val;
+
+				var = (char *) switch_xml_attr_soft(param, "name");
+				val = (char *) switch_xml_attr_soft(param, "value");
+				
+				if (!strcasecmp(var, "order_by") && !switch_strlen_zero(val)) {
+					if (!strcasecmp(val, "quality")) {
+						order_by = "quality DESC";
+					} else if(!strcasecmp(val, "reliability")) {
+						order_by = "reliability DESC";
+					} else {
+						order_by = val;
+					}
+				} else if (!strcasecmp(var, "id") && !switch_strlen_zero(val)) {
+					id_s = val;
+				}
+			}
+			
+			if(switch_strlen_zero(name)) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No name specified.\n");
+			} else {
+				profile = switch_core_alloc(globals.pool, sizeof(*profile));
+				profile->name = switch_core_strdup(globals.pool, name);
+				
+				if(!switch_strlen_zero(order_by)) {
+					profile->order_by = switch_core_strdup(globals.pool, order_by);
+				} else {
+					/* default to rate */
+					profile->order_by = "rate";
+				}
+				if(!switch_strlen_zero(id_s)) {
+					profile->id = atoi(id_s);
+				}
+				
+				switch_core_hash_insert(globals.profile_hash, profile->name, profile);
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Loaded lcr profile %s.\n", profile->name);
+			}
+		}
+	} else {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "No lcr profiles defined.\n");
+	}
+	
+
+	
 	if (globals.odbc_dsn) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO
 						  , "dsn is \"%s\", user is \"%s\", and password is \"%s\"\n"
@@ -414,7 +492,7 @@ SWITCH_STANDARD_DIALPLAN(lcr_dialplan_hunt) {
 	callback_t routes = { 0 };
 	lcr_route cur_route = { 0 };
 	char *bridge_data = NULL;
-	uint16_t lcr_profile = 0;
+	char *lcr_profile = NULL;
 
 	if (!caller_profile) {
 		caller_profile = switch_channel_get_caller_profile(channel);
@@ -467,7 +545,7 @@ SWITCH_STANDARD_APP(lcr_app_function)
 	char *rbp = rbuf;
 	switch_size_t l = 0, rbl = sizeof(rbuf);
 	uint32_t cnt = 1;
-	uint16_t lcr_profile = 0;
+	char *lcr_profile = NULL;
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	char *last_delim = "|";
 	callback_t routes = { 0 };
@@ -480,13 +558,7 @@ SWITCH_STANDARD_APP(lcr_app_function)
 	if ((argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0]))))) {
 		dest = argv[0];
 		if(argc > 1) {
-			if((uint16_t)atoi(argv[1]) > 0 && (uint16_t)atoi(argv[1]) < 0xFFFF) {
-				lcr_profile = (uint16_t)atoi(argv[1]);
-			} else {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, 
-								  "lcr profile MUST be an integer NOT '%s'\n", argv[1]
-								  );				
-			}
+			lcr_profile = argv[1];
 		}
 		
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "LCR Lookup on %s\n", dest);
@@ -518,7 +590,7 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 	char *mydata = NULL;
 	char *dialstring = NULL;
 	char *destination_number = NULL;
-	uint16_t lcr_profile = 0;
+	char *lcr_profile = NULL;
 	lcr_route current = NULL;
 	max_obj_t maximum_lengths = { 0 };
 	callback_t cb_struct = { 0 };
@@ -534,14 +606,7 @@ SWITCH_STANDARD_API(dialplan_lcr_function) {
 	if ((argc = switch_separate_string(mydata, ' ', argv, (sizeof(argv) / sizeof(argv[0]))))) {
 		destination_number = strdup(argv[0]);
 		if(argc > 1) {
-			if((uint16_t)atoi(argv[1]) > 0 && (uint16_t)atoi(argv[1]) < 0xFFFF) {
-				lcr_profile = (uint16_t)atoi(argv[1]);
-			} else {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR
-								  , "lcr profile MUST be an integer, NOT '%s'\n", argv[1]
-								  );
-				goto usage;
-			}
+			lcr_profile = argv[1];
 		}
 		cb_struct.lookup_number = destination_number;
 
@@ -635,6 +700,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_lcr_load) {
 #endif
 
 	globals.pool = pool;
+	
 
 	if (lcr_load_config() != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load lcr config file\n");
