@@ -339,7 +339,7 @@ switch_status_t lcr_do_lookup(callback_t *cb_struct, char *digits, char* profile
 	if(profile->id > 0) {
 		sql_stream.write_function(&sql_stream, "AND lcr_profile=%d ", profile->id);
 	}
-	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC, %s", profile->order_by);
+	sql_stream.write_function(&sql_stream, "ORDER BY digits DESC%s", profile->order_by);
 	if(db_random) {
 		sql_stream.write_function(&sql_stream, ", %s", db_random);
 	}
@@ -392,16 +392,19 @@ static switch_status_t lcr_load_config() {
 	/* define default profile  */
 	profile = switch_core_alloc(globals.pool, sizeof(*profile));
 	profile->name = "global_default";
-	profile->order_by = "rate";
+	profile->order_by = ", rate";
 	globals.default_profile = profile;
 	
 	switch_core_hash_init(&globals.profile_hash, globals.pool);
 	if((x_profiles = switch_xml_child(cfg, "profiles"))) {
 		for (x_profile = switch_xml_child(x_profiles, "profile"); x_profile; x_profile = x_profile->next) {
 			char *name = (char *) switch_xml_attr_soft(x_profile, "name");
-			char *order_by = NULL;
+			switch_stream_handle_t order_by = { 0 };
 			char *id_s = NULL;
+			int argc, x = 0;
+			char *argv[4] = { 0 };
 			
+			SWITCH_STANDARD_STREAM(order_by);
 			for (param = switch_xml_child(x_profile, "param"); param; param = param->next) {
 				char *var, *val;
 
@@ -409,12 +412,30 @@ static switch_status_t lcr_load_config() {
 				val = (char *) switch_xml_attr_soft(param, "value");
 				
 				if (!strcasecmp(var, "order_by") && !switch_strlen_zero(val)) {
-					if (!strcasecmp(val, "quality")) {
-						order_by = "quality DESC";
-					} else if(!strcasecmp(val, "reliability")) {
-						order_by = "reliability DESC";
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "param val is %s\n", val);
+					if ((argc = switch_separate_string(val, ',', argv, (sizeof(argv) / sizeof(argv[0]))))) {
+						for (x=0; x<argc; x++) {
+							switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "arg #%d/%d is %s\n", x, argc, argv[x]);
+							if(!switch_strlen_zero(argv[x])) {
+								if (!strcasecmp(argv[x], "quality")) {
+									order_by.write_function(&order_by, ", quality DESC");
+								} else if(!strcasecmp(argv[x], "reliability")) {
+									order_by.write_function(&order_by, ", reliability DESC");
+								} else {
+									order_by.write_function(&order_by, ", %s", argv[x]);
+								}
+							} else {
+								switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "arg #%d is empty\n", x);
+							}
+						}
 					} else {
-						order_by = val;
+						if (!strcasecmp(val, "quality")) {
+							order_by.write_function(&order_by, ", quality DESC");
+						} else if(!strcasecmp(val, "reliability")) {
+							order_by.write_function(&order_by, ", reliability DESC");
+						} else {
+							order_by.write_function(&order_by, ", %s", val);
+						}
 					}
 				} else if (!strcasecmp(var, "id") && !switch_strlen_zero(val)) {
 					id_s = val;
@@ -427,11 +448,12 @@ static switch_status_t lcr_load_config() {
 				profile = switch_core_alloc(globals.pool, sizeof(*profile));
 				profile->name = switch_core_strdup(globals.pool, name);
 				
-				if(!switch_strlen_zero(order_by)) {
-					profile->order_by = switch_core_strdup(globals.pool, order_by);
+				if(!switch_strlen_zero((char *)order_by.data)) {
+					profile->order_by = switch_core_strdup(globals.pool, (char *)order_by.data);
+					switch_safe_free(order_by.data);
 				} else {
 					/* default to rate */
-					profile->order_by = "rate";
+					profile->order_by = ", rate";
 				}
 				if(!switch_strlen_zero(id_s)) {
 					profile->id = atoi(id_s);
