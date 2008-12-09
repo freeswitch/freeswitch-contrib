@@ -34,7 +34,7 @@ CREATE TABLE `lcr` (
   `date_end` datetime NOT NULL DEFAULT '2030-12-31',
   `quality` float(10,6) NOT NULL,
   `reliability` float(10,6) NOT NULL,
-  `enabled` boolean NOT NULL DEFAULT '1';
+  `enabled` boolean NOT NULL DEFAULT '1',
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`),
   KEY `digits` (`digits`),
@@ -52,7 +52,7 @@ DROP TABLE IF EXISTS `carriers`;
 CREATE TABLE `carriers` (
   `id` int(11) NOT NULL auto_increment,
   `carrier_name` varchar(255) default NULL,
-  `enabled` boolean NOT NULL DEFAULT '1';
+  `enabled` boolean NOT NULL DEFAULT '1',
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 
@@ -66,7 +66,7 @@ CREATE TABLE `carrier_gateway` (
   `carrier_id` int(11) default NULL,
   `prefix` varchar(255) NOT NULL,
   `suffix` varchar(255) NOT NULL,
-  `enabled` boolean NOT NULL DEFAULT '1';
+  `enabled` boolean NOT NULL DEFAULT '1',
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
