@@ -145,14 +145,14 @@ namespace FreeSwitch.EventSocket
                     int pos = plainEvent.Body.IndexOf("\n\n");
                     if (pos < plainEvent.Body.Length - 2)
                     {
-                        Console.WriteLine("Fucked up event");
+                        Console.WriteLine("Invalid event");
                         Console.WriteLine("Header");
                         Console.WriteLine(headers);
                         Console.WriteLine("Body");
                         Console.WriteLine(plainEvent.Body);
                         Console.WriteLine("=========================== EVERYTHING in _text ==============================");
                         Console.WriteLine(_text);
-                        throw new InvalidDataException("Fucked up event: " + _text);
+                        throw new InvalidDataException("Invalid event: " + _text);
                     }
 
                     if (plainEvent.Body.Length < plainEvent.ContentLength)
