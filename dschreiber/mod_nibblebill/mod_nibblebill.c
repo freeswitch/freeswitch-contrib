@@ -190,7 +190,6 @@ done:
 	}
 	/* Need to add defaults for the integers! */
 
-
 #ifdef SWITCH_HAVE_ODBC
 	if (globals.db_dsn) {
 		if (!(globals.master_odbc = switch_odbc_handle_new(globals.db_dsn, globals.db_username, globals.db_password))) {
@@ -209,13 +208,12 @@ done:
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Opened ODBC Database!\n");
 		}
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: %s\n", globals.db_dsn);
-    	} else {
+	} else {
 #endif
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "ODBC does not appear to be installed in the core. You need to run ./configure --enable-core-odbc-support\n");
 #ifdef SWITCH_HAVE_ODBC
 	}
 #endif
-
 
 #ifdef SWITCH_HAVE_ODBC
 reallydone:
@@ -254,7 +252,7 @@ static switch_status_t sched_billing(switch_core_session_t *session)
 }
 
 /* This is where we actually charge the guy 
-   This can be called anytime a call is in progress or at the end of a call before the session is destroyed */
+  This can be called anytime a call is in progress or at the end of a call before the session is destroyed */
 static switch_status_t do_billing(switch_core_session_t *session)
 {
 	/* FS vars we will use */
@@ -265,10 +263,10 @@ static switch_status_t do_billing(switch_core_session_t *session)
 	nibble_data_t *nibble_data;
 	switch_time_t ts = switch_timestamp_now();
 	float billamount;
-        char date[80] = "";
+	char date[80] = "";
 	char *uuid;
-        switch_size_t retsize;
-        switch_time_exp_t tm;
+	switch_size_t retsize;
+	switch_time_exp_t tm;
 
 	if (!session) {
 		/* wtf? Why are we here? */
@@ -488,10 +486,10 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_nibblebill_load)
 	switch_core_add_state_handler(&nibble_state_handler);
 
 	/* bind to heartbeat events */
-        if (switch_event_bind_removable(modname, SWITCH_EVENT_SESSION_HEARTBEAT, SWITCH_EVENT_SUBCLASS_ANY, event_handler, NULL, &globals.node) != SWITCH_STATUS_SUCCESS) {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event to monitor for session heartbeats!\n");
-                return SWITCH_STATUS_GENERR;
-        }
+	if (switch_event_bind_removable(modname, SWITCH_EVENT_SESSION_HEARTBEAT, SWITCH_EVENT_SUBCLASS_ANY, event_handler, NULL, &globals.node) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event to monitor for session heartbeats!\n");
+		return SWITCH_STATUS_GENERR;
+	}
 
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
