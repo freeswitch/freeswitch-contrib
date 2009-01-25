@@ -307,7 +307,7 @@ static switch_status_t do_billing(switch_core_session_t *session)
 
 	/* Local vars */
 	nibble_data_t *nibble_data;
-	switch_time_t ts = switch_timestamp_now();
+	switch_time_t ts = switch_micro_time_now();
 	float billamount;
 	char date[80] = "";
 	char *tmp;
@@ -476,7 +476,7 @@ static void event_handler(switch_event_t *event)
 static void nibblebill_pause(switch_core_session_t *session)
 {
 	switch_channel_t *channel = switch_core_session_get_channel(session);
-	switch_time_t ts = switch_timestamp_now();
+	switch_time_t ts = switch_micro_time_now();
 	nibble_data_t *nibble_data;
 
 	if (!channel) {
@@ -512,7 +512,7 @@ static void nibblebill_pause(switch_core_session_t *session)
 static void nibblebill_resume(switch_core_session_t *session)
 {
 	switch_channel_t *channel = switch_core_session_get_channel(session);
-	switch_time_t ts = switch_timestamp_now();
+	switch_time_t ts = switch_micro_time_now();
 	nibble_data_t *nibble_data;
 
 	if (!channel) {
@@ -555,7 +555,7 @@ static void nibblebill_resume(switch_core_session_t *session)
 static void nibblebill_reset(switch_core_session_t *session)
 {
 	switch_channel_t *channel = switch_core_session_get_channel(session);
-	switch_time_t ts = switch_timestamp_now();
+	switch_time_t ts = switch_micro_time_now();
 	nibble_data_t *nibble_data;
 
 	if (!channel) {
