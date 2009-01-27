@@ -9,7 +9,7 @@ SOURCES += main.cpp \
     conn_event_handler.cpp \
     serverlogin.cpp
 
-INCLUDEPATH = ./../../../libs/esl/src/include 
+INCLUDEPATH += ../../../../libs/esl/src/include
 
 HEADERS += fsgui.h \
     conn_event_handler.h \
@@ -21,4 +21,4 @@ HEADERS += fsgui.h \
 FORMS += fsgui.ui \
     serverlogin.ui
 
-LIBS += -L.. -lesl
+LIBS += -L../../../../libs/esl -lesl

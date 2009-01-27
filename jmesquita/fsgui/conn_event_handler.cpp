@@ -8,7 +8,6 @@ conn_event_handler::conn_event_handler()
 
 conn_event_handler::~conn_event_handler(void){
     getDisconnected();
-	delete &handle;
 }
 
 void conn_event_handler::getDisconnected(){
