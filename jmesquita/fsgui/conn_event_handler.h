@@ -4,9 +4,6 @@
 #include <QtGui>
 
 #include "esl.h"
-#include "esl_event.h"
-#include "esl_threadmutex.h"
-#include "esl_config.h"
 
 class conn_event_handler : public QObject
 {
