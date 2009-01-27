@@ -4,7 +4,6 @@
 #include <QtGui/QMainWindow>
 #include "conn_event_handler.h"
 
-
 namespace Ui
 {
     class FSGuiClass;
@@ -25,15 +24,15 @@ private:
     QLabel * statusBarLabel;
 
 private slots:
-    void error(QString);
+    void error(const QString&);
     void connectionSuccessful(void);
-    void connectSlot(QString, QString, QString);
+    void connectSlot(const QString&, const QString&, const QString&);
     void btnSendClickedSlot();
-    void lineCmdEditedSlot(QString);
-    void messageSlot(QString);
+    void lineCmdEditedSlot(const QString&);
+    void messageSlot(const QString&);
 
 signals:
-    void btnSendClickedSignal(QString);
+    void btnSendClickedSignal(const QString&);
 
 };
 

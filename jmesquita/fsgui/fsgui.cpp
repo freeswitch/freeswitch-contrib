@@ -25,21 +25,21 @@ FSGui::~FSGui()
     delete ui;
 }
 
-void FSGui::error(QString msg){
+void FSGui::error(const QString &msg){
     ui->statusBar->showMessage(msg);
 }
 
-void FSGui::connectSlot(QString hostname, QString port, QString password){
+void FSGui::connectSlot(const QString& hostname, const QString& port, const QString& password){
     socket = new conn_event_handler();
     connect( socket  , SIGNAL( connectionError(QString) ),
              this, SLOT( error(QString) ) );
-    connect(socket , SIGNAL( gotConnected() ),
+    connect(socket , SIGNAL( onConnected() ),
             this, SLOT(connectionSuccessful()));
     connect(socket , SIGNAL( messageSignal(QString) ),
             this, SLOT( messageSlot(QString) ));
     connect(this, SIGNAL(btnSendClickedSignal(QString)),
             socket, SLOT(sendMessage(QString)));
-    socket->getConnected(hostname, port.toInt(), password);
+    socket->Connect(hostname, port.toInt(), password);
     ui->btnSend->setEnabled(true);
 }
 
@@ -53,7 +53,7 @@ void FSGui::btnSendClickedSlot()
     ui->lineCmd->clear();
 }
 
-void FSGui::lineCmdEditedSlot(QString text)
+void FSGui::lineCmdEditedSlot(const QString& text)
 {
     if (socket->isConnected() && !text.isEmpty())
     {
@@ -65,7 +65,7 @@ void FSGui::lineCmdEditedSlot(QString text)
     }
 }
 
-void FSGui::messageSlot(QString msg)
+void FSGui::messageSlot(const QString& msg)
 {
     if (!msg.isEmpty())
     {

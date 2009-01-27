@@ -6,29 +6,32 @@ conn_event_handler::conn_event_handler()
     memset(&handle, 0, sizeof(esl_handle_t));
 }
 
-conn_event_handler::~conn_event_handler(void){
-    getDisconnected();
+conn_event_handler::~conn_event_handler(void)
+{
+    if (isConnected()) {
+        Disconnect();
+    }
 }
 
-void conn_event_handler::getDisconnected(){
+void conn_event_handler::Disconnect()
+{
     esl_disconnect(&handle);
 }
 
-void conn_event_handler::getConnected(QString hostname, int port, QString password){
-    QByteArray h = hostname.toAscii();
-    QByteArray p = password.toAscii();
-    const char * Hostname = h.data();
-    const char * Password = p.data();
-	esl_status_t status = esl_connect(&handle, Hostname, port, Password);
-	if ( status != ESL_SUCCESS)
-	{
-            QString errDesc = handle.err;
-            emit connectionError(errDesc);
-	}
-	else
-	{
-            emit gotConnected();
-	}
+void conn_event_handler::Connect(const QString& hostname, int port, const QString& password) 
+{
+    
+    esl_status_t status = esl_connect(&handle, hostname.toAscii().data(), port, password.toAscii().data());
+    
+    if ( status != ESL_SUCCESS)
+    {
+        QString errDesc = handle.err;
+        emit connectionError(errDesc);
+    }
+    else
+    {
+        emit onConnected();
+    }
 }
 
 void conn_event_handler::handleError(){
@@ -40,7 +43,7 @@ void conn_event_handler::readClient()
     return;
 }
 
-void conn_event_handler::sendMessage(QString message)
+void conn_event_handler::sendMessage(const QString& message)
 {
 	if (isConnected())
 	{
@@ -76,12 +79,11 @@ void conn_event_handler::sendMessage(QString message)
     return;
 }
 
-void conn_event_handler::handleRecvMessage(QString msg)
+void conn_event_handler::handleRecvMessage(const QString &msg)
 {
-    return;
 }
 
-bool conn_event_handler::isConnected()
+bool conn_event_handler::isConnected() const
 {
     return handle.connected;
 }
