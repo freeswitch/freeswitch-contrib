@@ -18,6 +18,8 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * Class for XML directory
 */
 class fs_directory extends fs_curl {
+    private $user;
+    private $userid;
     private $users_vars;
     private $users_params;
     private $users_gateways;
@@ -25,6 +27,10 @@ class fs_directory extends fs_curl {
 
     public function fs_directory() {
         $this -> fs_curl();
+        if(array_key_exists('user', $this->request)) {
+            $this -> user = $this -> request['user'];
+        }
+        $this -> comment("User is " . $this->user);
     }
 
     public function main() {
@@ -49,7 +55,7 @@ class fs_directory extends fs_curl {
             $where_array[] = sprintf("domain='%s'", $this -> request['domain']);
         }
         if (array_key_exists('user', $this -> request)) {
-            $where_array[] = sprintf("username='%s'", $this -> request['user']);
+            $where_array[] = sprintf("username='%s'", $this -> user);
         }
         if (!empty($where_array)) {
             $this -> comment('where array has contents');
@@ -61,8 +67,7 @@ class fs_directory extends fs_curl {
         } else {
             $where_clause = '';
         }
-        $query = sprintf(
-        "SELECT * FROM directory %s ORDER BY username"
+        $query = sprintf("SELECT * FROM directory %s ORDER BY username"
             , $where_clause
         );
         $res = $this -> db -> queryAll($query);
@@ -72,6 +77,10 @@ class fs_directory extends fs_curl {
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
+        if(!empty($this -> user)) {
+            $this -> userid = $res[0]['id'];
+            $this -> comment(sprintf('user id is: %d', $this -> userid));
+        }
         return $res;
     }
 
@@ -80,7 +89,11 @@ class fs_directory extends fs_curl {
     * @return array of users' params
     */
     private function get_users_params() {
-        $query = sprintf("SELECT * FROM directory_params");
+        $where = '';
+        if(!empty($this -> userid)) {
+            $where = sprintf('WHERE directory_id = %d', $this -> userid);
+        }
+        $query = sprintf("SELECT * FROM directory_params %s;", $where);
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
@@ -120,7 +133,11 @@ class fs_directory extends fs_curl {
      * Get all the users' variables
      */
     private function get_users_vars() {
-        $query = sprintf("SELECT * FROM directory_vars;");
+        $where = '';
+        if(!empty($this -> userid)) {
+            $where = sprintf('WHERE directory_id = %d', $this -> userid);
+        }
+        $query = sprintf("SELECT * FROM directory_vars %s;", $where);
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
@@ -159,7 +176,11 @@ class fs_directory extends fs_curl {
      * get the users' gateways
      */
     private function get_users_gateways() {
-        $query = sprintf("SELECT * FROM directory_gateways;");
+        $where = '';
+        if(!empty($this -> userid)) {
+            $where = sprintf('WHERE directory_id = %d', $this -> userid);
+        }
+        $query = sprintf("SELECT * FROM directory_gateways %s;", $where);
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
