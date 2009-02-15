@@ -51,7 +51,7 @@ class fs_curl {
      * @return void
     */
     public function fs_curl() {
-	openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_LOCAL0);
+	openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_USER);
         header('Content-Type: text/xml');
         $this -> open_xml();
         $this -> generate_request_array();
