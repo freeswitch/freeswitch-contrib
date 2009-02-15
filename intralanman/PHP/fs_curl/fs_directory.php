@@ -18,6 +18,11 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * Class for XML directory
 */
 class fs_directory extends fs_curl {
+    private $users_vars;
+    private $users_params;
+    private $users_gateways;
+    private $users_gateway_params;
+
     public function fs_directory() {
         $this -> fs_curl();
     }
@@ -58,7 +63,7 @@ class fs_directory extends fs_curl {
         }
         $query = sprintf(
         "SELECT * FROM directory %s ORDER BY username"
-        , $where_clause
+            , $where_clause
         );
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
@@ -71,31 +76,62 @@ class fs_directory extends fs_curl {
     }
 
     /**
-     * Writes XML for directory user's <params>
-     * This method will pull all of the user params based on the passed user_id
-     * @param integer $user_id
-     * @return void
-     */
-    private function write_params($user_id) {
-        $query = sprintf(
-        "SELECT * FROM directory_params WHERE directory_id='$user_id';"
-        );
+    * This method will pull the params for every user in a domain
+    * @return array of users' params
+    */
+    private function get_users_params() {
+        $query = sprintf("SELECT * FROM directory_params");
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
-        $param_count = count($res);
-        if ($param_count > 0) {
+
+        $record_count = count($res);
+        for($i=0; $i<$record_count; $i++) {
+            $di = $res[$i]['directory_id'];
+            $pn = $res[$i]['param_name'];
+            $this->users_params[$di][$pn] = $res[$i]['param_value'];
+        }
+    }
+
+    /**
+     * Writes XML for directory user's <params>
+     * This method will pull all of the user params based on the passed user_id
+     * @param integer $user_id
+     * @return void
+     */
+    private function write_params($user_id) {
+        if (is_array($this->users_params[$user_id])
+            && count($this->users_params[$user_id]) > 0) {
             $this -> xmlw -> startElement('params');
-            for ($i=0; $i<$param_count; $i++) {
+            foreach($this->users_params[$user_id] as $pname => $pvalue) {
                 $this -> xmlw -> startElement('param');
-                $this -> xmlw -> writeAttribute('name', $res[$i]['param_name']);
-                $this -> xmlw -> writeAttribute('value', $res[$i]['param_value']);
+                $this -> xmlw -> writeAttribute('name', $pname);
+                $this -> xmlw -> writeAttribute('value', $pvalue);
                 $this -> xmlw -> endElement();
             }
             $this -> xmlw -> endElement();
+        }
+    }
+
+    /**
+     * Get all the users' variables
+     */
+    private function get_users_vars() {
+        $query = sprintf("SELECT * FROM directory_vars;");
+        $res = $this -> db -> queryAll($query);
+        if (FS_PDO::isError($res)) {
+            $this -> comment($this -> db -> getMessage());
+            $this -> file_not_found();
+        }
+
+        $record_count = count($res);
+        for($i=0; $i<$record_count; $i++) {
+            $di = $res[$i]['directory_id'];
+            $vn = $res[$i]['var_name'];
+            $this->users_vars[$di][$vn] = $res[$i]['var_value'];
         }
     }
 
@@ -106,24 +142,33 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_variables($user_id) {
-        $query = sprintf(
-        "SELECT * FROM directory_vars WHERE directory_id='$user_id';"
-        );
+        if (array_key_exists($user_id, $this->users_vars)
+            && is_array($this->users_vars[$user_id])) {
+            $this -> xmlw -> startElement('variables');
+            foreach($this->users_vars[$user_id] as $vname => $vvalue) {
+                $this -> xmlw -> startElement('variable');
+                $this -> xmlw -> writeAttribute('name', $vname);
+                $this -> xmlw -> writeAttribute('value', $vvalue);
+                $this -> xmlw -> endElement();
+            }
+            $this -> xmlw -> endElement();
+        }
+    }
+
+    /**
+     * get the users' gateways
+     */
+    private function get_users_gateways() {
+        $query = sprintf("SELECT * FROM directory_gateways;");
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
-        $var_count = count($res);
-        if ($var_count > 0) {
-            $this -> xmlw -> startElement('variables');
-            for ($i=0; $i<$var_count; $i++) {
-                $this -> xmlw -> startElement('variable');
-                $this -> xmlw -> writeAttribute('name', $res[$i]['var_name']);
-                $this -> xmlw -> writeAttribute('value', $res[$i]['var_value']);
-                $this -> xmlw -> endElement();
-            }
-            $this -> xmlw -> endElement();
+        $record_count = count($res);
+        for($i=0; $i<$record_count; $i++) {
+            $di = $res[$i]['directory_id'];
+            $this->users_gateways[$di][] = $res[$i];
         }
     }
 
@@ -136,24 +181,41 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_gateways($user_id) {
-        $query = sprintf(
-        "SELECT * FROM directory_gateways WHERE directory_id='$user_id';"
-        );
+        if (array_key_exists($user_id, $this->users_gateways)
+            && is_array($this -> users_gateways[$user_id])) {
+            $this -> xmlw -> startElement('gateways');
+            $gateway_count = count($this -> users_gateways[$user_id]);
+            for ($i=0; $i<$gateway_count; $i++) {
+                $this -> xmlw -> startElement('gateway');
+                $this -> xmlw -> writeAttribute(
+                'name', $this -> users_gateways[$user_id][$i]['gateway_name']
+                );
+
+                $this -> write_user_gateway_params(
+                    $this -> users_gateways[$user_id][$i]['id']
+                );
+                $this -> xmlw -> endElement();
+            }
+            $this -> xmlw -> endElement();
+        }
+    }
+
+    /**
+     * get users' gateway params
+     */
+    private function get_user_gateway_params() {
+        $query = sprintf("SELECT * FROM directory_gateway_params;");
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
-        $gw_count = count($res);
-        if ($gw_count > 0) {
-            $this -> xmlw -> startElement('gateways');
-            for ($i=0; $i<$gw_count; $i++) {
-                $this -> xmlw -> startElement('gateway');
-                $this -> xmlw -> writeAttribute('name', $res[$i]['gateway_name']);
-                $this -> write_single_gateway($res[$i]['id']);
-                $this -> xmlw -> endElement();
-            }
-            $this -> xmlw -> endElement();
+        $param_count = count($res);
+        for($i=0; $i<$param_count; $i++) {
+            $dgwid = $res[$i]['id'];
+            $pname = $res[$i]['param_name'];
+            $pvalue = $res[$i]['param_value'];
+            $this->users_gateway_params[$dgwid][$pname] = $pvalue;
         }
     }
 
@@ -163,21 +225,13 @@ class fs_directory extends fs_curl {
      * @param integer $d_gw_id id from directory_gateways
      * @return void
      */
-    private function write_single_gateway($d_gw_id) {
-        $query = sprintf(
-        "SELECT * FROM directory_gateway_params WHERE d_gw_id='%s';", $d_gw_id
-        );
-        $res = $this -> db -> queryAll($query);
-        if (FS_PDO::isError($res)) {
-            $this -> comment($this -> db -> getMessage());
-            $this -> file_not_found();
-        }
-        $param_count = count($res);
-        if ($param_count > 0) {
-            for ($i=0; $i<$param_count; $i++) {
+    private function write_user_gateway_params($d_gw_id) {
+        if (is_array($this->users_gateway_params[$d_gw_id])
+            && count($this->users_gateway_params[$d_gw_id]) > 0) {
+            foreach($this->users_gateway_params[$d_gw_id] as $pname => $pvalue) {
                 $this -> xmlw -> startElement('param');
-                $this -> xmlw -> writeAttribute('name', $res[$i]['param_name']);
-                $this -> xmlw -> writeAttribute('value', $res[$i]['param_value']);
+                $this -> xmlw -> writeAttribute('name', $pname);
+                $this -> xmlw -> writeAttribute('value', $pvalue);
                 $this -> xmlw -> endElement();
             }
         }
@@ -197,7 +251,7 @@ class fs_directory extends fs_curl {
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global params - %s"
-            , $this -> db -> getMessage()
+                , $this -> db -> getMessage()
             );
             trigger_error($error_msg);
         }
@@ -226,7 +280,7 @@ class fs_directory extends fs_curl {
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global vars - %s"
-            , $this -> db -> getMessage()
+                , $this -> db -> getMessage()
             );
             trigger_error($error_msg);
         }
@@ -253,9 +307,15 @@ class fs_directory extends fs_curl {
             $this -> file_not_found();
         }
         $directory_count = count($directory);
+
+        $this -> get_users_params();
+        $this -> get_users_vars();
+        $this -> get_users_gateways();
+        $this -> get_user_gateway_params();
+
         $this -> xmlw -> startElement('section');
         $this -> xmlw -> writeAttribute('name', 'directory');
-        $this -> xmlw -> writeAttribute('description', 'FreeSWITCH Dialplan');
+        $this -> xmlw -> writeAttribute('description', 'FreeSWITCH Directory');
         $this -> xmlw -> startElement('domain');
         $this -> xmlw -> writeAttribute('name', $this -> request['domain']);
         $this -> write_global_params();
