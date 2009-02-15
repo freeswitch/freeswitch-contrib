@@ -48,9 +48,9 @@ class dingaling_conf extends fs_configuration {
         , "ORDER BY dingaling_id"
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
         while ($row = $res -> fetchRow()) {
@@ -67,9 +67,9 @@ class dingaling_conf extends fs_configuration {
     private function get_profile_array() {
         $query = sprintf('SELECT * FROM dingaling_profiles');
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         while ($row = $res -> fetchRow()) {
@@ -121,9 +121,9 @@ class dingaling_conf extends fs_configuration {
     private function write_settings() {
         $query = sprintf('SELECT * FROM dingaling_settings');
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $setting_count = count($res);

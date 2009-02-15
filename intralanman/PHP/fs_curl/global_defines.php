@@ -11,13 +11,25 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 }
 
 /**
- * Defines the default dsn for the MDB2 PEAR class
+ * Defines the default dsn for the FS_PDO class
  */
-define('DEFAULT_DSN', 'mysql://freeswitch:Fr33Sw1tch@localhost/freeswitch');
+define('DEFAULT_DSN', 'mysql:dbname=freeswitch;host=127.0.0.1');
+/**
+ * Defines the default dsn login for the PDO class
+ */
+define('DEFAULT_DSN_LOGIN', 'freeswitch');
+/**
+ * Defines the default dsn password for the PDOclass
+ */
+define('DEFAULT_DSN_PASSWORD', 'fr33sw1tch');
 /**
  * Generic return success
  */
 define('FS_CURL_SUCCESS', 0);
+/**
+ * Generic return success
+ */
+define('FS_SQL_SUCCESS', '00000');
 /**
  * Generic return warning
  */

@@ -61,9 +61,9 @@ class fs_dialplan extends fs_curl {
         "SELECT * FROM dialplan_special WHERE context='%s'", $context
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         if ($res -> numRows() == 1) {
@@ -88,8 +88,8 @@ class fs_dialplan extends fs_curl {
         , "global_weight, context, extension, weight"
         );
         $res = $this -> db -> query($dpQuery);
-        if (MDB2::isError($res)) {
-            $this -> comment($res -> getMessage());
+        if (FS_PDO::isError($res)) {
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $condition_number = 0;

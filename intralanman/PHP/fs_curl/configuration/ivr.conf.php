@@ -34,7 +34,7 @@ class ivr_conf extends fs_configuration {
     */
     private function get_ivr_array() {
         $query = "SELECT * FROM ivr_conf";
-        $menus = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $menus = $this -> db -> queryAll($query);
         return $menus;
     }
 
@@ -47,10 +47,10 @@ class ivr_conf extends fs_configuration {
         $query = sprintf(
         "SELECT * FROM ivr_entries WHERE ivr_id=$ivr_id ORDER BY digits"
         );
-        $entries_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
-        if (MDB2::isError($entries_array)) {
+        $entries_array = $this -> db -> queryAll($query);
+        if (FS_PDO::isError($entries_array)) {
             $this -> comment($query);
-            $this -> comment($entries_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         $entries_count = count($entries_array);

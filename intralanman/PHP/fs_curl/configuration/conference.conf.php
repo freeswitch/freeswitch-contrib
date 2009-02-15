@@ -47,10 +47,10 @@ class conference_conf extends fs_configuration {
     */
     private function write_advertises() {
         $query = "SELECT * FROM conference_advertise ORDER BY room";
-        $advertises = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
-        if (MDB2::isError($advertises)) {
+        $advertises = $this -> db -> queryAll($query);
+        if (FS_PDO::isError($advertises)) {
             $this -> comment($query);
-            $this -> comment($advertises -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         $advertise_count = count($advertises);
@@ -72,7 +72,7 @@ class conference_conf extends fs_configuration {
     /**
      * Pull conference profiles from the database
      * This method will pull the conference profiles
-     * from the database using the PEAR MDB2 extension
+     * from the database using the PDO extension
      * @return array
     */
     private function get_profiles_array() {
@@ -81,12 +81,12 @@ class conference_conf extends fs_configuration {
         , "ORDER BY profile_name"
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
-        while ($row = $res -> fetchRow()) {
+        while ($row = $res -> fetch(PDO::FETCH_ASSOC)) {
             $pn = $row['profile_name'];
             $profiles[$pn][] = $row;
         }
@@ -124,9 +124,9 @@ class conference_conf extends fs_configuration {
     }
 
     /**
-     * Pull caller-controls from database via MDB2
+     * Pull caller-controls from database via PDO
      * This method will pull the conference caller-controls from
-     * the database using the PEAR MDB2 extension
+     * the database using the PDO extension
      * @return array
     */
     private function get_controls_array() {
@@ -134,12 +134,12 @@ class conference_conf extends fs_configuration {
         "SELECT * FROM conference_controls ORDER BY conf_group"
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
-        while ($row = $res -> fetchRow()) {
+        while ($row = $res -> fetch(PDO::FETCH_ASSOC)) {
             $cg = $row['conf_group'];
             $profiles[$cg][] = $row;
         }
@@ -155,9 +155,9 @@ class conference_conf extends fs_configuration {
     private function write_controls() {
         $controls_array = $this -> get_controls_array();
         $controls_count = count($controls_array);
-        if (MDB2::isError($controls_array)) {
+        if (FS_PDO::isError($controls_array)) {
             $this -> comment($query);
-            $this -> comment($controls_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($controls_count < 1) {

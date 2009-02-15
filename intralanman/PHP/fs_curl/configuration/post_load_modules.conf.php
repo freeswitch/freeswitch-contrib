@@ -35,7 +35,7 @@ class post_load_modules_conf extends fs_configuration {
         'SELECT * FROM post_load_modules_conf WHERE load_module=1 ORDER BY priority;'
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $this -> comment($res -> getMessage());
             return array();
@@ -44,7 +44,7 @@ class post_load_modules_conf extends fs_configuration {
         if ($res -> numRows() == 0) {
             return array();
         }
-        while ($row = $res -> fetchRow(MDB2_FETCHMODE_ASSOC)) {
+        while ($row = $res -> fetchRow()) {
             $feeds_array[] = $row;
         }
         return $feeds_array;

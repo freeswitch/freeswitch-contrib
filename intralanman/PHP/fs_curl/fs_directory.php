@@ -61,9 +61,10 @@ class fs_directory extends fs_curl {
         , $where_clause
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         return $res;
@@ -80,9 +81,9 @@ class fs_directory extends fs_curl {
         "SELECT * FROM directory_params WHERE directory_id='$user_id';"
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $param_count = count($res);
@@ -109,8 +110,8 @@ class fs_directory extends fs_curl {
         "SELECT * FROM directory_vars WHERE directory_id='$user_id';"
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
-            $this -> comment($res -> getMessage());
+        if (FS_PDO::isError($res)) {
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $var_count = count($res);
@@ -139,8 +140,8 @@ class fs_directory extends fs_curl {
         "SELECT * FROM directory_gateways WHERE directory_id='$user_id';"
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
-            $this -> comment($res -> getMessage());
+        if (FS_PDO::isError($res)) {
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $gw_count = count($res);
@@ -167,8 +168,8 @@ class fs_directory extends fs_curl {
         "SELECT * FROM directory_gateway_params WHERE d_gw_id='%s';", $d_gw_id
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
-            $this -> comment($res -> getMessage());
+        if (FS_PDO::isError($res)) {
+            $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
         $param_count = count($res);
@@ -193,10 +194,10 @@ class fs_directory extends fs_curl {
         "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global params - %s"
-            , $res -> getMessage()
+            , $this -> db -> getMessage()
             );
             trigger_error($error_msg);
         }
@@ -222,10 +223,10 @@ class fs_directory extends fs_curl {
         "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
         );
         $res = $this -> db -> queryAll($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $error_msg = sprintf("Error while selecting global vars - %s"
-            , $res -> getMessage()
+            , $this -> db -> getMessage()
             );
             trigger_error($error_msg);
         }

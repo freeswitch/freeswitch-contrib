@@ -25,17 +25,17 @@ class iax_conf extends fs_configuration {
 
     private function get_profiles() {
         $query = "SELECT * FROM iax_conf ORDER BY id LIMIT 1";
-        $profiles = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $profiles = $this -> db -> queryAll($query);
         return $profiles;
     }
 
     private function write_aliases($profile_id) {
         $query = "SELECT * FROM iax_aliases WHERE iax_id=$profile_id ";
-        $aliases_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $aliases_array = $this -> db -> queryAll($query);
         $aliases_count = count($aliases_array);
-        if (MDB2::isError($aliases_array)) {
+        if (FS_PDO::isError($aliases_array)) {
             $this -> comment($query);
-            $this -> comment($aliases_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($aliases_count < 1) {
@@ -55,11 +55,11 @@ class iax_conf extends fs_configuration {
     private function write_settings($profile_id) {
         $query = "SELECT * FROM iax_settings WHERE iax_id=$profile_id "
         . "ORDER BY iax_id, param_name";
-        $settings_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $settings_array = $this -> db -> queryAll($query);
         $settings_count = count($settings_array);
-        if (MDB2::isError($settings_array)) {
+        if (FS_PDO::isError($settings_array)) {
             $this -> comment($query);
-            $this -> comment($settings_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($settings_count < 1) {
@@ -80,12 +80,12 @@ class iax_conf extends fs_configuration {
     private function write_gateways($profile_id) {
         $query = "SELECT * FROM iax_gateways WHERE iax_id=$profile_id "
         . "ORDER BY gateway_name, gateway_param";
-        $gateway_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $gateway_array = $this -> db -> queryAll($query);
         $gateway_count = count($gateway_array);
         //$this -> comment_array($gateway_array);
         if (MDB2::isError($gateway_array)) {
             $this -> comment($query);
-            $this -> comment($gateway_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($gateway_count < 1) {
@@ -113,11 +113,11 @@ class iax_conf extends fs_configuration {
 
     private function write_domains($profile_id) {
         $query = "SELECT * FROM iax_domains WHERE iax_id=$profile_id";
-        $domain_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $domain_array = $this -> db -> queryAll($query);
         $domain_count = count($domain_array);
-        if (MDB2::isError($domain_array)) {
+        if (FS_PDO::isError($domain_array)) {
             $this -> comment($query);
-            $this -> comment($domain_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($domain_count < 1) {

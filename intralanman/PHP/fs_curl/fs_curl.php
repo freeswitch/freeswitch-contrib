@@ -20,9 +20,9 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 */
 class fs_curl {
     /**
-     * MDB2 Object
-     * @link http://pear.php.net/MDB2
-     * @var $db MDB2
+     * FS_PDO Object
+     * @link http://www.php.net/pdo
+     * @var $db FS_PDO
      */
     public $db;
     /**
@@ -45,8 +45,8 @@ class fs_curl {
     private $comments;
 
     /**
-     * Instantiation of XMLWriter and MDB2
-     * This method will instantiate the MDB2 and XMLWriter classes for use
+     * Instantiation of XMLWriter and FS_PDO
+     * This method will instantiate the FS_PDO and XMLWriter classes for use
      * in child classes
      * @return void
     */
@@ -55,27 +55,27 @@ class fs_curl {
         header('Content-Type: text/xml');
         $this -> open_xml();
         $this -> generate_request_array();
-        $inc = array('required'=>'MDB2.php');
+        $inc = array('required'=>'fs_pdo.php'); // include an external file. i.e. 'required'=>'important_file.php'
         $this -> include_files($inc);
-        $this -> connect_db(DEFAULT_DSN);
+        $this -> connect_db(DEFAULT_DSN, DEFAULT_DSN_LOGIN, DEFAULT_DSN_PASSWORD );
         set_error_handler(array($this, 'error_handler'));
         //trigger_error('blah', E_USER_ERROR);
     }
 
     /**
-     * Connect to a database via MDB2
+     * Connect to a database via FS_PDO
      * @param mixed $dsn data source for database connection (array or string)
      * @return void
     */
-    public function connect_db($dsn) {
-        $this -> db = MDB2::connect($dsn);
-        if (MDB2::isError($this -> db)) {
-            $this -> comment($this -> db -> getMessage());
-            $this -> file_not_found();
-        }
-        $this -> db -> setFetchMode(MDB2_FETCHMODE_ASSOC);
+    public function connect_db($dsn, $login, $password) {
+        try {
+			$this -> db = new FS_PDO($dsn, $login, $password);
+		} catch(Exception $e) {
+				$this -> comment($e->getMessage());
+				$this -> file_not_found(); //program terminates in function file_not_found()
+		}
     }
-
+	
     /**
      * Method to add comments to XML
      * Adds a comment to be displayed in the final XML
@@ -181,6 +181,14 @@ class fs_curl {
      * @return void
     */
     public function output_xml() {
+		$this->comment(
+            sprintf('Total # of Queries Run: %d', $this->db->counter)
+        );
+        $this -> comment(sprintf("Estimated Execution Time Is: %s"
+                , (ereg_replace(
+                '^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()) - START_TIME)
+        ));
+		
         $this -> close_xml();
         $comment_count = count($this -> comments);
         for ($i = 0; $i < $comment_count; $i++) {
@@ -191,7 +199,7 @@ class fs_curl {
         $this -> debug(explode("\n", $xml_out));
         $this -> debug('---- End XML Output ----');
         echo $xml_out;
-        exit();
+		exit();
     }
 
     /**

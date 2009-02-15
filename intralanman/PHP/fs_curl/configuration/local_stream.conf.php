@@ -30,11 +30,11 @@ class local_stream_conf extends fs_configuration {
         , "WHERE stream_id=$profile_id "
         , "ORDER BY stream_id, param_name"
         );
-        $settings_array = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
+        $settings_array = $this -> db -> queryAll($query);
         $settings_count = count($settings_array);
-        if (MDB2::isError($settings_array)) {
+        if (FS_PDO::isError($settings_array)) {
             $this -> comment($query);
-            $this -> comment($settings_array -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return ;
         }
         if ($settings_count < 1) {
@@ -54,10 +54,10 @@ class local_stream_conf extends fs_configuration {
 
     private function get_directories() {
         $query = sprintf('SELECT * FROM local_stream_conf;');
-        $profiles = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
-        if (MDB2::isError($profiles)) {
+        $profiles = $this -> db -> queryAll($query);
+        if (FS_PDO::isError($profiles)) {
             $this -> comment($query);
-            $this -> comment($profiles -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
         return $profiles;

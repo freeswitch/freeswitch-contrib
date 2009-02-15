@@ -35,10 +35,10 @@ class rss_conf extends fs_configuration {
         'SELECT * FROM rss_conf ORDER BY priority, local_file;'
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             return false;
         }
-        while ($row = $res -> fetchRow(MDB2_FETCHMODE_ASSOC)) {
+        while ($row = $res -> fetchRow()) {
             $feeds_array[] = $row;
         }
         return $feeds_array;

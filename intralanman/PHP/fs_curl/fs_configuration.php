@@ -53,12 +53,12 @@ class fs_configuration extends fs_curl {
         , "WHERE module_name='$mod_name' AND load_module=1"
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if ($this->db->errorCode() !== FS_SQL_SUCCESS) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this->db->errorCode());
             return true; //default allow policy
             return false; //comment previous line to default deny
-        } elseif ($res -> numRows() == 1) {
+        } elseif ($res -> rowCount() == 1) {
             return true;
         } else {
             return false;
@@ -77,7 +77,7 @@ class fs_configuration extends fs_curl {
         "SELECT COUNT(*) cnt FROM modless_conf WHERE conf_name = '$conf';"
         );
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $this -> comment($res -> getMessage());
             return true; //default allow policy

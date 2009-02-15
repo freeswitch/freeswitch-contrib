@@ -45,10 +45,10 @@ class acl_conf extends fs_configuration {
         $query = sprintf(
         'SELECT * FROM acl_lists al JOIN acl_nodes an ON an.list_id=al.id;'
         );
-        $acl_data = $this -> db -> queryAll($query, null, MDB2_FETCHMODE_ASSOC);
-        if (MDB2::isError($profiles)) {
+        $acl_data = $this -> db -> queryAll($query);
+        if (FS_PDO::isError($profiles)) {
             $this -> comment($query);
-            $this -> comment($acl_data -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
         return $acl_data;

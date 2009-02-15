@@ -14,6 +14,12 @@
  * class is successfully instantiated.
  * @return void
 */
+
+/**
+ * define for the time that execution of the script started
+ */
+define('START_TIME', ereg_replace('^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()));
+
 function file_not_found($no=false, $str=false, $file=false, $line=false) {
     if ($no == E_STRICT) {
         return;
@@ -94,3 +100,4 @@ $conf -> debug('---- End _REQUEST ----');
 $conf -> main();
 $conf -> output_xml();
 
+?>

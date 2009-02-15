@@ -32,9 +32,9 @@ class limit_conf extends fs_configuration {
     private function get_params_array() {
         $query = sprintf('SELECT * FROM limit_conf;');
         $res = $this -> db -> query($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $this -> comment($query);
-            $this -> comment($res -> getMessage());
+            $this -> comment($this -> db -> getMessage());
             return array();
         }
         $this -> comment($res -> numRows() . 'rows');

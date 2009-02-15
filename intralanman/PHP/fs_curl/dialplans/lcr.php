@@ -50,9 +50,9 @@ class dialplan_lcr {
         $query = sprintf("SELECT l.digits, c.Carrier_Name, l.rate, cg.id, cg.gateway, cg.id AS gwid, l.lead_strip, l.trail_strip, l.prefix, l.suffix FROM lcr l JOIN carriers c ON l.carrier_id=c.id JOIN carrier_gateway cg ON c.id=cg.carrier_id %s ORDER BY length(digits) DESC, rate;", $where_clause);
         $res = $obj -> db -> query($query);
         $obj -> comment($query);
-        if (MDB2::isError($res)) {
+        if (FS_PDO::isError($res)) {
             $obj -> comment($query);
-            $obj -> comment($res -> getMessage());
+            $obj -> comment($this -> db  -> getMessage());
             $obj -> file_not_found();
         }
         $carriers = array();
