@@ -55,7 +55,7 @@ class fs_curl {
         header('Content-Type: text/xml');
         $this -> open_xml();
         $this -> generate_request_array();
-        $inc = array('required'=>'fs_pdo.php'); // include an external file. i.e. 'required'=>'important_file.php'
+        $inc = array('required'=>'libs/fs_pdo.php'); // include an external file. i.e. 'required'=>'important_file.php'
         $this -> include_files($inc);
         $this -> connect_db(DEFAULT_DSN, DEFAULT_DSN_LOGIN, DEFAULT_DSN_PASSWORD );
         set_error_handler(array($this, 'error_handler'));
