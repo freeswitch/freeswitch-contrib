@@ -17,11 +17,11 @@ define('DEFAULT_DSN', 'mysql:dbname=freeswitch;host=127.0.0.1');
 /**
  * Defines the default dsn login for the PDO class
  */
-define('DEFAULT_DSN_LOGIN', 'root');
+define('DEFAULT_DSN_LOGIN', 'freeswitch');
 /**
  * Defines the default dsn password for the PDOclass
  */
-define('DEFAULT_DSN_PASSWORD', 'aasml2009');
+define('DEFAULT_DSN_PASSWORD', 'fr33sw1tch');
 /**
  * Generic return success
  */
