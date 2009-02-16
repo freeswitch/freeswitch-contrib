@@ -83,10 +83,23 @@ class fs_dialplan extends fs_curl {
      */
     private function get_dialplan($context) {
         $dp_array = array();
-        $dpQuery = sprintf("%s %s;"
-        , "SELECT * FROM dialplan WHERE context='$context' ORDER BY"
-        , "global_weight, context, extension, weight"
-        );
+		$dpQuery = sprintf("SELECT
+			`context`,
+			`name` as extension,
+			`application` as application_name,
+			`data` as application_data,
+			`field` as condition_field,
+			`expression` as condition_expression,
+			`continue` as ext_continue,
+			`type`
+		FROM dialplan
+			INNER JOIN dialplan_context USING(dialplan_id)
+			INNER JOIN dialplan_extension USING(context_id)
+			INNER JOIN dialplan_condition USING(extension_id)
+			INNER JOIN dialplan_actions USING(condition_id)
+		WHERE context = '%s'
+		ORDER BY dialplan_context.weight, dialplan_extension.weight, dialplan_condition.weight, dialplan_actions.weight", $context);
+
         $res = $this -> db -> query($dpQuery);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
@@ -99,11 +112,11 @@ class fs_dialplan extends fs_curl {
             $ec = $row['ext_continue'];
             $app = $row['application_name'];
             $data = $row['application_data'];
-            $app_cdata = $row['app_cdata'];
+            //$app_cdata = $row['app_cdata'];
             $type = $row['type'];
             $cf = $row['condition_field'];
             $ce = $row['condition_expression'];
-            $rcd = $row['re_cdata'];
+            //$rcd = $row['re_cdata'];
             $cc = empty($row['cond_break']) ? '0' : $row['cond_break'];
             $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc;$rcd"][] = array(
             'type'=>$type,

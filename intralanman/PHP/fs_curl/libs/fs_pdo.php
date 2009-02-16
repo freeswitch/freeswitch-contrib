@@ -105,5 +105,5 @@ class FS_PDOStatement extends PDOStatement {
 		
 		return $this->rowCount();
 	}
-}	
+}
 ?>
