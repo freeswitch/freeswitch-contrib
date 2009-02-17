@@ -396,7 +396,7 @@ static switch_status_t do_billing(switch_core_session_t *session)
 		/* Convert billrate into microseconds and multiply by # of microseconds that have passed since last *successful* bill */
 		billamount = (atof(billrate) / 1000000 / 60) * ((ts - nibble_data->lastts)) - nibble_data->bill_adjustments;
 
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Billing $%f to %s (Call: %s / %f so far)\n", billamount, billaccount, uuid, nibble_data->total);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Billing $%f to %s (Call: %s / %f so far)\n", billamount, billaccount, uuid, nibble_data->total);
 
 		/* DO ODBC BILLING HERE and reset counters if it's successful! */
 		if (bill_event(billamount, billaccount) == SWITCH_STATUS_SUCCESS) {
