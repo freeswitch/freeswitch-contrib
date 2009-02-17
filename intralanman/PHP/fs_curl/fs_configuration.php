@@ -1,7 +1,6 @@
 <?php
 /**
  * @package  FS_CURL
- * @subpackage FS_CURL_Configuration
  * fs_configuration.php
  */
 if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
@@ -10,8 +9,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 
 /**
  * @package FS_CURL
- * @subpackage FS_CURL_Configuration
- * @license
+ * @license BSD
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
  * @version 0.1
  * Class for all module configurations

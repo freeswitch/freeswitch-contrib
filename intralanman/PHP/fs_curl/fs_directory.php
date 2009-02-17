@@ -12,8 +12,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * @package FS_CURL
  * @subpackage FS_CURL_Directory
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
- * @license
- * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
+ * @license BSD
  * @version 0.1
  * Class for XML directory
 */

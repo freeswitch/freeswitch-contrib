@@ -10,7 +10,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 
 /**
  * @package FS_CURL
- * @license
+ * @license BSD
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
  * @version 0.1
  * FreeSWITCH CURL base class

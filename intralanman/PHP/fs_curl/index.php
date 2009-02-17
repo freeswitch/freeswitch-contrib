@@ -1,11 +1,16 @@
 <?php
 /**
  * @package FS_CURL
- * @license
+ * @license BSD
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
  * @version 0.1
  * initial page hit in all curl requests
  */
+
+/**
+ * define for the time that execution of the script started
+ */
+define('START_TIME', ereg_replace('^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()));
 
 /**
  * Pre-Class initialization die function
@@ -14,11 +19,6 @@
  * class is successfully instantiated.
  * @return void
 */
-
-/**
- * define for the time that execution of the script started
- */
-define('START_TIME', ereg_replace('^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()));
 
 function file_not_found($no=false, $str=false, $file=false, $line=false) {
     if ($no == E_STRICT) {
@@ -50,13 +50,13 @@ error_reporting(E_ALL);
 set_error_handler('file_not_found');
 
 if (!class_exists('XMLWriter')) {
-	trigger_error(
-	"XMLWriter Class NOT Found... You Must install it before using this package"
-	, E_USER_ERROR
-	);
+    trigger_error(
+    "XMLWriter Class NOT Found... You Must install it before using this package"
+        , E_USER_ERROR
+    );
 }
 if (!(@include_once('fs_curl.php'))
-|| !(@include_once('global_defines.php'))) {
+    || !(@include_once('global_defines.php'))) {
     trigger_error(
     'could not include fs_curl.php or global_defines.php', E_USER_ERROR
     );

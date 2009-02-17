@@ -1,7 +1,6 @@
 <?php
 /**
  * @package  FS_CURL
- * @subpackage FS_CURL_Dialplan
  * @todo i should probably add a condition_weight to order the conditions inside a given extension
  * fs_dialplan.php
  */
@@ -11,8 +10,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 
 /**
  * @package FS_CURL
- * @subpackage FS_CURL_Dialplan
- * @license
+ * @license BSD
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
  * @version 0.1
  * Class for XML dialplan
