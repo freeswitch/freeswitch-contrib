@@ -116,11 +116,11 @@ class fs_dialplan extends fs_curl {
             $ce = $row['condition_expression'];
             //$rcd = $row['re_cdata'];
             $cc = empty($row['cond_break']) ? '0' : $row['cond_break'];
-            $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc;$rcd"][] = array(
+            $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc"][] = array(
             'type'=>$type,
             'application'=>$app,
             'data'=>$data,
-            'is_cdata'=>$app_cdata
+            'is_cdata'=>(empty($app_cdata) ? '' : $app_cdata)
             );
         }
         return $dp_array;
