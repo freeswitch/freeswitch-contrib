@@ -51,10 +51,10 @@ class fs_curl {
      * @return void
     */
     public function fs_curl() {
-	openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_USER);
+        openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_USER);
         header('Content-Type: text/xml');
-        $this -> open_xml();
         $this -> generate_request_array();
+        $this -> open_xml();
         $inc = array('required'=>'libs/fs_pdo.php'); // include an external file. i.e. 'required'=>'important_file.php'
         $this -> include_files($inc);
         $this -> connect_db(DEFAULT_DSN, DEFAULT_DSN_LOGIN, DEFAULT_DSN_PASSWORD );
@@ -69,13 +69,13 @@ class fs_curl {
     */
     public function connect_db($dsn, $login, $password) {
         try {
-			$this -> db = new FS_PDO($dsn, $login, $password);
-		} catch(Exception $e) {
-				$this -> comment($e->getMessage());
-				$this -> file_not_found(); //program terminates in function file_not_found()
-		}
+            $this -> db = new FS_PDO($dsn, $login, $password);
+        } catch(Exception $e) {
+            $this -> comment($e->getMessage());
+            $this -> file_not_found(); //program terminates in function file_not_found()
+        }
     }
-	
+
     /**
      * Method to add comments to XML
      * Adds a comment to be displayed in the final XML
@@ -107,8 +107,14 @@ class fs_curl {
     private function open_xml() {
         $this -> xmlw = new XMLWriter();
         $this -> xmlw -> openMemory();
-        $this -> xmlw -> setIndent(true);
-        $this -> xmlw -> setIndentString('  ');
+        if (array_key_exists('fs_curl_debug', $this -> request)
+            && $this -> request['fs_curl_debug'] == true) {
+            $this -> xmlw -> setIndent(true);
+            $this -> xmlw -> setIndentString('  ');
+        } else {
+            $this -> xmlw -> setIndent(false);
+            $this -> xmlw -> setIndentString('  ');
+        }
         $this -> xmlw -> startDocument('1.0', 'UTF-8', 'no');
         //set the freeswitch document type
         $this -> xmlw -> startElement('document');
@@ -138,8 +144,10 @@ class fs_curl {
         $not_found -> writeAttribute('status', 'not found');
         $not_found -> endElement();
         $not_found -> endElement();
-        $not_found -> endElement();
+        /* we put the comments inside the root element so we don't
+         * get complaints about markup outside of it */
         $this -> comments2xml($not_found, $this -> comments);
+        $not_found -> endElement();
         echo $not_found -> outputMemory();
         exit();
     }
@@ -181,25 +189,22 @@ class fs_curl {
      * @return void
     */
     public function output_xml() {
-		$this->comment(
+        $this->comment(
             sprintf('Total # of Queries Run: %d', $this->db->counter)
         );
         $this -> comment(sprintf("Estimated Execution Time Is: %s"
                 , (ereg_replace(
                 '^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()) - START_TIME)
-        ));
-		
+            ));
+
+        $this -> comments2xml($this -> xmlw, $this -> comments);
         $this -> close_xml();
-        $comment_count = count($this -> comments);
-        for ($i = 0; $i < $comment_count; $i++) {
-            $this -> xmlw -> writeComment($this -> comments[$i]);
-        }
         $xml_out = $this -> xmlw -> outputMemory();
         $this -> debug('---- Start XML Output ----');
         $this -> debug(explode("\n", $xml_out));
         $this -> debug('---- End XML Output ----');
         echo $xml_out;
-		exit();
+        exit();
     }
 
     /**
@@ -269,20 +274,20 @@ class fs_curl {
 
         switch ($no) {
             case E_USER_NOTICE:
-            case E_NOTICE:
-                break;
-            case E_USER_WARNING:
-            case E_WARNING:
-                if (defined('RETURN_ON_WARN') && RETURN_ON_WARN == true) {
+                case E_NOTICE:
                     break;
-                }
-            case E_ERROR:
-            case E_USER_ERROR:
-            default:
-                $this -> file_not_found();
-        }
-        return true;
-    }
+                case E_USER_WARNING:
+                    case E_WARNING:
+                        if (defined('RETURN_ON_WARN') && RETURN_ON_WARN == true) {
+                            break;
+                        }
+                        case E_ERROR:
+                            case E_USER_ERROR:
+                                default:
+                                    $this -> file_not_found();
+                                }
+                                return true;
+                            }
 
     /**
      * Function to print out debugging info
@@ -292,41 +297,41 @@ class fs_curl {
      * @param integer $debug_level debug if $debug_level <= FS_CURL_DEBUG
      * @param integer $spaces
      */
-    public function debug($input, $debug_level=0, $spaces=0) {
-        if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
-            if (is_array($input)) {
-                $this -> debug('Array (', $debug_level, $spaces);
-                foreach ($input as $key=>$val) {
-                    if (is_array($val) || is_object($val)) {
-                        $this -> debug("[$key] => $val", $debug_level, $spaces+4);
-                        $this -> debug('(', $debug_level, $spaces + 8);
-                        $this -> debug($val, $debug_level, $spaces + 8);
-                    } else {
-                        $this -> debug("[$key] => '$val'", $debug_level, $spaces + 4);
-                    }
-                }
-                $this -> debug(")", $debug_level, $spaces);
-            } else {
-                $debug_str = sprintf("%s%s"
-                , str_repeat(' ', $spaces), $input
-                );
-                switch (FS_DEBUG_TYPE) {
-                    case 0:
-                        syslog(LOG_NOTICE, $debug_str);
-                        break;
-                    case 1:
-                        $this -> comment($debug_str);
-                        break;
-                    case 2:
-                        $ptr = fopen(FS_DEBUG_FILE, 'a');
-                        fputs($ptr, "$debug_str\r\n");
-                        fclose($ptr);
-                        break;
-                    default:
-                        return;
-                }
-            }
-        }
-    }
-}
+                            public function debug($input, $debug_level=0, $spaces=0) {
+                                if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
+                                    if (is_array($input)) {
+                                        $this -> debug('Array (', $debug_level, $spaces);
+                                        foreach ($input as $key=>$val) {
+                                            if (is_array($val) || is_object($val)) {
+                                                $this -> debug("[$key] => $val", $debug_level, $spaces+4);
+                                                $this -> debug('(', $debug_level, $spaces + 8);
+                                                $this -> debug($val, $debug_level, $spaces + 8);
+                                            } else {
+                                                $this -> debug("[$key] => '$val'", $debug_level, $spaces + 4);
+                                            }
+                                        }
+                                        $this -> debug(")", $debug_level, $spaces);
+                                    } else {
+                                        $debug_str = sprintf("%s%s"
+                                            , str_repeat(' ', $spaces), $input
+                                        );
+                                        switch (FS_DEBUG_TYPE) {
+                                            case 0:
+                                                syslog(LOG_NOTICE, $debug_str);
+                                                break;
+                                            case 1:
+                                                $this -> comment($debug_str);
+                                                break;
+                                            case 2:
+                                                $ptr = fopen(FS_DEBUG_FILE, 'a');
+                                                fputs($ptr, "$debug_str\r\n");
+                                                fclose($ptr);
+                                                break;
+                                            default:
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 
