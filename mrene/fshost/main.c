@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
 	printf("Initializing core...\n");
 	/* Initialize the core and load modules, that will startup FS completely */
 	if (switch_core_init_and_modload(flags, console, &err) != SWITCH_STATUS_SUCCESS) {
-	  fprintf(stderr, "Cannot Initialize [%s]\n", err);
+		fprintf(stderr, "Failed to initialize FreeSWITCH's core: %s\n", err);
+		return 1;
 	}
 	
 	printf("Everything OK, Entering runtime loop.\n");
