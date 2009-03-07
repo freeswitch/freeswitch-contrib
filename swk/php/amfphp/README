@@ -1,0 +1,14 @@
+AMF-PHP FreeSwitch Service
+
+Copy the freeswitch.php file to your AMF-PHP services directory
+
+the flex file goes in the normal spot... this is not dynamically configured so you'll have to edit a few things to get it right
+
+TODO: Dynamically detect where the AMF Feed is (ie: dont hardcode the URL)
+TODO: Make the UI better Looking
+TODO: Add some form of user management
+TODO: CDR Viewer
+TODO: Anything else I think I might want to add here
+
+Feel Free to submit patches It would be nice to figure out a good way to support as much of the API as possible via ESL and add things
+like basic Server monitoring
