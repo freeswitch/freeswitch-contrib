@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+
+	 <mx:Script>
+        <![CDATA[
+            import mx.controls.dataGridClasses.DataGridColumn;
+            import mx.events.DataGridEvent;
+            import mx.controls.Alert;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            import mx.collections.ArrayCollection;
+
+            /**
+             * This function is called when an item was edited in the data grid.
+             * Calls the saveData() method on the PHP server 
+             */
+             /*
+            private function save(event:DataGridEvent):void {
+                var dataGrid:DataGrid = event.target as DataGrid;
+                var dsColumnIndex:Number = event.columnIndex;
+                var col:DataGridColumn = dataGrid.columns[dsColumnIndex];
+                var newValue:String = dataGrid.itemEditorInstance[col.editorDataField];
+                var dsFieldName:String = event.dataField;
+                var author:VOAuthor = event.itemRenderer.data as VOAuthor;
+                if (newValue == author[dsFieldName])
+                    return;
+                //get the new value for the first name or last name
+                author[dsFieldName] = newValue;
+                myRemote.saveData(author);
+            }
+            */
+        ]]>
+    </mx:Script>
+
+    <!-- this is the RemoteObject  used to make the RPC calls -->
+    <mx:RemoteObject id="freeswitch" destination="freeswitch" source="freeswitch"
+            endpoint="http://192.168.1.140/feeder/gateway.php" showBusyCursor="true"/>
+
+    
+    <mx:TabNavigator width="100%" height="100%">
+        <mx:Canvas label="Channels" width="100%" height="100%">
+        	<mx:VBox top="0" left="0" width="100%" height="100%">
+		        <mx:Button label="Get data" click="{freeswitch.getChannels()}" />
+		        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getChannels.lastResult}" editable="true" itemEditEnd="save(event)"> -->
+		        <mx:DataGrid id="channelsGrid" dataProvider="{freeswitch.getChannels.lastResult}" width="100%" height="100%">
+		            <mx:columns>
+		                <mx:DataGridColumn dataField="uuid" editable="false"/>
+		                <mx:DataGridColumn dataField="cid_name"/>
+		                <mx:DataGridColumn dataField="cid_num"/>
+		                <mx:DataGridColumn dataField="dest"/>
+		                <mx:DataGridColumn dataField="created"/>
+		                <mx:DataGridColumn dataField="read_codec"/>
+		                <mx:DataGridColumn dataField="write_codec"/>
+		            </mx:columns>
+		        </mx:DataGrid>
+	        </mx:VBox>
+        </mx:Canvas>
+        <mx:Canvas label="Calls" width="100%" height="100%">
+        	<mx:VBox top="0" left="0" width="100%" height="100%">
+		        <mx:Button label="Get data" click="{freeswitch.getCalls()}" />
+		        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getCalls.lastResult}" editable="true" itemEditEnd="save(event)"> -->
+		        <mx:DataGrid id="callsGrid" dataProvider="{freeswitch.getCalls.lastResult}" width="100%" height="100%">
+		            <mx:columns>
+		                <mx:DataGridColumn dataField="created"/>
+		                <mx:DataGridColumn dataField="caller_uuid"/>
+		                <mx:DataGridColumn dataField="callee_uuid"/>
+		                <mx:DataGridColumn dataField="caller_cid_name"/>
+		                <mx:DataGridColumn dataField="caller_cid_num"/>
+		                <mx:DataGridColumn dataField="caller_dest_num"/>
+		            </mx:columns>
+		        </mx:DataGrid>
+	        </mx:VBox>
+        </mx:Canvas>
+        <mx:Canvas label="Conference" width="100%" height="100%">
+        	<mx:ComboBox id="confPicker" horizontalCenter="0" top="10" dataProvider="{freeswitch.getConferenceList.lastResult}"></mx:ComboBox>
+	        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getCalls.lastResult}" editable="true" itemEditEnd="save(event)"> -->
+	        <mx:DataGrid id="conferenceGrid" dataProvider="{freeswitch.getConferenceUsers.lastResult}" width="100%" top="43" bottom="115">
+	            <mx:columns>
+	                <mx:DataGridColumn headerText="id" dataField="0"/>
+	                <mx:DataGridColumn headerText="clid_name" dataField="3"/>
+	                <mx:DataGridColumn headerText="clid_num" dataField="4"/>
+	                <mx:DataGridColumn headerText="flags" dataField="5"/>
+	                <mx:DataGridColumn headerText="channel" dataField="1"/>
+	                <mx:DataGridColumn headerText="uuid" dataField="2"/>
+	                <mx:DataGridColumn headerText="volume" dataField="7"/>
+	                <mx:DataGridColumn headerText="mic_gain" dataField="6"/>
+	                <mx:DataGridColumn headerText="noise_floor" dataField="8"/>
+	            </mx:columns>
+	        </mx:DataGrid>
+	        <mx:Button label="Play File" click="{freeswitch.getConferenceList()}" horizontalCenter="-167" bottom="85"/>
+	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-90" bottom="85"/>
+	        <mx:Button label="Kick" click="{freeswitch.getCalls()}" horizontalCenter="-13" bottom="85"/>
+	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="74" bottom="85"/>
+	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="165" bottom="85"/>
+	        <mx:Button label="Mute" click="{freeswitch.getCalls()}" horizontalCenter="-177" bottom="55"/>
+	        <mx:Button label="Unmute" click="{freeswitch.getCalls()}" horizontalCenter="-85" bottom="55"/>
+	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="-3" bottom="55"/>
+	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="71" bottom="55"/>
+	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="152" bottom="55"/>
+	        <mx:Button label="Lock" click="{freeswitch.getCalls()}" horizontalCenter="-53" bottom="25"/>
+	        <mx:Button label="Unlock" click="{freeswitch.getCalls()}" horizontalCenter="36" bottom="25"/>
+		        
+        </mx:Canvas>
+    </mx:TabNavigator>
+	
+</mx:Application>
