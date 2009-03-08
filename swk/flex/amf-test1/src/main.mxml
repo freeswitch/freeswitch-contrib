@@ -3,32 +3,60 @@
 
 	 <mx:Script>
         <![CDATA[
+        
+        	import flash.utils.Timer;
+            import flash.events.TimerEvent;
+                    
             import mx.controls.dataGridClasses.DataGridColumn;
             import mx.events.DataGridEvent;
             import mx.controls.Alert;
             import mx.rpc.events.FaultEvent;
             import mx.rpc.events.ResultEvent;
             import mx.collections.ArrayCollection;
-
-            /**
-             * This function is called when an item was edited in the data grid.
-             * Calls the saveData() method on the PHP server 
-             */
-             /*
-            private function save(event:DataGridEvent):void {
-                var dataGrid:DataGrid = event.target as DataGrid;
-                var dsColumnIndex:Number = event.columnIndex;
-                var col:DataGridColumn = dataGrid.columns[dsColumnIndex];
-                var newValue:String = dataGrid.itemEditorInstance[col.editorDataField];
-                var dsFieldName:String = event.dataField;
-                var author:VOAuthor = event.itemRenderer.data as VOAuthor;
-                if (newValue == author[dsFieldName])
-                    return;
-                //get the new value for the first name or last name
-                author[dsFieldName] = newValue;
-                myRemote.saveData(author);
+            import mx.managers.PopUpManager;
+            import mx.core.IFlexDisplayObject;
+            private var confTimer:Timer;
+            
+            private function initConfTab():void{
+            	freeswitch.getConferenceList();
+            	freeswitch.getConferenceUsers(confPicker.selectedItem );
+            	confTimerLabel.text="Init...";
+            	confTimer = new Timer(10000, 0);
+            	confTimer.addEventListener(TimerEvent.TIMER, onConfRefresh);
+            	confTimer.start();
+            	confTimerLabel.text = confTimer.running.toString();
             }
-            */
+            
+            private function onConfRefresh(evt:TimerEvent):void {
+            	confTimerLabel.text="Refreshing";
+            	freeswitch.getConferenceUsers(confPicker.selectedItem);
+            	confTimerLabel.text="Refreshed";
+            	confTimerSecCount.text = confTimer.currentCount.toString();
+            }
+            
+            private function confAutoRefreshControl():void {
+            	if (confAutoRefreshCheckBox.selected) {
+            		confTimer.start();
+            		confTimerLabel.text="running";
+            		confTimerLabel.text = confTimer.running.toString();
+            		confTimerSecCount.text = confTimer.currentCount.toString();
+            	} else {
+            		confTimer.stop();
+            		confTimerLabel.text="stopped";
+            		confTimerLabel.text = confTimer.running.toString();
+            		confTimerSecCount.text = confTimer.currentCount.toString();
+            	}
+            }
+            
+            private function confTimerChangeTime():void {
+            	confTimer.delay = confAutoRefreshTimeSlider.value * 1000;
+            }
+            
+            public function doOriginate():void {
+				var origWindow:IFlexDisplayObject =
+					PopUpManager.createPopUp(this, originateForm, false);
+			}
+           
         ]]>
     </mx:Script>
 
@@ -36,12 +64,10 @@
     <mx:RemoteObject id="freeswitch" destination="freeswitch" source="freeswitch"
             endpoint="http://192.168.1.140/feeder/gateway.php" showBusyCursor="true"/>
 
-    
     <mx:TabNavigator width="100%" height="100%">
-        <mx:Canvas label="Channels" width="100%" height="100%">
+        <mx:Canvas label="Channels" width="100%" height="100%" show="freeswitch.getChannels();">
         	<mx:VBox top="0" left="0" width="100%" height="100%">
-		        <mx:Button label="Get data" click="{freeswitch.getChannels()}" />
-		        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getChannels.lastResult}" editable="true" itemEditEnd="save(event)"> -->
+		        <mx:Button label="Get data" click="freeswitch.getChannels();" />
 		        <mx:DataGrid id="channelsGrid" dataProvider="{freeswitch.getChannels.lastResult}" width="100%" height="100%">
 		            <mx:columns>
 		                <mx:DataGridColumn dataField="uuid" editable="false"/>
@@ -55,11 +81,15 @@
 		        </mx:DataGrid>
 	        </mx:VBox>
         </mx:Canvas>
-        <mx:Canvas label="Calls" width="100%" height="100%">
-        	<mx:VBox top="0" left="0" width="100%" height="100%">
-		        <mx:Button label="Get data" click="{freeswitch.getCalls()}" />
+        <mx:Canvas label="Calls" width="100%" height="100%" show="freeswitch.getCalls();">
+
+		        <mx:Button label="Refresh" click="freeswitch.getCalls();" />
+		        <mx:Button label="Originate" click="doOriginate();"  x="79"/>
+		        <mx:Button label="Kill UUID" click="{freeswitch.getCalls()}"  x="166"/>
+		        <mx:Button label="Status" click="{freeswitch.getCalls()}"  x="251"/>
+		        <mx:Button label="Status" click="{freeswitch.getCalls()}"  x="322"/>
 		        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getCalls.lastResult}" editable="true" itemEditEnd="save(event)"> -->
-		        <mx:DataGrid id="callsGrid" dataProvider="{freeswitch.getCalls.lastResult}" width="100%" height="100%">
+		        <mx:DataGrid id="callsGrid" dataProvider="{freeswitch.getCalls.lastResult}" top="30" bottom="0" left="0" right="0">
 		            <mx:columns>
 		                <mx:DataGridColumn dataField="created"/>
 		                <mx:DataGridColumn dataField="caller_uuid"/>
@@ -69,37 +99,42 @@
 		                <mx:DataGridColumn dataField="caller_dest_num"/>
 		            </mx:columns>
 		        </mx:DataGrid>
-	        </mx:VBox>
+
         </mx:Canvas>
-        <mx:Canvas label="Conference" width="100%" height="100%">
-        	<mx:ComboBox id="confPicker" horizontalCenter="0" top="10" dataProvider="{freeswitch.getConferenceList.lastResult}"></mx:ComboBox>
-	        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getCalls.lastResult}" editable="true" itemEditEnd="save(event)"> -->
-	        <mx:DataGrid id="conferenceGrid" dataProvider="{freeswitch.getConferenceUsers.lastResult}" width="100%" top="43" bottom="115">
+        <mx:Canvas label="Conference" width="100%" height="100%" show="initConfTab();">
+        	<mx:ComboBox id="confPicker" horizontalCenter="0" top="10" dataProvider="{freeswitch.getConferenceList.lastResult}" 
+        		change="{freeswitch.getConferenceUsers(confPicker.selectedItem)}"></mx:ComboBox>
+	        <mx:DataGrid id="conferenceGrid" dataProvider="{freeswitch.getConferenceUsers.lastResult}" width="100%" top="43" bottom="145">
 	            <mx:columns>
-	                <mx:DataGridColumn headerText="id" dataField="0"/>
-	                <mx:DataGridColumn headerText="clid_name" dataField="3"/>
-	                <mx:DataGridColumn headerText="clid_num" dataField="4"/>
-	                <mx:DataGridColumn headerText="flags" dataField="5"/>
-	                <mx:DataGridColumn headerText="channel" dataField="1"/>
-	                <mx:DataGridColumn headerText="uuid" dataField="2"/>
-	                <mx:DataGridColumn headerText="volume" dataField="7"/>
-	                <mx:DataGridColumn headerText="mic_gain" dataField="6"/>
-	                <mx:DataGridColumn headerText="noise_floor" dataField="8"/>
+	                <mx:DataGridColumn dataField="id"/>
+	                <mx:DataGridColumn dataField="caller_name"/>
+	                <mx:DataGridColumn dataField="caller_number" />
+	                <mx:DataGridColumn dataField="channel" />
+	                <mx:DataGridColumn dataField="uuid"/>
+	                <mx:DataGridColumn dataField="volume"/>
+	                <mx:DataGridColumn dataField="gain"/>
+	                <mx:DataGridColumn dataField="noise"/>
+	                <mx:DataGridColumn dataField="flags"/>
 	            </mx:columns>
 	        </mx:DataGrid>
-	        <mx:Button label="Play File" click="{freeswitch.getConferenceList()}" horizontalCenter="-167" bottom="85"/>
-	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-90" bottom="85"/>
-	        <mx:Button label="Kick" click="{freeswitch.getCalls()}" horizontalCenter="-13" bottom="85"/>
-	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="74" bottom="85"/>
-	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="165" bottom="85"/>
-	        <mx:Button label="Mute" click="{freeswitch.getCalls()}" horizontalCenter="-177" bottom="55"/>
-	        <mx:Button label="Unmute" click="{freeswitch.getCalls()}" horizontalCenter="-85" bottom="55"/>
-	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="-3" bottom="55"/>
-	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="71" bottom="55"/>
-	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="152" bottom="55"/>
-	        <mx:Button label="Lock" click="{freeswitch.getCalls()}" horizontalCenter="-53" bottom="25"/>
-	        <mx:Button label="Unlock" click="{freeswitch.getCalls()}" horizontalCenter="36" bottom="25"/>
-		        
+	        <mx:Button label="Play File" click="{freeswitch.getConferenceList()}" horizontalCenter="-138" bottom="85"/>
+	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-61" bottom="85"/>
+	        <mx:Button label="Kick" horizontalCenter="2" bottom="85"/>
+	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="64" bottom="85"/>
+	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="137" bottom="85"/>
+	        <mx:Button label="Mute" click="{freeswitch.getCalls()}" horizontalCenter="-136" bottom="55"/>
+	        <mx:Button label="Unmute" click="{freeswitch.getCalls()}" horizontalCenter="-65" bottom="55"/>
+	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="13" bottom="55"/>
+	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="81" bottom="55"/>
+	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="138" bottom="55"/>
+	        <mx:Button label="Lock" click="{freeswitch.getCalls()}" horizontalCenter="-36" bottom="25"/>
+	        <mx:Button label="Unlock" click="{freeswitch.getCalls()}" horizontalCenter="30" bottom="25"/>
+	        <mx:CheckBox id="confAutoRefreshCheckBox" label="AutoRefresh" right="204" top="10" selected="true" click="confAutoRefreshControl();"/>
+	        <mx:HSlider id="confAutoRefreshTimeSlider" right="37" top="10" width="162" minimum="5" maximum="120" snapInterval="5" value="15"/>
+	        <mx:Label id="confTimerLabel" text="STOPPED" right="339" top="12"/>
+	        <mx:Label width="23" id="lblRefreshInterval" text="{confAutoRefreshTimeSlider.value.toString()}" right="10" top="12"/>
+	        <mx:Label id="confTimerSecCount" text="Label" right="433" top="12"/>
+	        <mx:TextInput bottom="115" width="406" horizontalCenter="-1"/>
         </mx:Canvas>
     </mx:TabNavigator>
 	
