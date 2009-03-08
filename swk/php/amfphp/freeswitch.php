@@ -76,11 +76,31 @@ class FreeSWITCH {
 		$y=0;
 		foreach($data as $row){
         		if ($row!="" && substr($row, 0, 10) != "Conference"){
-                		$conf_data[$y] = explode(";", $row);
+                		$temp_data = explode(";", $row);
+				$conf_data[$y]['id'] = $temp_data[0];
+				$conf_data[$y]['channel'] = $temp_data[1];
+				$conf_data[$y]['uuid'] = $temp_data[2];
+				$conf_data[$y]['caller_name'] = $temp_data[3];
+				$conf_data[$y]['caller_number'] = $temp_data[4];
+				$conf_data[$y]['flags'] = $temp_data[5];
+				$conf_data[$y]['gain'] = $temp_data[6];
+				$conf_data[$y]['volume'] = $temp_data[7];
+				$conf_data[$y]['noise'] = $temp_data[8];
+				$conf_data[$y]['hear'] = 0;
+				$conf_data[$y]['speak'] = 0;
+				$conf_data[$y]['talk'] = 0;
+				$conf_data[$y]['video'] = 0;
+				$temp_flags = explode("|", $temp_data[5]);
+				foreach ($temp_flags as $flag){
+					if ($flag == "hear") $conf_data[$y]['hear'] = 1;
+					if ($flag == "speak") $conf_data[$y]['speak'] = 1;
+					if ($flag == "talk") $conf_data[$y]['talk'] = 1;
+					if ($flag == "video") $conf_data[$y]['video'] = 1;
+				}
+
                 		$y++;
         		}
 		}
-
 		return $conf_data;
 	}
 
