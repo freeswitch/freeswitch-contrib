@@ -62,7 +62,7 @@
 
     <!-- this is the RemoteObject  used to make the RPC calls -->
     <mx:RemoteObject id="freeswitch" destination="freeswitch" source="freeswitch"
-            endpoint="http://192.168.1.140/feeder/gateway.php" showBusyCursor="true"/>
+            endpoint="/feeder/gateway.php" showBusyCursor="true"/>
 
     <mx:TabNavigator width="100%" height="100%">
         <mx:Canvas label="Channels" width="100%" height="100%" show="freeswitch.getChannels();">
