@@ -56,6 +56,12 @@
 				var origWindow:IFlexDisplayObject =
 					PopUpManager.createPopUp(this, originateForm, false);
 			}
+            public function doStatusForm():void {
+				var origWindow:IFlexDisplayObject =
+					PopUpManager.createPopUp(this, statusForm, false);
+			}
+			
+				
            
         ]]>
     </mx:Script>
@@ -66,9 +72,9 @@
 
     <mx:TabNavigator width="100%" height="100%">
         <mx:Canvas label="Channels" width="100%" height="100%" show="freeswitch.getChannels();">
-        	<mx:VBox top="0" left="0" width="100%" height="100%">
-		        <mx:Button label="Get data" click="freeswitch.getChannels();" />
-		        <mx:DataGrid id="channelsGrid" dataProvider="{freeswitch.getChannels.lastResult}" width="100%" height="100%">
+        	
+		        <mx:Button label="Refresh" click="freeswitch.getChannels();" />
+		        <mx:DataGrid id="channelsGrid" dataProvider="{freeswitch.getChannels.lastResult}" left="0" top="30" bottom="0" right="0">
 		            <mx:columns>
 		                <mx:DataGridColumn dataField="uuid" editable="false"/>
 		                <mx:DataGridColumn dataField="cid_name"/>
@@ -79,15 +85,17 @@
 		                <mx:DataGridColumn dataField="write_codec"/>
 		            </mx:columns>
 		        </mx:DataGrid>
-	        </mx:VBox>
+	        
+        	<mx:Button label="Originate" click="doOriginate();"  x="81"/>
+        	<mx:Button label="Kill UUID" click="freeswitch.killUuid(callsGrid.selectedItem.caller_uuid); freeswitch.getCalls();"  x="168"/>
+        	<mx:Button label="Status" click="doStatusForm()"  x="253"/>
         </mx:Canvas>
         <mx:Canvas label="Calls" width="100%" height="100%" show="freeswitch.getCalls();">
 
 		        <mx:Button label="Refresh" click="freeswitch.getCalls();" />
 		        <mx:Button label="Originate" click="doOriginate();"  x="79"/>
-		        <mx:Button label="Kill UUID" click="{freeswitch.getCalls()}"  x="166"/>
-		        <mx:Button label="Status" click="{freeswitch.getCalls()}"  x="251"/>
-		        <mx:Button label="Status" click="{freeswitch.getCalls()}"  x="322"/>
+		        <mx:Button label="Kill UUID" click="freeswitch.killUuid(callsGrid.selectedItem.caller_uuid); freeswitch.getCalls();"  x="166"/>
+		        <mx:Button label="Status" click="doStatusForm()"  x="251"/>
 		        <!-- <mx:DataGrid id="myGrid" dataProvider="{myRemote.getCalls.lastResult}" editable="true" itemEditEnd="save(event)"> -->
 		        <mx:DataGrid id="callsGrid" dataProvider="{freeswitch.getCalls.lastResult}" top="30" bottom="0" left="0" right="0">
 		            <mx:columns>
