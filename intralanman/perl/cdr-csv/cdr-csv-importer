@@ -1,0 +1,90 @@
+#!/usr/bin/perl
+
+use DBI;
+use Data::Dumper;
+
+$config->{connect_string} = 'DBI:mysql:freeswitch';
+$config->{username} = 'root';
+$config->{password} = '';
+$config->{table} = "cdrs";
+$config->{fields} = [
+    "caller_id_name",
+    "caller_id_number",
+    "destination_number",
+    "context",
+    "start_stamp",
+    "answer_stamp",
+    "end_stamp",
+    "duration",
+    "billsec",
+    "hangup_cause",
+    "uuid",
+    "bleg_uuid",
+    "accountcode",
+    "read_codec",
+    "write_codec",
+    ];
+
+sub create_table {
+    my $db = shift;
+    my $sql = "CREATE TABLE IF NOT EXISTS`cdrs` (
+  `id` int(11) NOT NULL auto_increment,
+  `caller_id_name` varchar(255) NOT NULL default '',
+  `caller_id_number` varchar(255) NOT NULL default '',
+  `destination_number` varchar(255) NOT NULL default '',
+  `context` varchar(255) NOT NULL default '',
+  `start_stamp` varchar(255) NOT NULL default '',
+  `answer_stamp` varchar(255) NOT NULL default '',
+  `end_stamp` varchar(255) NOT NULL default '',
+  `duration` varchar(255) NOT NULL default '',
+  `billsec` varchar(255) NOT NULL default '',
+  `hangup_cause` varchar(255) NOT NULL default '',
+  `uuid` varchar(255) NOT NULL default '',
+  `bleg_uuid` varchar(255) NOT NULL default '',
+  `accountcode` varchar(255) NOT NULL default '',
+  `read_codec` varchar(255) NOT NULL default '',
+  `write_codec` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
+) ENGINE=InnoDB";
+    $db->do($sql);
+    if (!$db->{Executed}) {
+	die("We couldn't CREATE the DB table\n");
+    }
+}
+
+sub connect_db {
+    return DBI->connect($config->{connect_string}, $config->{username}, $config->{password});
+}
+
+sub is_db_connected {
+    $query = $db->prepare("SELECT CURRENT_TIMESTAMP;");
+    $query->execute();
+}
+
+my $db = &connect_db;
+&create_table($db);
+$field_count = @{$config->{fields}};
+my $values = '?';
+my $fields = $config->{fields}[0];
+for ($i=1; $i<$field_count; $i++) {
+    $fields = sprintf('%s, %s', $fields, $config->{fields}[$i]);
+    $values = sprintf('%s, ?', $values);
+}
+#print "$field_count - $fields $values\n";
+
+
+my $query = sprintf(
+    "INSERT INTO %s (%s) VALUES (%s);", 
+    $config->{table}, join(',', @{$config->{fields}}), $values
+    );
+#print "$query\n";
+
+my $query_handle = $db->prepare($query);
+while (<STDIN>) {
+    print $_;
+    chomp;
+    @values = split(/,/);
+    #print Dumper @values;
+    $query_handle->execute(@values);
+}
