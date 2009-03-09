@@ -2,32 +2,37 @@
 
 use DBI;
 use Data::Dumper;
+use Sys::Syslog;
 
-$config->{connect_string} = 'DBI:mysql:freeswitch';
-$config->{username} = 'root';
-$config->{password} = '';
-$config->{table} = "cdrs";
-$config->{fields} = [
-    "caller_id_name",
-    "caller_id_number",
-    "destination_number",
-    "context",
-    "start_stamp",
-    "answer_stamp",
-    "end_stamp",
-    "duration",
-    "billsec",
-    "hangup_cause",
-    "uuid",
-    "bleg_uuid",
-    "accountcode",
-    "read_codec",
-    "write_codec",
-    ];
+my $config={};
+my $db;
+my $identifier = 'cdr-csv-importer';
+
+sub parse_config {
+    open(CONFIG, "<cdr-csv-importer.ini") or die("Can't open config file (cdr-csv-importer.ini)\n");
+    while (<CONFIG>) {
+	#print $_;
+        chomp; #kill whitespaces
+        
+        next if !(m/^[[:alnum:]]/); #skip lines that don't start right
+        next if m/^\s*$/; #skip lines with only whitespace
+	next if m/^;/;    #skip ini comments
+        next if m(/^\[.*\]/); # skip the start of a section
+	
+	my ($key, $val) = split(/\s+=\s+/, $_, 2);
+	#print "'$key' = '$val'\n";
+	if($key eq "fields") {
+	    @{$config->{fields}} = split(/,/, $val);
+	} else {
+	    $config->{$key} = $val;    
+	}
+    }
+    close(CONFIG);
+}
 
 sub create_table {
-    my $db = shift;
-    my $sql = "CREATE TABLE IF NOT EXISTS`cdrs` (
+#    my $db = shift;
+    my $sql = "CREATE TABLE IF NOT EXISTS `$config->{table}` (
   `id` int(11) NOT NULL auto_increment,
   `caller_id_name` varchar(255) NOT NULL default '',
   `caller_id_number` varchar(255) NOT NULL default '',
@@ -62,7 +67,14 @@ sub is_db_connected {
     $query->execute();
 }
 
-my $db = &connect_db;
+openlog($identifier, 'ndelay,pid', LOG_USER);
+open(STDERR,"|logger -t \"${identifier}[$$]: \"") or die "Error: Unable to redirect STDERR to logger!";
+open(STDOUT,"|logger -t \"${identifier}[$$]: \"") or die "Error: Unable to redirect STDOUT to logger!";
+&parse_config;
+#print Dumper $config;
+open(PID, ">$config->{pid_file}");
+print PID $$;
+$db = &connect_db;
 &create_table($db);
 $field_count = @{$config->{fields}};
 my $values = '?';
@@ -71,18 +83,23 @@ for ($i=1; $i<$field_count; $i++) {
     $fields = sprintf('%s, %s', $fields, $config->{fields}[$i]);
     $values = sprintf('%s, ?', $values);
 }
-#print "$field_count - $fields $values\n";
 
 
 my $query = sprintf(
     "INSERT INTO %s (%s) VALUES (%s);", 
     $config->{table}, join(',', @{$config->{fields}}), $values
     );
-#print "$query\n";
+syslog(LOG_INFO, "$query");
 
+sub mylog {
+    $log = shift;
+    syslog(LOG_INFO, "$log");
+}
+
+print Dumper @ARGV;
 my $query_handle = $db->prepare($query);
 while (<STDIN>) {
-    print $_;
+    syslog(LOG_INFO, $_);
     chomp;
     @values = split(/,/);
     #print Dumper @values;
