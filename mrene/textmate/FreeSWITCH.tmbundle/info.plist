@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>FreeSWITCH</string>
+	<key>ordering</key>
+	<array>
+		<string>CCE4CE1C-2E71-4EDB-9733-1CDE38FA831E</string>
+		<string>40D09664-79B0-4983-84FB-8007DD80E0D5</string>
+		<string>BC5BFA60-002A-40F2-A6FE-72CEE4AAE330</string>
+		<string>C41EC675-F09C-4596-8C14-662403B27D54</string>
+		<string>8940F795-2A0A-411F-AB98-48DEAB07AD69</string>
+		<string>63A39832-470E-4839-8098-4CC537FAA46D</string>
+		<string>091C4224-A49A-4C68-AEA1-A25FEEAB0DE8</string>
+		<string>D7C796FB-389A-4D1B-A64B-BCAE45B4CEAF</string>
+		<string>86B6BF3F-C2C5-413C-A2FD-58D02D4B0AC0</string>
+		<string>FB9588B8-3540-41F6-BC2D-7A6F3083BDA4</string>
+	</array>
+	<key>uuid</key>
+	<string>5A009C17-72DB-453A-8BF9-02AFD085B5B8</string>
+</dict>
+</plist>

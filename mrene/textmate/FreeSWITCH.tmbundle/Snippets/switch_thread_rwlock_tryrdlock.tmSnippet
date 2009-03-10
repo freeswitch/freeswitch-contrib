@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>if (switch_thread_rwlock_tryrdlock($1) != SWITCH_STATUS_SUCCESS) {
+	$2
+}
+$0</string>
+	<key>name</key>
+	<string>switch_thread_rwlock_tryrdlock</string>
+	<key>tabTrigger</key>
+	<string>tryrdlock</string>
+	<key>uuid</key>
+	<string>091C4224-A49A-4C68-AEA1-A25FEEAB0DE8</string>
+</dict>
+</plist>

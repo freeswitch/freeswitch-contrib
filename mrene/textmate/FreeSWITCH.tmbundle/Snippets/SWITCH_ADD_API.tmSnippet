@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>SWITCH_ADD_API(api_interface, "${1:app name}", "${2:description}",${3:function ptr}, "${4:syntax}");
+</string>
+	<key>name</key>
+	<string>SWITCH_ADD_API</string>
+	<key>tabTrigger</key>
+	<string>addapi</string>
+	<key>uuid</key>
+	<string>63A39832-470E-4839-8098-4CC537FAA46D</string>
+</dict>
+</plist>

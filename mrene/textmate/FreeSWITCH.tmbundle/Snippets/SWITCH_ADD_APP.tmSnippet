@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>SWITCH_ADD_APP(app_interface, "${1:name}", "${2:short description}", "${3:long description}", ${4:function}, "${5:syntax}", ${6:SAF_NONE});
+</string>
+	<key>name</key>
+	<string>SWITCH_ADD_APP</string>
+	<key>tabTrigger</key>
+	<string>addapp</string>
+	<key>uuid</key>
+	<string>1D16269D-A544-4909-867E-70028ED7961B</string>
+</dict>
+</plist>

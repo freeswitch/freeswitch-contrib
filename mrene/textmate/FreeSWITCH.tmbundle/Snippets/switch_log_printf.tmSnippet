@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_${1:DEBUG}, "$2"$3);
+</string>
+	<key>name</key>
+	<string>switch_log_printf</string>
+	<key>tabTrigger</key>
+	<string>log</string>
+	<key>uuid</key>
+	<string>CCE4CE1C-2E71-4EDB-9733-1CDE38FA831E</string>
+</dict>
+</plist>

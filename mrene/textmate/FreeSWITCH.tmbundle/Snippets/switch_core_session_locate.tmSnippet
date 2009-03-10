@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>if ((${1:session} = switch_core_session_locate($2)) {
+	$0
+	switch_core_session_rwunlock($1);
+}</string>
+	<key>name</key>
+	<string>switch_core_session_locate</string>
+	<key>tabTrigger</key>
+	<string>slocate</string>
+	<key>uuid</key>
+	<string>8940F795-2A0A-411F-AB98-48DEAB07AD69</string>
+</dict>
+</plist>

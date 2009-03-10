@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>switch_thread_rwlock_wrlock($1);</string>
+	<key>name</key>
+	<string>switch_thread_rwlock_wrlock</string>
+	<key>tabTrigger</key>
+	<string>wrlock</string>
+	<key>uuid</key>
+	<string>86B6BF3F-C2C5-413C-A2FD-58D02D4B0AC0</string>
+</dict>
+</plist>

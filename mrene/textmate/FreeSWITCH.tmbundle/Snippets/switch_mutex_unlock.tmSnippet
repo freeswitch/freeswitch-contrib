@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>switch_mutex_unlock($1);</string>
+	<key>name</key>
+	<string>switch_mutex_unlock</string>
+	<key>tabTrigger</key>
+	<string>munlock</string>
+	<key>uuid</key>
+	<string>C41EC675-F09C-4596-8C14-662403B27D54</string>
+</dict>
+</plist>
