@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>SWITCH_CONFIG_ITEM("${1:key}", SWITCH_CONFIG_${2:}, 0, &amp;${3:globals.item}, (void*)$4, ${5:NULL}, "${6:syntax}", "${7:documentation}")</string>
+	<key>name</key>
+	<string>SWITCH_CONFIG_ITEM</string>
+	<key>tabTrigger</key>
+	<string>configitem</string>
+	<key>uuid</key>
+	<string>154CD9B8-6383-41C1-9F6E-A574AC6867D2</string>
+</dict>
+</plist>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>SWITCH_STATUS_SUCCESS</string>
+	<key>name</key>
+	<string>SWITCH_STATUS_SUCCESS</string>
+	<key>tabTrigger</key>
+	<string>sss</string>
+	<key>uuid</key>
+	<string>3F544B00-2D0B-4C60-804E-EF63C609E7D8</string>
+</dict>
+</plist>

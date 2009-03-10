@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>if ((${1:channel} = switch_core_session_get_channel(${2:session})) {
+	$0
+}</string>
+	<key>name</key>
+	<string>switch_core_session_get_channel</string>
+	<key>tabTrigger</key>
+	<string>getchan</string>
+	<key>uuid</key>
+	<string>8107A427-59E7-4FB0-AA1B-28F4A15A2B63</string>
+</dict>
+</plist>
