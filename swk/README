@@ -1,3 +1,30 @@
-for the Flex stuff you need the amf-php lib and the thing amf-php/freeswitch.php module
+This Software is licensed under the MPL.
 
-more stuff coming in here soon
+REQUIREMENTS:
+
+To Use:
+Flash9 or Flash10 
+PHP 5
+AMFPHP http://www.amfphp.org/
+FreeSWITCH ESL PHP Extensions
+And of course a WebServer
+
+To Develop:
+All of the Above
+Adobe Flex Development Environment. (This is available from Adobe's website in both paid and free formats.)
+
+
+To Install: 
+
+Install AMFPHP as per http://www.amfphp.org/docs/installingamfphp.html
+Rename the 'amfphp' directory to feeder. This is done to avoid robot scanners, bu I am sure that eventually they'll start looking for that.
+
+copy the freeswitch.php file into the AMFPHP services directory.
+
+make the files in amf-test1/bin-debug available on your webserver and point a browser at it.
+
+If you are developing in flex you need to load the swf from your development webserver so that it can properly locate the service. 
+
+Any questions, feel free to find me as SwK via IRC at #freeswitch on irc.freenode.net
+
+
