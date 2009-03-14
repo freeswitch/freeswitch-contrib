@@ -61,7 +61,8 @@
 				var origWindow:IFlexDisplayObject =
 					PopUpManager.createPopUp(this, statusForm, false);
 			}
-           
+			
+			           
         ]]>
     </mx:Script>
 
@@ -124,7 +125,7 @@
 	                <mx:DataGridColumn dataField="flags"/>
 	            </mx:columns>
 	        </mx:DataGrid>
-	        <mx:Button label="Play File" click="freeswitch.confPlayfile(confPicker.selectedItem, comboConfPlayfile.selectedItem.data);;" horizontalCenter="-40" bottom="85"/>
+	        <mx:Button label="Play File" click="freeswitch.confPlayfile(confPicker.selectedItem, comboConfPlayfile.selectedItem.data);" horizontalCenter="-40" bottom="85"/>
 	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="221" bottom="25"/>
 	        <mx:Button label="Refresh Confs" click="{freeswitch.getConferenceList()}" horizontalCenter="-276" bottom="115"/>
 	        <mx:Button label="Refresh Users" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-162" bottom="115"/>
@@ -149,30 +150,47 @@
                 <mx:Canvas label="Domains" width="100%" height="100%">
 	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 		                <mx:Canvas width="20%" height="100%">
-		                    <mx:DataGrid width="100%" horizontalCenter="0" top="0" bottom="40">
+		                    <mx:DataGrid id="gridDomainsDomain" width="100%" horizontalCenter="0" top="0" bottom="40" 
+		                    	dataProvider="{freeswitch.getDirDomains.lastResult}" 
+		                    	click="freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);">
 		                        <mx:columns>
 		                            <mx:DataGridColumn headerText="domain" dataField="name"/>
 		                        </mx:columns>
 		                    </mx:DataGrid>
-		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10"/>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10" click="freeswitch.getDirDomains();"/>
 		                </mx:Canvas>
 		                <mx:Canvas width="80%" height="100%">
-		                	<mx:Form id="formDomain" x="0" y="0" width="100%" height="100%">
-		                	</mx:Form>
+                			<mx:Label text="UID:" horizontalCenter="-421" top="10"/>
+                			<mx:Label text="{gridDomainsDomain.selectedItem.uid}" id="domainUid" horizontalCenter="-339" top="10"/>
+                			<mx:Label text="Name:" horizontalCenter="-129" top="12"/>
+                			<mx:TextInput id="domainName" text="{gridDomainsDomain.selectedItem.name}" horizontalCenter="25" top="10"/>
+                			<mx:CheckBox label="Enabled" id="domainEnabled" enabled="{gridDomainsDomain.selectedItem.enabled}" right="10" top="8"/>
+                			<mx:DataGrid left="10" top="61" bottom="42" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}">
+                				<mx:columns>
+                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Value" dataField="value"/>
+                				</mx:columns>
+                			</mx:DataGrid>
+                			<mx:DataGrid right="10" top="61" bottom="42" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}">
+                				<mx:columns>
+                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Data" dataField="value"/>
+                				</mx:columns>
+                			</mx:DataGrid>
 		                </mx:Canvas>
 		            </mx:HDividedBox>                
                 </mx:Canvas>
                 <mx:Canvas label="Users" width="100%" height="100%">
 	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 		                <mx:Canvas width="20%" height="100%">
-		                    <mx:ComboBox top="10" horizontalCenter="0"></mx:ComboBox>
-		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70">
+		                    <mx:ComboBox id="userDomain" top="10" horizontalCenter="0" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
+		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70" dataProvider="{freeswitch.getDirUsers.lastResult}">
 		                        <mx:columns>
-		                            <mx:DataGridColumn headerText="User" dataField="user_id"/>
+		                            <mx:DataGridColumn headerText="User" dataField="username" />
 		                        </mx:columns>
 		                    </mx:DataGrid>
-		                    <mx:Button label="Refresh Users" horizontalCenter="0" bottom="10"/>
-		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40"/>
+		                    <mx:Button label="Refresh Users" horizontalCenter="0" bottom="10" click="freeswitch.getDirUsers(userDomain.selectedItem.uid);"/>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40" click="freeswitch.getDirDomains();"/>
 		                </mx:Canvas>
 		                <mx:Canvas width="80%" height="100%">
 		                	<mx:Form id="formUser" x="0" y="0" width="100%" height="100%">

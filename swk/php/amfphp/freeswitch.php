@@ -38,21 +38,34 @@
 require_once "ESL.php";
  
 class FreeSWITCH {
-	 var $esl;
+	var $esl;
+	var $dbh;
+
+	private function getDbh(){
+		$dbtype='mysql'; 		/* Set the Database type */
+		$db_hostname = 'localhost'; 	/* Database Server hostname */
+		$db_username = 'root'; 		/* Database Server username */
+		$db_password = 'password'; 	/* Database Server password */
+		$db_database = 'shipment'; 	/* DataBase Name */
+		
+		$dbh = new PDO("$dbtype:host=$db_hostname;dbname=$db_database", $db_username, $db_password, array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,));
+		
+		return $dbh;
+	}
 
         public function __construct() { 
-		$this->esl = new eslConnection('127.0.0.1', '8021', 'ClueCon');
-	}
-	
-	public function getStatus() {
-		$e = $this->esl->sendRecv("api status");
-		$body = $e->getBody();
-		
-		return $body;
+
+		$esl_server = "127.0.0.1"; 	/* ESL Server */
+		$esl_port = "8021"; 		/* ESL Port */
+		$esl_secret = "ClueCon"; 	/* ESL Secret */
+
+		$this->esl = new eslConnection($esl_server, $esl_port, $esl_secret);
 	}
 
-	public function killUuid($uuid) {
-		$e = $this->esl->sendRecv("api uuid_kill $uuid");
+	/*** General Whats happening Methods ***/
+
+	public function getStatus() {
+		$e = $this->esl->sendRecv("api status");
 		$body = $e->getBody();
 		
 		return $body;
@@ -110,6 +123,8 @@ class FreeSWITCH {
 		return $data;
 	}
 
+	/*** General API Command Methods ***/
+
 	public function originate($call_url, $exten, $dialplan = "XML", $context= "default", $cid_name = "amf_php", $cid_number = "888", $timeout="30"){
 		$dialstring = "api originate $call_url $exten $dialplan $context $cid_name $cid_number $timeout";
 		$e = $this->esl->sendRecv($dialstring);
@@ -117,6 +132,14 @@ class FreeSWITCH {
 
 		return $body;
 	}
+
+	public function killUuid($uuid) {
+		$e = $this->esl->sendRecv("api uuid_kill $uuid");
+		$body = $e->getBody();
+		return $body;
+	}
+	
+	/*** Conference Methods ***/
 	
 	public function kickConferenceUser($conference, $member) {
 		$e = $this->esl->sendRecv("api conference $conference kick $member");
@@ -230,7 +253,67 @@ class FreeSWITCH {
 		$body = $e->getBody();
 		return $body;
 	}
+
+	/*** Directory Methods ***/
+
+	public function getDirDomains(){
+		$dbh = $this->getDbh();
+
+		$query = sprintf("select * from domains");
+		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+
+		return $results;
+	}
+
+	public function getDirDomain($domain_uid){
+
+		$dbh = $this->getDbh();
+
+		$query = sprintf("select * from domain_params where domains_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results['params'] = $stmt->fetchAll();
+
+		$query = sprintf("select * from domain_variables where domains_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results['variables'] = $stmt->fetchAll();
+
+		return $results;
+	}
 	
+	public function addDirDomain($domain_name){
+		$dbh = $this->getDbh();
+
+		$query = sprintf('insert into domains (name) values ("%s")', $domain_name);
+
+		return $dbh->exec($query);
+	}
+
+	public function getDirUsers($domain_uid){
+		$dbh = $this->getDbh();
+		
+		$query = sprintf("select * from users where domain_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+
+		return $results;
+	}
+
+	public function getDirGroups($domain_uid){
+		$dbh = $this->getDbh();
+
+		$query = sprintf("select * from groups where domain_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+
+		return $results;
+	}
+
+	
+
+}
+/* For Emacs:
+
 }
 /* For Emacs:
  * Local Variables:
