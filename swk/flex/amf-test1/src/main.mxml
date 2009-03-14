@@ -126,18 +126,16 @@
 	        </mx:DataGrid>
 	        <mx:Button label="Play File" click="freeswitch.confPlayfile(confPicker.selectedItem, comboConfPlayfile.selectedItem.data);;" horizontalCenter="-40" bottom="85"/>
 	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="221" bottom="25"/>
-	        <mx:Button label="Refersh Confs" click="{freeswitch.getConferenceList()}" horizontalCenter="-276" bottom="115"/>
-	        <mx:Button label="Refresh Conf Users" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-262" bottom="85"/>
-	        <mx:Button label="Kick" click="{freeswitch.kickConferenceUser(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-155" bottom="85"/>
+	        <mx:Button label="Refresh Confs" click="{freeswitch.getConferenceList()}" horizontalCenter="-276" bottom="115"/>
+	        <mx:Button label="Refresh Users" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-162" bottom="115"/>
+	        <mx:Button label="Kick" click="{freeswitch.kickConferenceUser(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-162" bottom="55"/>
 	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="98" bottom="25"/>
 	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="24" bottom="25"/>
 	        <mx:Button label="Mute" click="{freeswitch.confMute(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-303" bottom="55"/>
-	        <mx:Button label="Unmute" click="{freeswitch.confUnmute(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-230" bottom="55"/>
-	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="-295" bottom="25"/>
-	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="-227" bottom="25"/>
+	        <mx:Button label="Unmute" click="{freeswitch.confUnmute(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-232" bottom="55"/>
 	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="158" bottom="25"/>
-	        <mx:Button label="Lock" click="freeswitch.confLock(confPicker.selectedItem);" horizontalCenter="-156" bottom="55"/>
-	        <mx:Button label="Unlock" click="freeswitch.confUnlock(confPicker.selectedItem);" horizontalCenter="-162" bottom="25"/>
+	        <mx:Button label="Lock" click="freeswitch.confLock(confPicker.selectedItem);" horizontalCenter="-302" bottom="85"/>
+	        <mx:Button label="Unlock" click="freeswitch.confUnlock(confPicker.selectedItem);" horizontalCenter="-236" bottom="85"/>
 	        <mx:CheckBox id="confAutoRefreshCheckBox" label="AutoRefresh" right="204" top="10" selected="true" click="confAutoRefreshControl();"/>
 	        <mx:HSlider id="confAutoRefreshTimeSlider" right="37" top="10" width="162" minimum="5" maximum="120" snapInterval="5" value="15"/>
 	        <mx:Label id="confTimerLabel" text="STOPPED" right="339" top="12"/>
@@ -145,6 +143,71 @@
 	        <mx:Label id="confTimerSecCount" text="Label" right="433" top="12"/>
 	        <mx:TextInput bottom="55" width="406" horizontalCenter="126"/>
 	        <mx:ComboBox id="comboConfPlayfile" width="324" horizontalCenter="167" bottom="85" labelField="label" dataProvider="{freeswitch.getConfPlayfiles.lastResult}" ></mx:ComboBox>
+        </mx:Canvas>
+        <mx:Canvas label="Directory" width="100%" height="100%">
+            <mx:TabNavigator x="0" y="0" width="100%" height="100%">
+                <mx:Canvas label="Domains" width="100%" height="100%">
+	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
+		                <mx:Canvas width="20%" height="100%">
+		                    <mx:DataGrid width="100%" horizontalCenter="0" top="0" bottom="40">
+		                        <mx:columns>
+		                            <mx:DataGridColumn headerText="domain" dataField="name"/>
+		                        </mx:columns>
+		                    </mx:DataGrid>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10"/>
+		                </mx:Canvas>
+		                <mx:Canvas width="80%" height="100%">
+		                	<mx:Form id="formDomain" x="0" y="0" width="100%" height="100%">
+		                	</mx:Form>
+		                </mx:Canvas>
+		            </mx:HDividedBox>                
+                </mx:Canvas>
+                <mx:Canvas label="Users" width="100%" height="100%">
+	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
+		                <mx:Canvas width="20%" height="100%">
+		                    <mx:ComboBox top="10" horizontalCenter="0"></mx:ComboBox>
+		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70">
+		                        <mx:columns>
+		                            <mx:DataGridColumn headerText="User" dataField="user_id"/>
+		                        </mx:columns>
+		                    </mx:DataGrid>
+		                    <mx:Button label="Refresh Users" horizontalCenter="0" bottom="10"/>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40"/>
+		                </mx:Canvas>
+		                <mx:Canvas width="80%" height="100%">
+		                	<mx:Form id="formUser" x="0" y="0" width="100%" height="100%">
+		                	</mx:Form>
+		                </mx:Canvas>
+		            </mx:HDividedBox>
+                </mx:Canvas>
+                <mx:Canvas label="Groups" width="100%" height="100%">
+	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
+		                <mx:Canvas width="20%" height="100%">
+		                    <mx:ComboBox top="10" horizontalCenter="0"></mx:ComboBox>
+		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70">
+		                        <mx:columns>
+		                            <mx:DataGridColumn headerText="Group" dataField="user_id"/>
+		                        </mx:columns>
+		                    </mx:DataGrid>
+		                    <mx:Button label="Refresh Groups" horizontalCenter="0" bottom="10"/>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40"/>
+		                </mx:Canvas>
+		                <mx:Canvas width="80%" height="100%">
+		                	<mx:DataGrid width="45%" left="10" top="0" bottom="70">
+		                		<mx:columns>
+		                			<mx:DataGridColumn headerText="Member" dataField="col1"/>
+		                		</mx:columns>
+		                	</mx:DataGrid>
+		                	<mx:DataGrid width="45%" right="10" top="0" bottom="70">
+		                		<mx:columns>
+		                			<mx:DataGridColumn headerText="Available to Join" dataField="col1"/>
+		                		</mx:columns>
+		                	</mx:DataGrid>
+		                	<mx:Button x="10" y="572" label="Refresh"/>
+		                </mx:Canvas>
+		            </mx:HDividedBox>
+                </mx:Canvas>
+            </mx:TabNavigator>
         </mx:Canvas>
     </mx:TabNavigator>
 	
