@@ -7,25 +7,26 @@
         	import flash.utils.Timer;
             import flash.events.TimerEvent;
                     
-            import mx.controls.dataGridClasses.DataGridColumn;
-            import mx.events.DataGridEvent;
-            import mx.controls.Alert;
-            import mx.rpc.events.FaultEvent;
-            import mx.rpc.events.ResultEvent;
-            import mx.collections.ArrayCollection;
-            import mx.managers.PopUpManager;
-            import mx.core.IFlexDisplayObject;
-            private var confTimer:Timer;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.events.DataGridEvent;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			private var confTimer:Timer;
             
             private function initConfTab():void{
+            	freeswitch.getConfPlayfiles(null);
             	freeswitch.getConferenceList();
             	freeswitch.getConferenceUsers(confPicker.selectedItem );
-            	confTimerLabel.text="Init...";
-            	confTimer = new Timer(10000, 0);
-            	confTimer.addEventListener(TimerEvent.TIMER, onConfRefresh);
-            	confTimer.start();
-            	confTimerLabel.text = confTimer.running.toString();
-            }
+				confTimerLabel.text="Init...";
+				confTimer = new Timer(10000, 0);
+				confTimer.addEventListener(TimerEvent.TIMER, onConfRefresh);
+				confTimer.start();
+				confTimerLabel.text = confTimer.running.toString();
+			}
             
             private function onConfRefresh(evt:TimerEvent):void {
             	confTimerLabel.text="Refreshing";
@@ -60,8 +61,6 @@
 				var origWindow:IFlexDisplayObject =
 					PopUpManager.createPopUp(this, statusForm, false);
 			}
-			
-				
            
         ]]>
     </mx:Script>
@@ -125,24 +124,27 @@
 	                <mx:DataGridColumn dataField="flags"/>
 	            </mx:columns>
 	        </mx:DataGrid>
-	        <mx:Button label="Play File" click="{freeswitch.getConferenceList()}" horizontalCenter="-138" bottom="85"/>
-	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-61" bottom="85"/>
-	        <mx:Button label="Kick" horizontalCenter="2" bottom="85"/>
-	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="64" bottom="85"/>
-	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="137" bottom="85"/>
-	        <mx:Button label="Mute" click="{freeswitch.getCalls()}" horizontalCenter="-136" bottom="55"/>
-	        <mx:Button label="Unmute" click="{freeswitch.getCalls()}" horizontalCenter="-65" bottom="55"/>
-	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="13" bottom="55"/>
-	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="81" bottom="55"/>
-	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="138" bottom="55"/>
-	        <mx:Button label="Lock" click="{freeswitch.getCalls()}" horizontalCenter="-36" bottom="25"/>
-	        <mx:Button label="Unlock" click="{freeswitch.getCalls()}" horizontalCenter="30" bottom="25"/>
+	        <mx:Button label="Play File" click="freeswitch.confPlayfile(confPicker.selectedItem, comboConfPlayfile.selectedItem.data);;" horizontalCenter="-40" bottom="85"/>
+	        <mx:Button label="Speak" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="221" bottom="25"/>
+	        <mx:Button label="Refersh Confs" click="{freeswitch.getConferenceList()}" horizontalCenter="-276" bottom="115"/>
+	        <mx:Button label="Refresh Conf Users" click="{freeswitch.getConferenceUsers(confPicker.selectedItem)}" horizontalCenter="-262" bottom="85"/>
+	        <mx:Button label="Kick" click="{freeswitch.kickConferenceUser(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-155" bottom="85"/>
+	        <mx:Button label="DTMF" click="{freeswitch.getCalls()}" horizontalCenter="98" bottom="25"/>
+	        <mx:Button label="Transfer" click="{freeswitch.getCalls()}" horizontalCenter="24" bottom="25"/>
+	        <mx:Button label="Mute" click="{freeswitch.confMute(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-303" bottom="55"/>
+	        <mx:Button label="Unmute" click="{freeswitch.confUnmute(confPicker.selectedItem, conferenceGrid.selectedItem.id)}" horizontalCenter="-230" bottom="55"/>
+	        <mx:Button label="Volume" click="{freeswitch.getCalls()}" horizontalCenter="-295" bottom="25"/>
+	        <mx:Button label="Gain" click="{freeswitch.getCalls()}" horizontalCenter="-227" bottom="25"/>
+	        <mx:Button label="Dial" click="{freeswitch.getCalls()}" horizontalCenter="158" bottom="25"/>
+	        <mx:Button label="Lock" click="freeswitch.confLock(confPicker.selectedItem);" horizontalCenter="-156" bottom="55"/>
+	        <mx:Button label="Unlock" click="freeswitch.confUnlock(confPicker.selectedItem);" horizontalCenter="-162" bottom="25"/>
 	        <mx:CheckBox id="confAutoRefreshCheckBox" label="AutoRefresh" right="204" top="10" selected="true" click="confAutoRefreshControl();"/>
 	        <mx:HSlider id="confAutoRefreshTimeSlider" right="37" top="10" width="162" minimum="5" maximum="120" snapInterval="5" value="15"/>
 	        <mx:Label id="confTimerLabel" text="STOPPED" right="339" top="12"/>
 	        <mx:Label width="23" id="lblRefreshInterval" text="{confAutoRefreshTimeSlider.value.toString()}" right="10" top="12"/>
 	        <mx:Label id="confTimerSecCount" text="Label" right="433" top="12"/>
-	        <mx:TextInput bottom="115" width="406" horizontalCenter="-1"/>
+	        <mx:TextInput bottom="55" width="406" horizontalCenter="126"/>
+	        <mx:ComboBox id="comboConfPlayfile" width="324" horizontalCenter="167" bottom="85" labelField="label" dataProvider="{freeswitch.getConfPlayfiles.lastResult}" ></mx:ComboBox>
         </mx:Canvas>
     </mx:TabNavigator>
 	
