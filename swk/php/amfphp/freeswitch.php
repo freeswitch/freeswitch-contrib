@@ -281,12 +281,19 @@ class FreeSWITCH {
 		return $results;
 	}
 	
-	public function addDirDomain($domain_name){
+	public function getDirUser($user_uid){
+
 		$dbh = $this->getDbh();
 
-		$query = sprintf('insert into domains (name) values ("%s")', $domain_name);
+		$query = sprintf("select * from user_params where users_uid = $user_uid");
+		$stmt = $dbh->query($query);
+		$results['params'] = $stmt->fetchAll();
 
-		return $dbh->exec($query);
+		$query = sprintf("select * from user_variables where users_uid = $user_uid");
+		$stmt = $dbh->query($query);
+		$results['variables'] = $stmt->fetchAll();
+
+		return $results;
 	}
 
 	public function getDirUsers($domain_uid){
@@ -309,10 +316,35 @@ class FreeSWITCH {
 		return $results;
 	}
 
-	
+	public function addDirDomain($domain_name){
+		$dbh = $this->getDbh();
+		$query = sprintf('insert into domains (name) values ("%s")', $domain_name);
+		return $dbh->exec($query);
+	}
 
-}
-/* For Emacs:
+	public function addDirDomainParam($domain_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('insert into domain_params (domain_uid, name, value) values (%s, "%s", "%s")', $domain_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	public function addDirDomainVar($domain_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('insert into domain_variables (domain_uid, name, value) values (%s, "%s", "%s")', $domain_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	public function updateDirDomainParam($param_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('update domain_params set name = "%s", value = "%s" where uid=%s', $param_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	public function updateDirDomainVar($var_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('update domain_variables set name = "%s", value = "%s" where uid=%s', $var_uid, $name, $value);
+		return $dbh->exec($query);
+	}
 
 }
 /* For Emacs:

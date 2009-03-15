@@ -62,6 +62,45 @@
 					PopUpManager.createPopUp(this, statusForm, false);
 			}
 			
+			public function addDomainParam():void {
+				freeswitch.addDirDomainParam(gridDomainsDomain.selectedItem.uid, inputDomainParamName.text, inputDomainParamValue.text);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function addDomainVar():void {
+				freeswitch.addDirDomainVar(gridDomainsDomain.selectedItem.uid, inputDomainVarName.text, inputDomainVarValue.text);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgChangeDomainParam():void {
+				freeswitch.updateDirDomainParam(dgDomainParam.selectedItem.uid, dgDomainParam.selectedItem.name, dgDomainParam.value);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgChangeDomainVars():void {
+				freeswitch.updateDirDomainVar(dgDomainVars.selectedItem.uid, dgDomainVars.selectedItem.name, dgDomainVars.value);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function addDomainUserParam():void {
+				freeswitch.addDirDomainUserParam(gridDomainsDomain.selectedItem.uid, inputDomainParamName.text, inputDomainParamValue.text);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function addDomainUserVar():void {
+				freeswitch.addDirDomainUserVar(gridDomainsDomain.selectedItem.uid, inputDomainVarName.text, inputDomainVarValue.text);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgChangeDomainUserParam():void {
+				freeswitch.updateDirDomainUserParam(dgDomainParam.selectedItem.uid, dgDomainParam.selectedItem.name, dgDomainParam.value);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgChangeDomainUserVars():void {
+				freeswitch.updateDirDomainUserParam(dgDomainVars.selectedItem.uid, dgDomainVars.selectedItem.name, dgDomainVars.value);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
 			           
         ]]>
     </mx:Script>
@@ -165,18 +204,32 @@
                 			<mx:Label text="Name:" horizontalCenter="-129" top="12"/>
                 			<mx:TextInput id="domainName" text="{gridDomainsDomain.selectedItem.name}" horizontalCenter="25" top="10"/>
                 			<mx:CheckBox label="Enabled" id="domainEnabled" enabled="{gridDomainsDomain.selectedItem.enabled}" right="10" top="8"/>
-                			<mx:DataGrid left="10" top="61" bottom="42" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}">
+                			<mx:DataGrid left="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}"
+                				itemEditEnd="dgChangeDomainParam();" editable="true" id="dgDomainParam">
                 				<mx:columns>
                 					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120"/>
                 					<mx:DataGridColumn headerText="Value" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
-                			<mx:DataGrid right="10" top="61" bottom="42" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}">
+                			<mx:DataGrid right="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}" 
+                				itemEditEnd="dgChangeDomainVars();" editable="true" id="dgDomainVars">
                 				<mx:columns>
                 					<mx:DataGridColumn headerText="Variable" dataField="name" width="120"/>
                 					<mx:DataGridColumn headerText="Data" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
+                			<mx:Button label="Refresh Domain" bottom="10" horizontalCenter="-52"/>
+                			<mx:Button label="Add Parameter" left="149" bottom="40" click="addDomainParam()"/>
+                			<mx:Button label="Add Variable" bottom="40" right="168" width="99" click="addDomainVar()"/>
+                			<mx:Button label="Add Domain" bottom="10" horizontalCenter="63"/>
+                			<mx:Label text="Parameter" bottom="90" left="10"/>
+                			<mx:TextInput width="121" id="inputDomainParamName" bottom="70" left="10"/>
+                			<mx:TextInput width="272" id="inputDomainParamValue" bottom="70" left="139"/>
+                			<mx:Label text="Variable" bottom="90" right="361"/>
+                			<mx:TextInput width="121" id="inputDomainVarName" bottom="70" right="290"/>
+                			<mx:TextInput width="272" id="inputDomainVarValue" bottom="70" right="10"/>
+                			<mx:Label text="Data" bottom="90" right="251"/>
+                			<mx:Label text="Value" bottom="90" left="139"/>
 		                </mx:Canvas>
 		            </mx:HDividedBox>                
                 </mx:Canvas>
@@ -184,7 +237,8 @@
 	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 		                <mx:Canvas width="20%" height="100%">
 		                    <mx:ComboBox id="userDomain" top="10" horizontalCenter="0" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
-		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70" dataProvider="{freeswitch.getDirUsers.lastResult}">
+		                    <mx:DataGrid id="dgDomainUsers" width="100%" horizontalCenter="0" top="40" bottom="70" dataProvider="{freeswitch.getDirUsers.lastResult}"
+		                    	click="freeswitch.getDirUser(dgDomainUsers.selectedItem.uid)">
 		                        <mx:columns>
 		                            <mx:DataGridColumn headerText="User" dataField="username" />
 		                        </mx:columns>
@@ -193,8 +247,37 @@
 		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40" click="freeswitch.getDirDomains();"/>
 		                </mx:Canvas>
 		                <mx:Canvas width="80%" height="100%">
-		                	<mx:Form id="formUser" x="0" y="0" width="100%" height="100%">
-		                	</mx:Form>
+		                	<mx:Label text="UID:" horizontalCenter="-421" top="10"/>
+                			<mx:Label text="{dgDomainUsers.selectedItem.uid}" id="userUid" horizontalCenter="-339" top="10"/>
+                			<mx:Label text="Name:" horizontalCenter="-129" top="12"/>
+                			<mx:TextInput id="userName" text="{dgDomainUsers.selectedItem.username}" horizontalCenter="25" top="10"/>
+                			<mx:CheckBox label="Enabled" id="userEnabled" enabled="{dgDomainUsers.selectedItem.enabled}" right="10" top="8"/>
+                			<mx:DataGrid left="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.params}"
+                				change="dgChangeDomainUserParam();" editable="true" id="dgDomainUserParam">
+                				<mx:columns>
+                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Value" dataField="value"/>
+                				</mx:columns>
+                			</mx:DataGrid>
+                			<mx:DataGrid right="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.variables}" 
+                				change="dgChangeDomainVars();" editable="true" id="dgDomainUserVars">
+                				<mx:columns>
+                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Data" dataField="value"/>
+                				</mx:columns>
+                			</mx:DataGrid>
+                			<mx:Button label="Refresh Domain" bottom="10" horizontalCenter="-52"/>
+                			<mx:Button label="Add Parameter" left="149" bottom="40" click="addDomainUserParam()"/>
+                			<mx:Button label="Add Variable" bottom="40" right="168" width="99" click="addDomainUserVar()"/>
+                			<mx:Button label="Add Domain" bottom="10" horizontalCenter="63"/>
+                			<mx:Label text="Parameter" bottom="90" left="10"/>
+                			<mx:TextInput width="121" id="inputDomainUserParamName" bottom="70" left="10"/>
+                			<mx:TextInput width="272" id="inputDomainUserParamValue" bottom="70" left="139"/>
+                			<mx:Label text="Variable" bottom="90" right="361"/>
+                			<mx:TextInput width="121" id="inputDomainUserVarName" bottom="70" right="290"/>
+                			<mx:TextInput width="272" id="inputDomainUserVarValue" bottom="70" right="10"/>
+                			<mx:Label text="Data" bottom="90" right="251"/>
+                			<mx:Label text="Value" bottom="90" left="139"/>
 		                </mx:Canvas>
 		            </mx:HDividedBox>
                 </mx:Canvas>
@@ -221,7 +304,7 @@
 		                			<mx:DataGridColumn headerText="Available to Join" dataField="col1"/>
 		                		</mx:columns>
 		                	</mx:DataGrid>
-		                	<mx:Button x="10" y="572" label="Refresh"/>
+		                	<mx:Button label="Refresh" left="10" bottom="40"/>
 		                </mx:Canvas>
 		            </mx:HDividedBox>
                 </mx:Canvas>
