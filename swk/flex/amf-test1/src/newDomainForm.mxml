@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" height="306" title="Add Domain">
+    <mx:Script>
+        <![CDATA[
+            import mx.managers.PopUpManager;
+            import mx.controls.Alert;
+            import mx.rpc.events.ResultEvent;
+            
+            private function doInit():void {
+                PopUpManager.centerPopUp(this);
+            }
+            
+            private function doCall():void {
+				parentApplication.freeswitch.addDirDomain(domainName.text, dialString.text, defaultGateway.text, defaultAreacode.text, xferFallbackExten.text, recordStereo.selected);
+				PopUpManager.removePopUp(this);
+            }
+        ]]>
+    </mx:Script>
+  
+    <mx:Form width="100%">
+        <mx:FormItem label="Domain Name" width="100%">
+            <mx:TextInput id="domainName"  width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="Dial String" width="100%">
+            <mx:TextInput id="dialString" width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="default_gateway" width="100%">
+            <mx:TextInput id="defaultGateway" width="100%"/>
+        </mx:FormItem>         
+        <mx:FormItem label="Default Areacode" width="100%">
+            <mx:TextInput id="defaultAreacode" width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="Xfer Fallback Exten" width="100%">
+            <mx:TextInput id="xferFallbackExten" width="100%"/>
+        </mx:FormItem> 
+        <mx:FormItem label="Record Stereo">
+            <mx:CheckBox id="recordStereo" />
+        </mx:FormItem>
+		
+    </mx:Form>
+    <mx:HBox horizontalAlign="center" width="314"> 
+        <mx:Button click="doCall();" label="Add Domain"/> 
+        <mx:Button click="PopUpManager.removePopUp(this);" label="Cancel"/> 
+    </mx:HBox> 
+</mx:TitleWindow>

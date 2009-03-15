@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="doInit();" height="306" title="Add User">
+    <mx:Script>
+        <![CDATA[
+            import mx.managers.PopUpManager;
+            import mx.controls.Alert;
+            import mx.rpc.events.ResultEvent;
+            
+            private function doInit():void {
+                PopUpManager.centerPopUp(this);
+            }
+            
+            private function doCall():void {
+				parentApplication.freeswitch.addDirDomainUser(username.text, mailbox.text, cidr.text, password.text, vm_password.text, cid_name.text, cid_number.text);
+				PopUpManager.removePopUp(this);
+            }
+        ]]>
+    </mx:Script>
+  
+    <mx:Form width="100%">
+        <mx:FormItem label="UserName" width="100%">
+            <mx:TextInput id="username"  width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="Mailbox" width="100%">
+            <mx:TextInput id="mailbox" width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="CIDR" width="100%">
+            <mx:TextInput id="cidr" width="100%"/>
+        </mx:FormItem>         
+        <mx:FormItem label="Password" width="100%">
+            <mx:TextInput id="password" width="100%"/>
+        </mx:FormItem>
+        <mx:FormItem label="VM PIN" width="100%">
+            <mx:TextInput id="vm_password" width="100%"/>
+        </mx:FormItem> 
+		<mx:FormItem label="CallerID Name" width="100%">
+            <mx:TextInput id="cid_name" width="100%"/>
+        </mx:FormItem>
+		<mx:FormItem label="CallerID Number" width="100%">
+            <mx:TextInput id="cid_number" width="100%"/>
+        </mx:FormItem>
+    </mx:Form>
+    <mx:HBox horizontalAlign="center" width="314"> 
+        <mx:Button click="doCall();" label="Add User"/> 
+        <mx:Button click="PopUpManager.removePopUp(this);" label="Cancel"/> 
+    </mx:HBox> 
+</mx:TitleWindow>

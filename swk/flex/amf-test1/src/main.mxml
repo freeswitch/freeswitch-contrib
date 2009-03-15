@@ -62,6 +62,16 @@
 					PopUpManager.createPopUp(this, statusForm, false);
 			}
 			
+			public function doNewUserForm():void {
+				var origWindow:IFlexDisplayObject =
+					PopUpManager.createPopUp(this, newUserForm, false);
+			}
+			
+			public function doNewDomainForm():void {
+				var origWindow:IFlexDisplayObject =
+					PopUpManager.createPopUp(this, newDomainForm, false);
+			}
+			
 			public function addDomainParam():void {
 				freeswitch.addDirDomainParam(gridDomainsDomain.selectedItem.uid, inputDomainParamName.text, inputDomainParamValue.text);
 				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
@@ -221,7 +231,7 @@
                 			<mx:Button label="Refresh Domain" bottom="10" horizontalCenter="-52"/>
                 			<mx:Button label="Add Parameter" left="149" bottom="40" click="addDomainParam()"/>
                 			<mx:Button label="Add Variable" bottom="40" right="168" width="99" click="addDomainVar()"/>
-                			<mx:Button label="Add Domain" bottom="10" horizontalCenter="63"/>
+                			<mx:Button label="Add Domain" bottom="10" horizontalCenter="63" click="doNewDomainForm();"/>
                 			<mx:Label text="Parameter" bottom="90" left="10"/>
                 			<mx:TextInput width="121" id="inputDomainParamName" bottom="70" left="10"/>
                 			<mx:TextInput width="272" id="inputDomainParamValue" bottom="70" left="139"/>
@@ -266,10 +276,10 @@
                 					<mx:DataGridColumn headerText="Data" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
-                			<mx:Button label="Refresh Domain" bottom="10" horizontalCenter="-52"/>
+                			<mx:Button label="Refresh User" bottom="10" horizontalCenter="-52"/>
                 			<mx:Button label="Add Parameter" left="149" bottom="40" click="addDomainUserParam()"/>
                 			<mx:Button label="Add Variable" bottom="40" right="168" width="99" click="addDomainUserVar()"/>
-                			<mx:Button label="Add Domain" bottom="10" horizontalCenter="63"/>
+                			<mx:Button label="Add User" bottom="10" horizontalCenter="63" click="doNewUserForm();"/>
                 			<mx:Label text="Parameter" bottom="90" left="10"/>
                 			<mx:TextInput width="121" id="inputDomainUserParamName" bottom="70" left="10"/>
                 			<mx:TextInput width="272" id="inputDomainUserParamValue" bottom="70" left="139"/>
