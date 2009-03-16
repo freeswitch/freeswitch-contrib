@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="600" height="300">
+	<mx:Button x="10" y="10" label="Button"/>
+	<mx:CheckBox x="90" y="10" label="Checkbox"/>
+
+	<mx:ComboBox x="506" y="40" prompt="Combo Box">
+		<mx:dataProvider>
+			<mx:Array>
+				<mx:Object label="Item 1"/>
+				<mx:Object label="Item 2"/>
+				<mx:Object label="Item 3"/>
+				<mx:Object label="Item 4"/>
+			</mx:Array>
+		</mx:dataProvider>
+	</mx:ComboBox>
+	<mx:DateChooser x="22" y="77"/>
+	<mx:DateField x="340" y="10"/>
+	<mx:HSlider x="243" y="77"/>
+	<mx:LinkButton x="302" y="40" label="LinkButton"/>
+
+	<mx:ProgressBar x="244" y="107" indeterminate="true"/>
+	<mx:RadioButton x="195" y="11" label="Radio"/>
+	<mx:RadioButton x="265" y="11" label="Radio2"/>
+	<mx:VSlider x="486" y="10"/>
+	<mx:HBox x="302" y="176" verticalAlign="middle">
+		<mx:HRule/>
+		<mx:Label text="HRule"/>
+	</mx:HBox>
+	<mx:HBox x="240" y="153" verticalAlign="middle">
+		<mx:VRule/>
+		<mx:Label text="VRule"/>
+	</mx:HBox>
+</mx:Canvas>

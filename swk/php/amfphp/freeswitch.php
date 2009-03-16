@@ -43,14 +43,16 @@ class FreeSWITCH {
 
 	private function getDbh(){
 		$dbtype='mysql'; 		/* Set the Database type */
-		$db_hostname = 'localhost'; 	/* Database Server hostname */
+		// $db_hostname = 'localhost'; 	/* Database Server hostname */
+		$db_hostname = '192.168.1.140'; 	/* Database Server hostname */
+		$db_port = '3306';		/* Database Server Port */
 		$db_username = 'root'; 		/* Database Server username */
 		$db_password = 'password'; 	/* Database Server password */
 		$db_database = 'shipment'; 	/* DataBase Name */
 		if ($dbtype == 'mysql') {
 			$pdo_flags =  array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,);
 		}
-		$dbh = new PDO("$dbtype:host=$db_hostname;dbname=$db_database", $db_username, $db_password, $pdo_flags);
+		$dbh = new PDO("$dbtype:host=$db_hostname;port=$db_port;dbname=$db_database", $db_username, $db_password, $pdo_flags);
 		return $dbh;
 	}
 
@@ -256,12 +258,12 @@ class FreeSWITCH {
 		return $results;
 	}
 
-	public function getDirDomain($domain_uid){
+	public function getDirDomain($domains_uid){
 		$dbh = $this->getDbh();
-		$query = sprintf("select * from domain_params where domains_uid = $domain_uid");
+		$query = sprintf("select * from domain_params where domains_uid = $domains_uid");
 		$stmt = $dbh->query($query);
 		$results['params'] = $stmt->fetchAll();
-		$query = sprintf("select * from domain_variables where domains_uid = $domain_uid");
+		$query = sprintf("select * from domain_variables where domains_uid = $domains_uid");
 		$stmt = $dbh->query($query);
 		$results['variables'] = $stmt->fetchAll();
 		return $results;
@@ -273,16 +275,16 @@ class FreeSWITCH {
 		return $dbh->exec($query);
 	}
 
-	public function addDirDomainParam($domain_uid, $name, $value) {
+	public function addDirDomainParam($domains_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('insert into domain_params (domain_uid, name, value) values (%s, "%s", "%s")', $domain_uid, $name, $value);
+		$query = sprintf('insert into domain_params (domains_uid, name, value) values (%s, "%s", "%s")', $domains_uid, $name, $value);
 		return $dbh->exec($query);
 	}
 
-	public function addDirDomainVar($domain_uid, $name, $value) {
+	public function addDirDomainVar($domains_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('insert into domain_variables (domain_uid, name, value) values (%s, "%s", "%s")', $domain_uid, $name, $value);
-		return $dbh->exec($query);
+		$query = sprintf('insert into domain_variables (domains_uid, name, value) values (%s, "%s", "%s")', $domains_uid, $name, $value);
+		$dbh->exec($query);
 	}
 
 	public function updateDirDomainParam($param_uid, $name, $value) {
@@ -310,18 +312,42 @@ class FreeSWITCH {
 		return $results;
 	}
 
-	public function getDirUsers($domain_uid){
+	public function getDirUsers($domains_uid){
 		$dbh = $this->getDbh();
-		$query = sprintf("select * from users where domain_uid = $domain_uid");
+		$query = sprintf("select * from users where domains_uid = $domains_uid");
 		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results;
 	}
 
-	/* Directory Group Methods */
-	public function getDirGroups($domain_uid){
+	public function addDirDomainUserParam($users_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf("select * from groups where domains_uid = $domain_uid");
+		$query = sprintf('insert into user_params (users_uid, name, value) values (%s, "%s", "%s")', $users_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	public function addDirDomainUserVar($users_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('insert into user_variables (users_uid, name, value) values (%s, "%s", "%s")', $users_uid, $name, $value);
+		$dbh->exec($query);
+	}
+
+	public function updateDirDomainUserParam($param_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('update user_params set name = "%s", value = "%s" where uid=%s', $param_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	public function updateDirDomainUserVar($var_uid, $name, $value) {
+		$dbh = $this->getDbh();
+		$query = sprintf('update user_variables set name = "%s", value = "%s" where uid=%s', $var_uid, $name, $value);
+		return $dbh->exec($query);
+	}
+
+	/* Directory Group Methods */
+	public function getDirGroups($domains_uid){
+		$dbh = $this->getDbh();
+		$query = sprintf("select * from groups where domains_uid = $domains_uid");
 		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results;
@@ -332,10 +358,21 @@ class FreeSWITCH {
 		$query = sprintf("select a.uid as groupMemberUid, a.users_uid as usersUid, b.username as usersUsername from group_members as a, users as b where a.groups_uid = $groups_uid and a.users_uid = b.uid") ;
 		$stmt = $dbh->query($query);
 		$results['members'] = $stmt->fetchAll();
-		$query = sprintf("select uid as usersUid, username as usersUsername from users where uid not in (select users_uid from group_members where groups_uid = $groups_uid) and domain_uid = (select domains_uid from groups where uid = $groups_uid)");
+		$query = sprintf("select uid as usersUid, username as usersUsername from users where uid not in (select users_uid from group_members where groups_uid = $groups_uid) and domains_uid = (select domains_uid from groups where uid = $groups_uid)");
 		$stmt = $dbh->query($query);
 		$results['nonmembers'] = $stmt->fetchAll();
 		return $results;
+	}
+
+	public function addDirGroup($domains_uid, $new_groupname){
+		$dbh = $this->getDbh();
+		$query = sprintf("insert into groups (domains_uid, name) values (%s, '%s')", $domains_uid, $new_groupname);
+		
+		if ($dbh->exec($query) > 0){
+			return "INSERTED";
+		} else { 
+			return "FAILED $query";
+		}
 	}
 
 }

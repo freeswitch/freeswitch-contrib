@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BaseSkin xmlns:mx="http://www.adobe.com/2006/mxml"
+                xmlns:degrafa="com.degrafa.*"
+                xmlns:paint="com.degrafa.paint.*"
+                xmlns:geometry="com.degrafa.geometry.*"
+                xmlns="assets.skins.*">
+         
+        <!-- Creating fills. -->
+        <fills>
+        	<paint:SolidFill id="whiteColor" color="#ffffff" alpha="1" />
+        </fills>
+        
+        <!-- Creating Strokes. -->
+        <strokes>
+            <paint:SolidStroke id="stroke" color="{getStyle('borderColor')}"  alpha="0.5" weight="1"   pixelHinting="true"/>
+        </strokes>
+        
+        <!-- Creating a Geometry Group. -->
+        <graphicsData>
+        	<degrafa:GeometryGroup>
+        		<geometry:RoundedRectangleComplex width="{skinWidth}" height="{skinHeight}" 
+        										  stroke="{stroke}"  fill="{whiteColor}"  
+        										  bottomLeftRadius="{getBottomCornerRadius()}" 
+        										  bottomRightRadius="{getBottomCornerRadius()}" 
+        										  topLeftRadius="{getStyle('cornerRadius')}" 
+        										  topRightRadius="{getStyle('cornerRadius')}"/>
+        	</degrafa:GeometryGroup>
+        </graphicsData>
+        
+</BaseSkin>

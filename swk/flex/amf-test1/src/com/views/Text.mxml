@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300">
+	<mx:TextArea x="218" y="9" text="TextArea" width="200" height="100"/>
+	<mx:TextInput x="426" y="8" text="TextInput"/>
+	<mx:VBox x="10" y="10">
+		<mx:Label text="Text"/>
+		<mx:Text text="Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Praesent vel libero ut libero interdum aliquam. Morbi in massa. Suspendisse ultrices velit nec leo." width="200" height="100"/>
+	</mx:VBox>
+</mx:Canvas>
