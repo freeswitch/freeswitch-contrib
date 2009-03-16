@@ -47,18 +47,17 @@ class FreeSWITCH {
 		$db_username = 'root'; 		/* Database Server username */
 		$db_password = 'password'; 	/* Database Server password */
 		$db_database = 'shipment'; 	/* DataBase Name */
-		
-		$dbh = new PDO("$dbtype:host=$db_hostname;dbname=$db_database", $db_username, $db_password, array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,));
-		
+		if ($dbtype == 'mysql') {
+			$pdo_flags =  array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,);
+		}
+		$dbh = new PDO("$dbtype:host=$db_hostname;dbname=$db_database", $db_username, $db_password, $pdo_flags);
 		return $dbh;
 	}
 
         public function __construct() { 
-
 		$esl_server = "127.0.0.1"; 	/* ESL Server */
 		$esl_port = "8021"; 		/* ESL Port */
 		$esl_secret = "ClueCon"; 	/* ESL Secret */
-
 		$this->esl = new eslConnection($esl_server, $esl_port, $esl_secret);
 	}
 
@@ -67,14 +66,12 @@ class FreeSWITCH {
 	public function getStatus() {
 		$e = $this->esl->sendRecv("api status");
 		$body = $e->getBody();
-		
 		return $body;
 	}
 
 	public function getChannels() {
 		$e = $this->esl->sendRecv("api show channels");
 		$body = $e->getBody();
-		
 		$temp = explode  ("\n", $body);
 		$total_count = sizeof($temp);
 		$i = -1;
@@ -100,7 +97,6 @@ class FreeSWITCH {
 	public function getCalls() {
 		$e = $this->esl->sendRecv("api show calls");
 		$body = $e->getBody();
-		
 		$temp = explode  ("\n", $body);
 		$total_count = sizeof($temp);
 		$i = -1;
@@ -129,7 +125,6 @@ class FreeSWITCH {
 		$dialstring = "api originate $call_url $exten $dialplan $context $cid_name $cid_number $timeout";
 		$e = $this->esl->sendRecv($dialstring);
 		$body = $e->getBody();
-
 		return $body;
 	}
 
@@ -150,7 +145,6 @@ class FreeSWITCH {
 	public function getConferenceList() {
 		$e = $this->esl->sendRecv("api conference list");
 		$body = $e->getBody();
-		
 		$data=explode("\n", $body);
 		$y=0;
 		foreach($data as $row){
@@ -166,7 +160,6 @@ class FreeSWITCH {
 	public function getConferenceUsers($conference_name) {
 		$e = $this->esl->sendRecv("api conference $conference_name list");
 		$body = $e->getBody();
-		
 		$data=explode("\n", $body);
 		$y=0;
 		foreach($data as $row){
@@ -206,7 +199,6 @@ class FreeSWITCH {
 		} else {
 			$templist = glob("/usr/local/freeswitch/sounds/en/us/callie/*/*/*");
 		}
-		
 		$x=0;
 		foreach($templist as $file){
 			$temp_file = explode("/", $file);
@@ -215,7 +207,6 @@ class FreeSWITCH {
 			// $filelist[$x] = $file;
 			$x++;
 		}
-		
 		return $filelist;
 	}
 
@@ -255,67 +246,27 @@ class FreeSWITCH {
 	}
 
 	/*** Directory Methods ***/
-
+	
+	/* Directory Domain Methods */
 	public function getDirDomains(){
 		$dbh = $this->getDbh();
-
 		$query = sprintf("select * from domains");
 		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
-
 		return $results;
 	}
 
 	public function getDirDomain($domain_uid){
-
 		$dbh = $this->getDbh();
-
 		$query = sprintf("select * from domain_params where domains_uid = $domain_uid");
 		$stmt = $dbh->query($query);
 		$results['params'] = $stmt->fetchAll();
-
 		$query = sprintf("select * from domain_variables where domains_uid = $domain_uid");
 		$stmt = $dbh->query($query);
 		$results['variables'] = $stmt->fetchAll();
-
 		return $results;
 	}
 	
-	public function getDirUser($user_uid){
-
-		$dbh = $this->getDbh();
-
-		$query = sprintf("select * from user_params where users_uid = $user_uid");
-		$stmt = $dbh->query($query);
-		$results['params'] = $stmt->fetchAll();
-
-		$query = sprintf("select * from user_variables where users_uid = $user_uid");
-		$stmt = $dbh->query($query);
-		$results['variables'] = $stmt->fetchAll();
-
-		return $results;
-	}
-
-	public function getDirUsers($domain_uid){
-		$dbh = $this->getDbh();
-		
-		$query = sprintf("select * from users where domain_uid = $domain_uid");
-		$stmt = $dbh->query($query);
-		$results = $stmt->fetchAll();
-
-		return $results;
-	}
-
-	public function getDirGroups($domain_uid){
-		$dbh = $this->getDbh();
-
-		$query = sprintf("select * from groups where domain_uid = $domain_uid");
-		$stmt = $dbh->query($query);
-		$results = $stmt->fetchAll();
-
-		return $results;
-	}
-
 	public function addDirDomain($domain_name){
 		$dbh = $this->getDbh();
 		$query = sprintf('insert into domains (name) values ("%s")', $domain_name);
@@ -344,6 +295,47 @@ class FreeSWITCH {
 		$dbh = $this->getDbh();
 		$query = sprintf('update domain_variables set name = "%s", value = "%s" where uid=%s', $var_uid, $name, $value);
 		return $dbh->exec($query);
+	}
+
+
+	/* Directory User Methods */
+	public function getDirUser($user_uid){
+		$dbh = $this->getDbh();
+		$query = sprintf("select * from user_params where users_uid = $user_uid");
+		$stmt = $dbh->query($query);
+		$results['params'] = $stmt->fetchAll();
+		$query = sprintf("select * from user_variables where users_uid = $user_uid");
+		$stmt = $dbh->query($query);
+		$results['variables'] = $stmt->fetchAll();
+		return $results;
+	}
+
+	public function getDirUsers($domain_uid){
+		$dbh = $this->getDbh();
+		$query = sprintf("select * from users where domain_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results;
+	}
+
+	/* Directory Group Methods */
+	public function getDirGroups($domain_uid){
+		$dbh = $this->getDbh();
+		$query = sprintf("select * from groups where domains_uid = $domain_uid");
+		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results;
+	}
+
+	public function getDirGroup($groups_uid){
+		$dbh = $this->getDbh();
+		$query = sprintf("select a.uid as groupMemberUid, a.users_uid as usersUid, b.username as usersUsername from group_members as a, users as b where a.groups_uid = $groups_uid and a.users_uid = b.uid") ;
+		$stmt = $dbh->query($query);
+		$results['members'] = $stmt->fetchAll();
+		$query = sprintf("select uid as usersUid, username as usersUsername from users where uid not in (select users_uid from group_members where groups_uid = $groups_uid) and domain_uid = (select domains_uid from groups where uid = $groups_uid)");
+		$stmt = $dbh->query($query);
+		$results['nonmembers'] = $stmt->fetchAll();
+		return $results;
 	}
 
 }

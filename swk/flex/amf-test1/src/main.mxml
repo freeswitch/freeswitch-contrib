@@ -217,14 +217,14 @@
                 			<mx:DataGrid left="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}"
                 				itemEditEnd="dgChangeDomainParam();" editable="true" id="dgDomainParam">
                 				<mx:columns>
-                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120" editable="false" />
                 					<mx:DataGridColumn headerText="Value" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
                 			<mx:DataGrid right="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}" 
                 				itemEditEnd="dgChangeDomainVars();" editable="true" id="dgDomainVars">
                 				<mx:columns>
-                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120" editable="false"/>
                 					<mx:DataGridColumn headerText="Data" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
@@ -265,14 +265,14 @@
                 			<mx:DataGrid left="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.params}"
                 				change="dgChangeDomainUserParam();" editable="true" id="dgDomainUserParam">
                 				<mx:columns>
-                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120" editable="false"/>
                 					<mx:DataGridColumn headerText="Value" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
                 			<mx:DataGrid right="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.variables}" 
                 				change="dgChangeDomainVars();" editable="true" id="dgDomainUserVars">
                 				<mx:columns>
-                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120"/>
+                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120" editable="false"/>
                 					<mx:DataGridColumn headerText="Data" dataField="value"/>
                 				</mx:columns>
                 			</mx:DataGrid>
@@ -294,27 +294,30 @@
                 <mx:Canvas label="Groups" width="100%" height="100%">
 	                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 		                <mx:Canvas width="20%" height="100%">
-		                    <mx:ComboBox top="10" horizontalCenter="0"></mx:ComboBox>
-		                    <mx:DataGrid width="100%" horizontalCenter="0" top="40" bottom="70">
+		                    <mx:ComboBox top="10" horizontalCenter="0" id="groupsDomain" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
+		                    <mx:DataGrid id="dgDirGroups" width="100%" horizontalCenter="0" top="40" bottom="70" dataProvider="{freeswitch.getDirGroups.lastResult}" 
+		                    	click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)">
 		                        <mx:columns>
-		                            <mx:DataGridColumn headerText="Group" dataField="user_id"/>
+		                            <mx:DataGridColumn headerText="Group" dataField="name"/>
 		                        </mx:columns>
 		                    </mx:DataGrid>
-		                    <mx:Button label="Refresh Groups" horizontalCenter="0" bottom="10"/>
-		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40"/>
+		                    <mx:Button label="Refresh Groups" horizontalCenter="0" bottom="10" click="freeswitch.getDirGroups(groupsDomain.selectedItem.uid)"/>
+		                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="40" click="freeswitch.getDirDomains()"/>
 		                </mx:Canvas>
 		                <mx:Canvas width="80%" height="100%">
-		                	<mx:DataGrid width="45%" left="10" top="0" bottom="70">
+		                	<mx:DataGrid width="45%" left="10" top="0" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.members}" 
+		                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
 		                		<mx:columns>
-		                			<mx:DataGridColumn headerText="Member" dataField="col1"/>
+		                			<mx:DataGridColumn headerText="Member" dataField="usersUsername"/>
 		                		</mx:columns>
 		                	</mx:DataGrid>
-		                	<mx:DataGrid width="45%" right="10" top="0" bottom="70">
+		                	<mx:DataGrid width="45%" right="10" top="0" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.nonmembers}" 
+		                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
 		                		<mx:columns>
-		                			<mx:DataGridColumn headerText="Available to Join" dataField="col1"/>
+		                			<mx:DataGridColumn headerText="Available to Join" dataField="usersUsername"/>
 		                		</mx:columns>
 		                	</mx:DataGrid>
-		                	<mx:Button label="Refresh" left="10" bottom="40"/>
+		                	<mx:Button label="Refresh" left="10" bottom="40" click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)"/>
 		                </mx:Canvas>
 		            </mx:HDividedBox>
                 </mx:Canvas>
