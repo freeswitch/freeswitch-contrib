@@ -217,7 +217,7 @@ class FreeSWITCH {
 	}
 
 	public function confPlayfile($conference, $file_path){
-		$playfile = "api conference $conference play " . $file_path['data'];
+		$playfile = "api conference $conference play " . $file_path;
 		$e = $this->esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
