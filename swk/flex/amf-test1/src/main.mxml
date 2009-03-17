@@ -10,6 +10,7 @@
                     
 			import mx.controls.dataGridClasses.DataGridColumn;
 			import mx.events.DataGridEvent;
+			import mx.events.ListEvent;
 			import mx.controls.Alert;
 			import mx.rpc.events.FaultEvent;
 			import mx.rpc.events.ResultEvent;
@@ -88,34 +89,56 @@
 				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
 			}
 			
-			public function dgChangeDomainParam():void {
-				freeswitch.updateDirDomainParam(dgDomainParam.selectedItem.uid, dgDomainParam.selectedItem.name, dgDomainParam.value);
+			public function dgChangeDomainParam(event:DataGridEvent):void {
+				freeswitch.updateDirDomainParam(dgDomainParam.selectedItem.uid, dgDomainParam.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
 				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
 			}
 			
-			public function dgChangeDomainVars():void {
-				freeswitch.updateDirDomainVar(dgDomainVars.selectedItem.uid, dgDomainVars.selectedItem.name, dgDomainVars.value);
+			public function dgChangeDomainVars(event:DataGridEvent):void {
+				freeswitch.updateDirDomainVar(dgDomainVars.selectedItem.uid, dgDomainVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgDeleteDomainParam():void {
+				freeswitch.deleteDirDomainParam(dgDomainParam.selectedItem.uid);
+				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			}
+			
+			public function dgDeleteDomainVars():void {
+				freeswitch.deleteDirDomainVar(dgDomainVars.selectedItem.uid);
 				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
 			}
 			
 			public function addDomainUserParam():void {
-				freeswitch.addDirDomainUserParam(gridDomainsDomain.selectedItem.uid, inputDomainUserParamName.text, inputDomainUserParamValue.text);
-				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+				freeswitch.addDirDomainUserParam(dgDomainUsers.selectedItem.uid, inputDomainUserParamName.text, inputDomainUserParamValue.text);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			
 			public function addDomainUserVar():void {
-				freeswitch.addDirDomainUserVar(gridDomainsDomain.selectedItem.uid, inputDomainUserVarName.text, inputDomainUserVarValue.text);
-				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+				freeswitch.addDirDomainUserVar(dgDomainUsers.selectedItem.uid, inputDomainUserVarName.text, inputDomainUserVarValue.text);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			
-			public function dgChangeDomainUserParam():void {
-				freeswitch.updateDirDomainUserParam(dgDomainParam.selectedItem.uid, dgDomainParam.selectedItem.name, dgDomainParam.value);
-				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			public function dgChangeDomainUserParam(event:DataGridEvent):void {
+				freeswitch.updateDirDomainUserParam(dgDomainUsers.selectedItem.uid, dgDomainParam.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			
-			public function dgChangeDomainUserVars():void {
-				freeswitch.updateDirDomainUserParam(dgDomainVars.selectedItem.uid, dgDomainVars.selectedItem.name, dgDomainVars.value);
-				freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);
+			public function dgChangeDomainUserVars(event:DataGridEvent):void {
+				var _rowIndex:Number=event.rowIndex;
+        		var _columnIndex:Number= event.columnIndex;
+				freeswitch.updateDirDomainUserParam(dgDomainUserVars.selectedItem.uid, dgDomainUserVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
+			}
+			
+			public function dgDeleteDomainUserParam():void {
+				freeswitch.deleteDirDomainUserParam(dgDomainUserParam.selectedItem.uid);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
+			}
+			
+			public function dgdeleteDomainUserVars():void {
+				freeswitch.deleteDirDomainUserVar(dgDomainUserVars.selectedItem.uid);
+				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			        
 			public function doGroupAdd():void {
@@ -227,7 +250,7 @@
 					        <mx:TextInput bottom="55" width="406" horizontalCenter="126"/>
 					        <mx:ComboBox id="comboConfPlayfile" width="324" horizontalCenter="167" bottom="85" labelField="label" dataProvider="{freeswitch.getConfPlayfiles.lastResult}" ></mx:ComboBox>
 				        </mx:Canvas>
-				        <mx:Canvas label="Directory" width="100%" height="100%">
+				        <mx:Canvas label="Directory" width="100%" height="100%"  show="freeswitch.getDirDomains();">
 				            <mx:TabNavigator x="0" y="0" width="100%" height="100%">
 				                <mx:Canvas label="Domains" width="100%" height="100%">
 					                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
@@ -244,45 +267,46 @@
 						                    <mx:Button label="Delete Domain" click="doNewDomainForm();" horizontalCenter="0" bottom="40"/>
 						                </mx:Canvas>
 						                <mx:Canvas width="80%" height="100%">
-				                			<mx:Label text="UID:" horizontalCenter="-421" top="10"/>
-				                			<mx:Label text="{gridDomainsDomain.selectedItem.uid}" id="domainUid" horizontalCenter="-339" top="10"/>
-				                			<mx:Label text="Name:" horizontalCenter="-129" top="12"/>
-				                			<mx:TextInput id="domainName" text="{gridDomainsDomain.selectedItem.name}" horizontalCenter="25" top="10"/>
-				                			<mx:CheckBox label="Enabled" id="domainEnabled" enabled="{gridDomainsDomain.selectedItem.enabled}" right="10" top="8"/>
-				                			<mx:DataGrid left="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}"
-				                				itemEditEnd="dgChangeDomainParam();" editable="true" id="dgDomainParam">
+				                			<mx:Label text="UID:" top="10" left="10"/>
+				                			<mx:Label text="{gridDomainsDomain.selectedItem.uid}" id="domainUid" top="10" left="49"/>
+				                			<mx:Label text="Name:" top="12" left="174"/>
+				                			<mx:TextInput id="domainName" text="{gridDomainsDomain.selectedItem.name}" top="10" left="224"/>
+				                			<!-- <mx:CheckBox label="Enabled" id="domainEnabled" enabled="{Boolean(gridDomainsDomain.selectedItem.enabled)}" right="10" top="8" /> -->
+				                			<mx:DataGrid left="10" top="40" bottom="86" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.params}"
+				                				itemEditEnd="dgChangeDomainParam(event);" editable="true" id="dgDomainParam">
 				                				<mx:columns>
 				                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120" editable="false" />
 				                					<mx:DataGridColumn headerText="Value" dataField="value"/>
 				                				</mx:columns>
 				                			</mx:DataGrid>
-				                			<mx:DataGrid right="10" top="40" bottom="116" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}" 
-				                				itemEditEnd="dgChangeDomainVars();" editable="true" id="dgDomainVars">
+				                			<mx:DataGrid right="10" top="40" bottom="86" width="45%" dataProvider="{freeswitch.getDirDomain.lastResult.variables}" 
+				                				itemEditEnd="dgChangeDomainVars(event);" editable="true" id="dgDomainVars">
 				                				<mx:columns>
 				                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120" editable="false"/>
 				                					<mx:DataGridColumn headerText="Data" dataField="value"/>
 				                				</mx:columns>
 				                			</mx:DataGrid>
-				                			<mx:Button label="Refresh Domain" bottom="10" horizontalCenter="0"/>
-				                			<mx:Button label="Add Parameter" left="139" bottom="40" click="addDomainParam()"/>
-				                			<mx:Button label="Add Variable" bottom="40" right="183" width="99" click="addDomainVar()"/>
-				                			<mx:Label text="Parameter" bottom="90" left="10"/>
-				                			<mx:TextInput width="121" id="inputDomainParamName" bottom="70" left="10"/>
-				                			<mx:TextInput width="272" id="inputDomainParamValue" bottom="70" left="139"/>
-				                			<mx:Label text="Variable" bottom="90" right="361"/>
-				                			<mx:TextInput width="121" id="inputDomainVarName" bottom="70" right="290"/>
-				                			<mx:TextInput width="272" id="inputDomainVarValue" bottom="70" right="10"/>
-				                			<mx:Label text="Data" bottom="90" right="251"/>
-				                			<mx:Label text="Value" bottom="90" left="139"/>
-				                			<mx:Button label="Delete Param" left="26" bottom="40"/>
-				                			<mx:Button label="Delete Variable" bottom="40" right="290"/>
+				                			<mx:Button label="Refresh Domain" right="10" top="10" height="22"/>
+				                			<mx:Button label="Add Parameter" left="139" bottom="10" click="addDomainParam()"/>
+				                			<mx:Button label="Add Variable" bottom="10" right="183" width="99" click="addDomainVar()"/>
+				                			<mx:Label text="Parameter" bottom="60" left="10"/>
+				                			<mx:TextInput width="121" id="inputDomainParamName" bottom="40" left="10"/>
+				                			<mx:TextInput width="272" id="inputDomainParamValue" bottom="40" left="139"/>
+				                			<mx:Label text="Variable" bottom="60" right="361"/>
+				                			<mx:TextInput width="121" id="inputDomainVarName" bottom="40" right="290"/>
+				                			<mx:TextInput width="272" id="inputDomainVarValue" bottom="40" right="10"/>
+				                			<mx:Label text="Data" bottom="60" right="251"/>
+				                			<mx:Label text="Value" bottom="60" left="139"/>
+				                			<mx:Button label="Delete Param" left="26" bottom="10" click="dgDeleteDomainParam()"/>
+				                			<mx:Button label="Delete Variable" bottom="10" right="290" click="dgDeleteDomainVars()"/>
 						                </mx:Canvas>
 						            </mx:HDividedBox>                
 				                </mx:Canvas>
-				                <mx:Canvas label="Users" width="100%" height="100%">
+				                <mx:Canvas label="Users" width="100%" height="100%" show="freeswitch.getDirUsers(userDomain.selectedItem.uid);">
 					                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 						                <mx:Canvas width="20%" height="100%">
-						                    <mx:ComboBox id="userDomain" top="10" horizontalCenter="0" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
+						                    <mx:ComboBox id="userDomain" top="10" horizontalCenter="0" dataProvider="{freeswitch.getDirDomains.lastResult}" 
+						                    	labelField="name" change="freeswitch.getDirUsers(userDomain.selectedItem.uid);"></mx:ComboBox>
 						                    <mx:DataGrid id="dgDomainUsers" width="100%" horizontalCenter="0" top="40" bottom="130" dataProvider="{freeswitch.getDirUsers.lastResult}"
 						                    	click="freeswitch.getDirUser(dgDomainUsers.selectedItem.uid)">
 						                        <mx:columns>
@@ -299,16 +323,16 @@
 				                			<mx:Label text="{dgDomainUsers.selectedItem.uid}" id="userUid" top="10" left="49"/>
 				                			<mx:Label text="Name:" top="12" left="173"/>
 				                			<mx:TextInput id="userName" text="{dgDomainUsers.selectedItem.username}" top="10" left="224"/>
-				                			<mx:CheckBox label="Enabled" id="userEnabled" enabled="{dgDomainUsers.selectedItem.enabled}" right="330" top="8" left="493"/>
+				                			<!-- <mx:CheckBox label="Enabled" id="userEnabled" enabled="{dgDomainUsers.selectedItem.enabled}" right="330" top="8" left="493"/> -->
 				                			<mx:DataGrid left="10" top="40" bottom="86" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.params}"
-				                				change="dgChangeDomainUserParam();" editable="true" id="dgDomainUserParam">
+				                				itemEditEnd="dgChangeDomainUserParam(event);" editable="true" id="dgDomainUserParam">
 				                				<mx:columns>
 				                					<mx:DataGridColumn headerText="Parameter" dataField="name" width="120" editable="false"/>
 				                					<mx:DataGridColumn headerText="Value" dataField="value"/>
 				                				</mx:columns>
 				                			</mx:DataGrid>
 				                			<mx:DataGrid right="10" top="40" bottom="86" width="45%" dataProvider="{freeswitch.getDirUser.lastResult.variables}" 
-				                				change="dgChangeDomainVars();" editable="true" id="dgDomainUserVars">
+				                				itemEditEnd="dgChangeDomainUserVars(event);" editable="true" id="dgDomainUserVars">
 				                				<mx:columns>
 				                					<mx:DataGridColumn headerText="Variable" dataField="name" width="120" editable="false"/>
 				                					<mx:DataGridColumn headerText="Data" dataField="value"/>
@@ -316,7 +340,7 @@
 				                			</mx:DataGrid>
 				                			<mx:Button label="Refresh User" right="10" top="8" height="22"/>
 				                			<mx:Button label="Add Parameter" left="139" bottom="10" click="addDomainUserParam()"/>
-				                			<mx:Button label="Delete Param" bottom="10" left="26"/>
+				                			<mx:Button label="Delete Param" bottom="10" left="26" click="dgDeleteDomainUserParam();"/>
 				                			<mx:Button label="Add Variable" bottom="10" right="183" width="99" click="addDomainUserVar()"/>
 				                			<mx:Label text="Parameter" bottom="60" left="10"/>
 				                			<mx:TextInput width="121" id="inputDomainUserParamName" bottom="40" left="10"/>
@@ -326,11 +350,11 @@
 				                			<mx:TextInput width="272" id="inputDomainUserVarValue" bottom="40" right="10"/>
 				                			<mx:Label text="Data" bottom="60" right="251"/>
 				                			<mx:Label text="Value" bottom="60" left="139"/>
-				                			<mx:Button label="Delete Variable" bottom="10" right="290"/>
+				                			<mx:Button label="Delete Variable" bottom="10" right="290" click="dgdeleteDomainUserVars();"/>
 						                </mx:Canvas>
 						            </mx:HDividedBox>
 				                </mx:Canvas>
-				                <mx:Canvas label="Groups" width="100%" height="100%">
+				                <mx:Canvas label="Groups" width="100%" height="100%" show="freeswitch.getDirGroups(groupsDomain.selectedItem.uid)">
 					                <mx:HDividedBox x="0" y="0" width="100%" height="100%">
 						                <mx:Canvas width="20%" height="100%">
 						                    <mx:ComboBox top="10" horizontalCenter="0" id="groupsDomain" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
@@ -344,22 +368,26 @@
 						                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10" click="freeswitch.getDirDomains()"/>
 						                </mx:Canvas>
 						                <mx:Canvas width="80%" height="100%">
-						                	<mx:DataGrid width="45%" left="10" top="0" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.members}" 
+						                	<mx:DataGrid width="45%" left="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.members}" 
 						                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
 						                		<mx:columns>
 						                			<mx:DataGridColumn headerText="Member" dataField="usersUsername"/>
 						                		</mx:columns>
 						                	</mx:DataGrid>
-						                	<mx:DataGrid width="45%" right="10" top="0" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.nonmembers}" 
+						                	<mx:DataGrid width="45%" right="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.nonmembers}" 
 						                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
 						                		<mx:columns>
 						                			<mx:DataGridColumn headerText="Available to Join" dataField="usersUsername"/>
 						                		</mx:columns>
 						                	</mx:DataGrid>
-						                	<mx:Button label="Refresh" left="10" bottom="40" click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)"/>
-						                	<mx:Label text="New Group" right="274" bottom="42"/>
-						                	<mx:TextInput width="256" right="10" bottom="40" id="textNewGroup"/>
-						                	<mx:Button label="Create Group" right="10" bottom="10" click="doGroupAdd();"/>
+						                	<mx:Button label="Refresh" click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)" right="10" width="71" top="10" height="22"/>
+						                	<mx:Label text="New Group" bottom="42" left="10" width="63"/>
+						                	<mx:TextInput bottom="40" id="textNewGroup" left="81" width="256"/>
+						                	<mx:Button label="Create Group" bottom="10" click="doGroupAdd();" left="81" width="101"/>
+						                	<mx:Label text="UID:" top="10" left="10"/>
+						                	<mx:Label text="{dgDirGroups.selectedItem.uid}" id="groupUID" top="10" left="49"/>
+						                	<mx:Label text="Name:" top="12" left="173"/>
+						                	<mx:TextInput id="groupName" text="{dgDirGroups.selectedItem.name}" top="10" left="224"/>
 						                </mx:Canvas>
 						            </mx:HDividedBox>
 				                </mx:Canvas>

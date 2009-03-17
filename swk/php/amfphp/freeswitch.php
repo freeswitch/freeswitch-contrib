@@ -89,11 +89,15 @@ class FreeSWITCH {
 				}
 			}
 			$i++;
-			if ($i == $total_count - 4){
+			if ($i == $total_count - 3){
 				break;
 			}
 		}
-		return $data;
+		if ($none != 1) {
+			return $data;
+		} else { 
+			return "OK: No Calls";
+		}
 	}
 	
 	public function getCalls() {
@@ -289,13 +293,25 @@ class FreeSWITCH {
 
 	public function updateDirDomainParam($param_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('update domain_params set name = "%s", value = "%s" where uid=%s', $param_uid, $name, $value);
+		$query = sprintf('update domain_params set name = "%s", value = "%s" where uid=%s', $name, $value, $param_uid);
 		return $dbh->exec($query);
 	}
 
 	public function updateDirDomainVar($var_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('update domain_variables set name = "%s", value = "%s" where uid=%s', $var_uid, $name, $value);
+		$query = sprintf('update domain_variables set name = "%s", value = "%s" where uid=%s', $name, $value, $var_uid);
+		return $dbh->exec($query);
+	}
+
+	public function deleteDirDomainParam($param_uid) {
+		$dbh = $this->getDbh();
+		$query = sprintf('delete from domain_params where uid=%s', $param_uid);
+		return $dbh->exec($query);
+	}
+
+	public function deleteDirDomainVar($var_uid) {
+		$dbh = $this->getDbh();
+		$query = sprintf('delete from domain_variables where uid=%s', $var_uid);
 		return $dbh->exec($query);
 	}
 
@@ -334,14 +350,34 @@ class FreeSWITCH {
 
 	public function updateDirDomainUserParam($param_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('update user_params set name = "%s", value = "%s" where uid=%s', $param_uid, $name, $value);
+		$query = sprintf('update user_params set name = "%s", value = "%s" where uid=%s', $name, $value, $param_uid);
 		return $dbh->exec($query);
 	}
 
 	public function updateDirDomainUserVar($var_uid, $name, $value) {
 		$dbh = $this->getDbh();
-		$query = sprintf('update user_variables set name = "%s", value = "%s" where uid=%s', $var_uid, $name, $value);
+		$query = sprintf('update user_variables set name = "%s", value = "%s" where uid=%s', $name, $value, $var_uid);
 		return $dbh->exec($query);
+	}
+
+	public function deleteDirDomainUserParam($param_uid) {
+		$dbh = $this->getDbh();
+		$query = sprintf('delete from user_params where uid=%s', $param_uid);
+		if ($dbh->exec($query) < 1) {
+			return "FAILED " . $query;
+		} else {
+			return "SUCESS";
+		}
+	}
+
+	public function deleteDirDomainUserVar($var_uid) {
+		$dbh = $this->getDbh();
+		$query = sprintf('delete from user_variables where uid=%s', $var_uid);
+		if ($dbh->exec($query) < 1) {
+			return "FAILED " . $query;
+		} else {
+			return "SUCESS";
+		}
 	}
 
 	/* Directory Group Methods */
