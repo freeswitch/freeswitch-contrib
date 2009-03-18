@@ -23,8 +23,30 @@ copy the freeswitch.php file into the AMFPHP services directory.
 
 make the files in amf-test1/bin-debug available on your webserver and point a browser at it.
 
+copy the php/xml_curl directory to your webserver 
+
+make sure you have mod_xml_curl built and installed and enabled
+	uncomment it in the modules.conf in your source tree
+	uncomment it in your modules.conf.xml in the conf/autoload_configs/modules.conf.xml
+
+
+edit the gateway_url param in conf/autoload_configs/xml_curl.conf.xml to enabale the directory binding
+EXAMPLE:
+	<param name="gateway-url" value="http://localhost/xml_curl/directory.php" bindings="directory"/>
+
+
+rename conf/directory/default.xml to conf/directory/default.xml.NOLOAD
+	this is no longer required as we are now loading the directory using xml_curl
+
+
 If you are developing in flex you need to load the swf from your development webserver so that it can properly locate the service. 
 
-Any questions, feel free to find me as SwK via IRC at #freeswitch on irc.freenode.net
+Any questions, feel free to find me as SwK via IRC at #freeswitch on irc.freenode.net or krice AT freeswitch DOT org
 
+
+TODO:
+Fix Groups and Group Editing
+Fix Conference Controls
+Rework PHP Class Files for both the amfphp service and the xml_curl there is no need to maintain these seperately as they share a fair ammount of code
+anything else I can come up with
 
