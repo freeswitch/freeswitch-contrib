@@ -19,6 +19,7 @@ $key_name ="name";
 $key_value="192.168.1.140";
 $user="1000";
 */
+
 if ($section == "directory" && $tag_name == "domain" && $key_name == "name") {
 	$db_domain = $fsd->getDirDomainbyName($key_value);
 } else {
@@ -31,7 +32,7 @@ $db_user = $fsd->getDirUsersByDomainUidByUsername($db_domain['uid'], $user);
 
 $db_user_settings = $fsd->getDirUser($db_user['uid']);
 
-$db_groups = $fsd->getDirGroups($db_domain['uid']);
+$db_groups = $fsd->getDirGroupsByDomianUidByUserUid($db_domain['uid'], $db_user['uid']);
 
 printf(" <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 printf("   <document type=\"freeswitch/xml\">\n");
@@ -54,18 +55,14 @@ printf("		  </variables>\n");
 printf("		 </user>\n");
 printf("               </users>\n");
 printf("             </group>\n");
-/*  This is Broken need to talk to someone about this part... maybe I should load this at boot time instead 
 foreach($db_groups as $db_group){
-	$db_members = $fsd->getDirGroup($db_group['uid']);
-	printf("             <group name=\"%s\">\n", $db_group['name']);
+	printf("             <group name=\"%s\">\n", $db_group['groupName']);
 	printf("               <users>\n");
-	foreach($db_members['members'] as $db_member){
-		printf("		 <user id=\"%s\" type=\"pointer\"/>\n", $db_member['usersUsername']);
-	}
+	printf("		 <user id=\"%s\" type=\"pointer\"/>\n", $user);
 	printf("               </users>\n");
 	printf("             </group>\n");
 }
-*/
+
 printf("           </groups>\n");
 printf("         </domain>\n");
 printf("      </section>\n");

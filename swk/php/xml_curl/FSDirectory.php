@@ -142,6 +142,13 @@ class FSDirectory {
 		return $results;
 	}
 
+	public function getDirGroupsByDomianUidByUserUid($domain_uid, $user_uid){
+		$query = sprintf("select a.uid as groupUid, a.name as groupName, b.uid as usersUid from groups as a, group_members as b where a.uid = b.groups_uid and b.domains_uid = %s and b.users_uid = %s", $domain_uid, $user_uid) ;
+		$stmt = $this->dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results;
+	}
+
 }
 /* For Emacs:
  * Local Variables:
