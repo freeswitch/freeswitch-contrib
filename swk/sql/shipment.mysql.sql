@@ -243,13 +243,13 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `uid` int(11) NOT NULL auto_increment,
-  `domain_uid` int(11) NOT NULL,
+  `domains_uid` int(11) NOT NULL,
   `username` varchar(64) NOT NULL,
   `mailbox` varchar(64) default NULL,
   `cidr` varchar(32) default NULL,
   `enabled` tinyint(1) NOT NULL default '1',
   PRIMARY KEY  (`uid`),
-  KEY `domain_uid` (`domain_uid`,`username`,`mailbox`)
+  KEY `domain_uid` (`domains_uid`,`username`,`mailbox`)
 ) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 
 --
