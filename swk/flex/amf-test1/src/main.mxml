@@ -4,6 +4,7 @@
 
 	 <mx:Script>
         <![CDATA[
+        	import mx.events.DragEvent;
         
         	import flash.utils.Timer;
             import flash.events.TimerEvent;
@@ -127,7 +128,7 @@
 			public function dgChangeDomainUserVars(event:DataGridEvent):void {
 				var _rowIndex:Number=event.rowIndex;
         		var _columnIndex:Number= event.columnIndex;
-				freeswitch.updateDirDomainUserParam(dgDomainUserVars.selectedItem.uid, dgDomainUserVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
+				freeswitch.updateDirDomainUserVars(dgDomainUserVars.selectedItem.uid, dgDomainUserVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
 				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			
@@ -149,6 +150,11 @@
 					Alert.show('You must have a domain Selected', 'Invalid Domain', mx.controls.Alert.OK);
 				}
 			}   
+			
+			public function nonMemberDrop(event:DragEvent):void {
+				Alert.show('Dropped UID?', '-' + '-' +'-', mx.controls.Alert.OK);
+			}
+			
         ]]>
     </mx:Script>
 
@@ -286,7 +292,7 @@
 				                					<mx:DataGridColumn headerText="Data" dataField="value"/>
 				                				</mx:columns>
 				                			</mx:DataGrid>
-				                			<mx:Button label="Refresh Domain" right="10" top="10" height="22"/>
+				                			<mx:Button label="Refresh Domain" right="10" top="10" height="22" click="freeswitch.getDirDomain(gridDomainsDomain.selectedItem.uid);"/>
 				                			<mx:Button label="Add Parameter" left="139" bottom="10" click="addDomainParam()"/>
 				                			<mx:Button label="Add Variable" bottom="10" right="183" width="99" click="addDomainVar()"/>
 				                			<mx:Label text="Parameter" bottom="60" left="10"/>
@@ -338,7 +344,7 @@
 				                					<mx:DataGridColumn headerText="Data" dataField="value"/>
 				                				</mx:columns>
 				                			</mx:DataGrid>
-				                			<mx:Button label="Refresh User" right="10" top="8" height="22"/>
+				                			<mx:Button label="Refresh User" right="10" top="8" height="22" click="freeswitch.getDirUser(dgDomainUsers.selectedItem.uid)"/>
 				                			<mx:Button label="Add Parameter" left="139" bottom="10" click="addDomainUserParam()"/>
 				                			<mx:Button label="Delete Param" bottom="10" left="26" click="dgDeleteDomainUserParam();"/>
 				                			<mx:Button label="Add Variable" bottom="10" right="183" width="99" click="addDomainUserVar()"/>
@@ -368,21 +374,21 @@
 						                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10" click="freeswitch.getDirDomains()"/>
 						                </mx:Canvas>
 						                <mx:Canvas width="80%" height="100%">
-						                	<mx:DataGrid width="45%" left="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.members}" 
+						                	<mx:DataGrid id="dgGroupMembers" width="45%" left="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.members}" 
 						                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
 						                		<mx:columns>
 						                			<mx:DataGridColumn headerText="Member" dataField="usersUsername"/>
 						                		</mx:columns>
 						                	</mx:DataGrid>
-						                	<mx:DataGrid width="45%" right="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.nonmembers}" 
-						                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true">
+						                	<mx:DataGrid id="dgGroupNonMembers" width="45%" right="10" top="38" bottom="70" dataProvider="{freeswitch.getDirGroup.lastResult.nonmembers}" 
+						                		dragEnabled="true" dragMoveEnabled="true" dropEnabled="true" dragDrop="nonMemberDrop(event);">
 						                		<mx:columns>
 						                			<mx:DataGridColumn headerText="Available to Join" dataField="usersUsername"/>
 						                		</mx:columns>
 						                	</mx:DataGrid>
 						                	<mx:Button label="Refresh" click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)" right="10" width="71" top="10" height="22"/>
-						                	<mx:Label text="New Group" bottom="42" left="10" width="63"/>
-						                	<mx:TextInput bottom="40" id="textNewGroup" left="81" width="256"/>
+						                	<mx:Label text="New Group" bottom="42" left="10" width="81"/>
+						                	<mx:TextInput bottom="40" id="textNewGroup" left="99" width="256"/>
 						                	<mx:Button label="Create Group" bottom="10" click="doGroupAdd();" left="81" width="101"/>
 						                	<mx:Label text="UID:" top="10" left="10"/>
 						                	<mx:Label text="{dgDirGroups.selectedItem.uid}" id="groupUID" top="10" left="49"/>
