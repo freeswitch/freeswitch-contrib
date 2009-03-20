@@ -66,6 +66,7 @@ CREATE TABLE `carrier_gateway` (
   `carrier_id` int(11) default NULL,
   `prefix` varchar(255) NOT NULL,
   `suffix` varchar(255) NOT NULL,
+  `codec` varchar(255) NOT NULL,
   `enabled` boolean NOT NULL DEFAULT '1',
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`)

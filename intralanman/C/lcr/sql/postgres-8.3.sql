@@ -20,6 +20,7 @@ CREATE TABLE carrier_gateway
   carrier_id integer REFERENCES carriers(id),
   prefix VARCHAR(128) NOT NULL DEFAULT '',
   suffix VARCHAR(128) NOT NULL DEFAULT '',
+  codec VARCHAR(128) NOT NULL DEFAULT '',
   enabled boolean NOT NULL DEFAULT 'true',
   CONSTRAINT carrier_gateway_pkey PRIMARY KEY (id)
 );
