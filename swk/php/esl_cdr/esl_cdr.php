@@ -7,7 +7,17 @@ $esl_port = '8021';
 $esl_password = 'ClueCon';
 
 
-$db_url ="pgsql://root@localhost/esl_cdr";
+$dbtype='mysql'; 		/* Set the Database type */
+$db_hostname = 'localhost'; 	/* Database Server hostname */
+$db_port = '3306';		/* Database Server Port */
+$db_username = 'root'; 		/* Database Server username */
+$db_password = 'password'; 	/* Database Server password */
+$db_database = 'esl_cdr'; 	/* DataBase Name */
+if ($dbtype == 'mysql') {
+	$pdo_flags =  array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,);
+}
+
+$dbh = new PDO("$dbtype:host=$db_hostname;port=$db_port;dbname=$db_database", $db_username, $db_password, $pdo_flags);
 
 $con = MDB2::factory($db_url);
 if(PEAR::isError($con)) {
@@ -15,12 +25,18 @@ if(PEAR::isError($con)) {
 }
 
 /* set up the ESL Connection */
-$esl = new eslConnection('204.8.45.218', '8021', 'disasterisk-sucks');
+$esl = new eslConnection($esl_host, $esl_port, $esl_password);
 $e = $esl->sendRecv("api status");
 print $e->getBody();
 $esl->events("plain", "channel_hangup");
 for(;;) {
-	print "foo - 1\n";
+	while (!$esl->connected()) {
+		// if the connection is down, loop until we're able to reconnect
+		$esl = new eslConnection($esl_host, $esl_port, $esl_password);
+		$esl->events("plain", "channel_hangup");
+
+               sleep (1);
+        }
 	$e = $esl->recvEvent();
 	if ($e) {
 		$lines = explode("\n", $e->serialize());
@@ -82,11 +98,6 @@ for(;;) {
 	"0"
 	);
 
-		$result = $con->query($insert);
-                if(PEAR::isError($result)) {
-                        echo "$insert\n";
-			die();
-                }
-	}
+	$dbh->exec($insert) or die($db->errorInfo());
 }
 ?> 
