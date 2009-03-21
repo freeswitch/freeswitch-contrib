@@ -98,6 +98,9 @@ for(;;) {
 	"0"
 	);
 
-	$dbh->exec($insert) or die($db->errorInfo());
+	$inserted = $dbh->exec($insert);
+	if ($inserted < 1){
+		die($db->errorInfo());
+	}
 }
 ?> 
