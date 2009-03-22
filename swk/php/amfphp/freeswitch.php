@@ -38,8 +38,6 @@
 require_once "ESL.php";
  
 class FreeSWITCH {
-	var $esl;
-	var $dbh;
 
 	private function getDbh(){
 		$dbtype='mysql'; 		/* Set the Database type */
@@ -56,23 +54,26 @@ class FreeSWITCH {
 		return $dbh;
 	}
 
-        public function __construct() { 
+        private function getEsl(){
 		$esl_server = "127.0.0.1"; 	/* ESL Server */
 		$esl_port = "8021"; 		/* ESL Port */
 		$esl_secret = "ClueCon"; 	/* ESL Secret */
-		$this->esl = new eslConnection($esl_server, $esl_port, $esl_secret);
+		$esl = new eslConnection($esl_server, $esl_port, $esl_secret);
+		return $esl;
 	}
 
 	/*** General Whats happening Methods ***/
 
 	public function getStatus() {
-		$e = $this->esl->sendRecv("api status");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api status");
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function getChannels() {
-		$e = $this->esl->sendRecv("api show channels");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api show channels");
 		$body = $e->getBody();
 		$temp = explode  ("\n", $body);
 		$total_count = sizeof($temp);
@@ -101,7 +102,8 @@ class FreeSWITCH {
 	}
 	
 	public function getCalls() {
-		$e = $this->esl->sendRecv("api show calls");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api show calls");
 		$body = $e->getBody();
 		$temp = explode  ("\n", $body);
 		$total_count = sizeof($temp);
@@ -129,13 +131,15 @@ class FreeSWITCH {
 
 	public function originate($call_url, $exten, $dialplan = "XML", $context= "default", $cid_name = "amf_php", $cid_number = "888", $timeout="30"){
 		$dialstring = "api originate $call_url $exten $dialplan $context $cid_name $cid_number $timeout";
-		$e = $this->esl->sendRecv($dialstring);
+		$esl = getEsl();
+		$e = $esl->sendRecv($dialstring);
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function killUuid($uuid) {
-		$e = $this->esl->sendRecv("api uuid_kill $uuid");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api uuid_kill $uuid");
 		$body = $e->getBody();
 		return $body;
 	}
@@ -143,13 +147,15 @@ class FreeSWITCH {
 	/*** Conference Methods ***/
 	
 	public function kickConferenceUser($conference, $member) {
-		$e = $this->esl->sendRecv("api conference $conference kick $member");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api conference $conference kick $member");
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function getConferenceList() {
-		$e = $this->esl->sendRecv("api conference list");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api conference list");
 		$body = $e->getBody();
 		$data=explode("\n", $body);
 		$y=0;
@@ -164,7 +170,8 @@ class FreeSWITCH {
 	}
 
 	public function getConferenceUsers($conference_name) {
-		$e = $this->esl->sendRecv("api conference $conference_name list");
+		$esl = getEsl();
+		$e = $esl->sendRecv("api conference $conference_name list");
 		$body = $e->getBody();
 		$data=explode("\n", $body);
 		$y=0;
@@ -218,35 +225,40 @@ class FreeSWITCH {
 
 	public function confPlayfile($conference, $file_path){
 		$playfile = "api conference $conference play " . $file_path;
-		$e = $this->esl->sendRecv($playfile);
+		$esl = getEsl();
+		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function confLock($conference){
 		$playfile = "api conference $conference lock";
-		$e = $this->esl->sendRecv($playfile);
+		$esl = getEsl();
+		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function confUnlock($conference){
 		$playfile = "api conference $conference unlock";
-		$e = $this->esl->sendRecv($playfile);
+		$esl = getEsl();
+		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
 	}
 	
 	public function confMute($conference, $member){
 		$playfile = "api conference $conference mute $member";
-		$e = $this->esl->sendRecv($playfile);
+		$esl = getEsl();
+		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
 	}
 	
 	public function confUnmute($conference, $member){
 		$playfile = "api conference $conference unmute $member";
-		$e = $this->esl->sendRecv($playfile);
+		$esl = getEsl();
+		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
 	}
