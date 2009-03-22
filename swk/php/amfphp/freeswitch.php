@@ -38,41 +38,39 @@
 require_once "ESL.php";
  
 class FreeSWITCH {
+	
+	/* Edit these variables for your installation */
+	var $esl_server = "127.0.0.1"; 	/* ESL Server */
+	var $esl_port = "8021"; 		/* ESL Port */
+	var $esl_secret = "ClueCon"; 	/* ESL Secret */
+
+	var $dbtype='mysql'; 		/* Set the Database type */
+	var $db_hostname = '192.168.1.140'; 	/* Database Server hostname */
+	var $db_port = '3306';		/* Database Server Port */
+	var $db_username = 'root'; 		/* Database Server username */
+	var $db_password = 'password'; 	/* Database Server password */
+	var $db_database = 'shipment'; 	/* DataBase Name */
 
 	private function getDbh(){
-		$dbtype='mysql'; 		/* Set the Database type */
-		// $db_hostname = 'localhost'; 	/* Database Server hostname */
-		$db_hostname = '192.168.1.140'; 	/* Database Server hostname */
-		$db_port = '3306';		/* Database Server Port */
-		$db_username = 'root'; 		/* Database Server username */
-		$db_password = 'password'; 	/* Database Server password */
-		$db_database = 'shipment'; 	/* DataBase Name */
-		if ($dbtype == 'mysql') {
+		if ($this->dbtype == 'mysql') {
 			$pdo_flags =  array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,);
 		}
-		$dbh = new PDO("$dbtype:host=$db_hostname;port=$db_port;dbname=$db_database", $db_username, $db_password, $pdo_flags);
+		$dbh = new PDO($this->dbtype . ":host=" . $this->db_hostname . ";port=" . $this->db_port . ";dbname=" . $this->db_database, 
+			$this->db_username, $this->db_password, $pdo_flags);
 		return $dbh;
-	}
-
-        private function getEsl(){
-		$esl_server = "127.0.0.1"; 	/* ESL Server */
-		$esl_port = "8021"; 		/* ESL Port */
-		$esl_secret = "ClueCon"; 	/* ESL Secret */
-		$esl = new eslConnection($esl_server, $esl_port, $esl_secret);
-		return $esl;
 	}
 
 	/*** General Whats happening Methods ***/
 
 	public function getStatus() {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_ser"ver, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api status");
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function getChannels() {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api show channels");
 		$body = $e->getBody();
 		$temp = explode  ("\n", $body);
@@ -102,7 +100,7 @@ class FreeSWITCH {
 	}
 	
 	public function getCalls() {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api show calls");
 		$body = $e->getBody();
 		$temp = explode  ("\n", $body);
@@ -131,14 +129,14 @@ class FreeSWITCH {
 
 	public function originate($call_url, $exten, $dialplan = "XML", $context= "default", $cid_name = "amf_php", $cid_number = "888", $timeout="30"){
 		$dialstring = "api originate $call_url $exten $dialplan $context $cid_name $cid_number $timeout";
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($dialstring);
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function killUuid($uuid) {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api uuid_kill $uuid");
 		$body = $e->getBody();
 		return $body;
@@ -147,14 +145,14 @@ class FreeSWITCH {
 	/*** Conference Methods ***/
 	
 	public function kickConferenceUser($conference, $member) {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api conference $conference kick $member");
 		$body = $e->getBody();
 		return $body;
 	}
 
 	public function getConferenceList() {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api conference list");
 		$body = $e->getBody();
 		$data=explode("\n", $body);
@@ -170,7 +168,7 @@ class FreeSWITCH {
 	}
 
 	public function getConferenceUsers($conference_name) {
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api conference $conference_name list");
 		$body = $e->getBody();
 		$data=explode("\n", $body);
@@ -225,7 +223,7 @@ class FreeSWITCH {
 
 	public function confPlayfile($conference, $file_path){
 		$playfile = "api conference $conference play " . $file_path;
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
@@ -233,7 +231,7 @@ class FreeSWITCH {
 
 	public function confLock($conference){
 		$playfile = "api conference $conference lock";
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
@@ -241,7 +239,7 @@ class FreeSWITCH {
 
 	public function confUnlock($conference){
 		$playfile = "api conference $conference unlock";
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
@@ -249,7 +247,7 @@ class FreeSWITCH {
 	
 	public function confMute($conference, $member){
 		$playfile = "api conference $conference mute $member";
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
@@ -257,7 +255,7 @@ class FreeSWITCH {
 	
 	public function confUnmute($conference, $member){
 		$playfile = "api conference $conference unmute $member";
-		$esl = getEsl();
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv($playfile);
 		$body = $e->getBody();
 		return $body;
