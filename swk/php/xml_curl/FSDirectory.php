@@ -45,7 +45,7 @@ class FSDirectory {
 	public function __construct(){
 		$dbtype='mysql'; 		/* Set the Database type */
 		// $db_hostname = 'localhost'; 	/* Database Server hostname */
-		$db_hostname = '192.168.1.140'; 	/* Database Server hostname */
+		$db_hostname = '127.0.0.1'; 	/* Database Server hostname */
 		$db_port = '3306';		/* Database Server Port */
 		$db_username = 'root'; 		/* Database Server username */
 		$db_password = 'password'; 	/* Database Server password */
