@@ -128,7 +128,7 @@
 			public function dgChangeDomainUserVars(event:DataGridEvent):void {
 				var _rowIndex:Number=event.rowIndex;
         		var _columnIndex:Number= event.columnIndex;
-				freeswitch.updateDirDomainUserVars(dgDomainUserVars.selectedItem.uid, dgDomainUserVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
+				freeswitch.updateDirDomainUserVar(dgDomainUserVars.selectedItem.uid, dgDomainUserVars.selectedItem.name, TextInput(event.currentTarget.itemEditorInstance).text);
 				freeswitch.getDirUser(dgDomainUsers.selectedItem.uid);
 			}
 			
@@ -398,6 +398,52 @@
 						            </mx:HDividedBox>
 				                </mx:Canvas>
 				            </mx:TabNavigator>
+				        </mx:Canvas>
+				        <mx:Canvas label="IVR Menus" width="100%" height="100%">
+				        	<mx:HDividedBox x="0" y="0" width="100%" height="100%">
+				                <mx:Canvas width="20%" height="100%">
+				                    <mx:ComboBox top="10" horizontalCenter="0" id="ivrsDomain" dataProvider="{freeswitch.getDirDomains.lastResult}" labelField="name"></mx:ComboBox>
+				                    <mx:DataGrid id="dgIvrGrid" width="100%" horizontalCenter="0" top="40" bottom="70"> <!-- dataProvider="{freeswitch.getDirGroups.lastResult}"  
+				                    	click="freeswitch.getDirGroup(dgDirGroups.selectedItem.uid)"> -->
+				                        <mx:columns>
+				                            <mx:DataGridColumn headerText="Group" dataField="name"/>
+				                        </mx:columns>
+				                    </mx:DataGrid>
+				                    <mx:Button label="Refresh Menus" horizontalCenter="0" bottom="40" click="freeswitch.getDirGroups(groupsDomain.selectedItem.uid)"/>
+				                    <mx:Button label="Refresh Domains" horizontalCenter="0" bottom="10" click="freeswitch.getDirDomains()"/>
+				                </mx:Canvas>
+				                <mx:Canvas width="80%" height="100%">
+				                	<mx:Form width="340" height="450">
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:TextInput width="100%"/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:TextInput width="100%"/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:TextInput width="100%"/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:TextInput width="100%"/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:NumericStepper/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:NumericStepper/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:NumericStepper/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:NumericStepper/>
+				                		</mx:FormItem>
+				                		<mx:FormItem label="Label" width="100%">
+				                			<mx:NumericStepper/>
+				                		</mx:FormItem>
+				                	</mx:Form>
+				                </mx:Canvas>
+			                </mx:HDividedBox>
 				        </mx:Canvas>
 				    </mx:TabNavigator>
 				</mx:Canvas>
