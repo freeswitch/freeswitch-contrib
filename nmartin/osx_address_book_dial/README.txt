@@ -32,7 +32,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 ==============================================================
 
 
-Drop all thee files in ~/Library/Address Book Scripts
+Drop all files in ~/Library/Address Book Scripts
 
 Edit fsdial.py to set up your server information and phone number
 
