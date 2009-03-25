@@ -63,7 +63,7 @@ class FreeSWITCH {
 	/*** General Whats happening Methods ***/
 
 	public function getStatus() {
-		$esl = new eslConnection($this->esl_ser"ver, $this->esl_port, $this->esl_secret);
+		$esl = new eslConnection($this->esl_server, $this->esl_port, $this->esl_secret);
 		$e = $esl->sendRecv("api status");
 		$body = $e->getBody();
 		return $body;
