@@ -37,3 +37,6 @@ Drop all files in ~/Library/Address Book Scripts
 Edit fsdial.py to set up your server information and phone number
 
 Start Address Book.  You should now have a FS Dial entry on the popup menu on phone numbers now.
+
+These scripts depend on ESL libs to be loaded on the machine that the scripts run on.  These should be 
+built on a dev machice and loaded on the client machine in the proper locations (python libs)
