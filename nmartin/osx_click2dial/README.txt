@@ -36,7 +36,7 @@ Setup:
 
 Unzip Click2Dial.zip.
 
-Inside fs_dial.app, edit COntents/Resources/fsdial.py to set up your server information and phone number
+Inside fs_dial.app, edit Contents/Resources/fsdial.py to set up your server information and phone number
 
 Import linkify.user.js into greasemonkey (http://www.greasespot.net/)
 
