@@ -1,5 +1,6 @@
 README
 
+For support, contact me at freeswitch@servercorps.com
 
 ==============================================================
 Copyright (c) 2009 Nik Martin
