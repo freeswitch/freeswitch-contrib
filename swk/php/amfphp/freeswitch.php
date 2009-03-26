@@ -274,7 +274,8 @@ class FreeSWITCH {
 
 	public function getDirDomainbyName($domain_name){
 		$query = sprintf("select * from domains where name = '%s'", $domain_name);
-		$stmt = $this->dbh->query($query);
+		$dbh = $this->getDbh();
+		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results[0];
 	}
@@ -336,7 +337,8 @@ class FreeSWITCH {
 	/* Directory User Methods */
 	public function getDirUsersByDomainUidByUsername($domain_uid, $user_name){
 		$query = sprintf("select * from users where domains_uid = '%s' and username = '%s'", $domain_uid, $user_name);
-		$stmt = $this->dbh->query($query);
+		$dbh = $this->getDbh();
+		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results[0];
 	}
@@ -358,6 +360,13 @@ class FreeSWITCH {
 		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results;
+	}
+
+	public function addDirDomainUser($domains_uid, $username, $mailbox, $cidr, $enabled) {
+		$dbh = $this->getDbh();
+		$query = sprintf('insert into users (domains_uid, username, mailbox, cidr, enabled) values (%s, "%s", "%s", "%s", %s)', 
+							$domain_uid, $username, $mailbox, $cidr, $enabled);
+		return $dbh->exec($query);
 	}
 
 	public function addDirDomainUserParam($users_uid, $name, $value) {
@@ -415,7 +424,8 @@ class FreeSWITCH {
 
 	public function getDirGroupsByDomianUidByUserUid($domain_uid, $user_uid){
 		$query = sprintf("select a.uid as groupUid, a.name as groupName, b.uid as usersUid from groups as a, group_members as b where a.uid = b.groups_uid and b.domains_uid = %s and b.users_uid = %s", $domain_uid, $user_uid) ;
-		$stmt = $this->dbh->query($query);
+		$dbh = $this->getDbh();
+		$stmt = $dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results;
 	}
