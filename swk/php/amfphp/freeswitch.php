@@ -272,6 +272,13 @@ class FreeSWITCH {
 		return $results;
 	}
 
+	public function getDirDomainbyName($domain_name){
+		$query = sprintf("select * from domains where name = '%s'", $domain_name);
+		$stmt = $this->dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results[0];
+	}
+
 	public function getDirDomain($domains_uid){
 		$dbh = $this->getDbh();
 		$query = sprintf("select * from domain_params where domains_uid = $domains_uid");
@@ -327,6 +334,13 @@ class FreeSWITCH {
 
 
 	/* Directory User Methods */
+	public function getDirUsersByDomainUidByUsername($domain_uid, $user_name){
+		$query = sprintf("select * from users where domains_uid = '%s' and username = '%s'", $domain_uid, $user_name);
+		$stmt = $this->dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results[0];
+	}
+
 	public function getDirUser($user_uid){
 		$dbh = $this->getDbh();
 		$query = sprintf("select * from user_params where users_uid = $user_uid");
@@ -395,6 +409,13 @@ class FreeSWITCH {
 		$dbh = $this->getDbh();
 		$query = sprintf("select * from groups where domains_uid = $domains_uid");
 		$stmt = $dbh->query($query);
+		$results = $stmt->fetchAll();
+		return $results;
+	}
+
+	public function getDirGroupsByDomianUidByUserUid($domain_uid, $user_uid){
+		$query = sprintf("select a.uid as groupUid, a.name as groupName, b.uid as usersUid from groups as a, group_members as b where a.uid = b.groups_uid and b.domains_uid = %s and b.users_uid = %s", $domain_uid, $user_uid) ;
+		$stmt = $this->dbh->query($query);
 		$results = $stmt->fetchAll();
 		return $results;
 	}
