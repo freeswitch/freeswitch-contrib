@@ -53,6 +53,7 @@ CREATE TABLE lcr
   date_end timestamp with time zone NOT NULL DEFAULT '2030-12-31',
   quality numeric(10,6) NOT NULL DEFAULT 0,
   reliability numeric(10,6) NOT NULL DEFAULT 0,
+  cid VARCHAR(32) NOT NULL DEFAULT '',
   enabled boolean NOT NULL DEFAULT 'true',
   CONSTRAINT lcr_pkey PRIMARY KEY (id)
 );
