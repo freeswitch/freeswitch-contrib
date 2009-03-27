@@ -306,7 +306,7 @@ class FreeSWITCH {
 	public function addDirDomainVar($domains_uid, $name, $value) {
 		$dbh = $this->getDbh();
 		$query = sprintf('insert into domain_variables (domains_uid, name, value) values (%s, "%s", "%s")', $domains_uid, $name, $value);
-		$dbh->exec($query);
+		return $dbh->exec($query);
 	}
 
 	public function updateDirDomainParam($param_uid, $name, $value) {
@@ -365,7 +365,7 @@ class FreeSWITCH {
 	public function addDirDomainUser($domains_uid, $username, $mailbox, $cidr, $enabled) {
 		$dbh = $this->getDbh();
 		$query = sprintf('insert into users (domains_uid, username, mailbox, cidr, enabled) values (%s, "%s", "%s", "%s", %s)', 
-							$domain_uid, $username, $mailbox, $cidr, $enabled);
+							$domains_uid, $username, $mailbox, $cidr, $enabled);
 		return $dbh->exec($query);
 	}
 
@@ -378,7 +378,7 @@ class FreeSWITCH {
 	public function addDirDomainUserVar($users_uid, $name, $value) {
 		$dbh = $this->getDbh();
 		$query = sprintf('insert into user_variables (users_uid, name, value) values (%s, "%s", "%s")', $users_uid, $name, $value);
-		$dbh->exec($query);
+		return $dbh->exec($query);
 	}
 
 	public function updateDirDomainUserParam($param_uid, $name, $value) {
