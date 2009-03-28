@@ -3,14 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>content</key>
-	<string>if (session &amp;&amp; (${1:channel} = switch_core_session_get_channel(${2:session}))) {
-	$0
-}</string>
+	<string>${1:stream}-&gt;write_function($1, "$2",$3);
+$0</string>
 	<key>name</key>
-	<string>switch_core_session_get_channel</string>
+	<string>stream-&gt;write_function</string>
 	<key>tabTrigger</key>
-	<string>getchan</string>
+	<string>streamw</string>
 	<key>uuid</key>
-	<string>8107A427-59E7-4FB0-AA1B-28F4A15A2B63</string>
+	<string>EC0B951A-D6C9-4137-AB5E-0DBA1D666B5A</string>
 </dict>
 </plist>
