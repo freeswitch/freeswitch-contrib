@@ -1,0 +1,33 @@
+mod_fastsms
+Copyright (c) 2009, Jeremy Tregunna, All Rights Reserved.
+
+What is it?
+
+mod_fastsms is a FreeSWITCH module that can be used to send Short Message Service (SMS)
+text messages via the FastSMS web service.
+
+Configuration
+
+A template fastsms.conf.xml is included, you will need to edit the auth tag to put in
+the information you get from the FastSMS service.
+
+As far as your dialplan goes, you can add something like this:
+
+<extension name="fastsms">
+  <condition field="destination_number" expression="^1200$">
+    <action application="fastsms" data="15145551212 Limit this bit of text to 160 characters. It's your message."/>
+  </condition>
+</extension>
+
+You can optionally define an originator (who the message appears to come from), in your
+directory, add this line:
+	<variable name="fastsms_originator" value="Mr. Bob's Server"/>
+
+and reloadxml.
+
+That's about it! Just copy the fastsms.conf.xml to your conf/autoload_configs and make
+the changes appropriately, copy this directory to freeswitch/src/mod/applications/mod_fastsms
+edit freeswitch/modules.conf and add a line "applications/mod_fastsms" then rebuild
+FreeSWITCH.
+
+Should you encounter problems, either drop me a line at jeremy.tregunna@me.com.

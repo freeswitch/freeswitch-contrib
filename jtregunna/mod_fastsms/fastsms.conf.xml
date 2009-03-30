@@ -1,0 +1,5 @@
+<configuration name="fastsms.conf" description="fastsms">
+  <settings>
+    <auth companyid="XXX" userid="YYY" password="ZZZ"/>
+  </settings>
+</configuration>
