@@ -29,9 +29,9 @@ static switch_status_t do_config(switch_bool_t reload)
 
 	if ((settings = switch_xml_child(cfg, "settings"))) {
 		auth = switch_xml_child(settings, "auth");
-		companyid = (char*)switch_xml_attr_soft(auth, "companyid");
-		userid = (char*)switch_xml_attr_soft(auth, "userid");
-		password = (char*)switch_xml_attr_soft(auth, "password");
+		companyid = strdup(switch_xml_attr_soft(auth, "companyid"));
+		userid = strdup(switch_xml_attr_soft(auth, "userid"));
+		password = strdup(switch_xml_attr_soft(auth, "password"));
 	}
 
 	if (xml)
@@ -129,6 +129,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_fastsms_load)
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_fastsms_shutdown)
 {
 	curl_easy_cleanup(curl);
+	free(companyid);
+	free(userid);
+	free(password);
 	return SWITCH_STATUS_SUCCESS;
 }
 
