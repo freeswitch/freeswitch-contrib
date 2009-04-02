@@ -1,11 +1,15 @@
+using System;
+
 namespace FreeSwitch.EventSocket
 {
     public class EventSofiaExpire : EventPresence
     {
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
         private string _profileName;
         private string _userName;
         private string _domain;
         private string _userAgent;
+        private DateTime _expires;
 
         public string ProfileName
         {
@@ -31,6 +35,12 @@ namespace FreeSwitch.EventSocket
             set { _userAgent = value; }
         }
 
+        public DateTime Expires
+        {
+            get { return _expires; }
+            set { _expires = value; }
+        }
+
         /*
 				switch_event_add_header(s_event, SWITCH_STACK_BOTTOM, "profile-name", "%s", argv[6]);
 			switch_event_add_header(s_event, SWITCH_STACK_BOTTOM, "user", "%s", argv[1]);
@@ -49,6 +59,11 @@ namespace FreeSwitch.EventSocket
                     break;
                 case "host":
                     _domain = value;
+                    break;
+                case "expires":
+                    int seconds;
+                    if (int.TryParse(value, out seconds))
+                        _expires = UnixEpoch.AddSeconds(seconds);
                     break;
                 case "user-agent":
                     _userAgent = value;

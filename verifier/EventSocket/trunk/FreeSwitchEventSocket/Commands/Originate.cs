@@ -22,7 +22,7 @@ namespace FreeSwitch.EventSocket.Commands
     {
         private SofiaSipAddress _caller;
         private Address _destination;
-        private readonly IList<ChannelVariable> _variables = new List<ChannelVariable>();
+        private readonly IList<CallVariable> _variables = new List<CallVariable>();
         private string _callerIdName;
         private string _callerIdNumber;
         private bool _varsAdded;
@@ -49,7 +49,7 @@ namespace FreeSwitch.EventSocket.Commands
             set { _destination = value; }
         }
 
-        public IList<ChannelVariable> Variables
+        public IList<CallVariable> Variables
         {
             get { return _variables; }
         }
@@ -77,22 +77,35 @@ namespace FreeSwitch.EventSocket.Commands
             {
                 if (!_varsAdded)
                 {
-                    _variables.Add(new ChannelVariable("origination_caller_id_name", CallerIdName ?? _caller.Extension));
+                    string name = CallerIdName ?? _caller.Extension;
+                    _variables.Add(new CallVariable("origination_caller_id_name", "'" + name + "'"));
                     if (!string.IsNullOrEmpty(_callerIdNumber))
-                        _variables.Add(new ChannelVariable("origination_caller_id_number", _callerIdNumber));
+                        _variables.Add(new CallVariable("origination_caller_id_number", _callerIdNumber));
                     _varsAdded = true;
 
                     if (_autoAnswer)
-                        _variables.Add(new ChannelVariable("sip_auto_answer", "true"));
+                    {
+                        _variables.Add(new CallLegVariable("sip_invite_params", "intercom=true"));
+                        _variables.Add(new CallLegVariable("sip_h_Call-Info", "<sip:$${domain}>;answer-after=0"));
+                        _variables.Add(new CallLegVariable("sip_auto_answer", "true"));
+                    }
                 }
 
                 string variables = string.Empty;
-                foreach (ChannelVariable var in _variables)
-                    variables += var + ",";
+                string legVariables = string.Empty;
+                foreach (CallVariable var in _variables)
+                {
+                    if (var is CallLegVariable)
+                        legVariables += var + ",";
+                    else
+                        variables += var + ",";
+                }
                 if (variables.Length > 0)
                     variables = "{" + variables.Remove(variables.Length - 1, 1) + "}";
+                if (legVariables.Length > 0)
+                    legVariables = "[" + legVariables.Remove(legVariables.Length - 1, 1) + "]";
 
-                return variables + Caller + " " + Destination;
+                return variables + legVariables + Caller + " " + Destination;
             }
         }
 

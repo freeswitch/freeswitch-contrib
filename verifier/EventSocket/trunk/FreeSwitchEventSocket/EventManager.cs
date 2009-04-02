@@ -73,8 +73,8 @@ namespace FreeSwitch.EventSocket
         public void Start(string hostname)
         {
             _socket.MessageReceived += OnMessage;
-            _socket.Connect(hostname);
             _socket.DataReceived += OnData;
+            _socket.Connect(hostname);
         }
 
         private void OnData(string data)

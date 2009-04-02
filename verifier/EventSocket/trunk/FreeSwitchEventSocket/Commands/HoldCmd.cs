@@ -13,7 +13,7 @@ namespace FreeSwitch.EventSocket.Commands
 
         public override string Command
         {
-            get { return "hold"; }
+            get { return "uuid_hold"; }
         }
 
         public override string Arguments

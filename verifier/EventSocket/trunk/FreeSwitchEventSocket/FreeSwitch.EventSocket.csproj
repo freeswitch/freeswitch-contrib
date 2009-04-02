@@ -70,6 +70,7 @@
     <Compile Include="Commands\SleepCmd.cs" />
     <Compile Include="EventManager.cs" />
     <Compile Include="ChannelEvents\EventDtmfStatus.cs" />
+    <Compile Include="General\CallVariable.cs" />
     <Compile Include="Ivr\DtmfEventArgs.cs" />
     <Compile Include="Ivr\IvrInterface.cs" />
     <Compile Include="Ivr\IvrQueue.cs" />
@@ -90,7 +91,7 @@
     <Compile Include="Events\EventHeartbeat.cs" />
     <Compile Include="Events\EventReSchedule.cs" />
     <Compile Include="General\Address.cs" />
-    <Compile Include="General\ChannelVariable.cs" />
+    <Compile Include="General\CallLegVariable.cs" />
     <Compile Include="General\SipAddress.cs" />
     <Compile Include="General\SofiaSipAddress.cs" />
     <Compile Include="PartyInfo.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="SipEvents\EventPresenceProbe.cs" />
     <Compile Include="SipEvents\EventRoster.cs" />
     <Compile Include="Events\EventMessageWaiting.cs" />
+    <Compile Include="SipEvents\EventSofiaUnregister.cs" />
     <Compile Include="SipEvents\SipEvent.cs" />
     <Compile Include="SipEvents\EventPresence.cs" />
     <Compile Include="SipEvents\EventSofiaExpire.cs" />

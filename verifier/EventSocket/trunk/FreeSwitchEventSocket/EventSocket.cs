@@ -198,12 +198,16 @@ namespace FreeSwitch.EventSocket
             }
             catch (InvalidDataException err)
             {
-                LogWriter(LogPrio.Warning, "Failed to parse event message (" + err.Message + "): " + Environment.NewLine + _parser.Text);
+                LogWriter(LogPrio.Warning,
+                          "Failed to parse event message." + Environment.NewLine + "Exception: " + err +
+                          Environment.NewLine + _parser.Text);
                 HandleDisconnect();
             }
             catch (ArgumentException err)
             {
-                LogWriter(LogPrio.Warning, "Failed to parse event message ("+err.Message+"): " + Environment.NewLine +  _parser.Text);
+                LogWriter(LogPrio.Warning,
+                          "Failed to parse event message." + Environment.NewLine + "Exception: " + err +
+                          Environment.NewLine + _parser.Text);
                 HandleDisconnect();
             }
         }
@@ -260,10 +264,10 @@ namespace FreeSwitch.EventSocket
             try
             {
                 PlainEventMsg msg = _parser.ParseOne();
-                LogWriter(LogPrio.Trace, "MessageType: " + msg.ContentType);
                 while (msg != null)
                 {
-                    switch (msg.ContentType)
+					LogWriter(LogPrio.Trace, "MessageType: " + msg.ContentType);
+					switch (msg.ContentType)
                     {
                         case "auth/request":
                             {

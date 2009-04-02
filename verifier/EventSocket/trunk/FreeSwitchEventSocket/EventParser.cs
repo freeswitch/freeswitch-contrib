@@ -141,18 +141,22 @@ namespace FreeSwitch.EventSocket
                     _text.CopyTo(i, chars, 0, plainEvent.ContentLength);
                     plainEvent.Body = new string(chars);
 
-                    // check for errors.
-                    int pos = plainEvent.Body.IndexOf("\n\n");
-                    if (pos < plainEvent.Body.Length - 2)
+                    // api/response is buggy for originate, no \n\n are appended at the end.
+                    if (plainEvent.ContentType != "api/response")
                     {
-                        Console.WriteLine("Invalid event");
-                        Console.WriteLine("Header");
-                        Console.WriteLine(headers);
-                        Console.WriteLine("Body");
-                        Console.WriteLine(plainEvent.Body);
-                        Console.WriteLine("=========================== EVERYTHING in _text ==============================");
-                        Console.WriteLine(_text);
-                        throw new InvalidDataException("Invalid event: " + _text);
+                        // check for errors.
+                        int pos = plainEvent.Body.IndexOf("\n\n");
+                        if (pos < plainEvent.Body.Length - 2)
+                        {
+                            Console.WriteLine("Invalid event");
+                            Console.WriteLine("Header");
+                            Console.WriteLine(headers);
+                            Console.WriteLine("Body");
+                            Console.WriteLine(plainEvent.Body);
+                            Console.WriteLine("=========================== EVERYTHING unparsed ==============================");
+                            Console.WriteLine(_text);
+                            throw new InvalidDataException("Invalid event: " + _text);
+                        }
                     }
 
                     if (plainEvent.Body.Length < plainEvent.ContentLength)

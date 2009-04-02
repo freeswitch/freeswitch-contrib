@@ -95,14 +95,8 @@ namespace FreeSwitch.EventSocket
                             Caller = new PartyInfo();
                         return Caller.Parse(name.Substring(7), value);
                     }
-                    else
-                    {
-                        if (base.ParseCommand(name, value))
-                            return true;
-                        else
-                            return res;
-                    }
-                        
+
+                    return base.ParseCommand(name, value) || res;
             }
             return true;
         }
