@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>content</key>
-	<string>if (session &amp;&amp; (${1:channel} = switch_core_session_get_channel(${2:session}))) {
+	<string>if (${2:session} &amp;&amp; (${1:channel} = switch_core_session_get_channel(${2:session}))) {
 	$0
 }</string>
 	<key>name</key>
