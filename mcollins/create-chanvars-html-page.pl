@@ -70,7 +70,7 @@ my $srcdirlen = length $srcdir;  # calculate this once since it doesn't change
 
 my $headerfile = $tmpdir . "/header-defs.txt";
 my $datafile   = $tmpdir . "/get-set-vars.txt";
-my $htmlfile   = "/Users/michaelcollins/Downloads/chanvars.html";
+my $htmlfile   = $tmpdir . "/chanvars.html";
 
 my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH';
 

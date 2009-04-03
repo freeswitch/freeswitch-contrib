@@ -12,12 +12,16 @@
 # MC 2009-04-02
 
 # Change these vars if your source directory is different
-SRCDIR=/usr/usr/freeswitch.trunk
+SRCDIR=/usr/src/freeswitch.trunk
 TMPDIR=/tmp
 
 # Grep the variables, then grep the aliases in the header files
+echo Searching source tree for channel variable set/get...
 grep -rn "[sg]et_variable(" $SRCDIR/* | grep -v Binary | grep -v svn > $TMPDIR/get-set-vars.txt
+
+echo Getting header file definitions...
 grep -n "_VARIABLE" $SRCDIR/src/include/*h > $TMPDIR/header-defs.txt
 
 # launch perl script here
-./extract-fs-chanvars.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR
+echo Creating HTML file in $TMPDIR directory
+./create-chanvars-html-page.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR
