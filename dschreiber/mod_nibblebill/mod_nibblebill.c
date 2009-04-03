@@ -141,14 +141,14 @@ SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_lowbal_action, globals.lowbal_actio
 SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_nobal_action, globals.nobal_action);
 
 #ifdef SWITCH_HAVE_ODBC
-static int nibblebill_callback(void *pArg, int argc, char **argv, char **columnNames)
+/*static int nibblebill_callback(void *pArg, int argc, char **argv, char **columnNames)
 {
 	nibblebill_results_t *cbt = (nibblebill_results_t *) pArg;
 
 	cbt->funds = atof(argv[0]);
 
 	return 0;
-}
+}*/
 #endif
 
 static switch_status_t load_config(void)
@@ -276,15 +276,16 @@ static switch_status_t bill_event(float billamount, const char *billaccount)
 {
 #ifdef SWITCH_HAVE_ODBC
 	char sql[1024] = "";
-	nibblebill_results_t pdata;
+	SQLHSTMT stmt;
 
-	memset(&pdata, 0, sizeof(pdata));
 	snprintf(sql, 1024, SQL_SAVE, globals.db_table, globals.db_column_cash, globals.db_column_cash, billamount, globals.db_column_account, billaccount);
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG,  "Doing update query\n[%s]\n", sql);
 
-	if (!(switch_odbc_handle_callback_exec(globals.master_odbc, sql, nibblebill_callback, &pdata) == SWITCH_ODBC_SUCCESS)){
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "DB Error while updating cash!\n");
-
+	if (switch_odbc_handle_exec(globals.master_odbc, sql, &stmt) != SWITCH_ODBC_SUCCESS) {
+		char *err_str;
+		err_str = switch_odbc_handle_get_error(globals.master_odbc, stmt);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "ERR: [%s]\n[%s]\n", sql, switch_str_nil(err_str));
+		switch_safe_free(err_str);
 	} else {
 #endif
 		/* TODO: Failover to a flat/text file if DB is unavailable */
@@ -292,6 +293,8 @@ static switch_status_t bill_event(float billamount, const char *billaccount)
 		return SWITCH_STATUS_SUCCESS;
 #ifdef SWITCH_HAVE_ODBC
 	}
+
+	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 #endif
 	return SWITCH_STATUS_SUCCESS;
 }
@@ -350,7 +353,7 @@ static switch_status_t do_billing(switch_core_session_t *session)
 	}
 
 	if (profile->times->answered < 1) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Not billing %s - call is not in answered state\n", billaccount);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Not billing %s - call is not in answered state\n", billaccount);
 		return SWITCH_STATUS_SUCCESS;
 	}
 
