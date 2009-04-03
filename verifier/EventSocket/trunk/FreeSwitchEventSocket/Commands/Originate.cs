@@ -85,27 +85,20 @@ namespace FreeSwitch.EventSocket.Commands
 
                     if (_autoAnswer)
                     {
-                        _variables.Add(new CallLegVariable("sip_invite_params", "intercom=true"));
-                        _variables.Add(new CallLegVariable("sip_h_Call-Info", "<sip:$${domain}>;answer-after=0"));
-                        _variables.Add(new CallLegVariable("sip_auto_answer", "true"));
+                        /*_variables.Add(new CallVariable("sip_invite_params", "intercom=true"));*/
+                        _variables.Add(new CallVariable("sip_h_Call-Info", "answer-after=0"));
+                        _variables.Add(new CallVariable("sip_auto_answer", "true"));
                     }
                 }
 
                 string variables = string.Empty;
-                string legVariables = string.Empty;
                 foreach (CallVariable var in _variables)
-                {
-                    if (var is CallLegVariable)
-                        legVariables += var + ",";
-                    else
                         variables += var + ",";
-                }
+
                 if (variables.Length > 0)
                     variables = "{" + variables.Remove(variables.Length - 1, 1) + "}";
-                if (legVariables.Length > 0)
-                    legVariables = "[" + legVariables.Remove(legVariables.Length - 1, 1) + "]";
 
-                return variables + legVariables + Caller + " " + Destination;
+                return variables + Caller + " " + Destination;
             }
         }
 

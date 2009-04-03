@@ -91,7 +91,6 @@
     <Compile Include="Events\EventHeartbeat.cs" />
     <Compile Include="Events\EventReSchedule.cs" />
     <Compile Include="General\Address.cs" />
-    <Compile Include="General\CallLegVariable.cs" />
     <Compile Include="General\SipAddress.cs" />
     <Compile Include="General\SofiaSipAddress.cs" />
     <Compile Include="PartyInfo.cs" />
