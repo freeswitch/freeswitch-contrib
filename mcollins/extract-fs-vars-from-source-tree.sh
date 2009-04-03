@@ -11,9 +11,10 @@
 #
 # MC 2009-04-02
 
-# Change these vars if your source directory is different
+# Change these vars if your directories are different
 SRCDIR=/usr/src/freeswitch.trunk
 TMPDIR=/tmp
+HTMLDIR=/usr/local/freeswitch/htdocs
 
 # Grep the variables, then grep the aliases in the header files
 echo Searching source tree for channel variable set/get...
@@ -24,4 +25,4 @@ grep -n "_VARIABLE" $SRCDIR/src/include/*h > $TMPDIR/header-defs.txt
 
 # launch perl script here
 echo Creating HTML file in $TMPDIR directory
-./create-chanvars-html-page.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR
+./create-chanvars-html-page.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR --htmldir=$HTMLDIR

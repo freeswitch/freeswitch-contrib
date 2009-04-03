@@ -60,17 +60,19 @@ $|++;
 # Get the cmd line options
 my $srcdir = '/usr/src/freeswitch.trunk';
 my $tmpdir = '/tmp';
+my $htmldir = '/usr/local/freeswitch/htdocs';
 
 ## Use these as defaults unless command line args are supplied
 GetOptions( 'srcdir=s' => \$srcdir,
             'tmpdir=s' => \$tmpdir,
+            'htmldir=s' => \$htmldir,
 );
 
 my $srcdirlen = length $srcdir;  # calculate this once since it doesn't change
 
 my $headerfile = $tmpdir . "/header-defs.txt";
 my $datafile   = $tmpdir . "/get-set-vars.txt";
-my $htmlfile   = $tmpdir . "/chanvars.html";
+my $htmlfile   = $htmldir . "/chanvars.html";
 
 my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH';
 
