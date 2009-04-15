@@ -57,7 +57,7 @@
 /* Defaults */
 #ifdef SWITCH_HAVE_ODBC
 /*static char SQL_LOOKUP[] = "SELECT %s FROM %s WHERE %s=\"%s\"";*/
-static char SQL_SAVE[] = "UPDATE %s SET %s=%s-%f WHERE %s=\"%s\"";
+static char SQL_SAVE[] = "UPDATE %s SET %s=%s-%f WHERE %s=%s";
 #endif
 
 typedef struct
