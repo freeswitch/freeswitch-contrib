@@ -11,6 +11,7 @@ All Rights Reserved
 If the prior author's claimed copyright is infringed by the one I claim we'll 
 work it out, BUT I prefer a much looser MIT license:
 ==============================================================
+
 Copyright (c) 2009 Nik Martin
 
 Permission is hereby granted, free of charge, to any person
@@ -25,8 +26,8 @@ conditions:
 The above copyright notice and this permission notice shall be
 included in all copies or substantial portions of the Software.
 
-The original author of this work, Nik Martin, must be credited  
-as the original author of this work.
+The original authors of this work, John Wehle, then Nik Martin, must be credited  
+as the original authors of this work.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
@@ -203,7 +204,13 @@ for (i = 0; i < file_exts.length; i++) {
 		session.streamFile (recorded_name);
 		break;
 	}
+//TODO: say <module_name> <say_type> <say_method> <text> << spell out the name if they have not recorded one yet
+
 }
+
+
 session.execute ("phrase", "spell," + choice);
+//TODO: prompt to see if they REALLY want this person, then go back up if not.
+
 session.execute ("transfer", choice + " XML features");
 exit();
