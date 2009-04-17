@@ -51,7 +51,7 @@ edit en.xml in conf/lang/en to include the directory/ directory (uh-oh, bad name
 
 drop dial_by_name_directpry.js in scripts/
 
-in the dial plan, execute the dial by name directpry like:
+in the dial plan, execute the dial by name directory like:
 
 <extension name="dial_by_name">
 	<condition field="destination_number" expression="^6000$">
