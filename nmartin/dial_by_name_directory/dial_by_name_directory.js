@@ -8,10 +8,9 @@ All Rights Reserved
 =======================
 
 
-If the prior author's claimed copyright is infringed by the one I claim we'll 
-work it out, BUT I prefer a much looser MIT license:
-==============================================================
-
+================================================================================
+Copyright (c) 2008  Feith Systems and Software, Inc.
+and
 Copyright (c) 2009 Nik Martin
 
 Permission is hereby granted, free of charge, to any person
@@ -39,7 +38,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 
-==============================================================
+================================================================================
 */
 
 var digitTimeOut = 3000;

@@ -11,9 +11,9 @@ All Rights Reserved
 =======================
 
 
-If the prior author's claimed copyright is infringed by the one I claim we'll 
-work it out, BUT I prefer a much looser license:
-==============================================================
+================================================================================
+Copyright (c) 2008  Feith Systems and Software, Inc.
+and
 Copyright (c) 2009 Nik Martin
 
 Permission is hereby granted, free of charge, to any person
@@ -41,7 +41,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 
-==============================================================
+================================================================================
 
 dial_by_name_directory.xml is a phrase macro for the beginning of the directory app.
 dial_by_name_directory.js is the directory app itself.
