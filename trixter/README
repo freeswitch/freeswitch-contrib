@@ -23,6 +23,9 @@ with the programs whether commercial or FOSS.
 
 == FILE LIST ==
 
+apiexec.pl
+	Execute api commands from the console/cron/windows scheduler/etc
+
 makemodconf.pl
 	This will create a modules.conf.xml from the build modules.conf
 	ideal for a new build to uncomment all modules you built and comment
