@@ -1,0 +1,144 @@
+Index: src/mod/endpoints/mod_skypiax/mod_skypiax.c
+===================================================================
+--- src/mod/endpoints/mod_skypiax/mod_skypiax.c	(revision 13219)
++++ src/mod/endpoints/mod_skypiax/mod_skypiax.c	(working copy)
+@@ -27,9 +27,9 @@
+  *
+  *
+  * Further Contributors:
++ * Bret McDanel <trixter AT 0xdecafbad.com>
+  *
+  *
+- *
+  * mod_skypiax.c -- Skype compatible Endpoint Module
+  *
+  */
+@@ -338,13 +338,9 @@
+                                           switch_frame_t ** frame, switch_io_flag_t flags,
+                                           int stream_id)
+ {
+-  switch_channel_t *channel = NULL;
+   private_t *tech_pvt = NULL;
+   switch_byte_t *data;
+ 
+-  channel = switch_core_session_get_channel(session);
+-  switch_assert(channel != NULL);
+-
+   tech_pvt = switch_core_session_get_private(session);
+   switch_assert(tech_pvt != NULL);
+   tech_pvt->read_frame.flags = SFF_NONE;
+@@ -408,13 +404,9 @@
+                                            switch_frame_t * frame, switch_io_flag_t flags,
+                                            int stream_id)
+ {
+-  switch_channel_t *channel = NULL;
+   private_t *tech_pvt = NULL;
+   unsigned int sent;
+ 
+-  channel = switch_core_session_get_channel(session);
+-  switch_assert(channel != NULL);
+-
+   tech_pvt = switch_core_session_get_private(session);
+   switch_assert(tech_pvt != NULL);
+ 
+@@ -444,11 +436,7 @@
+ static switch_status_t channel_answer_channel(switch_core_session_t * session)
+ {
+   private_t *tech_pvt;
+-  switch_channel_t *channel = NULL;
+ 
+-  channel = switch_core_session_get_channel(session);
+-  switch_assert(channel != NULL);
+-
+   tech_pvt = switch_core_session_get_private(session);
+   switch_assert(tech_pvt != NULL);
+ 
+@@ -460,12 +448,8 @@
+ static switch_status_t channel_receive_message(switch_core_session_t * session,
+                                                switch_core_session_message_t * msg)
+ {
+-  switch_channel_t *channel;
+   private_t *tech_pvt;
+ 
+-  channel = switch_core_session_get_channel(session);
+-  switch_assert(channel != NULL);
+-
+   tech_pvt = (private_t *) switch_core_session_get_private(session);
+   switch_assert(tech_pvt != NULL);
+ 
+@@ -655,14 +639,11 @@
+ {
+   private_t *tech_pvt = obj;
+   int res;
+-  int forever = 1;
+ 
+   DEBUGA_SKYPE("In skypiax_signaling_thread_func: started, p=%p\n", SKYPIAX_P_LOG,
+                (void *) tech_pvt);
+ 
+-  while (forever) {
+-    if (!running)
+-      break;
++  while (running) {
+     res = skypiax_signaling_read(tech_pvt);
+     if (res == CALLFLOW_INCOMING_HANGUP) {
+       switch_core_session_t *session = NULL;
+@@ -912,7 +893,6 @@
+         switch_set_string(globals.SKYPIAX_INTERFACES[interface_id].dialplan, dialplan);
+         switch_set_string(globals.SKYPIAX_INTERFACES[interface_id].destination,
+                           destination);
+-        switch_set_string(globals.SKYPIAX_INTERFACES[interface_id].context, context);
+ 
+         DEBUGA_SKYPE
+           ("interface_id=%d globals.SKYPIAX_INTERFACES[interface_id].X11_display=%s\n",
+@@ -944,9 +924,6 @@
+           ("interface_id=%d globals.SKYPIAX_INTERFACES[interface_id].destination=%s\n",
+            SKYPIAX_P_LOG, interface_id,
+            globals.SKYPIAX_INTERFACES[interface_id].destination);
+-        DEBUGA_SKYPE
+-          ("interface_id=%d globals.SKYPIAX_INTERFACES[interface_id].context=%s\n",
+-           SKYPIAX_P_LOG, interface_id, globals.SKYPIAX_INTERFACES[interface_id].context);
+         WARNINGA("STARTING interface_id=%d\n", SKYPIAX_P_LOG, interface_id);
+ 
+         switch_threadattr_create(&skypiax_api_thread_attr, skypiax_module_pool);
+@@ -1036,8 +1013,6 @@
+                      i, i, globals.SKYPIAX_INTERFACES[i].dialplan);
+         DEBUGA_SKYPE("i=%d globals.SKYPIAX_INTERFACES[%d].destination=%s\n",
+                      SKYPIAX_P_LOG, i, i, globals.SKYPIAX_INTERFACES[i].destination);
+-        DEBUGA_SKYPE("i=%d globals.SKYPIAX_INTERFACES[%d].context=%s\n", SKYPIAX_P_LOG, i,
+-                     i, globals.SKYPIAX_INTERFACES[i].context);
+       }
+     }
+   }
+@@ -1348,10 +1323,9 @@
+ private_t *find_available_skypiax_interface(void)
+ {
+   private_t *tech_pvt = NULL;
+-  int found = 0;
+   int i;
+ 
+-  for (i = 0; !found && i < SKYPIAX_MAX_INTERFACES; i++) {
++  for (i = 0; i < SKYPIAX_MAX_INTERFACES; i++) {
+     if (strlen(globals.SKYPIAX_INTERFACES[i].name)) {
+       int skype_state = 0;
+ 
+@@ -1359,17 +1333,13 @@
+       skype_state = tech_pvt->interface_state;
+       DEBUGA_SKYPE("skype interface: %d, name: %s, state: %d\n", SKYPIAX_P_LOG, i,
+                    globals.SKYPIAX_INTERFACES[i].name, skype_state);
+-      if (SKYPIAX_STATE_DOWN == skype_state || 0 == skype_state) {
+-        found = 1;
+-        break;
++      if (SKYPIAX_STATE_DOWN == skype_state || 0 == skype_state) { 
++		  return tech_pvt;
+       }
+     }
+   }
+ 
+-  if (found)
+-    return tech_pvt;
+-  else
+-    return NULL;
++  return NULL;
+ }
+ 
+ SWITCH_STANDARD_API(sk_function)
