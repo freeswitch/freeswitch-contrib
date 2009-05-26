@@ -56,8 +56,8 @@
 
 /* Defaults */
 #ifdef SWITCH_HAVE_ODBC
-/*static char SQL_LOOKUP[] = "SELECT %s FROM %s WHERE %s=\"%s\"";*/
-static char SQL_SAVE[] = "UPDATE %s SET %s=%s-%f WHERE %s=%s";
+static char SQL_LOOKUP[] = "SELECT %s FROM %s WHERE %s='%s'";
+static char SQL_SAVE[] = "UPDATE %s SET %s=%s-%f WHERE %s='%s'";
 #endif
 
 typedef struct
@@ -73,7 +73,7 @@ typedef struct
 
 typedef struct nibblebill_results
 {
-	float	funds;
+	float	balance;
 
 	float	percall_max; /* Overrides global on a per-user level */
 	float	lowbal_amt;  /*  ditto */
@@ -117,6 +117,8 @@ static struct
 #endif
 } globals;
 
+static void nibblebill_pause(switch_core_session_t *session);
+
 /**************************
 * Setup FreeSWITCH Macros *
 **************************/
@@ -141,14 +143,14 @@ SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_lowbal_action, globals.lowbal_actio
 SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_nobal_action, globals.nobal_action);
 
 #ifdef SWITCH_HAVE_ODBC
-/*static int nibblebill_callback(void *pArg, int argc, char **argv, char **columnNames)
+static int nibblebill_callback(void *pArg, int argc, char **argv, char **columnNames)
 {
 	nibblebill_results_t *cbt = (nibblebill_results_t *) pArg;
 
-	cbt->funds = atof(argv[0]);
+	cbt->balance = atof(argv[0]);
 
 	return 0;
-}*/
+}
 #endif
 
 static switch_status_t load_config(void)
@@ -271,6 +273,37 @@ void debug_event_handler(switch_event_t *event)
 }
 
 
+static void transfer_call(switch_core_session_t *session, char *destination)
+{
+	char *argv[4] = { 0 };
+
+	switch_separate_string(destination, ' ', argv, (sizeof(argv) / sizeof(argv[0])));
+
+	const char *uuid;
+	switch_channel_t *channel = switch_core_session_get_channel(session);
+	/* Find the uuid of our B leg. If it exists, transfer it first */
+	if ((uuid = switch_channel_get_variable(channel, SWITCH_SIGNAL_BOND_VARIABLE))) {
+		/* Make sure we are in the media path on B leg */
+		switch_ivr_media(uuid, SMF_REBRIDGE);
+
+		/* Get info on the B leg */
+		switch_core_session_t *b_session;
+		if ((b_session = switch_core_session_locate(uuid))) {
+			/* Transfer the B leg */
+			switch_ivr_session_transfer(b_session, argv[0], argv[1], argv[2]);
+			switch_core_session_rwunlock(b_session);
+		}
+	}
+
+	/* Make sure we are in the media path on A leg */
+	uuid = switch_core_session_get_uuid(session);
+	switch_ivr_media(uuid, SMF_REBRIDGE);
+
+	/* Transfer the A leg */
+	switch_ivr_session_transfer(session, argv[0], argv[1], argv[2]);
+}
+
+
 /* At this time, billing never succeeds if you don't have a database. */
 static switch_status_t bill_event(float billamount, const char *billaccount)
 {
@@ -298,6 +331,36 @@ static switch_status_t bill_event(float billamount, const char *billaccount)
 #endif
 	return SWITCH_STATUS_SUCCESS;
 }
+
+
+static float get_balance(const char *billaccount)
+{
+#ifdef SWITCH_HAVE_ODBC
+	char sql[1024] = "";
+	nibblebill_results_t pdata;
+	float balance = 0.00;
+
+	memset(&pdata, 0, sizeof(pdata));
+	snprintf(sql, 1024, SQL_LOOKUP, globals.db_column_cash, globals.db_table, globals.db_column_account, billaccount);
+
+	if (switch_odbc_handle_callback_exec(globals.master_odbc, sql, nibblebill_callback, &pdata) != SWITCH_ODBC_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", sql);
+#endif
+		/* TODO: Return -1 for safety */
+
+		return -1.00;
+#ifdef SWITCH_HAVE_ODBC
+	} else {
+		/* Successfully retrieved! */
+		balance = pdata.balance;
+
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG,  "Retrieved current balance for account %s (balance = %f)\n", billaccount, balance);
+	}
+
+#endif
+	return balance;
+}
+
 
 
 /* This is where we actually charge the guy 
@@ -426,6 +489,20 @@ static switch_status_t do_billing(switch_core_session_t *session)
 	/* Save this location, but only if the channel/session are not hungup (otherwise, we're done) */
 	if (channel && switch_channel_get_state(channel) != CS_HANGUP) {
 		switch_channel_set_private(channel, "_nibble_data_", nibble_data);
+
+		/* See if this person has enough money left to continue the call */
+		float balance;
+		balance = get_balance(billaccount);
+		if (balance < globals.nobal_amt) {
+			/* Not enough money - reroute call to nobal location */
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Balance of %f fell below allowed amount of %f! (Account %s)\n", balance, globals.nobal_amt, billaccount);
+
+			/* IMPORTANT: Billing must be paused before the transfer occurs! This prevents infinite loops, since the transfer will result */
+			/* in nibblebill checking the call again in the routing process for an allowed balance! */
+			/* If you intend to give the user the option to re-up their balance, you must clear & resume billing once the balance is updated! */
+			nibblebill_pause(session);
+			transfer_call(session, globals.nobal_action);
+		}
 	}
 
 	/* Done changing - release lock */
@@ -647,6 +724,7 @@ static void nibblebill_adjust(switch_core_session_t *session, float amount)
 	}
 
 }
+
 
 #define APP_SYNTAX "pause | resume | reset | adjust <amount> | heartbeat <seconds> | check"
 SWITCH_STANDARD_APP(nibblebill_app_function)
