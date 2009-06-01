@@ -34,7 +34,7 @@ CREATE TABLE `lcr` (
   `date_end` datetime NOT NULL DEFAULT '2030-12-31',
   `quality` float(10,6) NOT NULL,
   `reliability` float(10,6) NOT NULL,
-  `cid` varchar(32), NOT NULL DEFAULT '',
+  `cid` varchar(32) NOT NULL DEFAULT '',
   `enabled` boolean NOT NULL DEFAULT '1',
   PRIMARY KEY  (`id`),
   KEY `carrier_id` (`carrier_id`),
