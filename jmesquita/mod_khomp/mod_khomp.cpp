@@ -30,7 +30,7 @@
  *
  */
 
-#define KHOMP_SYNTAX "khomp [show]"
+#define KHOMP_SYNTAX "khomp show [info|links]"
 
 /* Our includes */
 #include "k3lapi.hpp"
@@ -38,6 +38,7 @@
 extern "C"
 {
     #include <switch.h>
+    #include "k3l.h"
 }
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load);
@@ -125,6 +126,7 @@ static switch_status_t channel_kill_channel(switch_core_session_t *session, int 
 
 /* My function prototypes */
 static void printBoardsInfo(switch_stream_handle_t*);
+static const char* linkStatus(unsigned int device, unsigned int link);
 
 
 
@@ -493,7 +495,7 @@ switch_io_routines_t khomp_io_routines = {
 
 static switch_status_t load_config(void)
 {
-	char *cf = "khomp.conf";
+	const char *cf = "khomp.conf";
 	switch_xml_t cfg, xml, settings, param;
 
 	memset(&globals, 0, sizeof(globals));
@@ -620,10 +622,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
 }
 
 /* 
-   khomp API
-   Only displays board information right now
+   khomp API definition
 */
-
 SWITCH_STANDARD_API(khomp)
 {
    	char *argv[10] = { 0 };
@@ -640,13 +640,34 @@ SWITCH_STANDARD_API(khomp)
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if ((argc = switch_separate_string(myarg, ' ', argv, (sizeof(argv) / sizeof(argv[0])))) != 1) {
+	if ((argc = switch_separate_string(myarg, ' ', argv, (sizeof(argv) / sizeof(argv[0])))) < 1) {
 		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
 		goto done;
 	}
 
-	if (argv[0] && !strncasecmp(argv[0], "show", 6)) {
-        printBoardsInfo(stream);
+    /* Below show ... */
+	if (argv[0] && !strncasecmp(argv[0], "show", 4)) {
+        /* Show the API summary and information */
+        if (argv[1] && !strncasecmp(argv[1], "info", 4)) {
+            printBoardsInfo(stream);
+        }
+        /* Show all the links and their status */
+        if (argv[1] && !strncasecmp(argv[1], "links", 5)) {
+            for(int device=0 ; device < k3l->device_count() ; device++)
+            {
+                stream->write_function(stream, "___________________________________________\n");
+                stream->write_function(stream, "|--------------Khomp Links----------------|\n");
+                stream->write_function(stream, "|----Board----|----Link----|----Status----|\n");
+                for(int link=0 ; link < k3l->link_count(device) ; link++)
+                {
+                    stream->write_function(stream, "|%13d|%12d|%s|\n"
+                                            , device
+                                            , link
+                                            , linkStatus(device, link));
+                }
+            }
+            stream->write_function(stream, "-------------------------------------------\n");
+        }
 
 	} else {
 		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
@@ -657,6 +678,64 @@ done:
 	return status;
 
 }
+
+/* Helper functions */
+static const char * linkStatus(unsigned int device, unsigned int link)
+{
+
+    K3L_LINK_CONFIG & config = k3l->link_config(device, link);
+    K3L_LINK_STATUS   status;
+    
+    KLibraryStatus ret = (KLibraryStatus) k3lGetDeviceStatus (device, link + ksoLink, &status, sizeof(status));
+
+    if (ret == ksSuccess)
+    {
+        switch (config.Signaling)
+        {
+            case ksigInactive:
+                return "[ksigInactive]";
+
+            case ksigAnalog:
+                return "[ksigAnalog]";
+
+            case ksigSIP:
+                return "[ksigSIP]";
+
+            case ksigOpenCAS:
+            case ksigOpenR2:
+            case ksigR2Digital:
+            case ksigUserR2Digital:
+            case ksigOpenCCS:
+            case ksigPRI_EndPoint:
+            case ksigPRI_Network:
+            case ksigPRI_Passive:
+            case ksigLineSide:
+            case ksigCAS_EL7:
+            case ksigAnalogTerminal:
+                if (kesOk == status.E1)
+                {
+                    return "kesOk";
+                }
+                else
+                {
+                    if (kesSignalLost & status.E1)         return "SignalLost";
+                    if (kesNetworkAlarm & status.E1)       return "NetworkAlarm";
+                    if (kesFrameSyncLost & status.E1)      return "FrameSyncLost";
+                    if (kesMultiframeSyncLost & status.E1) return "MultiframeSyncLost";
+                    if (kesRemoteAlarm & status.E1)        return "RemoteAlarm";
+                    if (kesHighErrorRate & status.E1)      return "HighErrorRate";
+                    if (kesUnknownAlarm & status.E1)       return "UnknownAlarm";
+                    if (kesE1Error & status.E1)            return "E1Error";
+
+                }
+            default:
+                return "NotImplementedBoard";
+        }
+    }
+
+    return "<unknown>";
+}
+
 
 static void printBoardsInfo(switch_stream_handle_t* stream) {
 
@@ -759,6 +838,7 @@ static void printBoardsInfo(switch_stream_handle_t* stream) {
 
     stream->write_function(stream, " ------------------------------------------------------------------\n");
 }
+/* End of helper functions */
 
 
 /* For Emacs:
