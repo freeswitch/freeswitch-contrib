@@ -30,8 +30,10 @@
  *
  */
 
+#define KHOMP_SYNTAX "khomp [status]"
+
 /* Our includes */
-#include "k3l.h"
+#include "k3lapi.hpp"
 
 extern "C"
 {
@@ -47,6 +49,8 @@ SWITCH_MODULE_DEFINITION(mod_khomp, mod_khomp_load, mod_khomp_shutdown, NULL);	/
 switch_endpoint_interface_t *khomp_endpoint_interface;
 static switch_memory_pool_t *module_pool = NULL;
 static int running = 1;
+
+static K3LAPI * k3l;
 
 
 typedef enum {
@@ -103,6 +107,8 @@ SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_codec_string, globals.codec_string)
 SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_codec_rates_string, globals.codec_rates_string);
 SWITCH_DECLARE_GLOBAL_STRING_FUNC(set_global_ip, globals.ip);
 
+/* Macros to define specific API functions */
+SWITCH_STANDARD_API(khomp);
 
 
 static switch_status_t channel_on_init(switch_core_session_t *session);
@@ -534,49 +540,6 @@ static switch_status_t load_config(void)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-bool start_k3l(void)
-{
-    k3lSetGlobalParam (klpResetFwOnStartup, 1);
-    k3lSetGlobalParam (klpDisableInternalVoIP, 1);
-
-	sbyte *Erro = k3lStart( 2,0,0 );
-
-	if ( Erro )	{
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "loading K3L API failed: %s.\n", Erro);
-		return false;
-	}		
-
-	int _boardCount = k3lGetDeviceCount();
-
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Number of boards: %d.\n", _boardCount);
-
-	/* No boards */
-	if(_boardCount == 0){
-		k3lStop();
-		return false;
-	}
-
-/*	_boards = new Board*[ _boardCount ];
-
-	for( int i = 0; i < _boardCount; i++ )
-		_boards[ i ] = new Board( i );
-
-	
-	if(handler) 
-		RegisterHandler((void *)EventCallBack);		*/
-
-
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "the K3L API have been started!\n");
-
-	bool is_ok = true;
-
-	if (!is_ok)
-		return false;
-
-	return true;
-};
-
-
 SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
 {
 
@@ -586,15 +549,33 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
 
 	load_config();
 
+	switch_api_interface_t *api_interface;
+
 	*module_interface = switch_loadable_module_create_module_interface(pool, "mod_khomp");
 	khomp_endpoint_interface = static_cast<switch_endpoint_interface_t*>(switch_loadable_module_create_interface(*module_interface, SWITCH_ENDPOINT_INTERFACE));
 	khomp_endpoint_interface->interface_name = "khomp";
 	khomp_endpoint_interface->io_routines = &khomp_io_routines;
 	khomp_endpoint_interface->state_handler = &khomp_state_handlers;
 
-	if (!start_k3l()) {
-		return SWITCH_STATUS_FALSE;
-	}
+    /* 
+       Spawn our k3l global var that will be used along the module
+       for sending info to the boards
+    */
+    k3l = new K3LAPI();
+
+    /* Start the API and connect to KServer */
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Starting K3L...\n");
+    try {
+        k3l->start();
+    } catch (...) {
+        /* TODO: Catch the proper error and display it. */
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "K3L not started.");
+        return SWITCH_STATUS_TERM;
+    }
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "K3L started.\n");
+
+    /* Add all the specific API functions */
+    SWITCH_ADD_API(api_interface, "khomp", "Khomp Menu", khomp, KHOMP_SYNTAX);
 
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
@@ -628,10 +609,147 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
 
 	/* Finnish him! */
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Stopping K3L...\n");
-	k3lStop();
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "the K3L API have been stopped!\n");
+    k3l->stop();
+    delete k3l;
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "the K3L API has been stopped!\n");
 	
 	return SWITCH_STATUS_SUCCESS;
+}
+
+/* 
+   khomp API
+   Only displays board information right now
+*/
+
+SWITCH_STANDARD_API(khomp)
+{
+   	char *argv[10] = { 0 };
+	int argc = 0;
+	void *val;
+	char *myarg = NULL;
+	switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+    /* We should not ever get a session here */
+	if (session) return status;
+
+	if (switch_strlen_zero(cmd) || !(myarg = strdup(cmd))) {
+		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
+		return SWITCH_STATUS_FALSE;
+	}
+
+	if ((argc = switch_separate_string(myarg, ' ', argv, (sizeof(argv) / sizeof(argv[0])))) != 1) {
+		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
+		goto done;
+	}
+
+	if (argv[0] && !strncasecmp(argv[0], "status", 6)) {
+        K3L_API_CONFIG apiCfg;
+
+        stream->write_function(stream," ------------------------------------------------------------------\n");
+        stream->write_function(stream, "|---------------------- Khomp System Summary ----------------------|\n");
+        stream->write_function(stream, "|------------------------------------------------------------------|\n");
+
+        if (k3lGetDeviceConfig(-1, ksoAPI, &apiCfg, sizeof(apiCfg)) == ksSuccess)
+        {
+            stream->write_function(stream, "| K3L API %d.%d.%d [m.VPD %d] - %-38s |\n"
+                         , apiCfg.MajorVersion , apiCfg.MinorVersion , apiCfg.BuildVersion
+                         , apiCfg.VpdVersionNeeded , apiCfg.StrVersion);
+        }
+
+        for (unsigned int i = 0; i < k3l->device_count(); i++)
+        {
+            K3L_DEVICE_CONFIG & devCfg = k3l->device_config(i);
+
+            stream->write_function(stream, " ------------------------------------------------------------------\n");
+
+            switch (k3l->device_type(i))
+            {
+                /* E1 boards */
+                case kdtE1:
+                case kdtConf:
+                case kdtPR:
+                case kdtE1GW:
+                case kdtE1IP:
+                case kdtE1Spx:
+                case kdtGWIP:
+                case kdtFXS:
+                case kdtFXSSpx:
+                {
+                    K3L_E1600A_FW_CONFIG dspAcfg;
+                    K3L_E1600B_FW_CONFIG dspBcfg;
+
+                    if ((k3lGetDeviceConfig(i, ksoFirmware + kfiE1600A, &dspAcfg, sizeof(dspAcfg)) == ksSuccess) &&
+                        (k3lGetDeviceConfig(i, ksoFirmware + kfiE1600B, &dspBcfg, sizeof(dspBcfg)) == ksSuccess))
+                    {
+                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels, %d links.|\n"
+                                    , i , "E1" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount , devCfg.LinkCount);
+                        stream->write_function(stream, "| * DSP A: %s, DSP B: %s - PCI bus: %02d, PCI slot: %02d %s|\n"
+                                    , dspAcfg.DspVersion , dspBcfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                    , std::string(18 - strlen(dspAcfg.DspVersion) - strlen(dspBcfg.DspVersion), ' ').c_str());
+                        stream->write_function(stream, "| * %-62s |\n" , dspAcfg.FwVersion);
+                        stream->write_function(stream, "| * %-62s |\n" , dspBcfg.FwVersion);
+
+                    }
+
+                    break;
+                }
+
+                /* analog boards */
+                case kdtFXO:
+                case kdtFXOVoIP:
+                {
+                    K3L_FXO80_FW_CONFIG dspCfg;
+
+                    if (k3lGetDeviceConfig(i, ksoFirmware + kfiFXO80, &dspCfg, sizeof(dspCfg)) == ksSuccess)
+                    {
+                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
+                                    , i , "KFXO80" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
+                                    , std::string(26 - 6, ' ').c_str());
+                        stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
+                                    , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                    , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
+                        stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
+                    }
+
+                }
+
+                case kdtGSM:
+                case kdtGSMSpx:
+                {
+                    K3L_GSM40_FW_CONFIG dspCfg;
+
+                    if (k3lGetDeviceConfig(i, ksoFirmware + kfiGSM40, &dspCfg, sizeof(dspCfg)) == ksSuccess)
+                    {
+                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
+                            , i , "KGSM" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
+                            , std::string(26 - 4, ' ').c_str());
+
+                        stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
+                                    , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                    , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
+
+                        stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
+                    }
+
+                    break;
+                }
+                default:
+                    stream->write_function(stream, "| [[ %02d ]] Unknown type '%02d'! Please contact Khomp support for help! |\n"
+                        , i , k3l->device_type(i));
+                    break;
+            }
+        }
+
+        stream->write_function(stream, " ------------------------------------------------------------------\n");
+
+	} else {
+		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
+	}
+
+done:
+	switch_safe_free(myarg);
+	return status;
+
 }
 
 /* For Emacs:
