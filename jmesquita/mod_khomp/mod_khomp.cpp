@@ -30,7 +30,7 @@
  *
  */
 
-#define KHOMP_SYNTAX "khomp [status]"
+#define KHOMP_SYNTAX "khomp [show]"
 
 /* Our includes */
 #include "k3lapi.hpp"
@@ -122,6 +122,9 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 static switch_status_t channel_read_frame(switch_core_session_t *session, switch_frame_t **frame, switch_io_flag_t flags, int stream_id);
 static switch_status_t channel_write_frame(switch_core_session_t *session, switch_frame_t *frame, switch_io_flag_t flags, int stream_id);
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig);
+
+/* My function prototypes */
+static void printBoardsInfo(switch_stream_handle_t*);
 
 
 
@@ -642,105 +645,8 @@ SWITCH_STANDARD_API(khomp)
 		goto done;
 	}
 
-	if (argv[0] && !strncasecmp(argv[0], "status", 6)) {
-        K3L_API_CONFIG apiCfg;
-
-        stream->write_function(stream," ------------------------------------------------------------------\n");
-        stream->write_function(stream, "|---------------------- Khomp System Summary ----------------------|\n");
-        stream->write_function(stream, "|------------------------------------------------------------------|\n");
-
-        if (k3lGetDeviceConfig(-1, ksoAPI, &apiCfg, sizeof(apiCfg)) == ksSuccess)
-        {
-            stream->write_function(stream, "| K3L API %d.%d.%d [m.VPD %d] - %-38s |\n"
-                         , apiCfg.MajorVersion , apiCfg.MinorVersion , apiCfg.BuildVersion
-                         , apiCfg.VpdVersionNeeded , apiCfg.StrVersion);
-        }
-
-        for (unsigned int i = 0; i < k3l->device_count(); i++)
-        {
-            K3L_DEVICE_CONFIG & devCfg = k3l->device_config(i);
-
-            stream->write_function(stream, " ------------------------------------------------------------------\n");
-
-            switch (k3l->device_type(i))
-            {
-                /* E1 boards */
-                case kdtE1:
-                case kdtConf:
-                case kdtPR:
-                case kdtE1GW:
-                case kdtE1IP:
-                case kdtE1Spx:
-                case kdtGWIP:
-                case kdtFXS:
-                case kdtFXSSpx:
-                {
-                    K3L_E1600A_FW_CONFIG dspAcfg;
-                    K3L_E1600B_FW_CONFIG dspBcfg;
-
-                    if ((k3lGetDeviceConfig(i, ksoFirmware + kfiE1600A, &dspAcfg, sizeof(dspAcfg)) == ksSuccess) &&
-                        (k3lGetDeviceConfig(i, ksoFirmware + kfiE1600B, &dspBcfg, sizeof(dspBcfg)) == ksSuccess))
-                    {
-                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels, %d links.|\n"
-                                    , i , "E1" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount , devCfg.LinkCount);
-                        stream->write_function(stream, "| * DSP A: %s, DSP B: %s - PCI bus: %02d, PCI slot: %02d %s|\n"
-                                    , dspAcfg.DspVersion , dspBcfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
-                                    , std::string(18 - strlen(dspAcfg.DspVersion) - strlen(dspBcfg.DspVersion), ' ').c_str());
-                        stream->write_function(stream, "| * %-62s |\n" , dspAcfg.FwVersion);
-                        stream->write_function(stream, "| * %-62s |\n" , dspBcfg.FwVersion);
-
-                    }
-
-                    break;
-                }
-
-                /* analog boards */
-                case kdtFXO:
-                case kdtFXOVoIP:
-                {
-                    K3L_FXO80_FW_CONFIG dspCfg;
-
-                    if (k3lGetDeviceConfig(i, ksoFirmware + kfiFXO80, &dspCfg, sizeof(dspCfg)) == ksSuccess)
-                    {
-                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
-                                    , i , "KFXO80" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
-                                    , std::string(26 - 6, ' ').c_str());
-                        stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
-                                    , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
-                                    , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
-                        stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
-                    }
-
-                }
-
-                case kdtGSM:
-                case kdtGSMSpx:
-                {
-                    K3L_GSM40_FW_CONFIG dspCfg;
-
-                    if (k3lGetDeviceConfig(i, ksoFirmware + kfiGSM40, &dspCfg, sizeof(dspCfg)) == ksSuccess)
-                    {
-                        stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
-                            , i , "KGSM" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
-                            , std::string(26 - 4, ' ').c_str());
-
-                        stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
-                                    , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
-                                    , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
-
-                        stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
-                    }
-
-                    break;
-                }
-                default:
-                    stream->write_function(stream, "| [[ %02d ]] Unknown type '%02d'! Please contact Khomp support for help! |\n"
-                        , i , k3l->device_type(i));
-                    break;
-            }
-        }
-
-        stream->write_function(stream, " ------------------------------------------------------------------\n");
+	if (argv[0] && !strncasecmp(argv[0], "show", 6)) {
+        printBoardsInfo(stream);
 
 	} else {
 		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
@@ -751,6 +657,109 @@ done:
 	return status;
 
 }
+
+static void printBoardsInfo(switch_stream_handle_t* stream) {
+
+    K3L_API_CONFIG apiCfg;
+
+    stream->write_function(stream," ------------------------------------------------------------------\n");
+    stream->write_function(stream, "|---------------------- Khomp System Summary ----------------------|\n");
+    stream->write_function(stream, "|------------------------------------------------------------------|\n");
+
+    if (k3lGetDeviceConfig(-1, ksoAPI, &apiCfg, sizeof(apiCfg)) == ksSuccess)
+    {
+        stream->write_function(stream, "| K3L API %d.%d.%d [m.VPD %d] - %-38s |\n"
+                     , apiCfg.MajorVersion , apiCfg.MinorVersion , apiCfg.BuildVersion
+                     , apiCfg.VpdVersionNeeded , apiCfg.StrVersion);
+    }
+
+    for (unsigned int i = 0; i < k3l->device_count(); i++)
+    {
+        K3L_DEVICE_CONFIG & devCfg = k3l->device_config(i);
+
+        stream->write_function(stream, " ------------------------------------------------------------------\n");
+
+        switch (k3l->device_type(i))
+        {
+            /* E1 boards */
+            case kdtE1:
+            case kdtConf:
+            case kdtPR:
+            case kdtE1GW:
+            case kdtE1IP:
+            case kdtE1Spx:
+            case kdtGWIP:
+            case kdtFXS:
+            case kdtFXSSpx:
+            {
+                K3L_E1600A_FW_CONFIG dspAcfg;
+                K3L_E1600B_FW_CONFIG dspBcfg;
+
+                if ((k3lGetDeviceConfig(i, ksoFirmware + kfiE1600A, &dspAcfg, sizeof(dspAcfg)) == ksSuccess) &&
+                    (k3lGetDeviceConfig(i, ksoFirmware + kfiE1600B, &dspBcfg, sizeof(dspBcfg)) == ksSuccess))
+                {
+                    stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels, %d links.|\n"
+                                , i , "E1" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount , devCfg.LinkCount);
+                    stream->write_function(stream, "| * DSP A: %s, DSP B: %s - PCI bus: %02d, PCI slot: %02d %s|\n"
+                                , dspAcfg.DspVersion , dspBcfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                , std::string(18 - strlen(dspAcfg.DspVersion) - strlen(dspBcfg.DspVersion), ' ').c_str());
+                    stream->write_function(stream, "| * %-62s |\n" , dspAcfg.FwVersion);
+                    stream->write_function(stream, "| * %-62s |\n" , dspBcfg.FwVersion);
+
+                }
+
+                break;
+            }
+
+            /* analog boards */
+            case kdtFXO:
+            case kdtFXOVoIP:
+            {
+                K3L_FXO80_FW_CONFIG dspCfg;
+
+                if (k3lGetDeviceConfig(i, ksoFirmware + kfiFXO80, &dspCfg, sizeof(dspCfg)) == ksSuccess)
+                {
+                    stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
+                                , i , "KFXO80" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
+                                , std::string(26 - 6, ' ').c_str());
+                    stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
+                                , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
+                    stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
+                }
+
+            }
+
+            case kdtGSM:
+            case kdtGSMSpx:
+            {
+                K3L_GSM40_FW_CONFIG dspCfg;
+
+                if (k3lGetDeviceConfig(i, ksoFirmware + kfiGSM40, &dspCfg, sizeof(dspCfg)) == ksSuccess)
+                {
+                    stream->write_function(stream, "| [[ %02d ]] %s, serial '%04d', %02d channels. %s|\n"
+                        , i , "KGSM" , atoi(devCfg.SerialNumber) , devCfg.ChannelCount
+                        , std::string(26 - 4, ' ').c_str());
+
+                    stream->write_function(stream, "| * DSP: %s - PCI bus: %02d, PCI slot: %02d%s|\n"
+                                , dspCfg.DspVersion , devCfg.PciBus , devCfg.PciSlot
+                                , std::string(30 - strlen(dspCfg.DspVersion), ' ').c_str());
+
+                    stream->write_function(stream, "| * %-62s |\n" , dspCfg.FwVersion);
+                }
+
+                break;
+            }
+            default:
+                stream->write_function(stream, "| [[ %02d ]] Unknown type '%02d'! Please contact Khomp support for help! |\n"
+                    , i , k3l->device_type(i));
+                break;
+        }
+    }
+
+    stream->write_function(stream, " ------------------------------------------------------------------\n");
+}
+
 
 /* For Emacs:
  * Local Variables:
