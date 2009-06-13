@@ -98,6 +98,9 @@ struct private_object {
 	switch_mutex_t *mutex;
 	switch_mutex_t *flag_mutex;
 	//switch_thread_cond_t *cond;
+    unsigned int Kdevice;    // Represent de board we are making the call from
+    unsigned int Klink;      // Represent the link we are making the call from
+    unsigned int Kchannel;   // Represent the channel we are making the call from
 };
 
 typedef struct private_object private_t;
@@ -130,7 +133,8 @@ static const char* linkStatus(unsigned int device, unsigned int link);
 
 
 
-static void tech_init(private_t *tech_pvt, switch_core_session_t *session)
+/* Will init part of our private structure and setup all the read/write buffers */
+static switch_status_t tech_init(private_t *tech_pvt, switch_core_session_t *session)
 {
 	tech_pvt->read_frame.data = tech_pvt->databuf;
 	tech_pvt->read_frame.buflen = sizeof(tech_pvt->databuf);
@@ -138,6 +142,40 @@ static void tech_init(private_t *tech_pvt, switch_core_session_t *session)
 	switch_mutex_init(&tech_pvt->flag_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
 	switch_core_session_set_private(session, tech_pvt);
 	tech_pvt->session = session;
+
+    if (switch_core_codec_init(&tech_pvt->read_codec,
+							   "PCMA",
+							   NULL,
+							   8000,
+							   20,
+							   1,
+							   SWITCH_CODEC_FLAG_ENCODE | SWITCH_CODEC_FLAG_DECODE,
+							   NULL, switch_core_session_get_pool(tech_pvt->session)) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Can't load codec?\n");
+		return SWITCH_STATUS_GENERR;
+	} else {
+		if (switch_core_codec_init(&tech_pvt->write_codec,
+								   "PCMA",
+								   NULL,
+								   8000,
+								   20,
+								   1,
+								   SWITCH_CODEC_FLAG_ENCODE | SWITCH_CODEC_FLAG_DECODE,
+								   NULL, switch_core_session_get_pool(tech_pvt->session)) != SWITCH_STATUS_SUCCESS) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Can't load codec?\n");
+			switch_core_codec_destroy(&tech_pvt->read_codec);
+			return SWITCH_STATUS_GENERR;
+		}
+	}
+
+	switch_core_session_set_read_codec(tech_pvt->session, &tech_pvt->read_codec);
+	switch_core_session_set_write_codec(tech_pvt->session, &tech_pvt->write_codec);
+	switch_set_flag_locked(tech_pvt, TFLAG_CODEC);
+	tech_pvt->read_frame.codec = &tech_pvt->read_codec;
+	switch_set_flag_locked(tech_pvt, TFLAG_IO);
+
+	return SWITCH_STATUS_SUCCESS;
+
 }
 
 /* 
@@ -226,6 +264,15 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 		switch_core_codec_destroy(&tech_pvt->write_codec);
 	}
 
+    try {
+        k3l->command(tech_pvt->Kchannel, CM_DISCONNECT, NULL);
+    }
+    catch(K3LAPI::failed_command & e)
+    {
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "WE COULD NOT HANGUP THE CHANNEL! rc:%d\n", e.rc);
+        return SWITCH_STATUS_TERM;
+    }
+
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "%s CHANNEL HANGUP\n", switch_channel_get_name(channel));
 	switch_mutex_lock(globals.mutex);
@@ -302,6 +349,9 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
 	tech_pvt->read_frame.flags = SFF_NONE;
 	*frame = NULL;
 
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Are we being called?");
+
+
 	while (switch_test_flag(tech_pvt, TFLAG_IO)) {
 
 		if (switch_test_flag(tech_pvt, TFLAG_BREAK)) {
@@ -349,6 +399,8 @@ static switch_status_t channel_write_frame(switch_core_session_t *session, switc
 	switch_channel_t *channel = NULL;
 	private_t *tech_pvt = NULL;
 	//switch_frame_t *pframe;
+
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Are we being called?");
 
 	channel = switch_core_session_get_channel(session);
 	assert(channel != NULL);
@@ -417,6 +469,10 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 													switch_caller_profile_t *outbound_profile,
 													switch_core_session_t **new_session, switch_memory_pool_t **pool, switch_originate_flag_t flags)
 {
+
+   	char *argv[4] = { 0 };
+	int argc = 0;
+
 	if ((*new_session = switch_core_session_request(khomp_endpoint_interface, SWITCH_CALL_DIRECTION_OUTBOUND, pool)) != 0) {
 		private_t *tech_pvt;
 		switch_channel_t *channel;
@@ -438,6 +494,24 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 			snprintf(name, sizeof(name), "Khomp/%s", outbound_profile->destination_number);
 			switch_channel_set_name(channel, name);
 
+            /* Let's setup our own vars on tech_pvt */
+            if ((argc = switch_separate_string(outbound_profile->destination_number, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 4)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string. Should be on the format:[Khomp/BOARD/LINK/CHANNEL]\n");
+                return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
+            }
+            else
+            {
+                tech_pvt->Kdevice = atoi(argv[0]);
+                tech_pvt->Klink = atoi(argv[1]);
+                tech_pvt->Kchannel = atoi(argv[2]);
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing out from Board:%d, Link:%d, Channel:%d.\n",
+                                                                    tech_pvt->Kdevice,
+                                                                    tech_pvt->Klink,
+                                                                    tech_pvt->Kchannel);
+
+            }
+
 			caller_profile = switch_caller_profile_clone(*new_session, outbound_profile);
 			switch_channel_set_caller_profile(channel, caller_profile);
 			tech_pvt->caller_profile = caller_profile;
@@ -452,6 +526,21 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 		switch_channel_set_flag(channel, CF_OUTBOUND);
 		switch_set_flag_locked(tech_pvt, TFLAG_OUTBOUND);
 		switch_channel_set_state(channel, CS_INIT);
+
+        try {
+            /* Lets make the call! */
+            char params[ 255 ];
+            sprintf(params, "dest_addr=\"%s\"", argv[3]);
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
+            k3l->command(tech_pvt->Kdevice,tech_pvt->Kchannel, CM_MAKE_CALL, params); 
+        }
+        /* TODO: Cmon learn how to catch already! */
+        catch(K3LAPI::failed_command & e)
+        {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not place call! Cause: code%d and rc%d.\n", e.code, e.rc);
+            return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
+        }
+
 		return SWITCH_CAUSE_SUCCESS;
 	}
 
