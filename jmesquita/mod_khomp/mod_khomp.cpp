@@ -130,6 +130,7 @@ static switch_status_t channel_kill_channel(switch_core_session_t *session, int 
 /* My function prototypes */
 static void printBoardsInfo(switch_stream_handle_t*);
 static const char* linkStatus(unsigned int device, unsigned int link);
+static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e);
 
 
 
@@ -661,12 +662,13 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Starting K3L...\n");
     try {
         k3l->start();
-    } catch (...) {
-        /* TODO: Catch the proper error and display it. */
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "K3L not started.");
+    } catch (K3LAPI::start_failed & e) {
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "K3L not started. Reason:%s.\n", e.msg.c_str());
         return SWITCH_STATUS_TERM;
     }
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "K3L started.\n");
+
+    k3lRegisterEventHandler( EventCallBack );
 
     /* Add all the specific API functions */
     SWITCH_ADD_API(api_interface, "khomp", "Khomp Menu", khomp, KHOMP_SYNTAX);
@@ -928,6 +930,27 @@ static void printBoardsInfo(switch_stream_handle_t* stream) {
     stream->write_function(stream, " ------------------------------------------------------------------\n");
 }
 /* End of helper functions */
+
+
+static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
+{				
+    /* TODO: We should hash things to make it statful */
+    switch(e->Code)
+    {
+        case EV_NEW_CALL:   
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New call on %u to %s.\n", obj, k3l->get_param(e, "dest_addr").c_str());
+            break;
+        case EV_DISCONNECT:   
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Called party dropped the call on: %u. Releasing channel.\n", obj);
+            k3l->command(e->DeviceId, obj, CM_DISCONNECT, NULL);
+            break;
+        default:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New Event has just arrived on %u with untreated code: %x\n", obj, e->Code);
+            break;
+    }
+
+    return ksSuccess;
+}
 
 
 /* For Emacs:
