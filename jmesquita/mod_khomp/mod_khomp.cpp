@@ -30,7 +30,7 @@
  *
  */
 
-#define KHOMP_SYNTAX "khomp show [info|links]"
+#define KHOMP_SYNTAX "khomp show [info|links|channels]"
 
 /* Our includes */
 #include "k3lapi.hpp"
@@ -127,9 +127,11 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
 static switch_status_t channel_write_frame(switch_core_session_t *session, switch_frame_t *frame, switch_io_flag_t flags, int stream_id);
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig);
 
-/* My function prototypes */
-static void printBoardsInfo(switch_stream_handle_t*);
+/* Helper function prototypes */
+static void printSystemSummary(switch_stream_handle_t*);
 static const char* linkStatus(unsigned int device, unsigned int link);
+static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
+/* Handles callbacks and events from the boards */
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e);
 
 
@@ -266,7 +268,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 	}
 
     try {
-        k3l->command(tech_pvt->Kchannel, CM_DISCONNECT, NULL);
+        k3l->command(tech_pvt->Kdevice, tech_pvt->Kchannel, CM_DISCONNECT, NULL);
     }
     catch(K3LAPI::failed_command & e)
     {
@@ -275,7 +277,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
     }
 
 
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "%s CHANNEL HANGUP\n", switch_channel_get_name(channel));
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "%s Originator Hangup.\n", switch_channel_get_name(channel));
 	switch_mutex_lock(globals.mutex);
 	globals.calls--;
 	if (globals.calls < 0) {
@@ -434,6 +436,7 @@ static switch_status_t channel_answer_channel(switch_core_session_t *session)
 	tech_pvt = static_cast<private_t*>(switch_core_session_get_private(session));
 	assert(tech_pvt != NULL);
 
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "When the fuck is this called?.\n");
 
 	return SWITCH_STATUS_SUCCESS;
 }
@@ -443,6 +446,8 @@ static switch_status_t channel_receive_message(switch_core_session_t *session, s
 {
 	switch_channel_t *channel;
 	private_t *tech_pvt;
+
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "When the fuck is this called?.\n");
 
 	channel = switch_core_session_get_channel(session);
 	assert(channel != NULL);
@@ -535,10 +540,9 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
             k3l->command(tech_pvt->Kdevice,tech_pvt->Kchannel, CM_MAKE_CALL, params); 
         }
-        /* TODO: Cmon learn how to catch already! */
         catch(K3LAPI::failed_command & e)
         {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not place call! Cause: code%d and rc%d.\n", e.code, e.rc);
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not place call! Cause: code%x and rc%d.\n", e.code, e.rc);
             return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
         }
 
@@ -740,7 +744,7 @@ SWITCH_STANDARD_API(khomp)
 	if (argv[0] && !strncasecmp(argv[0], "show", 4)) {
         /* Show the API summary and information */
         if (argv[1] && !strncasecmp(argv[1], "info", 4)) {
-            printBoardsInfo(stream);
+            printSystemSummary(stream);
         }
         /* Show all the links and their status */
         if (argv[1] && !strncasecmp(argv[1], "links", 5)) {
@@ -759,6 +763,10 @@ SWITCH_STANDARD_API(khomp)
             }
             stream->write_function(stream, "-------------------------------------------\n");
         }
+        // Show all channels from all boards and all links
+        if (argv[1] && !strncasecmp(argv[1], "channels", 8)) {
+            printChannels(stream, NULL, NULL);
+        }
 
 	} else {
 		stream->write_function(stream, "USAGE: %s\n", KHOMP_SYNTAX);
@@ -771,6 +779,64 @@ done:
 }
 
 /* Helper functions */
+static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link) {
+    if (!device) {
+        // Print all channels from all boards and links
+		stream->write_function(stream, "|--------- Khomp ----------|\n");
+		stream->write_function(stream, "| Board | Channel | Status |\n");
+        for (int board=0 ; board < k3l->device_count() ; board++) {
+            for (int channel=0 ; channel < k3l->channel_count(board) ; channel++) {
+                try {
+                    K3L_CHANNEL_CONFIG channelConfig;
+                    channelConfig = k3l->channel_config( board, channel );
+                }
+                catch (...){
+                    stream->write_function(stream, "OOOPSS. Something went wrong, cleanup this mess!\n");
+                    return;
+                }
+                K3L_CHANNEL_STATUS status;
+                if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess) {
+                    stream->write_function(stream, "Damn, again something bad happened.\n");
+                    return;
+                }
+                switch(status.AddInfo) {
+                    case kecsFree: 
+                        stream->write_function(stream, "| %6u| %8u| Free |\n", board, channel);
+                        break;
+                    case kecsBusy: 
+                        stream->write_function(stream, "| %6u| %8u| Busy |\n", board, channel);
+                        break;
+                    case kecsOutgoing: 
+                        stream->write_function(stream, "| %6u| %8u| Outgoing |\n", board, channel);
+                        break;
+                    case kecsIncoming: 
+                        stream->write_function(stream, "| %6u| %8u| Incoming |\n", board, channel);
+                        break;
+                    case kecsLocked:
+                        stream->write_function(stream, "| %6u| %8u| Locked |\n", board, channel);
+                        break;
+                    case kecsOutgoingLock:
+                        stream->write_function(stream, "| %6u| %8u| OutgoingLock |\n", board, channel);
+                        break;
+                    case kecsLocalFail:
+                        stream->write_function(stream, "| %6u| %8u| LocalFail |\n", board, channel);
+                        break;
+                    case kecsIncomingLock:
+                        stream->write_function(stream, "| %6u| %8u| IncomingLock |\n", board, channel);
+                        break;
+                    case kecsRemoteLock:
+                        stream->write_function(stream, "| %6u| %8u| RemoteLock |\n", board, channel);
+                        break;
+                    default:
+                        stream->write_function(stream, "| %6u| %8u| UNKNOWN : %x |\n", board, channel, status.AddInfo);
+                }
+                        
+            }
+        }
+        stream->write_function(stream, "----------------------------\n");
+    }
+}
+
 static const char * linkStatus(unsigned int device, unsigned int link)
 {
 
@@ -828,7 +894,7 @@ static const char * linkStatus(unsigned int device, unsigned int link)
 }
 
 
-static void printBoardsInfo(switch_stream_handle_t* stream) {
+static void printSystemSummary(switch_stream_handle_t* stream) {
 
     K3L_API_CONFIG apiCfg;
 
@@ -934,11 +1000,20 @@ static void printBoardsInfo(switch_stream_handle_t* stream) {
 
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
 {				
-    /* TODO: We should hash things to make it statful */
+    /* TODO: We should hash things to make it stateful */
     switch(e->Code)
     {
         case EV_NEW_CALL:   
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New call on %u to %s.\n", obj, k3l->get_param(e, "dest_addr").c_str());
+            try {
+                k3l->command(e->DeviceId, obj, CM_RINGBACK, NULL); 
+                k3l->command(e->DeviceId, obj, CM_CONNECT, NULL); 
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Accepeted the call.\n");
+            }
+            catch (K3LAPI::failed_command & err)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Something went wrong here!\n");
+            }
             break;
         case EV_DISCONNECT:   
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Called party dropped the call on: %u. Releasing channel.\n", obj);
