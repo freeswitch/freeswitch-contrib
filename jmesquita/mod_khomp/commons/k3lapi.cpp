@@ -22,7 +22,7 @@ K3LAPI::~K3LAPI()
 void K3LAPI::start(void)
 {
 	/* tie the used k3l to the compiled k3l version */
-	char *ret = k3lStart(k3lApiMajorVersion, k3lApiMinorVersion, 0); //k3lApiBuildVersion);
+	char *ret = k3lStart(2, 0, 0); //k3lApiMajorVersion, k3lApiMinorVersion, 0); //k3lApiBuildVersion);
 	
 	if (ret && *ret)
 		throw start_failed(ret);
@@ -129,6 +129,7 @@ void K3LAPI::init(void)
 	_device_type	= new KDeviceType[_device_count];
 	_device_config  = new device_conf_type[_device_count];
 	_channel_config = new channel_ptr_conf_type[_device_count];
+	_KChannel       = new KChannel_ptr_t[_device_count];
 	_link_config    = new link_ptr_conf_type[_device_count];
 	_channel_count	= new unsigned int[_device_count];
 	_link_count		= new unsigned int[_device_count];
@@ -147,12 +148,15 @@ void K3LAPI::init(void)
 			
 		/* caches each channel config */
 		_channel_config[dev] = new channel_conf_type[_channel_count[dev]];
+        _KChannel[dev] = new KChannel_t[_channel_count[dev]];
 
 		for (unsigned int obj = 0; obj < _channel_count[dev]; obj++)
 		{
 			if (k3lGetDeviceConfig(dev, ksoChannel + obj, &(_channel_config[dev][obj]), 
 									sizeof(_channel_config[dev][obj])) != ksSuccess)
+            {
 				throw start_failed("k3lGetDeviceConfig(channel)");
+            }
 		}
 
 		/* adjust link count for device */

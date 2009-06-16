@@ -98,9 +98,8 @@ struct private_object {
 	switch_mutex_t *mutex;
 	switch_mutex_t *flag_mutex;
 	//switch_thread_cond_t *cond;
-    unsigned int Kdevice;    // Represent de board we are making the call from
-    unsigned int Klink;      // Represent the link we are making the call from
-    unsigned int Kchannel;   // Represent the channel we are making the call from
+    unsigned int KDeviceId;    // Represent de board we are making the call from
+    unsigned int KChannel;   // Represent the channel we are making the call from
 };
 
 typedef struct private_object private_t;
@@ -128,8 +127,8 @@ static switch_status_t channel_write_frame(switch_core_session_t *session, switc
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig);
 
 /* Helper function prototypes */
-static void printSystemSummary(switch_stream_handle_t*);
-static const char* linkStatus(unsigned int device, unsigned int link);
+static void printSystemSummary(switch_stream_handle_t* stream);
+static void printLinks(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
 static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
 /* Handles callbacks and events from the boards */
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e);
@@ -268,7 +267,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 	}
 
     try {
-        k3l->command(tech_pvt->Kdevice, tech_pvt->Kchannel, CM_DISCONNECT, NULL);
+        k3l->command(tech_pvt->KDeviceId, tech_pvt->KChannel, CM_DISCONNECT, NULL);
     }
     catch(K3LAPI::failed_command & e)
     {
@@ -352,8 +351,6 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
 	tech_pvt->read_frame.flags = SFF_NONE;
 	*frame = NULL;
 
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Are we being called?");
-
 
 	while (switch_test_flag(tech_pvt, TFLAG_IO)) {
 
@@ -403,8 +400,6 @@ static switch_status_t channel_write_frame(switch_core_session_t *session, switc
 	private_t *tech_pvt = NULL;
 	//switch_frame_t *pframe;
 
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Are we being called?");
-
 	channel = switch_core_session_get_channel(session);
 	assert(channel != NULL);
 
@@ -435,8 +430,6 @@ static switch_status_t channel_answer_channel(switch_core_session_t *session)
 
 	tech_pvt = static_cast<private_t*>(switch_core_session_get_private(session));
 	assert(tech_pvt != NULL);
-
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "When the fuck is this called?.\n");
 
 	return SWITCH_STATUS_SUCCESS;
 }
@@ -476,7 +469,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 													switch_core_session_t **new_session, switch_memory_pool_t **pool, switch_originate_flag_t flags)
 {
 
-   	char *argv[4] = { 0 };
+   	char *argv[3] = { 0 };
 	int argc = 0;
 
 	if ((*new_session = switch_core_session_request(khomp_endpoint_interface, SWITCH_CALL_DIRECTION_OUTBOUND, pool)) != 0) {
@@ -501,20 +494,19 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 			switch_channel_set_name(channel, name);
 
             /* Let's setup our own vars on tech_pvt */
-            if ((argc = switch_separate_string(outbound_profile->destination_number, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 4)
+            if ((argc = switch_separate_string(outbound_profile->destination_number, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 3)
             {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string. Should be on the format:[Khomp/BOARD/LINK/CHANNEL]\n");
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string. Should be on the format:[Khomp/BOARD/CHANNEL]\n");
                 return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
             }
             else
             {
-                tech_pvt->Kdevice = atoi(argv[0]);
-                tech_pvt->Klink = atoi(argv[1]);
-                tech_pvt->Kchannel = atoi(argv[2]);
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing out from Board:%d, Link:%d, Channel:%d.\n",
-                                                                    tech_pvt->Kdevice,
-                                                                    tech_pvt->Klink,
-                                                                    tech_pvt->Kchannel);
+                tech_pvt->KDeviceId = atoi(argv[0]);
+                tech_pvt->KChannel = atoi(argv[1]);
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
+                                                                    argv[2],
+                                                                    tech_pvt->KDeviceId,
+                                                                    tech_pvt->KChannel);
 
             }
 
@@ -524,6 +516,8 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Doh! no caller profile\n");
 			switch_core_session_destroy(new_session);
+            /* Destroy the channel session */
+            k3l->setSession(tech_pvt->KDeviceId, tech_pvt->KChannel, NULL);
 			return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
 		}
 
@@ -536,15 +530,18 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
         try {
             /* Lets make the call! */
             char params[ 255 ];
-            sprintf(params, "dest_addr=\"%s\"", argv[3]);
+            sprintf(params, "dest_addr=\"%s\"", argv[2]);
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
-            k3l->command(tech_pvt->Kdevice,tech_pvt->Kchannel, CM_MAKE_CALL, params); 
+            k3l->command(tech_pvt->KDeviceId,tech_pvt->KChannel, CM_MAKE_CALL, params); 
         }
         catch(K3LAPI::failed_command & e)
         {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not place call! Cause: code%x and rc%d.\n", e.code, e.rc);
             return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
         }
+
+        /* Add the new session the the channel's info */
+        k3l->setSession(tech_pvt->KDeviceId, tech_pvt->KChannel, *new_session);
 
 		return SWITCH_CAUSE_SUCCESS;
 	}
@@ -718,6 +715,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
 
 /* 
    khomp API definition
+   TODO: Add as xml modifier
 */
 SWITCH_STANDARD_API(khomp)
 {
@@ -748,23 +746,12 @@ SWITCH_STANDARD_API(khomp)
         }
         /* Show all the links and their status */
         if (argv[1] && !strncasecmp(argv[1], "links", 5)) {
-            for(int device=0 ; device < k3l->device_count() ; device++)
-            {
-                stream->write_function(stream, "___________________________________________\n");
-                stream->write_function(stream, "|--------------Khomp Links----------------|\n");
-                stream->write_function(stream, "|----Board----|----Link----|----Status----|\n");
-                for(int link=0 ; link < k3l->link_count(device) ; link++)
-                {
-                    stream->write_function(stream, "|%13d|%12d|%s|\n"
-                                            , device
-                                            , link
-                                            , linkStatus(device, link));
-                }
-            }
-            stream->write_function(stream, "-------------------------------------------\n");
+            /* TODO: Let show specific boards/links */
+            printLinks(stream, NULL, NULL);
         }
         // Show all channels from all boards and all links
         if (argv[1] && !strncasecmp(argv[1], "channels", 8)) {
+            /* TODO: Let show specific channels */
             printChannels(stream, NULL, NULL);
         }
 
@@ -799,33 +786,15 @@ static void printChannels(switch_stream_handle_t* stream, unsigned int device, u
                     stream->write_function(stream, "Damn, again something bad happened.\n");
                     return;
                 }
-                switch(status.AddInfo) {
-                    case kecsFree: 
+                switch(status.CallStatus) {
+                    case kcsFree: 
                         stream->write_function(stream, "| %6u| %8u| Free |\n", board, channel);
                         break;
-                    case kecsBusy: 
-                        stream->write_function(stream, "| %6u| %8u| Busy |\n", board, channel);
-                        break;
-                    case kecsOutgoing: 
+                    case kcsOutgoing: 
                         stream->write_function(stream, "| %6u| %8u| Outgoing |\n", board, channel);
                         break;
-                    case kecsIncoming: 
+                    case kcsIncoming: 
                         stream->write_function(stream, "| %6u| %8u| Incoming |\n", board, channel);
-                        break;
-                    case kecsLocked:
-                        stream->write_function(stream, "| %6u| %8u| Locked |\n", board, channel);
-                        break;
-                    case kecsOutgoingLock:
-                        stream->write_function(stream, "| %6u| %8u| OutgoingLock |\n", board, channel);
-                        break;
-                    case kecsLocalFail:
-                        stream->write_function(stream, "| %6u| %8u| LocalFail |\n", board, channel);
-                        break;
-                    case kecsIncomingLock:
-                        stream->write_function(stream, "| %6u| %8u| IncomingLock |\n", board, channel);
-                        break;
-                    case kecsRemoteLock:
-                        stream->write_function(stream, "| %6u| %8u| RemoteLock |\n", board, channel);
                         break;
                     default:
                         stream->write_function(stream, "| %6u| %8u| UNKNOWN : %x |\n", board, channel, status.AddInfo);
@@ -837,60 +806,98 @@ static void printChannels(switch_stream_handle_t* stream, unsigned int device, u
     }
 }
 
-static const char * linkStatus(unsigned int device, unsigned int link)
+static void printLinks(switch_stream_handle_t* stream, unsigned int device, unsigned int link)
 {
 
-    K3L_LINK_CONFIG & config = k3l->link_config(device, link);
-    K3L_LINK_STATUS   status;
-    
-    KLibraryStatus ret = (KLibraryStatus) k3lGetDeviceStatus (device, link + ksoLink, &status, sizeof(status));
+    stream->write_function(stream, "___________________________________________\n");
+    stream->write_function(stream, "|--------------Khomp Links----------------|\n");
+    stream->write_function(stream, "|----Board----|----Link----|----Status----|\n");
 
-    if (ret == ksSuccess)
-    {
-        switch (config.Signaling)
+    // We want to see all links from all devices
+    if (!device) {
+        for(int device=0 ; device < k3l->device_count() ; device++)
         {
-            case ksigInactive:
-                return "[ksigInactive]";
+            K3L_LINK_CONFIG & config = k3l->link_config(device, link);
+            K3L_LINK_STATUS   status;
 
-            case ksigAnalog:
-                return "[ksigAnalog]";
-
-            case ksigSIP:
-                return "[ksigSIP]";
-
-            case ksigOpenCAS:
-            case ksigOpenR2:
-            case ksigR2Digital:
-            case ksigUserR2Digital:
-            case ksigOpenCCS:
-            case ksigPRI_EndPoint:
-            case ksigPRI_Network:
-            case ksigPRI_Passive:
-            case ksigLineSide:
-            case ksigCAS_EL7:
-            case ksigAnalogTerminal:
-                if (kesOk == status.E1)
+            for(int link=0 ; link < k3l->link_count(device) ; link++)
+            {
+                const char * E1Status = "";
+                if (k3lGetDeviceStatus (device, link + ksoLink, &status, sizeof(status)) == ksSuccess)
                 {
-                    return "kesOk";
-                }
-                else
-                {
-                    if (kesSignalLost & status.E1)         return "SignalLost";
-                    if (kesNetworkAlarm & status.E1)       return "NetworkAlarm";
-                    if (kesFrameSyncLost & status.E1)      return "FrameSyncLost";
-                    if (kesMultiframeSyncLost & status.E1) return "MultiframeSyncLost";
-                    if (kesRemoteAlarm & status.E1)        return "RemoteAlarm";
-                    if (kesHighErrorRate & status.E1)      return "HighErrorRate";
-                    if (kesUnknownAlarm & status.E1)       return "UnknownAlarm";
-                    if (kesE1Error & status.E1)            return "E1Error";
+                    switch (config.Signaling)
+                    {
+                        case ksigInactive:
+                            E1Status = "[ksigInactive]";
+                            break;
 
+                        case ksigAnalog:
+                            E1Status = "[ksigAnalog]";
+                            break;
+
+                        case ksigSIP:
+                            E1Status = "[ksigSIP]";
+                            break;
+
+                        case ksigOpenCAS:
+                        case ksigOpenR2:
+                        case ksigR2Digital:
+                        case ksigUserR2Digital:
+                        case ksigOpenCCS:
+                        case ksigPRI_EndPoint:
+                        case ksigPRI_Network:
+                        case ksigPRI_Passive:
+                        case ksigLineSide:
+                        case ksigCAS_EL7:
+                        case ksigAnalogTerminal:
+                            switch (status.E1) {
+
+                                case (kesOk):
+                                    E1Status = "kesOk";
+                                    break;
+                                case (kesSignalLost):
+                                    E1Status = "kesSignalLost";
+                                    break;
+                                case (kesNetworkAlarm):
+                                    E1Status = "kesNetworkAlarm";
+                                    break;
+                                case (kesFrameSyncLost):
+                                    E1Status = "kesFrameSyncLost";
+                                    break;
+                                case (kesMultiframeSyncLost):
+                                    E1Status = "kesMultiframeSyncLost";
+                                    break;
+                                case (kesRemoteAlarm):
+                                    E1Status = "kesRemoteAlarm";
+                                    break;
+                                case (kesHighErrorRate):
+                                    E1Status = "kesHighErrorRate";
+                                    break;
+                                case (kesUnknownAlarm):
+                                    E1Status = "kesUnknownAlarm";
+                                    break;
+                                case (kesE1Error):
+                                    E1Status = "kesE1Error";
+                                    break;
+                                case (kesNotInitialized):
+                                    E1Status = "kesNotInitialized";
+                                    break;
+                                default:
+                                    E1Status = "UnknownE1Status";
+                            }
+                            break;
+                        default:
+                            E1Status = "NotImplementedBoard";
+                    }
                 }
-            default:
-                return "NotImplementedBoard";
+                stream->write_function(stream, "|%13d|%12d|%s|\n"
+                                        , device
+                                        , link
+                                        , E1Status);
+            }
         }
     }
-
-    return "<unknown>";
+    stream->write_function(stream, "-------------------------------------------\n");
 }
 
 
@@ -1000,28 +1007,139 @@ static void printSystemSummary(switch_stream_handle_t* stream) {
 
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
 {				
-    /* TODO: We should hash things to make it stateful */
+    /* TODO: How do we make sure channels inside FreeSWITCH only change to valid states on K3L? */
     switch(e->Code)
     {
         case EV_NEW_CALL:   
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New call on %u to %s.\n", obj, k3l->get_param(e, "dest_addr").c_str());
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "New call on %u to %s. [EV_NEW_CALL]\n", obj, k3l->get_param(e, "dest_addr").c_str());
             try {
                 k3l->command(e->DeviceId, obj, CM_RINGBACK, NULL); 
                 k3l->command(e->DeviceId, obj, CM_CONNECT, NULL); 
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Accepeted the call.\n");
             }
             catch (K3LAPI::failed_command & err)
             {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Something went wrong here!\n");
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not set board channel status! [EV_NEW_CALL]\n");
             }
             break;
         case EV_DISCONNECT:   
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Called party dropped the call on: %u. Releasing channel.\n", obj);
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
+            /* Do we need to release on the board? */
             k3l->command(e->DeviceId, obj, CM_DISCONNECT, NULL);
+            try {
+                k3l->setSession(e->DeviceId, obj, NULL);
+            }
+            catch(K3LAPI::invalid_channel & err)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
+            }
             break;
+        case EV_CONNECT:
+            switch_channel_t *channel;
+            /* TODO: We should check if the session is there before getting the channel. */
+            channel = switch_core_session_get_channel(k3l->getSession(e->DeviceId ,obj));
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
+            switch_channel_mark_answered(channel);
+            break;
+        case EV_CALL_SUCCESS:
+            /* TODO: Should we bridge here? Maybe check a certain variable if we should generate ringback? */
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call on board %u, channel %u is ringing. [EV_CALL_SUCESS]\n", e->DeviceId, obj);
+            break;
+        case EV_CHANNEL_FREE:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Channel %u on board %u is now free. [EV_CHANNEL_FREE]\n", obj, e->DeviceId);
+            break;
+        case EV_NO_ANSWER:
+            /* TODO: Destroy sessions and channels */
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "No one answered the call on board %u channel %u. [EV_NO_ANSWER]\n", e->DeviceId, obj);
+            break;
+        case EV_CALL_ANSWER_INFO:
+            {
+                /* TODO: Set channel variable if we get this event */
+                /* TODO: Fire an event so ESL can get it? */
+                /* Call Analyser has to be enabled on k3lconfig */
+                const char * startInfo = "";
+                switch (e->AddInfo)
+                {
+                    case (kcsiHumanAnswer):
+                        startInfo = "kcsiHumanAnswer";
+                        break;
+                    case (kcsiAnsweringMachine):
+                        startInfo = "kcsiAnsweringMachine";
+                        break;
+                    case (kcsiCellPhoneMessageBox):
+                        startInfo = "kcsiCellPhoneMessageBox";
+                        break;
+                    case (kcsiUnknown):
+                        startInfo = "kcsiUnknown";
+                        break;
+                    case (kcsiCarrierMessage):
+                        startInfo = "kcsiCarrierMessage";
+                        break;
+                    default:
+                        startInfo = "Error or unknown code!";
+
+                }
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel %u, board %u detected: \"%s\". [EV_CALL_ANSWER_INFO]\n", e->DeviceId, obj, startInfo);
+                    break;
+            }
+        case EV_DTMF_DETECTED:
+            /* TODO: What to do with DTMF? */
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Board %u detected DTMF (%d) on channel %u. [EV_DTMF_DETECTED]\n", e->DeviceId, e->AddInfo, obj);
+            break;
+        case EV_DTMF_SEND_FINISH:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel %u on board %u has sucessfully generated DTMF. [EV_DTMF_SEND_FINNISH]\n", obj, e->DeviceId);
+            break;
+        case EV_CALL_FAIL:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Channel %u on board %u reported call fail. [EV_CALL_FAIL]\n", obj, e->DeviceId);
+            break;
+        case EV_CHANNEL_FAIL:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Channel %u on board %u reported failure. [EV_CHANNEL_FAIL]\n", obj, e->DeviceId);
+            break;
+        case EV_LINK_STATUS:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Link %u on board %u changed. [EV_LINK_STATUS]\n", e->DeviceId, obj);
+            break;
+        case EV_PHYSICAL_LINK_DOWN:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Link %u on board %u is DOWN. [EV_PHYSICAL_LINK_DOWN]\n", e->DeviceId, obj);
+            break;
+        case EV_PHYSICAL_LINK_UP:
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Link %u on board %u is UP. [EV_PHYSICAL_LINK_UP]\n", e->DeviceId, obj);
+            break;
+        case EV_INTERNAL_FAIL:
+            {
+                const char * msg = "";
+                switch(e->AddInfo)
+                {
+                    case kifInterruptCtrl:
+                        msg = "kifInterruptCtrl";
+                        break;
+                    case kifCommunicationFail:
+                        msg = "kifCommunicationFail";
+                        break;
+                    case kifProtocolFail:
+                        msg = "kifProtocolFail";
+                        break;
+                    case kifInternalBuffer:
+                        msg = "kifInternalBuffer";
+                        break;
+                    case kifMonitorBuffer:
+                        msg = "kifMonitorBuffer";
+                        break;
+                    case kifInitialization:
+                        msg = "kifInitialization";
+                        break;
+                    case kifInterfaceFail:
+                        msg = "kifInterfaceFail";
+                        break;
+                    case kifClientCommFail:
+                        msg = "kifClientCommFail";
+                        break;
+                    default:
+                        msg = "UnknownError";
+                }
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "This is a fatal error and we will not recover. Reason: %s. [EV_INTERNAL_FAIL]\n", msg);
+                break;
+            }
         default:
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New Event has just arrived on %u with untreated code: %x\n", obj, e->Code);
-            break;
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New Event has just arrived on %u with untreated code: %x\n", obj, e->Code);
     }
 
     return ksSuccess;

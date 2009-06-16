@@ -1,10 +1,7 @@
 #include <string>
 
 #include <k3l.h>
-
-#ifndef KHOMP_COMMONS_WITH_CHANNEL
-# include <k3lVersion.h>
-#endif
+#include <k3lVersion.h>
 
 #ifdef __GNUC_PREREQ
 #if __GNUC_PREREQ(4,3)
@@ -14,6 +11,12 @@
 
 #ifndef INCLUDED_K3LAPI_HPP
 #define INCLUDED_K3LAPI_HPP
+
+/* FreeSWITCH include */
+extern "C" {
+    #include "switch.h"
+}
+
 
 struct K3LAPI
 {
@@ -78,12 +81,29 @@ struct K3LAPI
 		std::string name;
 		KLibraryStatus rc;
 	};
+
+    struct KChannel {
+        public:
+            KChannel() : _session(NULL){};
+            void setSession(switch_core_session_t * session)
+            {
+                _session = session;
+            }
+            switch_core_session_t * getSession()
+            {
+                return _session;
+            }
+        protected:
+            switch_core_session_t * _session;
+    };
 	
 	typedef K3L_DEVICE_CONFIG          device_conf_type;
 	typedef K3L_CHANNEL_CONFIG        channel_conf_type;
 	typedef K3L_CHANNEL_CONFIG *  channel_ptr_conf_type;
 	typedef K3L_LINK_CONFIG              link_conf_type;
 	typedef K3L_LINK_CONFIG *        link_ptr_conf_type;
+    typedef KChannel                         KChannel_t;
+    typedef KChannel_t *                 KChannel_ptr_t;
 
 	/* constructors/destructors */
 	
@@ -186,12 +206,27 @@ struct K3LAPI
 
 	void init(void);
 
+    void setSession(unsigned int boardId, unsigned int chanId, switch_core_session_t * session)
+    {
+		if (!valid_channel(boardId, chanId))
+			throw invalid_channel(boardId, chanId);
+        _KChannel[boardId][chanId].setSession(session);
+    }
+
+    switch_core_session_t * getSession(unsigned int boardId, unsigned int chanId)
+    {
+		if (!valid_channel(boardId, chanId))
+			throw invalid_channel(boardId, chanId);
+        return _KChannel[boardId][chanId].getSession();
+    }
+
  protected:
 
-	unsigned int           _device_count;
-	unsigned int *        _channel_count;
-	unsigned int *           _link_count;
-	
+	unsigned int              _device_count;
+	unsigned int *           _channel_count;
+	unsigned int *              _link_count;
+
+           KChannel_ptr_t *        _KChannel;
 	     device_conf_type *   _device_config;
 	channel_ptr_conf_type *  _channel_config;
 	   link_ptr_conf_type *     _link_config;
