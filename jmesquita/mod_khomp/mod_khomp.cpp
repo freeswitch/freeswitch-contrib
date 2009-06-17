@@ -132,6 +132,7 @@ static void printLinks(switch_stream_handle_t* stream, unsigned int device, unsi
 static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
 /* Handles callbacks and events from the boards */
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e);
+KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KChannel, K3L_EVENT * event);
 
 
 
@@ -530,7 +531,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
         try {
             /* Lets make the call! */
             char params[ 255 ];
-            sprintf(params, "dest_addr=\"%s\"", argv[2]);
+            sprintf(params, "dest_addr=\"%s\" orig_addr=\"%s\"", argv[2], outbound_profile->caller_id_number);
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
             k3l->command(tech_pvt->KDeviceId,tech_pvt->KChannel, CM_MAKE_CALL, params); 
         }
@@ -1004,6 +1005,104 @@ static void printSystemSummary(switch_stream_handle_t* stream) {
 }
 /* End of helper functions */
 
+/* Create a new channel on incoming call */
+KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KChannel, K3L_EVENT * event)
+{
+	switch_core_session_t *session = NULL;
+	private_t *tech_pvt = NULL;
+	switch_channel_t *channel = NULL;
+	char name[128];
+	
+	if (!(session = switch_core_session_request(khomp_endpoint_interface, SWITCH_CALL_DIRECTION_INBOUND, NULL))) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Initilization Error!\n");
+		return ksFail;
+	}
+	
+	switch_core_session_add_stream(session, NULL);
+	
+	tech_pvt = (private_t *) switch_core_session_alloc(session, sizeof(private_t));
+	assert(tech_pvt != NULL);
+	channel = switch_core_session_get_channel(session);
+	if (tech_init(tech_pvt, session) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Initilization Error!\n");
+		switch_core_session_destroy(&session);
+		return ksFail;
+	}
+	
+
+    /* Get all data from event */
+    std::string cidNum; 
+    std::string destination_number; 
+    try
+    {
+        cidNum = k3l->get_param(event, "orig_addr");
+        destination_number = k3l->get_param(event, "dest_addr");
+    }
+    catch ( K3LAPI::get_param_failed & err )
+    {
+        // TODO: Can we set NULL variables? What should we do if this fails?
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Could not get param %s on channel %u, board %u.\n", err.name.c_str(), KChannel, KDeviceId);
+    }
+
+	/*if (switch_strlen_zero(sigmsg->channel->caller_data.cid_num.digits)) {
+		if (!switch_strlen_zero(sigmsg->channel->caller_data.ani.digits)) {
+			switch_set_string(sigmsg->channel->caller_data.cid_num.digits, sigmsg->channel->caller_data.ani.digits);
+		} else {
+			switch_set_string(sigmsg->channel->caller_data.cid_num.digits, sigmsg->channel->chan_number);
+		}
+	}
+    */
+
+    /* Set the caller profile - Look at documentation */
+	tech_pvt->caller_profile = switch_caller_profile_new(switch_core_session_get_pool(session),
+														 "Khomp",
+														 "XML", // TODO: Dialplan module to use?
+                                                         NULL,
+                                                         NULL,
+														 NULL,
+                                                         cidNum.c_str(),
+                                                         NULL,
+                                                         NULL,
+														 (char *) modname,
+														 "default", // TODO: Context to look for on the dialplan?
+														 destination_number.c_str());
+
+	assert(tech_pvt->caller_profile != NULL);
+    /* END */
+
+    /* WHAT??? - Look at documentation */
+    //switch_set_flag(tech_pvt->caller_profile, SWITCH_CPF_NONE);
+    /* END */
+	
+    /* */
+	snprintf(name, sizeof(name), "Khomp/%u/%u/%s", KDeviceId, KChannel, tech_pvt->caller_profile->destination_number);
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Connect inbound channel %s\n", name);
+	switch_channel_set_name(channel, name);
+	switch_channel_set_caller_profile(channel, tech_pvt->caller_profile);
+    /* END */
+
+		
+	switch_channel_set_state(channel, CS_INIT);
+	if (switch_core_session_thread_launch(session) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Error spawning thread\n");
+		switch_core_session_destroy(&session);
+		return ksFail;
+	}
+
+    /* WHAT?
+	if (zap_channel_add_token(sigmsg->channel, switch_core_session_get_uuid(session), 0) != ZAP_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Error adding token\n");
+		switch_core_session_destroy(&session);
+		return ZAP_FAIL;
+	}
+    */
+
+    /* Set the session to the channel */
+    k3l->setSession(KDeviceId, KChannel, session);
+
+    return ksSuccess;
+}
+
 
 static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
 {				
@@ -1012,6 +1111,11 @@ static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
     {
         case EV_NEW_CALL:   
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "New call on %u to %s. [EV_NEW_CALL]\n", obj, k3l->get_param(e, "dest_addr").c_str());
+            if (khomp_channel_from_event(e->DeviceId, obj, e) != ksSuccess )
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Something bad happened while getting channel session. Device:%u/Channel:%u. [EV_CONNECT]\n", e->DeviceId, obj);
+                return ksFail;
+            }
             try {
                 k3l->command(e->DeviceId, obj, CM_RINGBACK, NULL); 
                 k3l->command(e->DeviceId, obj, CM_CONNECT, NULL); 
@@ -1021,24 +1125,46 @@ static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not set board channel status! [EV_NEW_CALL]\n");
             }
             break;
-        case EV_DISCONNECT:   
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
-            /* Do we need to release on the board? */
-            k3l->command(e->DeviceId, obj, CM_DISCONNECT, NULL);
-            try {
-                k3l->setSession(e->DeviceId, obj, NULL);
-            }
-            catch(K3LAPI::invalid_channel & err)
+        case EV_DISCONNECT:
             {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
+                switch_core_session_t * session = NULL;
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
+                try
+                {
+                    session = k3l->getSession(e->DeviceId, obj);
+                }
+                catch(K3LAPI::invalid_channel & err)
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Session does not exist on channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
+                }
+                if (channel_on_hangup(session) != SWITCH_STATUS_SUCCESS)
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
+                try
+                {
+                    k3l->setSession(e->DeviceId, obj, NULL);
+                }
+                catch(K3LAPI::invalid_channel & err)
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "We are trying to set session on an non existent channel: %u on board %u. Releasing channel. [EV_DISCONNECT]\n", obj, e->DeviceId);
+                }
+                /* Do we need to release on the board? */
+                k3l->command(e->DeviceId, obj, CM_DISCONNECT, NULL);
             }
             break;
         case EV_CONNECT:
-            switch_channel_t *channel;
-            /* TODO: We should check if the session is there before getting the channel. */
-            channel = switch_core_session_get_channel(k3l->getSession(e->DeviceId ,obj));
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
-            switch_channel_mark_answered(channel);
+            switch_core_session_t* session;
+            try
+            {
+                session = k3l->getSession(e->DeviceId ,obj);
+                switch_channel_t *channel;
+                channel = switch_core_session_get_channel(session);
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
+                switch_channel_mark_answered(channel);
+            }
+            catch (K3LAPI::invalid_session & err)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Something bad happened while getting channel session. Device:%u/Channel:%u. [EV_CONNECT]\n", e->DeviceId, obj);
+            }
             break;
         case EV_CALL_SUCCESS:
             /* TODO: Should we bridge here? Maybe check a certain variable if we should generate ringback? */
@@ -1095,7 +1221,7 @@ static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Channel %u on board %u reported failure. [EV_CHANNEL_FAIL]\n", obj, e->DeviceId);
             break;
         case EV_LINK_STATUS:
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Link %u on board %u changed. [EV_LINK_STATUS]\n", e->DeviceId, obj);
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Link %u on board %u changed. [EV_LINK_STATUS]\n", e->DeviceId, obj);
             break;
         case EV_PHYSICAL_LINK_DOWN:
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Link %u on board %u is DOWN. [EV_PHYSICAL_LINK_DOWN]\n", e->DeviceId, obj);

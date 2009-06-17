@@ -49,6 +49,15 @@ struct K3LAPI
 		int32         rc;
 	};
 
+	struct invalid_session
+	{
+		invalid_session(unsigned int _device, unsigned int _channel)
+		: device(_device), channel(_channel) {};
+		
+		unsigned int device;
+        unsigned int channel;
+	};
+
 	struct invalid_device
 	{
 		invalid_device(unsigned int _device)
@@ -215,9 +224,12 @@ struct K3LAPI
 
     switch_core_session_t * getSession(unsigned int boardId, unsigned int chanId)
     {
+        switch_core_session_t * session = NULL;
 		if (!valid_channel(boardId, chanId))
 			throw invalid_channel(boardId, chanId);
-        return _KChannel[boardId][chanId].getSession();
+        session = _KChannel[boardId][chanId].getSession();
+        if (session == NULL) { throw invalid_session(boardId, chanId); }
+        return session;
     }
 
  protected:
