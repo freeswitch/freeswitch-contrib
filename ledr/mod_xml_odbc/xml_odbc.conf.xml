@@ -1,0 +1,35 @@
+<configuration name="xml_odbc.conf" description="XML ODBC Configuration">
+  <bindings>
+    <binding name="directory">
+      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+
+      <param name="query-domain-key-user" value="SELECT
+                                                   dir_domains.id AS domain_id,
+                                                   dir_users.id AS user_id
+                                                 FROM
+                                                   dir_domains,
+                                                   dir_users,
+                                                   dir_user_attrs
+                                                 WHERE
+                                                   dir_domains.name = '%q' AND
+                                                   dir_user_attrs.name = '%q' AND
+                                                   dir_user_attrs.value = '%q' AND
+                                                   dir_domains.id = dir_users.dir_domain_id AND
+                                                   dir_users.id = dir_user_attrs.dir_user_id;"/>
+
+      <param name="query-domain-params" value="SELECT name, value FROM dir_domain_params WHERE dir_domain_id = '%q';"/>
+
+      <param name="query-domain-variables" value="SELECT name, value FROM dir_domain_variables WHERE dir_domain_id = '%q';"/>
+
+      <param name="query-user-attrs" value="SELECT name, value FROM dir_user_attrs WHERE dir_user_id = '%q';"/>
+
+      <param name="query-user-params" value="SELECT name, value FROM dir_user_params WHERE dir_user_id = '%q';"/>
+
+      <param name="query-user-variables" value="SELECT name, value FROM dir_user_variables WHERE dir_user_id = '%q';"/>
+
+      <param name="query-groups" value="SELECT dir_groups.name FROM dir_groups, dir_groups_users
+                                        WHERE dir_groups_users.dir_user_id = '%q' AND dir_groups_users.dir_group_id = dir_groups.id;"/>
+
+    </binding>
+  </bindings>
+</configuration>
