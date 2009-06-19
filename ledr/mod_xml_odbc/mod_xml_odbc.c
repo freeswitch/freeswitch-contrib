@@ -45,6 +45,37 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load);
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown);
 SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown, NULL);
 
+static switch_bool_t debug = SWITCH_FALSE;
+
+#define XML_ODBC_SYNTAX "[debug_on|debug_off]"
+
+SWITCH_STANDARD_API(xml_odbc_function)
+{
+	if (session) {
+		return SWITCH_STATUS_FALSE;
+	}
+
+	if (switch_strlen_zero(cmd)) {
+		goto usage;
+	}
+
+	if (!strcasecmp(cmd, "debug_on")) {
+		debug = SWITCH_TRUE;
+	} else if (!strcasecmp(cmd, "debug_off")) {
+		debug = SWITCH_FALSE;
+	} else {
+		goto usage;
+	}
+
+	stream->write_function(stream, "OK\n");
+	return SWITCH_STATUS_SUCCESS;
+
+  usage:
+	stream->write_function(stream, "USAGE: %s\n", XML_ODBC_SYNTAX);
+	return SWITCH_STATUS_SUCCESS;
+}
+
+
 typedef struct xml_binding {
 	char *bindings;
 } xml_binding_t;
@@ -287,7 +318,9 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 						}
 					}
 
-//switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG DUMP OF XML GENERATED:\n\n%s\n\n", switch_xml_toxml(xml, SWITCH_FALSE));
+					if (debug == SWITCH_TRUE) {
+						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of XML generated:\n%s", switch_xml_toxml(xml, SWITCH_FALSE));
+					}
 
 					free(dir_user);
 					dir_user = NULL;
@@ -432,7 +465,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 	switch_core_new_memory_pool(&globals.pool);
 	switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
 
-	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+	switch_api_interface_t *xml_odbc_api_interface;
 
 #ifndef SWITCH_HAVE_ODBC
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
@@ -441,6 +474,12 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 #endif
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC module loading...\n");
+
+	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+
+	SWITCH_ADD_API(xml_odbc_api_interface, "xml_odbc", "XML ODBC", xml_odbc_function, XML_ODBC_SYNTAX);
+	switch_console_set_complete("add xml_odbc debug_on");
+	switch_console_set_complete("add xml_odbc debug_off");
 
 	if (do_config() != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
