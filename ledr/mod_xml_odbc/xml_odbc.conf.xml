@@ -1,35 +1,97 @@
 <configuration name="xml_odbc.conf" description="XML ODBC Configuration">
+
   <bindings>
+<!--
+    <binding name="configuration">
+      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+      <param name="template" value="configuration"/>
+    </binding>
+-->
     <binding name="directory">
       <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
-
-      <param name="query-domain-key-user" value="SELECT
-                                                   dir_domains.id AS domain_id,
-                                                   dir_users.id AS user_id
-                                                 FROM
-                                                   dir_domains,
-                                                   dir_users,
-                                                   dir_user_attrs
-                                                 WHERE
-                                                   dir_domains.name = '%q' AND
-                                                   dir_user_attrs.name = '%q' AND
-                                                   dir_user_attrs.value = '%q' AND
-                                                   dir_domains.id = dir_users.dir_domain_id AND
-                                                   dir_users.id = dir_user_attrs.dir_user_id;"/>
-
-      <param name="query-domain-params" value="SELECT name, value FROM dir_domain_params WHERE dir_domain_id = '%q';"/>
-
-      <param name="query-domain-variables" value="SELECT name, value FROM dir_domain_variables WHERE dir_domain_id = '%q';"/>
-
-      <param name="query-user-attrs" value="SELECT name, value FROM dir_user_attrs WHERE dir_user_id = '%q';"/>
-
-      <param name="query-user-params" value="SELECT name, value FROM dir_user_params WHERE dir_user_id = '%q';"/>
-
-      <param name="query-user-variables" value="SELECT name, value FROM dir_user_variables WHERE dir_user_id = '%q';"/>
-
-      <param name="query-groups" value="SELECT dir_groups.name FROM dir_groups, dir_groups_users
-                                        WHERE dir_groups_users.dir_user_id = '%q' AND dir_groups_users.dir_group_id = dir_groups.id;"/>
-
+      <!-- <param name="template" value="directory"/> -->
+      <!-- <param name="template" value="not_found"/> -->
+      <param name="template" value="someuser"/>
     </binding>
+<!--
+    <binding name="dialplan">
+      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+      <param name="template" value="dialplan"/>
+    </binding>
+
+    <binding name="phrases">
+      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+      <param name="template" value="phrases"/>
+    </binding>
+-->
   </bindings>
+
+  <templates>
+
+    <template name="configuration">
+      <xml-odbc-do name="break-to" value="${section}" on-no-template-break-to="simple_configuration"/>
+    </template>
+
+    <template name="simple_configuration">
+      <document type="freeswitch/xml"> <!-- should this tag be automatically rendered first on xml_out and left out here ? -->
+        <configuration name="${section}">
+          <settings>
+            <xml-odbc-do name="query" value="
+              SELECT
+                name, value
+              FROM
+                cnf_settings
+              WHERE
+                hostname = '${hostname}' AND
+                section = '${section}';">
+              <param name="${name}" value="${value}"/>
+            </xml-odbc-do>
+          </settings>
+        </configuration>
+      </document>
+    </template>
+  
+    <template name="not_found">
+      <document type="freeswitch/xml">
+        <section name="result">
+          <result status="not found"/>
+        </section>
+      </document>
+    </template>
+
+    <template name="someuser">
+      <document type="freeswitch/xml">
+        <section name="directory">
+          <domain name="${domain}">
+            <params>
+              <param name="some_domain_param" value="some_domain_value"/>
+            </params>
+            <variables>
+            </variables>
+            <groups>
+              <group name="default">
+                <users>
+                  <user id="someuser" mailbox="leon@toyos.nl" cidr="" number-alias="0031320227470">
+                    <params>
+                      <param name="password" value="secret"/>
+                    </params>
+                    <variables>
+                      <variable name="accountcode" value="1234"/>
+                    </variables>
+                  </user>
+                </users>
+              </group>
+              <group name="prepay">
+                <user id="someuser" type="pointer"/>
+              </group>
+            </groups>
+          </domain>
+        </section>
+      </document>
+    </template>
+  
+    <X-PRE-PROCESS cmd="include" data="xml_odbc_templates/*.xml"/>
+
+  </templates>
+
 </configuration>

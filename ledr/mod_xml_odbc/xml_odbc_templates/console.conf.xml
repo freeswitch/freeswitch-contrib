@@ -1,0 +1,31 @@
+<include>
+  <template name="console.conf">
+    <document type="freeswitch/xml">
+      <configuration name="console.conf" description="Console Logger">
+        <mappings>
+          <xml-odbc-do name="query" value="
+            SELECT
+              name, value
+            FROM
+              cnf_console_mappings
+            WHERE
+              hostname = '${hostname}';">
+            <mapping name="${name}" value="${value}"/>
+          </xml-odbc-do>
+        </mappings>
+        <settings>
+          <xml-odbc-do name="query" value="
+            SELECT
+              name, value
+            FROM
+              cnf_settings
+            WHERE
+              hostname = '${hostname}' AND
+              section = '${section}';">
+            <param name="${name}" value="${value}"/>
+          </xml-odbc-do>
+        </settings>
+      </configuration>
+    </document>
+  </template>
+</include>
