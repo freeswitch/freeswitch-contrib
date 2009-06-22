@@ -13,12 +13,12 @@
           dir_domains,
           dir_users
         WHERE
-          dir_users.${key} = '${value}' AND
-          dir_domains.name = '${domain_name}' AND
+          dir_users.${key} = '${user}' AND
+          dir_domains.name = '${domain}' AND
           dir_users.domain_id = dir_domains.id AND
-          dir_users.enabled = 1;"/>
+          dir_users.enabled = 1;"/> <!-- TODO ${key} can be id when username is meant, but id is also int prim key on table -->
       <section name="directory">
-        <domain name="${domain_name}">
+        <domain name="${domain}">
           <params>
             <xml-odbc-do name="query" value="
               SELECT
@@ -44,15 +44,15 @@
           <groups>
             <group name="default">
               <users>
-                <user id="${username}" mailbox="${mailbox}" cidr="${cidr}" number-alias="${number-alias}">
+                <user id="${user}" mailbox="${mailbox}" cidr="${cidr}" number-alias="${number-alias}">
                   <params>
                     <xml-odbc-do name="query" on-zero-rows-break-to="not_found" value="
                       SELECT
                         name, value
                       FROM
-                        dir_domain_params
+                        dir_user_params
                       WHERE
-                        dir_domain_id = '${domain_id}';">
+                        dir_user_id = '${user_id}';">
                       <param name="${name}" value="${value}"/>
                     </xml-odbc-do>
                   </params>
@@ -61,9 +61,9 @@
                       SELECT
                         name, value
                       FROM
-                        dir_domain_params
+                        dir_user_variables
                       WHERE
-                        dir_domain_id = '${domain_id}';">
+                        dir_user_id = '${user_id}';">
                       <variable name="${name}" value="${value}"/>
                     </xml-odbc-do>
                   </variables>
