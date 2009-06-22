@@ -1,22 +1,21 @@
 <include>
   <template name="directory">
     <document type="freeswitch/xml">
-      <xml-odbc-do name="query" on-zero-rows-break-to="not_found" value="
+      <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
         SELECT
           dir_domains.id AS domain_id,
           dir_users.id AS user_id,
-          dir_users.username,
           dir_users.cidr,
           dir_users.mailbox,
-          dir_users.number-alias
+          dir_users.`number-alias`
         FROM
           dir_domains,
           dir_users
         WHERE
-          dir_users.${key} = '${user}' AND
+          dir_users.username = '${user}' AND
           dir_domains.name = '${domain}' AND
-          dir_users.domain_id = dir_domains.id AND
-          dir_users.enabled = 1;"/> <!-- TODO ${key} can be id when username is meant, but id is also int prim key on table -->
+          dir_users.dir_domain_id = dir_domains.id AND
+          dir_users.enabled = '1';"/>
       <section name="directory">
         <domain name="${domain}">
           <params>
@@ -46,7 +45,7 @@
               <users>
                 <user id="${user}" mailbox="${mailbox}" cidr="${cidr}" number-alias="${number-alias}">
                   <params>
-                    <xml-odbc-do name="query" on-zero-rows-break-to="not_found" value="
+                    <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
                       SELECT
                         name, value
                       FROM
@@ -77,10 +76,10 @@
                 dir_groups,
                 dir_groups_users
               WHERE
-                dir_groups_users.dir_group_id
+                dir_groups_users.dir_group_id = dir_groups.id AND
                 dir_user_id = '${user_id}';">
               <group name="${group_name}">
-                <user id="${username}" type="pointer"/>
+                <user id="${user}" type="pointer"/>
               </group>
             </xml-odbc-do>
           </groups>

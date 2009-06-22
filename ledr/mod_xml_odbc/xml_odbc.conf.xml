@@ -9,9 +9,10 @@
 -->
     <binding name="directory">
       <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
-      <!-- <param name="template" value="directory"/> -->
+      <param name="template" value="directory"/>
       <!-- <param name="template" value="not_found"/> -->
-      <param name="template" value="someuser"/>
+      <!-- <param name="template" value="someuser"/> -->
+      <!-- <param name="template" value="testsql"/> -->
     </binding>
 <!--
     <binding name="dialplan">
@@ -59,7 +60,15 @@
       </document>
     </template>
 
-    <template name="someuser">
+    <template name="testsql"> <!-- for testing only -->
+      <document type="freeswitch/xml">
+        <xml-odbc-do name="query" value="SELECT name, value FROM dir_user_params WHERE dir_user_id='1';">
+          <param name="${name}" value="${value}"/>
+        </xml-odbc-do>
+      </document>
+    </template>
+
+    <template name="someuser"> <!-- for testing only -->
       <document type="freeswitch/xml">
         <section name="directory">
           <domain name="${domain}">

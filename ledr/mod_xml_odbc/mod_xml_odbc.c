@@ -50,8 +50,8 @@ SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown,
 
 static switch_bool_t debug = SWITCH_FALSE;
 
-static switch_status_t xml_odbc_render_template(char *template, switch_hash_t *hash, switch_xml_t xml_out, int *off);
-static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_hash_t *hash, switch_xml_t xml_out, int *off);
+static switch_status_t xml_odbc_render_template(char *template, switch_event_t *params, switch_xml_t xml_out, int *off);
+static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *params, switch_xml_t xml_out, int *off);
 
 #define XML_ODBC_SYNTAX "[debug_on|debug_off|render_template]"
 
@@ -92,14 +92,15 @@ SWITCH_STANDARD_API(xml_odbc_function)
 		debug = SWITCH_FALSE;
 	} else if (!strcasecmp(cmd, "render_template")) {
 // TODO make it configurable what themplate is rendered instead of static "not_found"
-		int off = 0;
-		switch_xml_t xml_out = NULL;
-		switch_hash_t *hash;
-		if (switch_core_hash_init(&hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
-//		    need_vars_map = -1; // does it need to be freed ? :)
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't init params hash!\n");
-		}
-		xml_odbc_render_template("not_found", hash, xml_out, &off);
+	//	int off = 0;
+	//	switch_xml_t xml_out = NULL;
+//		switch_hash_t *hash;
+	//	switch_event_t *params;
+//		if (switch_core_hash_init(&hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
+////		    need_vars_map = -1; // does it need to be freed ? :)
+//			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't init params hash!\n");
+//		}
+	//	xml_odbc_render_template("not_found", params, xml_out, &off);
 	} else {
 		goto usage;
 	}
@@ -122,7 +123,7 @@ typedef struct xml_odbc_query_helper {
 	switch_xml_t xml_in;
 	switch_xml_t xml_out;
 	int *off;
-	switch_hash_t *hash;
+	switch_event_t *params;
 } xml_odbc_query_helper_t;
 
 
@@ -132,21 +133,21 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	switch_xml_t xml_in_tmp;
 	int i;
 
-	/* set all columnName/argv key/value pairs in qh->hash */
 	for (i = 0; i < argc; i++) {
-		switch_core_hash_insert(qh->hash, columnName[i], argv[i]); // does a hash insert overwrite old entries ?
+		switch_event_del_header(qh->params, columnName[i]);
+		switch_event_add_header_string(qh->params, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
 	/* render all xml children */
 	for (xml_in_tmp = qh->xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-		xml_odbc_render_tag(xml_in_tmp, qh->hash, qh->xml_out, qh->off);
+		xml_odbc_render_tag(xml_in_tmp, qh->params, qh->xml_out, qh->off);
 	}
 
 	return 0;
 }
 
 
-static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_hash_t *hash, switch_xml_t xml_out, int *off)
+static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *params, switch_xml_t xml_out, int *off)
 {
 	switch_xml_t xml_in_tmp = NULL;
 	int i;
@@ -155,35 +156,38 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_hash_t *h
 
     if (!strcasecmp(xml_in->name, "xml-odbc-do")) {
 		char *name = NULL;
-		char *value = NULL;
-		char *zero_rows_break_to = NULL;
+		char *value = NULL, *new_value = NULL;
+		char *empty_result_break_to = NULL;
 		char *no_template_break_to = NULL;
 
 		name = (char *) switch_xml_attr_soft(xml_in, "name");
 		value = (char *) switch_xml_attr_soft(xml_in, "value");
-		zero_rows_break_to = (char *) switch_xml_attr_soft(xml_in, "on-zero-rows-break-to");
+		empty_result_break_to = (char *) switch_xml_attr_soft(xml_in, "on-empty-result-break-to");
 		no_template_break_to = (char *) switch_xml_attr_soft(xml_in, "on-no-template-break-to");
 
-		if (!strcasecmp(name, "break-to") && !switch_strlen_zero(value)) { // WHAT TO DO WITH FURTHER RENDERING LOWER ON THE STACK ?!?!?!
-			xml_out = NULL;
-			off = 0; // <- ?
-			if (xml_odbc_render_template(value, hash, xml_out, off) == SWITCH_STATUS_FALSE) {
-				if (!switch_strlen_zero(no_template_break_to)) {
-					xml_odbc_render_template(no_template_break_to, hash, xml_out, off);
-				}
-			}
-		} else if (!strcasecmp(name, "query") && !switch_strlen_zero(value)) {
-			// do an auto expasion on value to replace all ${foo} parts based on switch_hash_t hash
-			query_helper.xml_in = xml_in;
-			query_helper.xml_out = xml_out;
-			query_helper.off = off;
-			query_helper.hash = hash;
-			if (switch_odbc_handle_callback_exec(globals.master_odbc, value, xml_odbc_query_callback, &query_helper) == SWITCH_ODBC_SUCCESS) {
-				// nothing
-			} else if (!switch_strlen_zero(zero_rows_break_to)) { // if zero rows returned then switch_odbc_handle_callback_exec != SWITCH_ODBC_SUCCESS ??? 
+		if (!switch_strlen_zero(value)) {
+			new_value = switch_event_expand_headers(params, value);
+			if (!strcasecmp(name, "break-to")) { // WHAT TO DO WITH FURTHER RENDERING LOWER ON THE STACK ?!?!?!
 				xml_out = NULL;
 				off = 0; // <- ?
-				xml_odbc_render_template(zero_rows_break_to, hash, xml_out, off);
+				if (xml_odbc_render_template(new_value, params, xml_out, off) == SWITCH_STATUS_FALSE) {
+					if (!switch_strlen_zero(no_template_break_to)) {
+						xml_odbc_render_template(no_template_break_to, params, xml_out, off);
+					}
+				}
+			} else if (!strcasecmp(name, "query")) {
+				query_helper.xml_in = xml_in;
+				query_helper.xml_out = xml_out;
+				query_helper.off = off;
+				query_helper.params = params;
+
+				if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, &query_helper) == SWITCH_ODBC_SUCCESS) {
+					// nothing
+				} else if (!switch_strlen_zero(empty_result_break_to)) { // if zero rows returned then switch_odbc_handle_callback_exec != SWITCH_ODBC_SUCCESS ??? 
+					xml_out = NULL;
+					off = 0; // <- ?
+					xml_odbc_render_template(empty_result_break_to, params, xml_out, off);
+				}
 			}
 		}
 
@@ -198,18 +202,16 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_hash_t *h
 			return SWITCH_STATUS_FALSE;
 		}
 
-//SWITCH_DECLARE(void *) switch_core_hash_find(_In_ switch_hash_t *hash, _In_z_ const char *key);
-logger((char *)switch_core_hash_find(hash, "domain"));
-
 		/* copy all attrs */
 		for (i = 0; xml_in->attr[i]; i+=2) {
-			// do an auto expasion on attr[i+1] to replace all ${foo} parts based on switch_hash_t hash
-			switch_xml_set_attr(xml_out, xml_in->attr[i], xml_in->attr[i+1]);
+			char *tmp_attr;
+			tmp_attr = switch_event_expand_headers(params, xml_in->attr[i+1]);
+			switch_xml_set_attr(xml_out, xml_in->attr[i], tmp_attr);
 		}
 
 		/* copy all children and render them */
 		for (xml_in_tmp = xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-			xml_odbc_render_tag(xml_in_tmp, hash, xml_out, off);
+			xml_odbc_render_tag(xml_in_tmp, params, xml_out, off);
 		}
 
 	}
@@ -218,7 +220,7 @@ logger((char *)switch_core_hash_find(hash, "domain"));
 }
 
 
-static switch_status_t xml_odbc_render_template(char *template_name, switch_hash_t *hash, switch_xml_t xml_out, int *off)
+static switch_status_t xml_odbc_render_template(char *template_name, switch_event_t *params, switch_xml_t xml_out, int *off)
 {
 	switch_xml_t template_tag = NULL, sub_tag = NULL;
 
@@ -226,7 +228,7 @@ static switch_status_t xml_odbc_render_template(char *template_name, switch_hash
 		char *template_tag_name = (char*) switch_xml_attr_soft(template_tag, "name");
 		if (!strcmp(template_tag_name, template_name)) {
 			for (sub_tag = template_tag->child; sub_tag; sub_tag = sub_tag->ordered) {
-				xml_odbc_render_tag(sub_tag, hash, xml_out, off);
+				xml_odbc_render_tag(sub_tag, params, xml_out, off);
 				return SWITCH_STATUS_SUCCESS;
 			}
 		}
@@ -247,7 +249,6 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 
 	xml_odbc_query_type_t query_type;
 
-	switch_hash_t *hash;
 
 	int off = 0, ret = 1;
 
@@ -270,22 +271,12 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 
 	if (params) {
 		if ((hi = params->headers)) {
-
-			/* initialize hash */
-			if (switch_core_hash_init(&hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
-//			    need_vars_map = -1; // does it need to be freed ? :)
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't init params hash!\n");
-			}
-
 			for (; hi; hi = hi->next) {
 				if (debug == SWITCH_TRUE) {
 					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG in xml_odbc_search, header [%s]=[%s]\n", hi->name, hi->value);
 				}
-				switch_core_hash_insert(hash, hi->name, hi->value); // prefix with 'h_' to avoid collision with keys returned by SELECT's ?
 			}
-
-			xml_odbc_render_template(globals.template, hash, xml_out, &off); // TODO globals.template should be replace with something specific for this section
-
+			xml_odbc_render_template(globals.template, params, xml_out, &off); // TODO globals.template should be replace with something specific for this section
 		}
 	} else {
 		goto cleanup;
