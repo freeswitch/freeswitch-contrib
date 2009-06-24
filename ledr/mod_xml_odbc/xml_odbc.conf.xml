@@ -10,9 +10,6 @@
     <binding name="directory">
       <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
       <param name="template" value="directory"/>
-      <!-- <param name="template" value="not_found"/> -->
-      <!-- <param name="template" value="someuser"/> -->
-      <!-- <param name="template" value="testsql"/> -->
     </binding>
 <!--
     <binding name="dialplan">
@@ -34,7 +31,7 @@
     </template>
 
     <template name="simple_configuration">
-      <document type="freeswitch/xml"> <!-- should this tag be automatically rendered first on xml_out and left out here ? -->
+      <document type="freeswitch/xml">
         <configuration name="${section}">
           <settings>
             <xml-odbc-do name="query" value="
@@ -60,45 +57,6 @@
       </document>
     </template>
 
-    <template name="testsql"> <!-- for testing only -->
-      <document type="freeswitch/xml">
-        <xml-odbc-do name="query" value="SELECT name, value FROM dir_user_params WHERE dir_user_id='1';">
-          <param name="${name}" value="${value}"/>
-        </xml-odbc-do>
-      </document>
-    </template>
-
-    <template name="someuser"> <!-- for testing only -->
-      <document type="freeswitch/xml">
-        <section name="directory">
-          <domain name="${domain}">
-            <params>
-              <param name="some_domain_param" value="some_domain_value"/>
-            </params>
-            <variables>
-            </variables>
-            <groups>
-              <group name="default">
-                <users>
-                  <user id="someuser" mailbox="leon@toyos.nl" cidr="" number-alias="0031320227470">
-                    <params>
-                      <param name="password" value="secret"/>
-                    </params>
-                    <variables>
-                      <variable name="accountcode" value="1234"/>
-                    </variables>
-                  </user>
-                </users>
-              </group>
-              <group name="prepay">
-                <user id="someuser" type="pointer"/>
-              </group>
-            </groups>
-          </domain>
-        </section>
-      </document>
-    </template>
-  
     <X-PRE-PROCESS cmd="include" data="xml_odbc_templates/*.xml"/>
 
   </templates>

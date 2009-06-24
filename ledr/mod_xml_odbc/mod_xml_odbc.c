@@ -124,6 +124,7 @@ typedef struct xml_odbc_query_helper {
 	switch_xml_t xml_out;
 	int *off;
 	switch_event_t *params;
+	int rowcount;
 } xml_odbc_query_helper_t;
 
 
@@ -132,6 +133,8 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	xml_odbc_query_helper_t *qh = (xml_odbc_query_helper_t *) pArg;
 	switch_xml_t xml_in_tmp;
 	int i;
+
+	qh->rowcount++;
 
 	for (i = 0; i < argc; i++) {
 		switch_event_del_header(qh->params, columnName[i]);
@@ -154,7 +157,7 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 
 	xml_odbc_query_helper_t query_helper;
 
-    if (!strcasecmp(xml_in->name, "xml-odbc-do")) {
+	if (!strcasecmp(xml_in->name, "xml-odbc-do")) {
 		char *name = NULL;
 		char *value = NULL, *new_value = NULL;
 		char *empty_result_break_to = NULL;
@@ -165,30 +168,47 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 		empty_result_break_to = (char *) switch_xml_attr_soft(xml_in, "on-empty-result-break-to");
 		no_template_break_to = (char *) switch_xml_attr_soft(xml_in, "on-no-template-break-to");
 
-		if (!switch_strlen_zero(value)) {
-			new_value = switch_event_expand_headers(params, value);
-			if (!strcasecmp(name, "break-to")) { // WHAT TO DO WITH FURTHER RENDERING LOWER ON THE STACK ?!?!?!
-				xml_out = NULL;
-				off = 0; // <- ?
-				if (xml_odbc_render_template(new_value, params, xml_out, off) == SWITCH_STATUS_FALSE) {
-					if (!switch_strlen_zero(no_template_break_to)) {
-						xml_odbc_render_template(no_template_break_to, params, xml_out, off);
-					}
-				}
-			} else if (!strcasecmp(name, "query")) {
-				query_helper.xml_in = xml_in;
-				query_helper.xml_out = xml_out;
-				query_helper.off = off;
-				query_helper.params = params;
+		if (switch_strlen_zero(name)) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do because no name attribute is given\n");
+			goto done;
+		}
 
-				if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, &query_helper) == SWITCH_ODBC_SUCCESS) {
-					// nothing
-				} else if (!switch_strlen_zero(empty_result_break_to)) { // if zero rows returned then switch_odbc_handle_callback_exec != SWITCH_ODBC_SUCCESS ??? 
-					xml_out = NULL;
-					off = 0; // <- ?
-					xml_odbc_render_template(empty_result_break_to, params, xml_out, off);
+		if (switch_strlen_zero(value)) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no value attr is given\n", name);
+			goto done;
+		}
+
+		new_value = switch_event_expand_headers(params, value);
+
+		if (!strcasecmp(name, "break-to")) {
+//			if (xml_odbc_render_template(new_value, params, xml_out, off) == SWITCH_STATUS_FALSE) {
+//				if (!switch_strlen_zero(no_template_break_to)) {
+/* have a look at this again, not too happy about this next_template_name thing.. */
+					switch_event_del_header(params, "next_template_name");
+					switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", value);
+					return SWITCH_STATUS_FALSE;
+//				}
+//			}
+		} else if (!strcasecmp(name, "query")) {
+			query_helper.xml_in = xml_in;
+			query_helper.xml_out = xml_out;
+			query_helper.off = off;
+			query_helper.params = params;
+			query_helper.rowcount = 0;
+
+			if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, &query_helper) != SWITCH_ODBC_SUCCESS) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
+			} else {
+				if (!switch_strlen_zero(empty_result_break_to) && query_helper.rowcount == 0) {
+/* have a look at this again, not too happy about this next_template_name thing.. */
+					switch_event_del_header(params, "next_template_name");
+					switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", empty_result_break_to);
+					return SWITCH_STATUS_FALSE;
 				}
 			}
+
+		} else {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring unknown xml-odbc-do name=[%s]\n", name);
 		}
 
 	} else {
@@ -211,11 +231,14 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 
 		/* copy all children and render them */
 		for (xml_in_tmp = xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-			xml_odbc_render_tag(xml_in_tmp, params, xml_out, off);
+			if (xml_odbc_render_tag(xml_in_tmp, params, xml_out, off) != SWITCH_STATUS_SUCCESS) {
+				return SWITCH_STATUS_FALSE;
+			}
 		}
 
 	}
 
+  done:
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -223,17 +246,31 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 static switch_status_t xml_odbc_render_template(char *template_name, switch_event_t *params, switch_xml_t xml_out, int *off)
 {
 	switch_xml_t template_tag = NULL, sub_tag = NULL;
+	char *next_template_name = NULL;
 
-	for (template_tag = switch_xml_child(globals.templates_tag, "template"); template_tag; template_tag = template_tag->next) {
-		char *template_tag_name = (char*) switch_xml_attr_soft(template_tag, "name");
-		if (!strcmp(template_tag_name, template_name)) {
-			for (sub_tag = template_tag->child; sub_tag; sub_tag = sub_tag->ordered) {
-				xml_odbc_render_tag(sub_tag, params, xml_out, off);
-				return SWITCH_STATUS_SUCCESS;
+	if ((template_tag = switch_xml_find_child(globals.templates_tag, "template", "name", template_name))) {
+		for (sub_tag = template_tag->child; sub_tag; sub_tag = sub_tag->ordered) {
+			if (xml_odbc_render_tag(sub_tag, params, xml_out, off) != SWITCH_STATUS_SUCCESS) {
 			}
+
+			if ((next_template_name = switch_event_get_header(params, "next_template_name"))) {
+				goto rewind;
+			}
+
 		}
+		goto done;
 	}
-	return SWITCH_STATUS_FALSE;
+
+    next_template_name = "not_found";
+
+  rewind:
+/* have a look at this again, not too happy about this next_template_name thing.. */
+	switch_event_del_header(params, "next_template_name");
+	xml_out->name = "";
+	xml_odbc_render_template(next_template_name, params, xml_out, off);
+
+  done:
+	return SWITCH_STATUS_SUCCESS;
 }
 
 
@@ -248,7 +285,6 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	}
 
 	xml_odbc_query_type_t query_type;
-
 
 	int off = 0, ret = 1;
 
