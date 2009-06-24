@@ -33,9 +33,6 @@
  *
  */
 #include <switch.h>
-#ifdef SWITCH_HAVE_ODBC
-#include <switch_odbc.h>
-#endif
 
 typedef enum {
 	XML_ODBC_CONFIG = 0,
@@ -68,11 +65,7 @@ static struct {
 	switch_xml_t templates_tag;
 	switch_mutex_t *mutex;
 	switch_memory_pool_t *pool;
-#ifdef SWITCH_HAVE_ODBC
 	switch_odbc_handle_t *master_odbc;
-#else
-	void *filler1;
-#endif
 } globals;
 
 
@@ -406,8 +399,7 @@ logger("X");
 		binding = NULL;
 	}
 
-#ifdef SWITCH_HAVE_ODBC
-	if (globals.odbc_dsn) {
+	if (switch_odbc_available() && globals.odbc_dsn) {
 
 		if (!(globals.master_odbc = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
@@ -423,7 +415,6 @@ logger("X");
 
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: %s\n", globals.odbc_dsn);
 	}
-#endif
 
   done:
 
@@ -441,11 +432,11 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 
 	switch_api_interface_t *xml_odbc_api_interface;
 
-#ifndef SWITCH_HAVE_ODBC
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "\t./configure --enable-core-odbc-support\n");
-	return SWITCH_STATUS_FALSE;
-#endif
+	if (!switch_odbc_available()) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "\t./configure --enable-core-odbc-support\n");
+		return SWITCH_STATUS_FALSE;
+	}
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC module loading...\n");
 
