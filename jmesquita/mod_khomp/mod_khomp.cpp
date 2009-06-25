@@ -364,8 +364,8 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
 			return SWITCH_STATUS_FALSE;
 		}
 
-		if (switch_test_flag(tech_pvt, TFLAG_IO) && switch_test_flag(tech_pvt, TFLAG_VOICE)) {
-			switch_clear_flag_locked(tech_pvt, TFLAG_VOICE);
+		//if (switch_test_flag(tech_pvt, TFLAG_IO) && switch_test_flag(tech_pvt, TFLAG_VOICE)) {
+		//	switch_clear_flag_locked(tech_pvt, TFLAG_VOICE);
 			if (!tech_pvt->read_frame.datalen) {
 				continue;
 			}
@@ -376,7 +376,7 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
 			}
 #endif
 			return SWITCH_STATUS_SUCCESS;
-		}
+		//}
 
 		switch_cond_next();
 	}
