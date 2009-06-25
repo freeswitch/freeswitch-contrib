@@ -1,0 +1,151 @@
+#!/usr/bin/perl
+use strict;
+use Data::Dumper;
+use Sys::Syslog;
+use XML::Simple;
+use CGI;
+use DBI;
+
+openlog('xml-cdr', 'pid|ndelay', "LOG_USER");
+open(DEBUG, ">/tmp/debug.txt");
+
+my $config={};
+my $db;
+my $identifier = 'cdr-csv-importer';
+
+sub parse_config {
+    open(CONFIG, "<cdr-csv-importer.ini") or die("Can't open config file (cdr-csv-importer.ini)\n");
+    while (<CONFIG>) {
+	#print $_;
+        chomp; #kill whitespaces
+        
+        next if !(m/^[[:alnum:]]/); #skip lines that don't start right
+        next if m/^\s*$/; #skip lines with only whitespace
+	next if m/^;/;    #skip ini comments
+        next if m(/^\[.*\]/); # skip the start of a section
+	
+	my ($key, $val) = split(/\s+=\s+/, $_, 2);
+	#print "'$key' = '$val'\n";
+	if($key eq "fields") {
+	    @{$config->{fields}} = split(/,/, $val);
+	} else {
+	    $config->{$key} = $val;    
+	}
+    }
+    close(CONFIG);
+}
+
+sub create_table {
+#    my $db = shift;
+    my $sql = "CREATE TABLE IF NOT EXISTS `$config->{table}` (
+  `id` int(11) NOT NULL auto_increment,
+  `caller_id_name` varchar(255) NOT NULL default '',
+  `caller_id_number` varchar(255) NOT NULL default '',
+  `destination_number` varchar(255) NOT NULL default '',
+  `context` varchar(255) NOT NULL default '',
+  `start_stamp` varchar(255) NOT NULL default '',
+  `answer_stamp` varchar(255) NOT NULL default '',
+  `end_stamp` varchar(255) NOT NULL default '',
+  `duration` varchar(255) NOT NULL default '',
+  `billsec` varchar(255) NOT NULL default '',
+  `hangup_cause` varchar(255) NOT NULL default '',
+  `uuid` varchar(255) NOT NULL default '',
+  `bleg_uuid` varchar(255) NOT NULL default '',
+  `accountcode` varchar(255) NOT NULL default '',
+  `read_codec` varchar(255) NOT NULL default '',
+  `write_codec` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
+) ENGINE=InnoDB";
+    $db->do($sql);
+    if (!$db->{Executed}) {
+	die("We couldn't CREATE the DB table\n");
+    }
+}
+
+sub connect_db {
+    return DBI->connect($config->{connect_string}, $config->{username}, $config->{password});
+}
+
+sub is_db_connected {
+    my $query = $db->prepare("SELECT CURRENT_TIMESTAMP;");
+    $query->execute();
+}
+
+sub urldecode {
+    my $url = shift;
+    $url =~ s/%([a-fA-F0-9]{2,2})/chr(hex($1))/eg;
+    return $url;
+}
+
+
+
+&parse_config;
+$db = &connect_db;
+&create_table;
+my $cgi = new CGI;
+#syslog("LOG_INFO", Dumper $cgi);
+#syslog("LOG_INFO", Dumper \@ARGV);
+
+my @cgi_params = $cgi->param;
+print "Content-Type: text/plain\r\n\r\n";
+
+my $xml = new XML::Simple();
+#my $cdr = $xml->XMLin('/usr/local/freeswitch/conf/autoload_configs/acl.conf.xml');
+my $cdr = $xml->parse_string($cgi->param('cdr'));
+print DEBUG Dumper $cdr;
+
+my $variables = $cdr->{variables};
+my $caller_profile = {};
+if (ref $cdr->{callflow} eq "ARRAY") {
+    syslog("LOG_INFO", "callflow is an array");
+    $caller_profile = $cdr->{callflow}->[0]->{caller_profile};
+} else {
+    syslog("LOG_INFO", "callflow is not an array");
+    $caller_profile = $cdr->{callflow}->{caller_profile};
+}
+
+#syslog(LOG_INFO, Dumper $cdr);
+
+print "caller_id_name: $caller_profile->{caller_id_name}\n";
+print "caller_id_number: $caller_profile->{caller_id_number}\n";
+print "destination_number: $caller_profile->{destination_number}\n";
+print "context: $caller_profile->{context}\n";
+print "start_stamp: " . &urldecode($variables->{start_stamp}) . "\n";
+print "answer_stamp: " . &urldecode($variables->{answer_stamp}) . "\n";
+print "end_stamp: " . &urldecode($variables->{end_stamp}) . "\n";
+print "duration: $variables->{duration}\n";
+print "billsec: $variables->{billsec}\n";
+print "hangup_cause: $variables->{hangup_cause}\n";
+print "uuid: $caller_profile->{uuid}\n";
+print "bleg_uuid: $caller_profile->{bleg_uuid}\n";
+print "accountcode: $variables->{accountcode}\n";
+print "\n\n";
+
+my $cdr_line = sprintf(
+    '"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"',
+    $caller_profile->{caller_id_name},
+    $caller_profile->{caller_id_number},
+    $caller_profile->{destination_number},
+    $caller_profile->{context},
+    &urldecode($variables->{start_stamp}),
+    &urldecode($variables->{answer_stamp}),
+    &urldecode($variables->{end_stamp}),
+    $variables->{duration},
+    $variables->{billsec},
+    $variables->{hangup_cause},
+    $caller_profile->{uuid},
+    $caller_profile->{bleg_uuid},
+    $variables->{accountcode},
+    $variables->{read_codec},
+    $variables->{write_codec}
+);
+
+syslog("LOG_INFO", $cdr_line);
+
+my $query = sprintf(
+    "INSERT INTO %s (%s) VALUES (%s);", 
+    $config->{table}, join(',', @{$config->{fields}}), $cdr_line
+    );
+syslog("LOG_INFO", $query);
+$db->do($query);
