@@ -29,7 +29,7 @@
  * mod_khomp.c -- Khomp board Endpoint Module
  *
  */
-
+ 
 #define KHOMP_SYNTAX "khomp show [info|links|channels]"
 
 /* Our includes */
