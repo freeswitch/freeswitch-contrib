@@ -1272,14 +1272,14 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
         default:
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New Event has just arrived on %u with untreated code: %x\n", obj, e->Code);
     }
-
+    
     return ksSuccess;
 }
 
 
 static void Kstdcall khomp_audio_listener (int32 deviceid, int32 mixer, byte * read_buffer, int32 read_size)
 {
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New audio buffer for deviceid %d, mixer %d, with size %d\n", deviceid, mixer, read_size);
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New audio buffer for deviceid %d, mixer %d, with size %d\n", deviceid, mixer, read_size);
 }
 
 /* For Emacs:
