@@ -9,6 +9,7 @@
 -->
     <binding name="directory">
       <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+      <!-- <param name="template" value="directory_swk"/> -->
       <param name="template" value="directory"/>
     </binding>
 <!--

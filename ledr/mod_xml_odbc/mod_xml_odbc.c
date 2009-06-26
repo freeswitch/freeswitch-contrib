@@ -174,14 +174,10 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 		new_value = switch_event_expand_headers(params, value);
 
 		if (!strcasecmp(name, "break-to")) {
-//			if (xml_odbc_render_template(new_value, params, xml_out, off) == SWITCH_STATUS_FALSE) {
-//				if (!switch_strlen_zero(no_template_break_to)) {
 /* have a look at this again, not too happy about this next_template_name thing.. */
-					switch_event_del_header(params, "next_template_name");
-					switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", value);
-					return SWITCH_STATUS_FALSE;
-//				}
-//			}
+			switch_event_del_header(params, "next_template_name");
+			switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", value);
+			return SWITCH_STATUS_FALSE;
 		} else if (!strcasecmp(name, "query")) {
 			query_helper.xml_in = xml_in;
 			query_helper.xml_out = xml_out;
