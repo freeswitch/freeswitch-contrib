@@ -3,4 +3,4 @@ LOCAL_CFLAGS=-I./include -I./commons/include -lk3l -D_REENTRANT -D_GNU_SOURCE -D
 
 LOCAL_OBJS= ./commons/k3lapi.o
 
-include ../../../../build/modmake.rules
+include ../../../build/modmake.rules
