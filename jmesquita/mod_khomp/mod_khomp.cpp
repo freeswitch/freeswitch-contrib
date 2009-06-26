@@ -1165,6 +1165,9 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                 channel = switch_core_session_get_channel(session);
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
                 switch_channel_mark_answered(channel);
+                /* Start listening for audio */
+                const size_t buffer_size = 16;
+                k3l->command(e->DeviceId, obj, CM_LISTEN, (const char *) &buffer_size);
             }
             catch (K3LAPI::invalid_session & err)
             {
