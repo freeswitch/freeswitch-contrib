@@ -43,6 +43,7 @@ CREATE TABLE lcr
   id serial NOT NULL,
   digits NUMERIC(20, 0),
   rate numeric(11,5) NOT NULL,
+  intra numeric(11,5) NOT NULL,
   carrier_id integer NOT NULL REFERENCES carriers(id),
   lead_strip integer NOT NULL DEFAULT 0,
   trail_strip integer NOT NULL DEFAULT 0,
