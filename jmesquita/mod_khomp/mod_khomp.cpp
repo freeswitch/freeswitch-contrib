@@ -131,9 +131,10 @@ static void printSystemSummary(switch_stream_handle_t* stream);
 static void printLinks(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
 static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link);
 /* Handles callbacks and events from the boards */
-static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e);
+static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e);
 KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KChannel, K3L_EVENT * event);
-
+/* Callback for receiving audio buffers from the boards */
+static void Kstdcall khomp_audio_listener (int32 deviceid, int32 mixer, byte * read_buffer, int32 read_size);
 
 
 /* Will init part of our private structure and setup all the read/write buffers */
@@ -658,6 +659,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
        Spawn our k3l global var that will be used along the module
        for sending info to the boards
     */
+    k3lSetGlobalParam (klpResetFwOnStartup, 1);
+    k3lSetGlobalParam (klpDisableInternalVoIP, 1);
+	
     k3l = new K3LAPI();
 
     /* Start the API and connect to KServer */
@@ -670,7 +674,8 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
     }
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "K3L started.\n");
 
-    k3lRegisterEventHandler( EventCallBack );
+    k3lRegisterEventHandler( khomp_event_callback );
+	k3lRegisterAudioListener (NULL, khomp_audio_listener);
 
     /* Add all the specific API functions */
     SWITCH_ADD_API(api_interface, "khomp", "Khomp Menu", khomp, KHOMP_SYNTAX);
@@ -1104,7 +1109,7 @@ KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KCh
 }
 
 
-static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
+static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
 {				
     /* TODO: How do we make sure channels inside FreeSWITCH only change to valid states on K3L? */
     switch(e->Code)
@@ -1271,6 +1276,11 @@ static int32 Kstdcall EventCallBack(int32 obj, K3L_EVENT * e)
     return ksSuccess;
 }
 
+
+static void Kstdcall khomp_audio_listener (int32 deviceid, int32 mixer, byte * read_buffer, int32 read_size)
+{
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New audio buffer for deviceid %d, mixer %d, with size %d\n", deviceid, mixer, read_size);
+}
 
 /* For Emacs:
  * Local Variables:
