@@ -3,6 +3,11 @@
 
 #include "globals.h"
 
+/*!
+ \brief This struct holds a static linked list representing all the Khomp channels
+ \      found in the host. It's also a place holder for session objects and some
+ \      other opaque members used by the module.
+ */
 struct KhompPvt
 {
 
