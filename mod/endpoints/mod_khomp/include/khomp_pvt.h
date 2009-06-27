@@ -71,6 +71,9 @@ struct KhompPvt
     switch_mutex_t *_mutex;
     switch_mutex_t *flag_mutex; //TODO: Alterar o nome depois
 
+    unsigned int _KDeviceId;    // Represent de board we are making the call from
+    unsigned int _KChannel;   // Represent the channel we are making the call from
+    
     /* static stuff */    
     static KhompPvtVector _pvts;
 };

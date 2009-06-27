@@ -127,10 +127,12 @@ static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *sess
 {
     tech_pvt->_read_frame.data = tech_pvt->_databuf;
     tech_pvt->_read_frame.buflen = sizeof(tech_pvt->_databuf);
-    switch_mutex_init(&tech_pvt->_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
 
+    switch_mutex_init(&tech_pvt->_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
     switch_mutex_init(&tech_pvt->flag_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
+
     switch_core_session_set_private(session, tech_pvt);
+
     tech_pvt->_session = session;
 
     if (switch_core_codec_init(&tech_pvt->_read_codec,
@@ -160,6 +162,7 @@ static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *sess
 
     switch_core_session_set_read_codec(tech_pvt->_session, &tech_pvt->_read_codec);
     switch_core_session_set_write_codec(tech_pvt->_session, &tech_pvt->_write_codec);
+
     switch_set_flag_locked(tech_pvt, TFLAG_CODEC);
 
     tech_pvt->_read_frame.codec = &tech_pvt->_read_codec;
@@ -255,6 +258,16 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
         switch_core_codec_destroy(&tech_pvt->_write_codec);
     }
 
+    try 
+    {
+        Globals::_k3lapi.command(tech_pvt->_KDeviceId, tech_pvt->_KChannel, CM_DISCONNECT, NULL);
+    }
+    catch(K3LAPI::failed_command & e)
+    {
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "WE COULD NOT HANGUP THE CHANNEL! rc:%d\n", e.rc);
+        return SWITCH_STATUS_TERM;
+    }
+    
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "%s Originator Hangup.\n", switch_channel_get_name(channel));
     switch_mutex_lock(Globals::_mutex);
     Globals::_calls--;
@@ -343,7 +356,6 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
             return SWITCH_STATUS_FALSE;
         }
 
-        switch_clear_flag_locked(tech_pvt, TFLAG_VOICE);
         if (!tech_pvt->_read_frame.datalen) {
             continue;
         }
@@ -447,7 +459,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
                                                     switch_core_session_t **new_session, switch_memory_pool_t **pool, switch_originate_flag_t flags)
 {
 
-       char *argv[3] = { 0 };
+    char *argv[3] = { 0 };
     int argc = 0;
 
     if ((*new_session = switch_core_session_request(Globals::_khomp_endpoint_interface, SWITCH_CALL_DIRECTION_OUTBOUND, pool)) != 0) {
@@ -480,12 +492,12 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
             else
             {
 // usar algoritmo de busca de canais (spec.*).
-//                tech_pvt->_KDeviceId = atoi(argv[0]);
-//                tech_pvt->_KChannel = atoi(argv[1]);
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out\n",// from Board:%u, Channel:%u.\n",
-                                                                    argv[2]
-                                                                    //, tech_pvt->_KDeviceId, tech_pvt->_KChannel
-                                                                    );
+                tech_pvt->_KDeviceId = atoi(argv[0]);
+                tech_pvt->_KChannel = atoi(argv[1]);
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
+                                                                    argv[2],
+                                                                    tech_pvt->_KDeviceId,
+                                                                    tech_pvt->_KChannel);
 
             }
 
@@ -496,7 +508,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Doh! no caller profile\n");
             switch_core_session_destroy(new_session);
             /* Destroy the channel session */
-           // Globals::_k3lapi.setSession(tech_pvt->_KDeviceId, tech_pvt->_KChannel, NULL);
+            KhompPvt::khompPvt(tech_pvt->_KDeviceId, tech_pvt->_KChannel)->session(NULL);
             return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
         }
 
@@ -509,9 +521,9 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
         try {
             /* Lets make the call! */
             char params[ 255 ];
-            sprintf(params, "dest_addr=\"%s\"", argv[2]);
+            snprintf(params, sizeof(params), "dest_addr=\"%s\" orig_addr=\"%s\"", argv[2], outbound_profile->caller_id_number);
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
-            //Globals::_k3lapi.command(tech_pvt->_KDeviceId,tech_pvt->_KChannel, CM_MAKE_CALL, params); 
+            Globals::_k3lapi.command(tech_pvt->_KDeviceId,tech_pvt->_KChannel, CM_MAKE_CALL, params); 
         }
         catch(K3LAPI::failed_command & e)
         {
@@ -520,7 +532,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
         }
 
         /* Add the new session the the channel's info */
-        //Globals::_k3lapi.setSession(tech_pvt->_KDeviceId, tech_pvt->_KChannel, *new_session);
+        KhompPvt::khompPvt(tech_pvt->_KDeviceId, tech_pvt->_KChannel)->session(*new_session);
 
         return SWITCH_CAUSE_SUCCESS;
     }
@@ -629,7 +641,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
 */
 SWITCH_STANDARD_API(khomp)
 {
-       char *argv[10] = { 0 };
+    char *argv[10] = { 0 };
     int argc = 0;
     void *val;
     char *myarg = NULL;
