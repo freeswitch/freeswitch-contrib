@@ -928,6 +928,104 @@ static void printSystemSummary(switch_stream_handle_t* stream) {
 /* End of helper functions */
 
 
+/* Create a new channel on incoming call */
+KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KChannel, K3L_EVENT * event)
+{
+	switch_core_session_t *session = NULL;
+	KhompPvt *tech_pvt = NULL;
+	switch_channel_t *channel = NULL;
+	char name[128];
+	
+	if (!(session = switch_core_session_request(Globals::_khomp_endpoint_interface, SWITCH_CALL_DIRECTION_INBOUND, NULL))) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Initilization Error!\n");
+		return ksFail;
+	}
+	
+	switch_core_session_add_stream(session, NULL);
+	
+	tech_pvt = KhompPvt::khompPvt(KDeviceId, KChannel);
+	assert(tech_pvt != NULL);
+	channel = switch_core_session_get_channel(session);
+	if (tech_init(tech_pvt, session) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Initilization Error!\n");
+		switch_core_session_destroy(&session);
+		return ksFail;
+	}
+	
+
+    /* Get all data from event */
+    std::string cidNum; 
+    std::string destination_number; 
+    try
+    {
+        cidNum = Globals::_k3lapi.get_param(event, "orig_addr");
+        destination_number = Globals::_k3lapi.get_param(event, "dest_addr");
+    }
+    catch ( K3LAPI::get_param_failed & err )
+    {
+        // TODO: Can we set NULL variables? What should we do if this fails?
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Could not get param %s on channel %u, board %u.\n", err.name.c_str(), KChannel, KDeviceId);
+    }
+
+	/*if (switch_strlen_zero(sigmsg->channel->caller_data.cid_num.digits)) {
+		if (!switch_strlen_zero(sigmsg->channel->caller_data.ani.digits)) {
+			switch_set_string(sigmsg->channel->caller_data.cid_num.digits, sigmsg->channel->caller_data.ani.digits);
+		} else {
+			switch_set_string(sigmsg->channel->caller_data.cid_num.digits, sigmsg->channel->chan_number);
+		}
+	}
+    */
+
+    /* Set the caller profile - Look at documentation */
+	tech_pvt->_caller_profile = switch_caller_profile_new(switch_core_session_get_pool(session),
+														 "Khomp",
+														 "XML", // TODO: Dialplan module to use?
+                                                         NULL,
+                                                         NULL,
+														 NULL,
+                                                         cidNum.c_str(),
+                                                         NULL,
+                                                         NULL,
+														 (char *) modname,
+														 "default", // TODO: Context to look for on the dialplan?
+														 destination_number.c_str());
+
+	assert(tech_pvt->_caller_profile != NULL);
+    /* END */
+
+    /* WHAT??? - Look at documentation */
+    //switch_set_flag(tech_pvt->caller_profile, SWITCH_CPF_NONE);
+    /* END */
+	
+    /* */
+	snprintf(name, sizeof(name), "Khomp/%u/%u/%s", KDeviceId, KChannel, tech_pvt->_caller_profile->destination_number);
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Connect inbound channel %s\n", name);
+	switch_channel_set_name(channel, name);
+	switch_channel_set_caller_profile(channel, tech_pvt->_caller_profile);
+    /* END */
+
+		
+	switch_channel_set_state(channel, CS_INIT);
+	if (switch_core_session_thread_launch(session) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Error spawning thread\n");
+		switch_core_session_destroy(&session);
+		return ksFail;
+	}
+
+    /* WHAT?
+	if (zap_channel_add_token(sigmsg->channel, switch_core_session_get_uuid(session), 0) != ZAP_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Error adding token\n");
+		switch_core_session_destroy(&session);
+		return ZAP_FAIL;
+	}
+    */
+
+    /* Set the session to the channel */
+    KhompPvt::khompPvt(KDeviceId, KChannel)->session(session);
+
+    return ksSuccess;
+}
+
 static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
 {                
     /* TODO: How do we make sure channels inside FreeSWITCH only change to valid states on K3L? */
@@ -935,6 +1033,11 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
     {
         case EV_NEW_CALL:   
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "New call on %u to %s. [EV_NEW_CALL]\n", obj, Globals::_k3lapi.get_param(e, "dest_addr").c_str());
+            if (khomp_channel_from_event(e->DeviceId, obj, e) != ksSuccess )
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Something bad happened while getting channel session. Device:%u/Channel:%u. [EV_CONNECT]\n", e->DeviceId, obj);
+                return ksFail;
+            }
             try {
                 Globals::_k3lapi.command(e->DeviceId, obj, CM_RINGBACK, NULL); 
                 Globals::_k3lapi.command(e->DeviceId, obj, CM_CONNECT, NULL); 
