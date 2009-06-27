@@ -23,21 +23,47 @@
  *
  * Contributor(s):
  * 
- * Joao Mesquita <mesquita@khomp.com.br>
+ * Joao Mesquita <mesquita (at) khomp.com.br>
+ * Raul Fragoso <raulfragoso (at) gmail.com>
  *
  *
  * mod_khomp.c -- Khomp board Endpoint Module
  *
  */
 
+/**
+ * @file mod_khomp.cpp
+ * @brief Khomp Endpoint Module
+ * @see mod_khomp
+ */
+
+
 #define KHOMP_SYNTAX "khomp show [info|links|channels]"
 
 #include "mod_khomp.h"
 
-/* Handles callbacks and events from the boards */
-static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e);
-static void Kstdcall khomp_audio_listener(int32 deviceid, int32 objectid, byte * read_buffer, int32 read_size);
 
+/*!
+ \brief Callback generated from K3L API for every new event on the board.
+ \param Object ID (could be a channel or a board, depends on device type) which generated the event
+ \param The event itself (look at the K3L doc for its structure)
+ \return ksSuccess if the event was treated
+ */
+static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e);
+/*!
+ \brief Callback generated from K3L API everytime audio is available on the board.
+ \param Board on which we get the event
+ \param The channel we are getting the audio from
+ \param The audio buffer itself (RAW)
+ \param The buffer size, meaning the amount of data to be read
+ \return ksSuccess if the event was treated
+ */
+static void Kstdcall khomp_audio_listener(int32 deviceid, int32 objectid,
+                                          byte * read_buffer, int32 read_size);
+
+/*!
+ \brief Defined by mod_reference, defines statuses for the switch_channel
+ */
 typedef enum
 {
     TFLAG_IO = (1 << 0),
@@ -114,15 +140,26 @@ switch_io_routines_t khomp_io_routines = {
 /* Macros to define specific API functions */
 SWITCH_STANDARD_API(khomp);
 
-/* Helper function prototypes */
+/*!
+ \brief Print a system summary for all the boards. [khomp show info]
+ */
 static void printSystemSummary(switch_stream_handle_t* stream);
+/*!
+ \brief Print link status. [khomp show links]
+ */
 static void printLinks(switch_stream_handle_t* stream, unsigned int device, 
         unsigned int link);
+/*!
+ \brief Print board channel status. [khomp show channels]
+ */
 static void printChannels(switch_stream_handle_t* stream, unsigned int device, 
         unsigned int link);
 
 
-/* Will init part of our private structure and setup all the read/write buffers */
+/*!
+ \brief Will init part of our private structure and setup all the read/write
+ buffers along with the proper codecs. Right now, only PCMA.
+ */
 static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *session)
 {
     tech_pvt->_read_frame.data = tech_pvt->_databuf;
@@ -173,8 +210,8 @@ static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *sess
 
 }
 
-/* 
-   State methods they get called when the state changes to the specific state 
+/*!
+   \brief State methods they get called when the state changes to the specific state 
    returning SWITCH_STATUS_SUCCESS tells the core to execute the standard state method next
    so if you fully implement the state you can return SWITCH_STATUS_FALSE to skip it.
 */
@@ -451,8 +488,9 @@ static switch_status_t channel_receive_message(switch_core_session_t *session, s
     return SWITCH_STATUS_SUCCESS;
 }
 
-/* Make sure when you have 2 sessions in the same scope that you pass the appropriate one to the routines
-   that allocate memory or you will have 1 channel with memory allocated from another channel's pool!
+/*!
+  \brief Make sure when you have 2 sessions in the same scope that you pass the appropriate one to the routines
+  that allocate memory or you will have 1 channel with memory allocated from another channel's pool!
 */
 static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *session, switch_event_t *var_event,
                                                     switch_caller_profile_t *outbound_profile,
@@ -491,7 +529,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
             }
             else
             {
-// usar algoritmo de busca de canais (spec.*).
+                // usar algoritmo de busca de canais (spec.*).
                 tech_pvt->_KDeviceId = atoi(argv[0]);
                 tech_pvt->_KChannel = atoi(argv[1]);
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
@@ -636,8 +674,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
     return SWITCH_STATUS_SUCCESS;
 }
 
-/* 
-   khomp API definition
+/*!
+   \brief khomp API definition
    TODO: Add as xml modifier
 */
 SWITCH_STANDARD_API(khomp)
@@ -688,7 +726,6 @@ done:
 
 }
 
-/* Helper functions */
 static void printChannels(switch_stream_handle_t* stream, unsigned int device, unsigned int link) {
     if (!device) {
         // Print all channels from all boards and links
