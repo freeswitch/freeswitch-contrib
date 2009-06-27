@@ -318,7 +318,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig)
 {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "CHANNEL KILL\n");
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "CHANNEL KILL, kill = %d\n", sig);
     switch_channel_t *channel = NULL;
     KhompPvt *tech_pvt = NULL;
 
@@ -1095,7 +1095,7 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
                 try
                 {
-                    Globals::_k3lapi.command(e->DeviceId, obj, CM_DISCONNECT, NULL);
+                    Globals::_k3lapi.command(e->DeviceId, obj, CM_STOP_LISTEN, NULL);
                     KhompPvt::khompPvt(e->DeviceId, obj)->session(NULL);
                 }
                 catch(K3LAPI::invalid_channel & err)
