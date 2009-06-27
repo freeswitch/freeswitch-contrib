@@ -54,6 +54,7 @@ struct KhompPvt
                 K3LAPI::target tgt(Globals::_k3lapi, K3LAPI::target::CHANNEL, dev, obj);
                 KhompPvt * pvt = new KhompPvt(tgt);
                 _pvts.back().push_back(pvt);
+                Globals::_k3lapi.command(dev, obj, CM_DISCONNECT, NULL); 
             }
         }
     }

@@ -1048,17 +1048,23 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
             }
             break;
         case EV_DISCONNECT:
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
-            if (channel_on_hangup(KhompPvt::khompPvt(e->DeviceId, obj)->session()) != SWITCH_STATUS_SUCCESS)
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
-            try
             {
-                Globals::_k3lapi.command(e->DeviceId, obj, CM_DISCONNECT, NULL);
-                KhompPvt::khompPvt(e->DeviceId, obj)->session(NULL);
-            }
-            catch(K3LAPI::invalid_channel & err)
-            {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not send CM_DISCONNECT!\n");
+                switch_core_session_t * session = KhompPvt::khompPvt(e->DeviceId, obj)->session();
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Called party dropped the call on: %u. Releasing channel. [EV_DISCONNECT]\n", obj);
+                if(session == NULL)
+                    break;
+
+                if (channel_on_hangup(session) != SWITCH_STATUS_SUCCESS)
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
+                try
+                {
+                    Globals::_k3lapi.command(e->DeviceId, obj, CM_DISCONNECT, NULL);
+                    KhompPvt::khompPvt(e->DeviceId, obj)->session(NULL);
+                }
+                catch(K3LAPI::invalid_channel & err)
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not send CM_DISCONNECT!\n");
+                }
             }
             break;
         case EV_CONNECT:
