@@ -43,15 +43,19 @@ struct KhompPvt
 
     static void initialize(void)
     {
+        for (unsigned dev = 0; dev < Globals::_k3lapi.device_count(); dev++)
+        {
+           // KhompPvt * tech_pvt;
+            //tech= (KhompPvt *) switch_core_session_alloc(*new_session, sizeof(KhompPvt));
+            _pvts.push_back(std::vector<KhompPvt*>());
 
-////        tech_pvt = (private_t *) switch_core_session_alloc(*new_session, sizeof(private_t))
-        //for (unsigned dev = 0; dev < Globals::_k3lapi.device_count(); dev++)
-        //{
-         //   _pvts.push_back(std::vector<KhompPvt>());
-
-            //for (unsigned obj = 0; obj < Globals::_k3lapi.channel_count(obj); obj++)
-                //_pvts.back().push_back(KhompPvt(K3LAPI::target(Globals::_k3lapi, K3LAPI::target::CHANNEL, dev, obj)));
-       // }
+            for (unsigned obj = 0; obj < Globals::_k3lapi.channel_count(dev); obj++)
+            {
+                K3LAPI::target tgt(Globals::_k3lapi, K3LAPI::target::CHANNEL, dev, obj);
+                KhompPvt * pvt = new KhompPvt(tgt);
+                _pvts.back().push_back(pvt);
+            }
+        }
     }
 
     K3LAPI::target          _target;

@@ -579,6 +579,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load)
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Starting K3L...\n");
     try {
         Globals::_k3lapi.start();
+        KhompPvt::initialize();
     } catch (K3LAPI::start_failed & e) {
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "K3L not started. Reason:%s.\n", e.msg.c_str());
         return SWITCH_STATUS_TERM;
