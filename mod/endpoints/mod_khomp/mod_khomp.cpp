@@ -181,6 +181,9 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
         switch_core_codec_destroy(&tech_pvt->_write_codec);
     }
 
+    /* Make the channel available again */
+    tech_pvt->session(NULL);
+    
     try 
     {
         Globals::_k3lapi.command(tech_pvt->_KDeviceId, tech_pvt->_KChannelId, CM_DISCONNECT, NULL);
@@ -413,7 +416,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
                 return cause;
             }
                     
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %u out from Board:%u, Channel:%u.\n",
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
                                                                 argv[2],
                                                                 tech_pvt->_KDeviceId,
                                                                 tech_pvt->_KChannelId);
@@ -429,7 +432,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
         channel = switch_core_session_get_channel(*new_session);
         tech_init(tech_pvt, *new_session);
 
-        snprintf(name, sizeof(name), "Khomp/%s", outbound_profile->destination_number);
+        snprintf(name, sizeof(name), "Khomp/%d/%d/%s", tech_pvt->_KDeviceId, tech_pvt->_KChannelId, argv[2]);
         switch_channel_set_name(channel, name);
         
         caller_profile = switch_caller_profile_clone(*new_session, outbound_profile);
