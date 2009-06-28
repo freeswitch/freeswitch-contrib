@@ -396,7 +396,16 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 
         if (outbound_profile) 
         {
-            tech_pvt = KhompPvt::find_channel(outbound_profile->destination_number, *new_session, &cause);
+            snprintf(name, sizeof(name), "%s", outbound_profile->destination_number);
+            
+            if ((argc = switch_separate_string(outbound_profile->destination_number, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 3)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string. Should be on the format:[Khomp/BoardID (or A for first free board)/CHANNEL (or A for first free channel)]\n");
+                switch_core_session_destroy(new_session);
+                return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
+            }
+
+            tech_pvt = KhompPvt::find_channel(name, *new_session, &cause);
 
             if(tech_pvt == NULL || cause != SWITCH_CAUSE_SUCCESS)
             {

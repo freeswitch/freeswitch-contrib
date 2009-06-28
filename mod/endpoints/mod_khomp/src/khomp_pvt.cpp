@@ -62,8 +62,10 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
 
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel selection: board (%d-%d), channel (%d-%d)!\n", board_low, board_high, channel_low, channel_high);
     
-    for (int board = board_low ; board < board_high; board++)
+    for (int board = board_low ; board <= board_high; board++)
     {
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking board %d\n", board);
+        
         if(pvt != NULL)
             break;
         
@@ -82,7 +84,7 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
             }
         }
         
-        for (int channel = channel_low ; channel < channel_high ; channel++) 
+        for (int channel = channel_low ; channel <= channel_high ; channel++) 
         {
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
             try 
