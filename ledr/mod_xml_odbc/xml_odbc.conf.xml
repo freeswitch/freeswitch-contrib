@@ -1,25 +1,25 @@
 <configuration name="xml_odbc.conf" description="XML ODBC Configuration">
 
+  <settings>
+    <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+  </settings>
+
   <bindings>
 <!--
     <binding name="configuration">
-      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
       <param name="template" value="configuration"/>
     </binding>
 -->
     <binding name="directory">
-      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
       <!-- <param name="template" value="directory_swk"/> -->
       <param name="template" value="directory"/>
     </binding>
 <!--
     <binding name="dialplan">
-      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
       <param name="template" value="dialplan"/>
     </binding>
 
     <binding name="phrases">
-      <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
       <param name="template" value="phrases"/>
     </binding>
 -->
