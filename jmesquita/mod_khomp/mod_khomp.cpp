@@ -247,6 +247,8 @@ static switch_status_t channel_on_execute(switch_core_session_t *session)
 
 static switch_status_t channel_on_hangup(switch_core_session_t *session)
 {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "CHANNEL ON HANGUP\n");
+    
 	switch_channel_t *channel = NULL;
 	private_t *tech_pvt = NULL;
 
@@ -291,6 +293,8 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig)
 {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "CHANNEL KILL, sig = %d\n", sig);
+    
 	switch_channel_t *channel = NULL;
 	private_t *tech_pvt = NULL;
 
@@ -1282,7 +1286,7 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
 
 static void Kstdcall khomp_audio_listener (int32 deviceid, int32 mixer, byte * read_buffer, int32 read_size)
 {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New audio buffer for deviceid %d, mixer %d, with size %d\n", deviceid, mixer, read_size);
+    //switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New audio buffer for deviceid %d, mixer %d, with size %d\n", deviceid, mixer, read_size);
 }
 
 /* For Emacs:

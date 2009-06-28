@@ -53,7 +53,7 @@ static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *sess
 
     switch_mutex_init(&tech_pvt->_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
     switch_mutex_init(&tech_pvt->flag_mutex, SWITCH_MUTEX_NESTED, switch_core_session_get_pool(session));
-
+    
     switch_core_session_set_private(session, tech_pvt);
 
     tech_pvt->_session = session;
@@ -183,7 +183,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
 
     try 
     {
-        Globals::_k3lapi.command(tech_pvt->_KDeviceId, tech_pvt->_KChannel, CM_DISCONNECT, NULL);
+        Globals::_k3lapi.command(tech_pvt->_KDeviceId, tech_pvt->_KChannelId, CM_DISCONNECT, NULL);
     }
     catch(K3LAPI::failed_command & e)
     {
@@ -266,7 +266,6 @@ static switch_status_t channel_read_frame(switch_core_session_t *session, switch
     assert(tech_pvt != NULL);
     tech_pvt->_read_frame.flags = SFF_NONE;
     *frame = NULL;
-
 
     while (switch_test_flag(tech_pvt, TFLAG_IO)) {
 
@@ -385,78 +384,67 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
 
     char *argv[3] = { 0 };
     int argc = 0;
+    KhompPvt *tech_pvt;
+    switch_call_cause_t cause = SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
 
+    /* We first need to find an available KhompPvt object to serve the session */
+    
     if ((*new_session = switch_core_session_request(Globals::_khomp_endpoint_interface, SWITCH_CALL_DIRECTION_OUTBOUND, pool)) != 0) {
-        KhompPvt *tech_pvt;
         switch_channel_t *channel;
         switch_caller_profile_t *caller_profile;
+        char name[128];
 
-        switch_core_session_add_stream(*new_session, NULL);
-        if ((tech_pvt = (KhompPvt *) switch_core_session_alloc(*new_session, sizeof(KhompPvt))) != 0) {
-            channel = switch_core_session_get_channel(*new_session);
-            tech_init(tech_pvt, *new_session);
-        } else {
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Hey where is my memory pool?\n");
-            switch_core_session_destroy(new_session);
-            return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
+        if (outbound_profile) 
+        {
+            tech_pvt = KhompPvt::find_channel(outbound_profile->destination_number, *new_session, &cause);
+
+            if(tech_pvt == NULL || cause != SWITCH_CAUSE_SUCCESS)
+            {
+                switch_core_session_destroy(new_session);
+                return cause;
+            }
+                    
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
+                                                                argv[2],
+                                                                tech_pvt->_KDeviceId,
+                                                                tech_pvt->_KChannelId);
         }
-
-        if (outbound_profile) {
-            char name[128];
-
-            snprintf(name, sizeof(name), "Khomp/%s", outbound_profile->destination_number);
-            switch_channel_set_name(channel, name);
-
-            /* Let's setup our own vars on tech_pvt */
-            if ((argc = switch_separate_string(outbound_profile->destination_number, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 3)
-            {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string. Should be on the format:[Khomp/BOARD/CHANNEL]\n");
-                return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
-            }
-            else
-            {
-                // usar algoritmo de busca de canais (spec.*).
-                tech_pvt->_KDeviceId = atoi(argv[0]);
-                tech_pvt->_KChannel = atoi(argv[1]);
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
-                                                                    argv[2],
-                                                                    tech_pvt->_KDeviceId,
-                                                                    tech_pvt->_KChannel);
-
-            }
-
-            caller_profile = switch_caller_profile_clone(*new_session, outbound_profile);
-            switch_channel_set_caller_profile(channel, caller_profile);
-            tech_pvt->_caller_profile = caller_profile;
-        } else {
+        else
+        {
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Doh! no caller profile\n");
             switch_core_session_destroy(new_session);
-            /* Destroy the channel session */
-            KhompPvt::khompPvt(tech_pvt->_KDeviceId, tech_pvt->_KChannel)->session(NULL);
             return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
         }
+        
+        switch_core_session_add_stream(*new_session, NULL);
+        channel = switch_core_session_get_channel(*new_session);
+        tech_init(tech_pvt, *new_session);
 
-
+        snprintf(name, sizeof(name), "Khomp/%s", outbound_profile->destination_number);
+        switch_channel_set_name(channel, name);
+        
+        caller_profile = switch_caller_profile_clone(*new_session, outbound_profile);
+        switch_channel_set_caller_profile(channel, caller_profile);
+        tech_pvt->_caller_profile = caller_profile;
 
         switch_channel_set_flag(channel, CF_OUTBOUND);
         switch_set_flag_locked(tech_pvt, TFLAG_OUTBOUND);
         switch_channel_set_state(channel, CS_INIT);
 
-        try {
+        try 
+        {
             /* Lets make the call! */
             char params[ 255 ];
             snprintf(params, sizeof(params), "dest_addr=\"%s\" orig_addr=\"%s\"", argv[2], outbound_profile->caller_id_number);
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "We are calling with params: %s.\n", params);
-            Globals::_k3lapi.command(tech_pvt->_KDeviceId,tech_pvt->_KChannel, CM_MAKE_CALL, params); 
+            Globals::_k3lapi.command(tech_pvt->_KDeviceId,tech_pvt->_KChannelId, CM_MAKE_CALL, params); 
         }
         catch(K3LAPI::failed_command & e)
         {
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not place call! Cause: code%x and rc%d.\n", e.code, e.rc);
+            switch_core_session_destroy(new_session);
             return SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
         }
-
-        /* Add the new session the the channel's info */
-        KhompPvt::khompPvt(tech_pvt->_KDeviceId, tech_pvt->_KChannel)->session(*new_session);
 
         return SWITCH_CAUSE_SUCCESS;
     }
@@ -1113,8 +1101,11 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
     return ksSuccess;
 }
 
-static void Kstdcall khomp_audio_listener (int32 deviceid, int32 mixer, byte * read_buffer, int32 read_size)
+static void Kstdcall khomp_audio_listener (int32 deviceid, int32 objectid, byte * read_buffer, int32 read_size)
 {
+    KhompPvt * pvt = KhompPvt::khompPvt(deviceid, objectid);
+    /*TODO: write to the switch_buffer_t member, which will be read by channel_read_frame */
+        
 }
 
 /* For Emacs:

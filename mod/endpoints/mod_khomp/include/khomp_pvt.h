@@ -46,22 +46,32 @@ struct KhompPvt
         return _pvts[target.device][target.object];
     }
 
+    static KhompPvt * find_channel(char* allocation_string, switch_core_session_t * new_session, switch_call_cause_t * cause);
+
     static void initialize(void)
     {
+        switch_mutex_init(&_pvts_mutex, SWITCH_MUTEX_NESTED, Globals::_module_pool);
+        
         for (unsigned dev = 0; dev < Globals::_k3lapi.device_count(); dev++)
         {
-           // KhompPvt * tech_pvt;
-            //tech= (KhompPvt *) switch_core_session_alloc(*new_session, sizeof(KhompPvt));
             _pvts.push_back(std::vector<KhompPvt*>());
 
             for (unsigned obj = 0; obj < Globals::_k3lapi.channel_count(dev); obj++)
             {
                 K3LAPI::target tgt(Globals::_k3lapi, K3LAPI::target::CHANNEL, dev, obj);
                 KhompPvt * pvt = new KhompPvt(tgt);
+                pvt->_KDeviceId = dev;
+                pvt->_KChannelId = obj;
+                pvt->_session = NULL;
                 _pvts.back().push_back(pvt);
                 Globals::_k3lapi.command(dev, obj, CM_DISCONNECT, NULL); 
             }
         }
+    }
+
+    static void terminate()
+    {
+        
     }
 
     K3LAPI::target          _target;
@@ -74,6 +84,8 @@ struct KhompPvt
 
     switch_frame_t _read_frame;
 
+    switch_buffer_t * _audio_buffer;
+    
     unsigned char _databuf[SWITCH_RECOMMENDED_BUFFER_SIZE];
 
     switch_caller_profile_t *_caller_profile;
@@ -82,9 +94,11 @@ struct KhompPvt
     switch_mutex_t *flag_mutex; //TODO: Alterar o nome depois
 
     unsigned int _KDeviceId;    // Represent de board we are making the call from
-    unsigned int _KChannel;   // Represent the channel we are making the call from
+    unsigned int _KChannelId;   // Represent the channel we are making the call from
     
-    /* static stuff */    
+    /* static stuff */
+    static switch_mutex_t *_pvts_mutex;
+    
     static KhompPvtVector _pvts;
 };
 
