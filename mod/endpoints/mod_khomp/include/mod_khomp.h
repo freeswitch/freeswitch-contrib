@@ -80,6 +80,9 @@ static void Kstdcall khomp_audio_listener(int32 deviceid, int32 objectid,
 
 /*!
  \brief Defined by mod_reference, defines statuses for the switch_channel
+ \param TFLAG_IO Enables the IO state of a channel
+ \param TFLAG_INBOUND Sets a channel as inbound
+ \param TFLAG_OUTBOUND Sets a channel as outbound
  */
 typedef enum
 {
@@ -95,7 +98,19 @@ typedef enum
 }
 TFLAGS;
 
-/* Module management routines */
+/*!
+  \brief Load the module. Expadend by a FreeSWITCH macro.
+  Things we do here:
+  \li Initialize a static structure on KhompPvt
+  \li Load the configuration
+  \li Start the K3L API, responsible for connecting to KServer
+  \li Register mod APIs and APPs
+  \li Register audio callback for KServer
+  \li Register event callback for KServer
+  \see Opt Where all the configs are handled
+  \see khomp_event_callback To where we bind the event handler
+  \see khomp_audio_listener To where we bind the audio handlers
+  */
 SWITCH_MODULE_LOAD_FUNCTION(mod_khomp_load);
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown);
 SWITCH_MODULE_DEFINITION(mod_khomp, mod_khomp_load, mod_khomp_shutdown, NULL);

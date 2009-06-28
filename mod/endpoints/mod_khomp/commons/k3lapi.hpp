@@ -122,9 +122,14 @@ struct K3LAPI
         return (valid_device(dev) && obj >= 0 && obj < ((int32)_link_count[dev]));
     }
 
-    /* identificadores alto-nivel de objectos */
+    /*!
+      \brief High level object identifier
+      Since Khomp works with an object concept, this is used to map the
+      object id with its proper type.
+     */
     struct target
     {
+        /*! The types a target can have */
         typedef enum { DEVICE, CHANNEL, MIXER, LINK } target_type;
 
         target(K3LAPI & k3lapi, target_type type_init, int32 device_value, int32 object_value)

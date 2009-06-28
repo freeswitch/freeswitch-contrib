@@ -25,7 +25,9 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
     /* Let's setup our own vars on tech_pvt */
     if ((argc = switch_separate_string(allocation_string, '/', argv, (sizeof(argv) / sizeof(argv[0])))) < 3)
     {
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid dial string (%s). Should be on the format:[Khomp/BoardID (or A for first free board)/CHANNEL (or A for first free channel)]\n", allocation_string);
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR,
+                "Invalid dial string (%s). Should be on the format:[Khomp/BoardID (or A for first free board)/CHANNEL (or A for first free channel)]\n",
+                allocation_string);
         return NULL;
     }
 
@@ -73,6 +75,7 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
         {
             channel_low = 0;
             channel_high = Globals::_k3lapi.channel_count(board);
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Just to check we are getting on the first_channel\n", board_low, board_high, channel_low, channel_high);
         }
         else
         {

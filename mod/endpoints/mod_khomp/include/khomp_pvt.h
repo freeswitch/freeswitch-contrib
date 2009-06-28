@@ -5,15 +5,15 @@
 
 /*!
  \brief This struct holds a static linked list representing all the Khomp channels
- \      found in the host. It's also a place holder for session objects and some
- \      other opaque members used by the module.
+        found in the host. It's also a place holder for session objects and some
+        other opaque members used by the module.
  */
 struct KhompPvt
 {
 
-    typedef std::vector < KhompPvt * >        PvtVectorType;
-    typedef std::vector < PvtVectorType >   PvtVector2Type;
-    typedef PvtVector2Type KhompPvtVector;
+    typedef std::vector < KhompPvt * >        PvtVectorType; /*!< Collection of pointers of KhompPvts */
+    typedef std::vector < PvtVectorType >   PvtVector2Type;  /*!< Collection of PvtVectorType */
+    typedef PvtVector2Type KhompPvtVector;                   /*!< A bidimensional array o KhompPvts, meaning [board][channel] */
     
     KhompPvt(K3LAPI::target & target)
     : _target(target), _session(NULL) {};
@@ -75,7 +75,7 @@ struct KhompPvt
     }
 
     K3LAPI::target          _target;
-    switch_core_session_t * _session;
+    switch_core_session_t * _session; /*!< The session to which this pvt is associated with */
 
     unsigned int flags; //TODO: Alterar o nome depois
 
@@ -93,13 +93,13 @@ struct KhompPvt
     switch_mutex_t *_mutex;
     switch_mutex_t *flag_mutex; //TODO: Alterar o nome depois
 
-    unsigned int _KDeviceId;    // Represent de board we are making the call from
-    unsigned int _KChannelId;   // Represent the channel we are making the call from
+    unsigned int _KDeviceId;    /*!< Represent de board we are making the call from */
+    unsigned int _KChannelId;   /*!< Represent the channel we are making the call from */
     
     /* static stuff */
     static switch_mutex_t *_pvts_mutex;
     
-    static KhompPvtVector _pvts;
+    static KhompPvtVector _pvts; /*!< Static structure that contains all the pvts. Will be initialized by KhompPvt::initialize */
 };
 
 

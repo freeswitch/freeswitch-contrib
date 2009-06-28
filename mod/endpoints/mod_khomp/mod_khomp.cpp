@@ -413,7 +413,7 @@ static switch_call_cause_t channel_outgoing_channel(switch_core_session_t *sessi
                 return cause;
             }
                     
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %s out from Board:%u, Channel:%u.\n",
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Dialing to %u out from Board:%u, Channel:%u.\n",
                                                                 argv[2],
                                                                 tech_pvt->_KDeviceId,
                                                                 tech_pvt->_KChannelId);
