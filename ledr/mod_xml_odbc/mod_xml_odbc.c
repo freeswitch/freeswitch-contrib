@@ -144,15 +144,17 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 	switch_xml_t xml_in_tmp = NULL;
 	int i;
 
+	char *name = NULL;
+	char *value = NULL, *new_value = NULL;
+	char *empty_result_break_to = NULL;
+	char *no_template_break_to = NULL;
+
 	xml_odbc_query_helper_t query_helper;
+
+	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	/* special case xml-odbc-do - this tag is not copied, but action is done */
 	if (!strcasecmp(xml_in->name, "xml-odbc-do")) {
-		char *name = NULL;
-		char *value = NULL, *new_value = NULL;
-		char *empty_result_break_to = NULL;
-		char *no_template_break_to = NULL;
-
 		name = (char *) switch_xml_attr_soft(xml_in, "name");
 		value = (char *) switch_xml_attr_soft(xml_in, "value");
 		empty_result_break_to = (char *) switch_xml_attr_soft(xml_in, "on-empty-result-break-to");
@@ -171,10 +173,11 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 		new_value = switch_event_expand_headers(params, value);
 
 		if (!strcasecmp(name, "break-to")) {
-/* have a look at this again, not too happy about this next_template_name thing.. */
+			/* set a next_template header so xml_odbc_render_template breaks the loop and starts over with a new template */
 			switch_event_del_header(params, "next_template_name");
 			switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", value);
-			return SWITCH_STATUS_FALSE;
+			goto done;
+
 		} else if (!strcasecmp(name, "query")) {
 			query_helper.xml_in = xml_in;
 			query_helper.xml_out = xml_out;
@@ -186,18 +189,16 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
 			} else {
 				if (!switch_strlen_zero(empty_result_break_to) && query_helper.rowcount == 0) {
-/* have a look at this again, not too happy about this next_template_name thing.. */
+					/* set a next_template header so xml_odbc_render_template breaks the loop and starts over with a new template */
 					switch_event_del_header(params, "next_template_name");
 					switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", empty_result_break_to);
-					return SWITCH_STATUS_FALSE;
+					goto done;
 				}
 			}
 
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring unknown xml-odbc-do name=[%s]\n", name);
 		}
-
-		switch_safe_free(new_value);
 
 	/* just copy current tag xml_in to xml_out and recurse for all children */
 	} else {
@@ -208,7 +209,7 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 
 		/* or create a child */
 		} else if (!(xml_out = switch_xml_add_child_d(xml_out, xml_in->name, *off++))) {
-			return SWITCH_STATUS_FALSE;
+			goto done;
 		}
 
 		/* copy all attrs */
@@ -221,14 +222,23 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 		/* copy all children and render them */
 		for (xml_in_tmp = xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
 			if (xml_odbc_render_tag(xml_in_tmp, params, xml_out, off) != SWITCH_STATUS_SUCCESS) {
-				return SWITCH_STATUS_FALSE;
+				goto done;
 			}
 		}
 
 	}
 
+	status = SWITCH_STATUS_SUCCESS;
+
   done:
-	return SWITCH_STATUS_SUCCESS;
+/* what must I free here : */
+//	switch_xml_free(xml_in_tmp);
+//	switch_safe_free(name);
+//	switch_safe_free(value);
+//	switch_safe_free(new_value);
+//	switch_safe_free(empty_result_break_to);
+//	switch_safe_free(no_template_break_to);
+	return status;
 }
 
 
@@ -253,9 +263,14 @@ static switch_status_t xml_odbc_render_template(char *template_name, switch_even
     next_template_name = "not_found";
 
   rewind:
-/* have a look at this again, not too happy about this next_template_name thing.. */
+	/* remove next_template_name header from event so xml_odbc_render_template won't go into an infinite loop */
 	switch_event_del_header(params, "next_template_name");
+
+    /* reset xml_out */
 	xml_out->name = "";
+//  switch_xml_free(xml_out); // THIS DOESN'T WORK EITHER
+//  xml_out = switch_xml_new("");
+
 	xml_odbc_render_template(next_template_name, params, xml_out, off);
 
   done:
