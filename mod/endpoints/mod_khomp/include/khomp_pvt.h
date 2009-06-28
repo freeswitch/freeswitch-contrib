@@ -47,6 +47,13 @@ struct KhompPvt
     }
 
 
+    /*!
+      \brief Lookup channels and boards when dialed.
+      \param allocation_string The dialstring as put on Dialplan. [Khomp/[a|A|0-board_high]/[a|A|0-channel_high]/dest].
+      \param new_session Session allocated for this call.
+      \param[out] Cause returned. Returns NULL if suceeded if not, the proper cause.
+      \return KhompPvt to be used on the call.
+      */
     static KhompPvt * find_channel(char* allocation_string, switch_core_session_t * new_session, switch_call_cause_t * cause);
 
     static void initialize(void)
