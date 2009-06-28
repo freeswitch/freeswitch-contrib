@@ -330,6 +330,8 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 
   cleanup:
 
+	switch_safe_free(template_name);
+
 	if (ret) {
 		switch_xml_free(xml_out);
 		return NULL;
