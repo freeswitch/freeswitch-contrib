@@ -205,6 +205,13 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session)
     return SWITCH_STATUS_SUCCESS;
 }
 
+static switch_status_t channel_on_destroy(switch_core_session_t *session)
+{
+    /* Doesn't do anything for now */
+    
+	return SWITCH_STATUS_SUCCESS;
+}
+
 static switch_status_t channel_kill_channel(switch_core_session_t *session, int sig)
 {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "CHANNEL KILL, kill = %d\n", sig);
@@ -952,6 +959,9 @@ KLibraryStatus khomp_channel_from_event(unsigned int KDeviceId, unsigned int KCh
 static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
 {                
     /* TODO: How do we make sure channels inside FreeSWITCH only change to valid states on K3L? */
+
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "New Khomp Event: on %u/%u: %x\n", e->DeviceId, obj, e->Code);
+    
     switch(e->Code)
     {
         case EV_NEW_CALL:   
@@ -963,7 +973,8 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
             }
             try 
             {
-                Globals::_k3lapi.command(e->DeviceId, obj, CM_RINGBACK, NULL); 
+                Globals::_k3lapi.command(e->DeviceId, obj, CM_RINGBACK, NULL);
+                Globals::_k3lapi.command(e->DeviceId, obj, CM_CONNECT, NULL); 
             }
             catch (K3LAPI::failed_command & err)
             {

@@ -123,6 +123,7 @@ static switch_status_t channel_on_hangup(switch_core_session_t *session);
 static switch_status_t channel_on_exchange_media(
         switch_core_session_t *session);
 static switch_status_t channel_on_soft_execute(switch_core_session_t *session);
+static switch_status_t channel_on_destroy(switch_core_session_t *session);
 
 switch_state_handler_table_t khomp_state_handlers = {
     /*.on_init */ channel_on_init,
@@ -130,7 +131,13 @@ switch_state_handler_table_t khomp_state_handlers = {
     /*.on_execute */ channel_on_execute,
     /*.on_hangup */ channel_on_hangup,
     /*.on_exchange_media */ channel_on_exchange_media,
-    /*.on_soft_execute */ channel_on_soft_execute
+    /*.on_soft_execute */ channel_on_soft_execute,
+	/*.on_consume_media */ NULL,
+    /*.on_hibernate */ NULL,
+    /*.on_reset */ NULL,
+    /*.on_park*/ NULL,
+    /*.on_reporting*/ NULL,
+    /*.on_destroy*/ channel_on_destroy
 };
 
 /* Callbacks for FreeSWITCH */
