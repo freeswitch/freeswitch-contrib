@@ -961,9 +961,9 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Something bad happened while getting channel session. Device:%u/Channel:%u. [EV_CONNECT]\n", e->DeviceId, obj);
                 return ksFail;
             }
-            try {
+            try 
+            {
                 Globals::_k3lapi.command(e->DeviceId, obj, CM_RINGBACK, NULL); 
-                Globals::_k3lapi.command(e->DeviceId, obj, CM_CONNECT, NULL); 
             }
             catch (K3LAPI::failed_command & err)
             {
