@@ -46,6 +46,7 @@ struct KhompPvt
         return _pvts[target.device][target.object];
     }
 
+
     static KhompPvt * find_channel(char* allocation_string, switch_core_session_t * new_session, switch_call_cause_t * cause);
 
     static void initialize(void)

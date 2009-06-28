@@ -5,7 +5,6 @@ switch_mutex_t * KhompPvt::_pvts_mutex;
 
 KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t * new_session, switch_call_cause_t * cause)
 {
-    /* For now we support only the 'first-free' mode */
 
     char *argv[3] = { 0 };
     int argc = 0;
@@ -17,6 +16,8 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
     int channel_high = 0;
     
     bool first_channel_available = true;
+    bool reverse_first_board_available = false;
+    bool reverse_first_channel_available = false;
 
     *cause = SWITCH_CAUSE_DESTINATION_OUT_OF_ORDER;
 
@@ -35,6 +36,11 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
     {
         board_low = 0;
         board_high = Globals::_k3lapi.device_count();
+        // Lets make it reverse...
+        if(*argv[0] == 'a')
+        {
+            reverse_first_board_available = true;
+        }
     }
     else
     {
@@ -45,6 +51,11 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
     if(*argv[1] == 'A' || *argv[1] == 'a')
     {
         first_channel_available = true;
+        // Lets make it reverse...
+        if(*argv[1] == 'a')
+        {
+            reverse_first_channel_available = true;
+        }
     }
     else
     {
@@ -64,60 +75,202 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
 
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel selection: board (%d-%d), channel (%d-%d)!\n", board_low, board_high, channel_low, channel_high);
     
-    for (int board = board_low ; board <= board_high; board++)
+    // TODO: Stop this nonsense of having duplicate code?
+    if(reverse_first_board_available)
     {
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking board %d\n", board);
-        
-        if(pvt != NULL)
-            break;
-        
-        if(first_channel_available)
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Doing reverse board lookup.\n");
+        for (int board = board_high-1 ; board >= board_low; board--)
         {
-            channel_low = 0;
-            channel_high = Globals::_k3lapi.channel_count(board);
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Just to check we are getting on the first_channel\n", board_low, board_high, channel_low, channel_high);
-        }
-        else
-        {
-            if(channel_low < 0 || channel_high > Globals::_k3lapi.channel_count(board))
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking board %d\n", board);
+            
+            if(pvt != NULL)
+                break;
+            
+            if(first_channel_available)
             {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid channel selection (%d-%d) !\n", channel_low, channel_high);
-                switch_mutex_unlock(_pvts_mutex);
-                return NULL;
+                channel_low = 0;
+                channel_high = Globals::_k3lapi.channel_count(board);
             }
-        }
-        
-        for (int channel = channel_low ; channel <= channel_high ; channel++) 
-        {
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
-            try 
+            else
             {
-                K3L_CHANNEL_CONFIG channelConfig;
-                channelConfig = Globals::_k3lapi.channel_config( board, channel );
-            }
-            catch (...)
-            {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Exception while retrieving channel config for board %d, channel%d!\n", board, channel);
-                switch_mutex_unlock(_pvts_mutex);
-                return NULL;
-            }
-            K3L_CHANNEL_STATUS status;
-            if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess)
-            {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "k3lGetDeviceStatus failed to retrieve channel config for board %d, channel%d!\n", board, channel);
-                switch_mutex_unlock(_pvts_mutex);
-                return NULL;
-            }
-            if(status.CallStatus == kcsFree)
-            {
-                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel (%d-%d) is free, let's check if the session is available ...\n", board, channel);
-                pvt = KhompPvt::khompPvt(board, channel);
-                if(pvt != NULL && pvt->session() == NULL)
+                if(channel_low < 0 || channel_high > Globals::_k3lapi.channel_count(board))
                 {
-                    pvt->session(new_session);
-                    break;
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid channel selection (%d-%d) !\n", channel_low, channel_high);
+                    switch_mutex_unlock(_pvts_mutex);
+                    return NULL;
                 }
-                pvt = NULL;
+            }
+            if (reverse_first_channel_available)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Doing a reverse free channel lookup\n", board_low, board_high, channel_low, channel_high);
+                for (int channel = channel_high-1 ; channel >= channel_low ; channel--) 
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
+                    try 
+                    {
+                        K3L_CHANNEL_CONFIG channelConfig;
+                        channelConfig = Globals::_k3lapi.channel_config( board, channel );
+                    }
+                    catch (...)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Exception while retrieving channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    K3L_CHANNEL_STATUS status;
+                    if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "k3lGetDeviceStatus failed to retrieve channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    if(status.CallStatus == kcsFree)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel (%d-%d) is free, let's check if the session is available ...\n", board, channel);
+                        pvt = KhompPvt::khompPvt(board, channel);
+                        if(pvt != NULL && pvt->session() == NULL)
+                        {
+                            pvt->session(new_session);
+                            break;
+                        }
+                        pvt = NULL;
+                    }
+                }
+            }
+            else
+            {            
+                for (int channel = channel_low ; channel <= channel_high ; channel++) 
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
+                    try 
+                    {
+                        K3L_CHANNEL_CONFIG channelConfig;
+                        channelConfig = Globals::_k3lapi.channel_config( board, channel );
+                    }
+                    catch (...)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Exception while retrieving channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    K3L_CHANNEL_STATUS status;
+                    if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "k3lGetDeviceStatus failed to retrieve channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    if(status.CallStatus == kcsFree)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel (%d-%d) is free, let's check if the session is available ...\n", board, channel);
+                        pvt = KhompPvt::khompPvt(board, channel);
+                        if(pvt != NULL && pvt->session() == NULL)
+                        {
+                            pvt->session(new_session);
+                            break;
+                        }
+                        pvt = NULL;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        
+        for (int board = board_low ; board <= board_high; board++)
+        {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking board %d\n", board);
+            
+            if(pvt != NULL)
+                break;
+            
+            if(first_channel_available)
+            {
+                channel_low = 0;
+                channel_high = Globals::_k3lapi.channel_count(board);
+            }
+            else
+            {
+                if(channel_low < 0 || channel_high > Globals::_k3lapi.channel_count(board))
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid channel selection (%d-%d) !\n", channel_low, channel_high);
+                    switch_mutex_unlock(_pvts_mutex);
+                    return NULL;
+                }
+            }
+            if (reverse_first_channel_available)
+            {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Doing a reverse free channel lookup\n", board_low, board_high, channel_low, channel_high);
+                for (int channel = channel_high-1 ; channel >= channel_low ; channel--) 
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
+                    try 
+                    {
+                        K3L_CHANNEL_CONFIG channelConfig;
+                        channelConfig = Globals::_k3lapi.channel_config( board, channel );
+                    }
+                    catch (...)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Exception while retrieving channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    K3L_CHANNEL_STATUS status;
+                    if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "k3lGetDeviceStatus failed to retrieve channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    if(status.CallStatus == kcsFree)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel (%d-%d) is free, let's check if the session is available ...\n", board, channel);
+                        pvt = KhompPvt::khompPvt(board, channel);
+                        if(pvt != NULL && pvt->session() == NULL)
+                        {
+                            pvt->session(new_session);
+                            break;
+                        }
+                        pvt = NULL;
+                    }
+                }
+            }
+            else
+            {            
+                for (int channel = channel_low ; channel <= channel_high ; channel++) 
+                {
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Checking if (%d-%d) is free\n", board, channel);
+                    try 
+                    {
+                        K3L_CHANNEL_CONFIG channelConfig;
+                        channelConfig = Globals::_k3lapi.channel_config( board, channel );
+                    }
+                    catch (...)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Exception while retrieving channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    K3L_CHANNEL_STATUS status;
+                    if (k3lGetDeviceStatus( board, channel + ksoChannel, &status, sizeof(status) ) != ksSuccess)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "k3lGetDeviceStatus failed to retrieve channel config for board %d, channel%d!\n", board, channel);
+                        switch_mutex_unlock(_pvts_mutex);
+                        return NULL;
+                    }
+                    if(status.CallStatus == kcsFree)
+                    {
+                        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Channel (%d-%d) is free, let's check if the session is available ...\n", board, channel);
+                        pvt = KhompPvt::khompPvt(board, channel);
+                        if(pvt != NULL && pvt->session() == NULL)
+                        {
+                            pvt->session(new_session);
+                            break;
+                        }
+                        pvt = NULL;
+                    }
+                }
             }
         }
     }
