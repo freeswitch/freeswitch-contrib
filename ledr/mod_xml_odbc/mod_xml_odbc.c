@@ -447,6 +447,10 @@ static switch_status_t do_config()
 					*odbc_pass++ = '\0';
 				}
 			}
+		} else if (!strcasecmp(var, "debug") && !switch_strlen_zero(val)) {
+			if (!strcasecmp(val, "true") || !strcasecmp(val, "on")) {
+				debug = SWITCH_TRUE;
+			}
 		}
 	}
 

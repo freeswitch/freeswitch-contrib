@@ -2,6 +2,7 @@
 
   <settings>
     <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+    <param name="debug" value="true"/>
   </settings>
 
   <bindings>
