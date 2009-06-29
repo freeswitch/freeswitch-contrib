@@ -271,6 +271,11 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 			char *tmp_attr;
 			tmp_attr = switch_event_expand_headers(params, xml_in->attr[i+1]);
 			switch_xml_set_attr(xml_out, xml_in->attr[i], tmp_attr);
+
+			if (tmp_attr != xml_in->attr[i+1]) {
+				switch_safe_free(tmp_attr);
+			}
+
 		}
 
 		/* copy all children and render them */
@@ -285,13 +290,11 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 	status = SWITCH_STATUS_SUCCESS;
 
   done:
-/* what must I free here : */
-//	switch_xml_free(xml_in_tmp);
-//	switch_safe_free(name);
-//	switch_safe_free(value);
-//	switch_safe_free(new_value);
-//	switch_safe_free(empty_result_break_to);
-//	switch_safe_free(no_template_break_to);
+
+	if (value != new_value) {
+		switch_safe_free(new_value);
+	}
+
 	return status;
 }
 
@@ -377,7 +380,9 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	}
 
 	if (debug == SWITCH_TRUE) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of XML generated:\n%s", switch_xml_toxml(xml_out, SWITCH_FALSE));
+		char *tmp_xml = switch_xml_toxml(xml_out, SWITCH_FALSE);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of XML generated:\n%s", tmp_xml);
+		switch_safe_free(tmp_xml);
 	}
 
 	ret = 0;
@@ -572,6 +577,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown)
 {
 	switch_odbc_handle_disconnect(globals.master_odbc);
 	switch_odbc_handle_destroy(&globals.master_odbc);
+
+	switch_xml_unbind_search_function_ptr(xml_odbc_search);
 
 	return SWITCH_STATUS_SUCCESS;
 }
