@@ -55,7 +55,7 @@ struct KhompPvt
       \return KhompPvt to be used on the call.
       */
     static KhompPvt * find_channel(char* allocation_string, switch_core_session_t * new_session, switch_call_cause_t * cause);
-
+    
     static void initialize(void)
     {
         switch_mutex_init(&_pvts_mutex, SWITCH_MUTEX_NESTED, Globals::_module_pool);

@@ -992,7 +992,7 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
                 try
                 {
-                    Globals::_k3lapi.command(e->DeviceId, obj, CM_STOP_LISTEN, NULL);
+                    //Globals::_k3lapi.command(e->DeviceId, obj, CM_STOP_LISTEN, NULL);
                     KhompPvt::khompPvt(e->DeviceId, obj)->session(NULL);
                 }
                 catch(K3LAPI::invalid_channel & err)
@@ -1011,8 +1011,10 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
                 switch_channel_mark_answered(channel);
                 /* Start listening for audio */
+                /*
                 const size_t buffer_size = 16;
                 Globals::_k3lapi.command(e->DeviceId, obj, CM_LISTEN, (const char *) &buffer_size);
+                */
             }
             catch (K3LAPI::invalid_session & err)
             {
