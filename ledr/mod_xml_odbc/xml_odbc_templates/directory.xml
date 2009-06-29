@@ -1,6 +1,7 @@
 <include>
   <template name="directory">
     <document type="freeswitch/xml">
+      <xml-odbc-do name="replace_header_value" when-name="key" when-value="id" value="username"/>
       <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
         SELECT
           dir_domains.id AS domain_id,

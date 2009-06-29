@@ -1,6 +1,7 @@
 <include>
   <template name="directory_swk" description="based on swk's shipment sql">
     <document type="freeswitch/xml">
+      <xml-odbc-do name="replace_header_value" when-name="key" when-value="id" value="username"/>
       <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
         SELECT
           domains.uid AS domains_uid,
@@ -11,7 +12,7 @@
           domains,
           users
         WHERE
-          users.username = '${user}' AND
+          users.${key} = '${user}' AND
           domains.name = '${domain}' AND
           users.domains_uid = domains.uid AND
           domains.enabled = '1' AND
