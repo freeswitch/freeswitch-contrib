@@ -1,0 +1,20 @@
+THIS MODULE IS HIGHLY EXPERIMENTAL.  USE MAY RESULT IN HAIR LOSS, DISMEMBERMENT,
+OR EVEN DEATH.
+
+
+That out of the way, it is a way to provide a RADIUS interface to perform
+authentication and authorization functionality to FreeSWITCH.
+
+It uses the FreeRADIUS Client Library, which is part of the FreeRADIUS project.
+The version used to create/test this library is the tagged release 1.1.6.
+
+In order to use this module, you will need to edit the top level 'configure.in'
+as well as 'modules.conf'.
+
+More information/details can be found on the wiki:
+
+     http://wiki.freeswitch.org/wiki/Mod_xml_radius
+
+Questions/comments/suggestions, please find 's3g_fault' on IRC.
+
+

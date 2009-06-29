@@ -1,0 +1,25 @@
+<include>
+  <template name="directory">
+    <document type="freeswitch/xml">
+	<section name="directory" description="arbitrary stuff here">
+<domain name="${domain}">
+          <groups>
+            <group name="default">
+              <users>
+                <user id="${user}" number-alias="${radius_alias}">
+                  <params>
+                      <param name="vm-password" value="${radius_vm_pass}"/>
+                    </params>
+                    <variables>
+                      <variable name="international" value="${radius_international}"/>
+                      <variable name="usenat" value="${radius_natuser}"/>
+                    </variables>
+                  </user>
+                </users>
+              </group>
+            </groups>
+          </domain>
+        </section>
+    </document>
+  </template>
+</include>
