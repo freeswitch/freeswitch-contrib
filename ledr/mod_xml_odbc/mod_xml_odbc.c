@@ -199,6 +199,7 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 		new_value = switch_event_expand_headers(params, value);
 
 		if (!strcasecmp(name, "replace_header_value")) {
+			char *old_header_value = NULL;
 			/* replace a header value when when_name AND/OR when_value matches */
 
 			when_name = (char *) switch_xml_attr_soft(xml_in, "when-name");			
@@ -209,7 +210,6 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 				goto done;
 			}
 
-			char *old_header_value = NULL;
 			if ((old_header_value = switch_event_get_header(params, when_name))) {
 				if (switch_strlen_zero(when_value) || !strcasecmp(when_value, old_header_value)) {
 					switch_event_del_header(params, when_name);
@@ -339,19 +339,22 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 {
 	xml_binding_t *binding = (xml_binding_t *) user_data;
 	switch_event_header_t *hi;
-
-	switch_xml_t xml_out = NULL;
-	if ((xml_out = switch_xml_new(""))) {
-		//switch_xml_set_attr_d(xml_out, "type", "freeswitch/xml");
-	}
-
 	char *template_name;
 	int off = 0, ret = 1;
+
+	switch_xml_t xml_out = NULL;
 
 	if (!binding) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No bindings... sorry bud returning now\n");
 		return NULL;
 	}
+
+	if (!(xml_out = switch_xml_new(""))) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Allocation Error\n");
+		return NULL;		
+	}
+
+	//switch_xml_set_attr_d(xml_out, "type", "freeswitch/xml");
 
 	if (!strcmp(section, "configuration")) {
 		template_name = strdup(globals.configuration_template_name);
@@ -542,11 +545,10 @@ static switch_status_t do_config()
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 {
+	switch_api_interface_t *xml_odbc_api_interface;
 
 	switch_core_new_memory_pool(&globals.pool);
 	switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
-
-	switch_api_interface_t *xml_odbc_api_interface;
 
 	if (!switch_odbc_available()) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
