@@ -80,7 +80,9 @@
                 dir_groups_users.dir_group_id = dir_groups.id AND
                 dir_user_id = '${user_id}';">
               <group name="${group_name}">
-                <user id="${user}" type="pointer"/>
+                <users>
+                  <user id="${user}" type="pointer"/>
+                </users>
               </group>
             </xml-odbc-do>
           </groups>

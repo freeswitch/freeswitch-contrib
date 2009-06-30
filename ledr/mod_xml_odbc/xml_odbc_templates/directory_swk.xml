@@ -80,7 +80,9 @@
                 group_members.groups_uid = groups.uid AND
                 users_uid = '${users_uid}';">
               <group name="${group_name}">
-                <user id="${user}" type="pointer"/>
+                <users>
+                  <user id="${user}" type="pointer"/>
+                </users>
               </group>
             </xml-odbc-do>
           </groups>
