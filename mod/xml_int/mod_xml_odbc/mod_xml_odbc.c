@@ -110,7 +110,7 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	int i;
 
 	/* up the row counter */
-	qh->tmp_i++; // TODO THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
+	qh->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
 
 	/* loop through all columns and store them in qh->event->params */
 	for (i = 0; i < argc; i++) {
