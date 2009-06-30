@@ -1,0 +1,8 @@
+<include>
+    <extension name="flite">
+      <condition field="destination_number" expression="^2910$">
+<!--	<action application="bridge" data="skypiax/skypiax1/echo123"/>-->
+<action application="lua" data="welcome.lua"/> 
+      </condition>
+    </extension>
+</include>
