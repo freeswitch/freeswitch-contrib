@@ -1,0 +1,11 @@
+<!!-- this is a dialplan extention to the sample Welcome IVR Script in LUA -->
+<include>
+<!-- extension name -->
+    <extension name="flite">
+<!-- Condition -->
+      <condition field="destination_number" expression="^2910$">
+<!-- Runing the IVR -->
+<action application="lua" data="welcome.lua"/> 
+      </condition>
+    </extension>
+</include>
