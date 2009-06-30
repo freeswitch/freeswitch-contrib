@@ -272,9 +272,9 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 			tmp_attr = switch_event_expand_headers(params, xml_in->attr[i+1]);
 			switch_xml_set_attr(xml_out, xml_in->attr[i], tmp_attr);
 
-			if (tmp_attr != xml_in->attr[i+1]) {
-				switch_safe_free(tmp_attr);
-			}
+//			if (tmp_attr != xml_in->attr[i+1]) {
+//				switch_safe_free(tmp_attr);
+//			}
 
 		}
 
