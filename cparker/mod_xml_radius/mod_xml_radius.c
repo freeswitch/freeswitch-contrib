@@ -63,11 +63,13 @@ SWITCH_MODULE_DEFINITION(mod_xml_radius, mod_xml_radius_load, mod_xml_radius_shu
 
 static switch_bool_t debug = SWITCH_FALSE;
 
+#if 0
 static int logi = 0;
 static void logger(char *str)
 {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG[%i] [%s]\n", ++logi, str);
 }
+#endif
 
 
 static rc_handle *my_radius_init(void)
