@@ -153,3 +153,161 @@ KhompPvt * KhompPvt::find_channel(char* allocation_string, switch_core_session_t
     switch_mutex_unlock(_pvts_mutex);
     return pvt;
 }
+
+/* Helper functions - based on code from chan_khomp */
+
+int32 KhompPvt::get_audio_dsp()
+{
+    switch (Globals::_k3lapi.device_type(_KDeviceId))
+    {
+        case kdtFXO:
+        case kdtFXOVoIP:
+        case kdtGSM:
+        case kdtGSMSpx:
+            return 0;
+        default:
+            return 1;
+    }
+}
+
+bool KhompPvt::obtain_both(void)
+{
+	/* estes buffers *NAO PODEM SER ESTATICOS*! */
+    char cmd1[] = { 0x3f, 0x03, 0xff, 0x00, 0x05, 0xff };
+    char cmd2[] = { 0x3f, 0x03, 0xff, 0x01, 0x00, 0xff };
+
+    cmd1[2] = cmd1[5] = cmd2[2] = cmd2[5] = _KChannelId;
+
+    int32 val = get_audio_dsp();
+
+    try
+    {
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd1, 6);
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd2, 6);
+    }
+    catch(...)
+    {
+        return false;
+    }
+        
+	return true;
+}
+
+bool KhompPvt::obtain_rx(bool with_delay)
+{
+	/* estes buffers *NAO PODEM SER ESTATICOS*! */
+    char cmd1[] = { 0x3f, 0x03, 0xff, 0x00, (with_delay ? 0x05 : 0x0a), 0xff };
+    char cmd2[] = { 0x3f, 0x03, 0xff, 0x01, 0x09, 0x0f };
+
+    cmd1[2] = cmd1[5] = cmd2[2] = _KChannelId;
+
+    int32 val = get_audio_dsp();
+
+    try
+    {
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd1, 6);
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd2, 6);
+    }
+    catch(...)
+    {
+        return false;
+    }
+
+	return true;
+}
+
+bool KhompPvt::obtain_tx(void)
+{
+	/* estes buffers *NAO PODEM SER ESTATICOS*! */
+    char cmd1[] = { 0x3f, 0x03, 0xff, 0x00, 0x00, 0xff };
+    char cmd2[] = { 0x3f, 0x03, 0xff, 0x01, 0x09, 0x0f };
+
+	cmd1[2] = cmd1[5] = cmd2[2] = _KChannelId;
+
+    int32 val = get_audio_dsp();
+
+    try
+    {
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd1, 6);
+	    Globals::_k3lapi.raw_command(_KDeviceId, val, cmd2, 6);
+    }
+    catch(...)
+    {
+        return false;
+    }
+
+	return true;
+}
+
+bool KhompPvt::start_stream(void)
+{
+    try
+    {
+        Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsPlay, _KChannelId);
+        Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_START_STREAM_BUFFER);
+    	//flags.set(kflags::STREAM_UP);
+    }
+    catch(...)
+    {
+		return false;
+    }
+	return true;
+}
+
+bool KhompPvt::stop_stream(void)
+{
+    try
+    {
+        Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsGenerator, kmtSilence);
+	    Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_STOP_STREAM_BUFFER);
+    	//flags.clear(kflags::STREAM_UP);
+    }
+    catch(...)
+    {
+        return false;
+    }
+        
+	return true;
+}
+
+bool KhompPvt::start_listen(bool conn_rx)
+{
+	const size_t buffer_size = KHOMP_PACKET_SIZE;
+
+    if (conn_rx)
+    {
+	    if (!obtain_rx(false)) // no delay, by default..
+			return false;
+	}
+
+    try
+    {
+        Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_LISTEN, (const char *) &buffer_size);
+    }
+    catch(...)
+    {
+        return false;
+    }
+
+	/* always set this flag to avoid constant 'ksInvalidState' messages. */
+	//flags.set(kflags::LISTEN_UP);
+    
+	return true;
+}
+
+bool KhompPvt::stop_listen(void)
+{
+    try
+    {
+        Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_STOP_LISTEN);
+    }
+    catch(...)
+    {
+        return false;
+    }
+
+	//flags.clear(kflags::LISTEN_UP);
+
+	return true;
+}
+

@@ -40,24 +40,24 @@ void K3LAPI::stop(void)
     
 void K3LAPI::mixer(int32 dev, int32 obj, byte track, KMixerSource src, int32 index)
 {
-       KMixerCommand mix;
+    KMixerCommand mix;
 
     mix.Track = track;
-       mix.Source = src;
+    mix.Source = src;
     mix.SourceIndex = index;
 
-       command(dev, obj, CM_MIXER, (const char *) &mix);
+    command(dev, obj, CM_MIXER, (const char *) &mix);
 }
 
 void K3LAPI::mixerCTbus(int32 dev, int32 obj, byte track, KMixerSource src, int32 index)
 {
-       KMixerCommand mix;
+    KMixerCommand mix;
 
     mix.Track = track;
-       mix.Source = src;
+    mix.Source = src;
     mix.SourceIndex = index;
 
-       command(dev, obj, CM_MIXER_CTBUS, (const char *) &mix);
+    command(dev, obj, CM_MIXER_CTBUS, (const char *) &mix);
 }
 
 void K3LAPI::command(int32 dev, int32 obj, int32 code, std::string & str)
@@ -69,12 +69,12 @@ void K3LAPI::command (int32 dev, int32 obj, int32 code, const char * parms)
 {
     K3L_COMMAND cmd;
 
-       cmd.Cmd = code;
+    cmd.Cmd = code;
     cmd.Object = obj;
-       cmd.Params = (byte *)parms;
+    cmd.Params = (byte *)parms;
 
     int32 rc = k3lSendCommand(dev, &cmd);
-        
+
     if (rc != ksSuccess)
         throw failed_command(code, dev, obj, rc);
 }

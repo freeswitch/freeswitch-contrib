@@ -993,8 +993,12 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not hangup channel: %u on board %u. Releasing board channel anyway. [EV_DISCONNECT]\n", obj, e->DeviceId);
                 try
                 {
-                    //Globals::_k3lapi.command(e->DeviceId, obj, CM_STOP_LISTEN, NULL);
+                    /* Stop the audio callbacks */
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Stopping audio callbacks ...\n");
+                    KhompPvt::khompPvt(e->DeviceId, obj)->stop_listen();
+                    KhompPvt::khompPvt(e->DeviceId, obj)->stop_stream();
                     KhompPvt::khompPvt(e->DeviceId, obj)->session(NULL);
+                    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Audio callbacks stopped successfully\n");
                 }
                 catch(K3LAPI::invalid_channel & err)
                 {
@@ -1012,10 +1016,10 @@ static int32 Kstdcall khomp_event_callback(int32 obj, K3L_EVENT * e)
                 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Call will be answered on board %u, channel %u. [EV_CONNECT]\n", e->DeviceId, obj);
                 switch_channel_mark_answered(channel);
                 /* Start listening for audio */
-                /*
-                const size_t buffer_size = 16;
-                Globals::_k3lapi.command(e->DeviceId, obj, CM_LISTEN, (const char *) &buffer_size);
-                */
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Starting audio callbacks ...\n");
+                KhompPvt::khompPvt(e->DeviceId, obj)->start_stream();
+                KhompPvt::khompPvt(e->DeviceId, obj)->start_listen();
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Audio callbacks initialized successfully\n");
             }
             catch (K3LAPI::invalid_session & err)
             {

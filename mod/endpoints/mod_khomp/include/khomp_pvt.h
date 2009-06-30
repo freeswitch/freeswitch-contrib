@@ -3,6 +3,8 @@
 
 #include "globals.h"
 
+#define KHOMP_PACKET_SIZE 16
+
 /*!
  \brief This struct holds a static linked list representing all the Khomp channels
         found in the host. It's also a place holder for session objects and some
@@ -14,15 +16,37 @@ struct KhompPvt
     typedef std::vector < KhompPvt * >        PvtVectorType; /*!< Collection of pointers of KhompPvts */
     typedef std::vector < PvtVectorType >   PvtVector2Type;  /*!< Collection of PvtVectorType */
     typedef PvtVector2Type KhompPvtVector;                   /*!< A bidimensional array o KhompPvts, meaning [board][channel] */
-    
+
+    K3LAPI::target          _target;    /*!< The card/device pair to bind this pvt to */
+    switch_core_session_t * _session;   /*!< The session to which this pvt is associated with */
+
+    unsigned int flags; //TODO: Alterar o nome depois
+
+    switch_codec_t _read_codec;
+    switch_codec_t _write_codec;
+
+    switch_frame_t _read_frame;
+
+    switch_buffer_t * _audio_buffer;    /*!< Audio buffer used to write data in the khomp callback and read by FS callback */
+
+    unsigned char _databuf[SWITCH_RECOMMENDED_BUFFER_SIZE];
+
+    switch_caller_profile_t *_caller_profile;
+
+    switch_mutex_t *_mutex;
+    switch_mutex_t *flag_mutex; //TODO: Alterar o nome depois
+
+    unsigned int _KDeviceId;    /*!< Represent de board we are making the call from */
+    unsigned int _KChannelId;   /*!< Represent the channel we are making the call from */
+
     KhompPvt(K3LAPI::target & target)
-    : _target(target), _session(NULL) {};
+        : _target(target), _session(NULL) {};
 
     K3LAPI::target target()
     {
         return _target;
     }
-    
+
     void session(switch_core_session_t * newSession)
     {
         _session = newSession;
@@ -32,6 +56,23 @@ struct KhompPvt
     {
         return _session;
     }
+
+    int32 get_audio_dsp();
+
+    bool obtain_both(void);
+    bool obtain_rx(bool with_delay);
+    bool obtain_tx(void);
+
+    bool start_stream(void);
+    bool stop_stream(void);
+
+    bool start_listen(bool conn_rx = true);
+    bool stop_listen(void);
+
+    /* static stuff */
+    static switch_mutex_t *_pvts_mutex;
+
+    static KhompPvtVector _pvts; /*!< Static structure that contains all the pvts. Will be initialized by KhompPvt::initialize */
 
     static KhompPvt * khompPvt(int32 device, int32 object)
     {
@@ -90,33 +131,7 @@ struct KhompPvt
             }
         }
     }
-
-    K3LAPI::target          _target;
-    switch_core_session_t * _session; /*!< The session to which this pvt is associated with */
-
-    unsigned int flags; //TODO: Alterar o nome depois
-
-    switch_codec_t _read_codec;
-    switch_codec_t _write_codec;
-
-    switch_frame_t _read_frame;
-
-    switch_buffer_t * _audio_buffer;
     
-    unsigned char _databuf[SWITCH_RECOMMENDED_BUFFER_SIZE];
-
-    switch_caller_profile_t *_caller_profile;
-
-    switch_mutex_t *_mutex;
-    switch_mutex_t *flag_mutex; //TODO: Alterar o nome depois
-
-    unsigned int _KDeviceId;    /*!< Represent de board we are making the call from */
-    unsigned int _KChannelId;   /*!< Represent the channel we are making the call from */
-    
-    /* static stuff */
-    static switch_mutex_t *_pvts_mutex;
-    
-    static KhompPvtVector _pvts; /*!< Static structure that contains all the pvts. Will be initialized by KhompPvt::initialize */
 };
 
 
