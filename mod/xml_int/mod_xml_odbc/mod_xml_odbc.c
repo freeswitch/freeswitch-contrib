@@ -105,22 +105,22 @@ typedef struct xml_binding {
 
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
-	session_helper_t *qh = (session_helper_t *) pArg;
+	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
 	switch_xml_t xml_in_tmp;
 	int i;
 
 	/* up the row counter */
-	qh->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
+	helper->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
 
-	/* loop through all columns and store them in qh->event->params */
+	/* loop through all columns and store them in helper->event->params */
 	for (i = 0; i < argc; i++) {
-		switch_event_del_header(qh->event, columnName[i]);
-		switch_event_add_header_string(qh->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
+		switch_event_del_header(helper->event, columnName[i]);
+		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
 	/* render all children of xml_in */
-	for (xml_in_tmp = qh->xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-		xml_odbc_render_tag(xml_in_tmp, qh->event, qh->xml_out, qh->off);
+	for (xml_in_tmp = helper->xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
+		xml_odbc_render_tag(xml_in_tmp, helper->event, helper->xml_out, helper->off);
 	}
 
 	return 0;
