@@ -37,9 +37,6 @@
  * @see mod_khomp
  */
 
-
-#define KHOMP_SYNTAX "khomp show [info|links|channels]"
-
 #include "mod_khomp.h"
 
 /*!

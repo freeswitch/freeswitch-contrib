@@ -54,6 +54,9 @@
 #ifndef _MOD_KHOMP_H_
 #define _MOD_KHOMP_H_
 
+
+#define KHOMP_SYNTAX "khomp show [info|links|channels]"
+
 #include "globals.h"
 #include "khomp_pvt.h"
 #include "opt.h"
