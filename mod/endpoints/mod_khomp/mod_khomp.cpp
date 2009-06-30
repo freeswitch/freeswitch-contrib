@@ -561,6 +561,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_khomp_shutdown)
 
     /* Finnish him! */
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Stopping K3L...\n");
+    KhompPvt::terminate();
     Globals::_k3lapi.stop();
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "the K3L API has been stopped!\n");
     

@@ -79,7 +79,16 @@ struct KhompPvt
 
     static void terminate()
     {
+        switch_mutex_lock(_pvts_mutex);
         
+        for(KhompPvtVector::iterator it_board = _pvts.begin(); it_board != _pvts.end(); it_board++)
+        {
+            for(PvtVectorType::iterator it_channel = it_board->begin(); it_channel != it_board->begin(); it_channel++)
+            {
+                KhompPvt * pvt = *it_channel;
+                delete pvt;
+            }
+        }
     }
 
     K3LAPI::target          _target;
