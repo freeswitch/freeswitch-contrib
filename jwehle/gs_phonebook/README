@@ -1,0 +1,31 @@
+This directory contains software for outputting a phonebook
+suitable for download to a Grandstream phone.  It is generated
+at startup and updated whenever a reloadxml occurs.
+
+gs_phonebook.lua goes into the FreeSWITCH scripts directory.
+
+Configuration fragments look something like:
+
+  conf/autoload_configs/lua.conf.xml
+
+    <param name="startup-script" value="gs_phonebook.lua"/>
+
+  Grandstream
+
+    Phonebook XML Download:      YES, TFTP
+    Phonebook XML Server Path:   <IP address of freeswitch server>
+    Phonebook Download Interval: <desired interval ... e.g. 240>
+
+and assumes that a tftp server has been configured.  Obviously
+other arrangements can be used (e.g. http).
+
+The script uses LuaXml which is available from:
+
+  http://www.viremo.de/LuaXML/
+
+typical installation has:
+
+  /usr/local/lib/lua/5.1/LuaXML_lib.so
+  /usr/local/share/lua/5.1/LuaXml.lua
+
+Tested using FreeSWITCH SVN 13988 running on FreeBSD 6.4.
