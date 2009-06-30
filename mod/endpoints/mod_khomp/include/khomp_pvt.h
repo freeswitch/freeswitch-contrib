@@ -2,6 +2,7 @@
 #define _KHOMP_PVT_H_
 
 #include "globals.h"
+#include "mod_khomp.h"
 
 #define KHOMP_PACKET_SIZE 16
 

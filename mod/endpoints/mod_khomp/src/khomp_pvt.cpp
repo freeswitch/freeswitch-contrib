@@ -245,12 +245,14 @@ bool KhompPvt::start_stream(void)
     {
         Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsPlay, _KChannelId);
         Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_START_STREAM_BUFFER);
-    	//flags.set(kflags::STREAM_UP);
     }
     catch(...)
     {
 		return false;
     }
+
+    switch_set_flag_locked(this, TFLAG_STREAM);
+    
 	return true;
 }
 
@@ -260,13 +262,14 @@ bool KhompPvt::stop_stream(void)
     {
         Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsGenerator, kmtSilence);
 	    Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_STOP_STREAM_BUFFER);
-    	//flags.clear(kflags::STREAM_UP);
     }
     catch(...)
     {
         return false;
     }
-        
+
+    switch_clear_flag_locked(this, TFLAG_STREAM);
+    
 	return true;
 }
 
@@ -289,8 +292,7 @@ bool KhompPvt::start_listen(bool conn_rx)
         return false;
     }
 
-	/* always set this flag to avoid constant 'ksInvalidState' messages. */
-	//flags.set(kflags::LISTEN_UP);
+    switch_set_flag_locked(this, TFLAG_LISTEN);
     
 	return true;
 }
@@ -306,7 +308,7 @@ bool KhompPvt::stop_listen(void)
         return false;
     }
 
-	//flags.clear(kflags::LISTEN_UP);
+	switch_clear_flag_locked(this, TFLAG_LISTEN);
 
 	return true;
 }
