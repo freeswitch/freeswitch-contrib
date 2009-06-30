@@ -166,6 +166,8 @@ static void printChannels(switch_stream_handle_t* stream, unsigned int device,
  */
 static switch_status_t tech_init(KhompPvt *tech_pvt, switch_core_session_t *session)
 {
+    tech_pvt->flags = 0;
+    
     tech_pvt->_read_frame.data = tech_pvt->_databuf;
     tech_pvt->_read_frame.buflen = sizeof(tech_pvt->_databuf);
 

@@ -241,6 +241,9 @@ bool KhompPvt::obtain_tx(void)
 
 bool KhompPvt::start_stream(void)
 {
+    if(switch_test_flag(this, TFLAG_STREAM))
+        return true;
+    
     try
     {
         Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsPlay, _KChannelId);
@@ -258,6 +261,9 @@ bool KhompPvt::start_stream(void)
 
 bool KhompPvt::stop_stream(void)
 {
+    if(!switch_test_flag(this, TFLAG_STREAM))
+        return true;
+    
     try
     {
         Globals::_k3lapi.mixer(_KDeviceId, _KChannelId, 0, kmsGenerator, kmtSilence);
@@ -275,6 +281,9 @@ bool KhompPvt::stop_stream(void)
 
 bool KhompPvt::start_listen(bool conn_rx)
 {
+    if(switch_test_flag(this, TFLAG_LISTEN))
+        return true;
+    
 	const size_t buffer_size = KHOMP_PACKET_SIZE;
 
     if (conn_rx)
@@ -299,6 +308,9 @@ bool KhompPvt::start_listen(bool conn_rx)
 
 bool KhompPvt::stop_listen(void)
 {
+    if(!switch_test_flag(this, TFLAG_LISTEN))
+        return true;
+    
     try
     {
         Globals::_k3lapi.command(_KDeviceId, _KChannelId, CM_STOP_LISTEN);
