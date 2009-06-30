@@ -23,13 +23,12 @@
  *
  * Contributor(s):
  * 
- * Anthony Minessale II <anthm@freeswitch.org>
- * Other FreeSWITCH module contributors that I borrowed code from
+ * All the FreeSWITCH contributors that I borrowed code from
  * Leon de Rooij <leon@scarlet-internet.nl>
  *
  *
- * mod_xml_odbc.c -- use fs odbc to realtime create xml directory 
- * perhaps later also config, dialplan, etc ?
+ * mod_xml_odbc.c -- Use FreeSWITCH ODBC to realtime create XML
+ *
  *
  */
 #include <switch.h>
@@ -45,37 +44,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load);
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown);
 SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown, NULL);
 
-static switch_bool_t debug = SWITCH_FALSE;
-
-static switch_status_t xml_odbc_render_template(char *template, switch_event_t *params, switch_xml_t xml_out, int *off);
-static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *params, switch_xml_t xml_out, int *off);
-
-
-/*
-static char *my_dup(const char *s)
-{
-    size_t len = strlen(s) + 1;
-    void *new = malloc(len);
-    switch_assert(new);
-
-    return (char *) memcpy(new, s, len);
-}
-
-#ifndef ALLOC
-#define ALLOC(size) malloc(size)
-#endif
-#ifndef DUP
-#define DUP(str) my_dup(str)
-#endif
-#ifndef FREE
-#define FREE(ptr) switch_safe_free(ptr)
-#endif
-*/
-
-
-#define XML_ODBC_SYNTAX "[debug_on|debug_off|render_template]"
-
-
 static struct {
 	char *odbc_dsn;
 	char *configuration_template_name;
@@ -86,9 +54,25 @@ static struct {
 	switch_mutex_t *mutex;
 	switch_memory_pool_t *pool;
 	switch_odbc_handle_t *master_odbc;
+	switch_bool_t debug;
 } globals;
 
+static struct xml_odbc_session_helper {
+	switch_memory_pool_t *pool;
+	char *template_name;
+	switch_event_t *event;
+	switch_xml_t xml_in;
+	switch_xml_t xml_out;
+	int *off;
+	int tmp_i;
+} xml_odbc_session_helper_t;
 
+static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t helper);
+static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t helper);
+
+#define XML_ODBC_SYNTAX "[debug_on|debug_off]"
+
+/* cli commands */
 SWITCH_STANDARD_API(xml_odbc_function)
 {
 	if (session) {
@@ -100,20 +84,9 @@ SWITCH_STANDARD_API(xml_odbc_function)
 	}
 
 	if (!strcasecmp(cmd, "debug_on")) {
-		debug = SWITCH_TRUE;
+		globals.debug = SWITCH_TRUE;
 	} else if (!strcasecmp(cmd, "debug_off")) {
-		debug = SWITCH_FALSE;
-	} else if (!strcasecmp(cmd, "render_template")) {
-// TODO make it configurable what themplate is rendered instead of static "not_found"
-	//	int off = 0;
-	//	switch_xml_t xml_out = NULL;
-//		switch_hash_t *hash;
-	//	switch_event_t *params;
-//		if (switch_core_hash_init(&hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
-////		    need_vars_map = -1; // does it need to be freed ? :)
-//			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't init params hash!\n");
-//		}
-	//	xml_odbc_render_template("not_found", params, xml_out, &off);
+		globals.debug = SWITCH_FALSE;
 	} else {
 		goto usage;
 	}
@@ -126,161 +99,152 @@ SWITCH_STANDARD_API(xml_odbc_function)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-
 typedef struct xml_binding {
 	char *bindings;
 } xml_binding_t;
 
-
-typedef struct xml_odbc_query_helper {
-	switch_xml_t xml_in;
-	switch_xml_t xml_out;
-	int *off;
-	switch_event_t *params;
-	int rowcount;
-} xml_odbc_query_helper_t;
-
-
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
-	xml_odbc_query_helper_t *qh = (xml_odbc_query_helper_t *) pArg;
+	session_helper_t *qh = (session_helper_t *) pArg;
 	switch_xml_t xml_in_tmp;
 	int i;
 
-	qh->rowcount++;
+	/* up the row counter */
+	qh->tmp_i++; // TODO THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
 
+	/* loop through all columns and store them in qh->event->params */
 	for (i = 0; i < argc; i++) {
-		switch_event_del_header(qh->params, columnName[i]);
-		switch_event_add_header_string(qh->params, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
+		switch_event_del_header(qh->event, columnName[i]);
+		switch_event_add_header_string(qh->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
-	/* render all xml children */
+	/* render all children of xml_in */
 	for (xml_in_tmp = qh->xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-		xml_odbc_render_tag(xml_in_tmp, qh->params, qh->xml_out, qh->off);
+		xml_odbc_render_tag(xml_in_tmp, qh->event, qh->xml_out, qh->off);
 	}
 
 	return 0;
 }
 
-
-static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *params, switch_xml_t xml_out, int *off)
+static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t helper)
 {
-	switch_xml_t xml_in_tmp = NULL;
-	int i;
+	char *name = (char *) switch_xml_attr_soft(helper->xml_in, "name");
+	char *value = (char *) switch_xml_attr_soft(helper->xml_in, "value");
+	char *new_value = switch_event_expand_headers(helper->event, value);
 
-	char *name = NULL;
-	char *value = NULL, *new_value = NULL;
+	helper->template_name = strdup(new_value);
+}
 
-	char *when_name = NULL, *when_value = NULL;
-
-	char *empty_result_break_to = NULL;
-	char *no_template_break_to = NULL;
-
-	xml_odbc_query_helper_t query_helper;
-
+static switch_status_t xml_odbc_do_replace_header_value(xml_odbc_session_helper_t helper)
+{
+	char *old_header_value = NULL;
+	char *name = (char *) switch_xml_attr_soft(helper->xml_in, "name");
+	char *when_name = (char *) switch_xml_attr_soft(helper->xml_in, "when_name");
+	char *when_value = (char *) switch_xml_attr_soft(helper->xml_in, "when_value");
+	char *value = (char *) switch_xml_attr_soft(helper->xml_in, "value");
+	char *new_value = switch_event_expand_headers(helper->event, value);
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
-	/* special case xml-odbc-do - this tag is not copied, but action is done */
-	if (!strcasecmp(xml_in->name, "xml-odbc-do")) {
-		name = (char *) switch_xml_attr_soft(xml_in, "name");
-		value = (char *) switch_xml_attr_soft(xml_in, "value");
+	if (switch_strlen_zero(when_name)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no when_name is given\n", name);
+		goto done;
+	}
 
-		no_template_break_to = (char *) switch_xml_attr_soft(xml_in, "on-no-template-break-to"); // THIS DOESN'T WORK YET !!
+	if (switch_strlen_zero(value)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no value is given\n", name);
+		goto done;
+	}
+
+	if ((old_header_value = switch_event_get_header(helper->event, when_name))) {
+		if (switch_strlen_zero(when_value) || !strcasecmp(when_value, old_header_value)) {
+			switch_event_del_header(helper->event, when_name);
+			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, when_name, new_value);
+		}
+	}
+
+	status = SWITCH_STATUS_SUCCESS;
+
+  done:
+	return status;
+}
+
+static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t helper)
+{
+	char *name = (char *) switch_xml_attr_soft(helper->xml_in, "name");
+	char *value = (char *) switch_xml_attr_soft(helper->xml_in, "value");
+	char *empty_result_break_to = (char *) switch_xml_attr_soft(xml_in, "on-empty-result-break-to");
+	char *new_value = switch_event_expand_headers(helper->event, value);
+	switch_status_t status = SWITCH_STATUS_FALSE;
+
+	if (globals.debug == SWITCH_TRUE) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Performing Query:\n%s\n", new_value);
+	}
+
+	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper) != SWITCH_ODBC_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
+		goto done;
+	} 
+
+	if (!switch_strlen_zero(empty_result_break_to) && helper.tmp_i == 0) {
+		helper->template_name = empty_result_break_to;
+	}
+	
+	status = SWITCH_STATUS_SUCCESS;
+
+  done:
+	return status;
+}
+
+static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t helper)
+{
+	switch_status_t status = SWITCH_STATUS_FALSE;
+	switch_xml_t xml_in_tmp, xml_out_tmp;
+	int i;
+
+	if (!strcasecmp(helper->xml_in->name, "xml-odbc-do")) {
+		char *name = (char *) switch_xml_attr_soft(helper->xml_in, "name");
 
 		if (switch_strlen_zero(name)) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do because no name attribute is given\n");
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do because no name is given\n");
 			goto done;
 		}
 
-		if (switch_strlen_zero(value)) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no value attr is given\n", name);
+		/* special cases for xml-odbc-do */
+		if (!strcasecmp(name, "break-to")) {
+			status = xml_odbc_do_break_to(helper);
 			goto done;
-		}
-		new_value = switch_event_expand_headers(params, value);
-
-		if (!strcasecmp(name, "replace_header_value")) {
-			char *old_header_value = NULL;
-			/* replace a header value when when_name AND/OR when_value matches */
-
-			when_name = (char *) switch_xml_attr_soft(xml_in, "when-name");			
-			when_value = (char *) switch_xml_attr_soft(xml_in, "when-value");			
-
-			if (switch_strlen_zero(when_name)) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no when-name is given\n", name);
-				goto done;
-			}
-
-			if ((old_header_value = switch_event_get_header(params, when_name))) {
-				if (switch_strlen_zero(when_value) || !strcasecmp(when_value, old_header_value)) {
-					switch_event_del_header(params, when_name);
-					switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, when_name, new_value);
-				}
-			}
-
-		} else if (!strcasecmp(name, "break-to")) {
-			/* set a next_template header so xml_odbc_render_template breaks the loop and starts over with a new template */
-
-			switch_event_del_header(params, "next_template_name");
-			switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", new_value);
+		} else if (!strcasecmp(name, "replace-header-value")) {
+			status = xml_odbc_do_replace_header_value(helper);
 			goto done;
-
 		} else if (!strcasecmp(name, "query")) {
-			/* create query_helper that is given to callback function on each returned row */
-
-			query_helper.xml_in = xml_in;
-			query_helper.xml_out = xml_out;
-			query_helper.off = off;
-			query_helper.params = params;
-			query_helper.rowcount = 0;
-
-			if (debug == SWITCH_TRUE) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Performing Query:\n%s\n", new_value);
-			}
-
-			if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, &query_helper) != SWITCH_ODBC_SUCCESS) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
-				goto done;
-			} 
-
-			empty_result_break_to = (char *) switch_xml_attr_soft(xml_in, "on-empty-result-break-to");
-			if (!switch_strlen_zero(empty_result_break_to) && query_helper.rowcount == 0) {
-				/* set a next_template header so xml_odbc_render_template breaks the loop and starts over with a new template */
-				switch_event_del_header(params, "next_template_name");
-				switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "next_template_name", empty_result_break_to);
-				goto done;
-			}
-
-		} else {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring unknown xml-odbc-do name=[%s]\n", name);
+			status = xml_odbc_do_query(helper);
+			goto done;
 		}
 
-	/* just copy current tag xml_in to xml_out and recurse for all children */
-	} else {
+		/* just copy xml_in to xml_out */
+		if (switch_strlen_zero(helper->xml_out->name)) {
+			/* remove all children from helper->xml_out TODO DO THAT HERE !!!!!!!!!!!!!!!!!!!!!! */
 
-		/* set name if current root node */
-		if (switch_strlen_zero(xml_out->name)) { // I should match here on off instead of on name == "" ?
-			xml_out->name = strdup(xml_in->name);
+			helper->xml_out->name = strdup(helper->xml_in->name);
 
-		/* or create a child */
-		} else if (!(xml_out = switch_xml_add_child_d(xml_out, xml_in->name, *off++))) {
+		} else if (!(xml_out_tmp = switch_xml_add_child_d(helper->xml_out, helper->xml_in->name, (helper->off)++))) {
 			goto done;
 		}
 
 		/* copy all attrs */
-		for (i = 0; xml_in->attr[i]; i+=2) {
+		for (i=0; helper->xml_in->attr[i]; i+=2) {
 			char *tmp_attr;
-			tmp_attr = switch_event_expand_headers(params, xml_in->attr[i+1]);
-			switch_xml_set_attr(xml_out, xml_in->attr[i], tmp_attr);
+			tmp_attr = switch_event_exapand_headers(helper->event, helper->xml_in->attr[i+1]);
+			switch_xml_set_attr(helper->xml_out, helper->xml_in->attr[i], tmp_attr);
 
-//			if (tmp_attr != xml_in->attr[i+1]) {
-//				switch_safe_free(tmp_attr);
-//			}
-
+			// if (tmp_attr != helper->xml_in->attr[i+1]) {
+			// 	switch_safe_free(tmp_attr);
+			// }
 		}
 
-		/* copy all children and render them */
-		for (xml_in_tmp = xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-			if (xml_odbc_render_tag(xml_in_tmp, params, xml_out, off) != SWITCH_STATUS_SUCCESS) {
+		/* render all children */
+		for (xml_in_tmp = helper->xml_in->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
+			if (xml_odbc_render_tag(xml_in_tmp, helper->event, event->xml_out, helper->off) != SWITCH_STATUS_SUCCESS) {
 				goto done;
 			}
 		}
@@ -290,72 +254,59 @@ static switch_status_t xml_odbc_render_tag(switch_xml_t xml_in, switch_event_t *
 	status = SWITCH_STATUS_SUCCESS;
 
   done:
-
-	if (value != new_value) {
-		switch_safe_free(new_value);
-	}
-
 	return status;
 }
 
-
-static switch_status_t xml_odbc_render_template(char *template_name, switch_event_t *params, switch_xml_t xml_out, int *off)
+static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t helper)
 {
 	switch_xml_t template_tag = NULL, sub_tag = NULL;
-	char *next_template_name = NULL;
+	switch_status_t status = SWITCH_STATUS_FALSE;
 
-	if ((template_tag = switch_xml_find_child(globals.templates_tag, "template", "name", template_name))) {
+	if ((template_tag = switch_xml_find_child(globals.templates_tag, "template", "name", helper->template_name))) {
 		for (sub_tag = template_tag->child; sub_tag; sub_tag = sub_tag->ordered) {
-			if (xml_odbc_render_tag(sub_tag, params, xml_out, off) != SWITCH_STATUS_SUCCESS) {
+			if (xml_odbc_render_tag(sub_tag, helper->event, helper->xml_out, helper->off) != SWITCH_STATUS_SUCCESS) {
 			}
 
-			if ((next_template_name = switch_event_get_header(params, "next_template_name"))) {
+			if ((!switch_strlen_zero(helper->template_name))) {
 				goto rewind;
 			}
-
 		}
 		goto done;
 	}
 
-    next_template_name = "not_found";
+	helper->template_name = "not_found";
 
   rewind:
-	/* remove next_template_name header from event so xml_odbc_render_template won't go into an infinite loop */
-	switch_event_del_header(params, "next_template_name");
-
-    /* reset xml_out */
-	xml_out->name = "";
-//  switch_xml_free(xml_out); // THIS DOESN'T WORK EITHER
-//  xml_out = switch_xml_new("");
-
-	xml_odbc_render_template(next_template_name, params, xml_out, off);
+	/* remove all children of helper->xml_out here */
+	xml_odbc_render_template(helper);
 
   done:
-	return SWITCH_STATUS_SUCCESS;
+	return status;
 }
-
 
 static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, const char *key_name, const char *key_value, switch_event_t *params, void *user_data)
 {
 	xml_binding_t *binding = (xml_binding_t *) user_data;
 	switch_event_header_t *hi;
 	char *template_name;
+	switch_uuid_t uuid;
+	char uuid_str[SWITCH_UUID_FORMATTED_LENGTH + 1];
 	int off = 0, ret = 1;
-
 	switch_xml_t xml_out = NULL;
+	session_helper_t helper;
 
 	if (!binding) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No bindings... sorry bud returning now\n");
 		return NULL;
 	}
 
+	/* create a new xml_out used to render the template into */
 	if (!(xml_out = switch_xml_new(""))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Allocation Error\n");
 		return NULL;		
 	}
 
-	//switch_xml_set_attr_d(xml_out, "type", "freeswitch/xml");
-
+	/* find out what template to render, based on the section */
 	if (!strcmp(section, "configuration")) {
 		template_name = strdup(globals.configuration_template_name);
 	} else if (!strcmp(section, "directory")) {
@@ -369,36 +320,73 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 		return NULL;
 	}
 
-	if (params) {
+	/* add some headers to params */
+	switch_event_add_header_string(params, SWITCH_STACK_TOP, "hostname", hostname);
+	switch_event_add_header_string(params, SWITCH_STACK_TOP, "section", switch_str_nil(section));
+	switch_event_add_header_string(params, SWITCH_STACK_TOP, "tag_name", switch_str_nil(tag_name));
+	switch_event_add_header_string(params, SWITCH_STACK_TOP, "key_name", switch_str_nil(key_name));
+	switch_event_add_header_string(params, SWITCH_STACK_TOP, "key_value", switch_str_nil(key_value));
+
+	/* generate a new uuid */
+	switch_uuid_get(&uuid);
+	switch_uuid_format(uuid_str, &uuid);
+
+	/* generate a temporary filename to store the generated xml in */
+	switch_snprintf(filename, sizeof(filename), "%s%s.tmp.xml", SWITCH_GLOBAL_dirs.temp_dir, uuid_str);
+
+	/* debug print all switch_event_t params headers */
+	if (globals.debug == SWITCH_TRUE) {
 		if ((hi = params->headers)) {
 			for (; hi; hi = hi->next) {
-				if (debug == SWITCH_TRUE) {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG in xml_odbc_search, header [%s]=[%s]\n", hi->name, hi->value);
-				}
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG in xml_odbc_search, header [%s]=[%s]\n", hi->name, hi->value);
 			}
-			xml_odbc_render_template(template_name, params, xml_out, &off);
 		}
+	}
+
+	/* put all necessary data in session_helper_t helper */
+	// switch_memory_pool_t
+	// template_name
+	// params
+	// xml_out
+	// &off
+
+	/* render xml from template */
+	if (xml_odbc_render_template(helper) == SWITCH_STATUS_SUCCESS) {
+
+	/* dump the generated file to *xml_char */
+	xml_char = switch_xml_toxml(xml_out, SWITCH_TRUE);
+
+	/* debug dump the generated xml to console */
+	if (globals.debug == SWITCH_TRUE) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of generated XML:\n%s", xml_char);
+	}
+
+	/* dump *xml_char to disk */
+
+	/* close the file */
+
+	/* free *xml_char */
+
+	/* free switch_memory_pool_t */
+
+	/* free helper ?? */
+
+	/* copy the generated xml to xml_out - this should never happen */
+	if (!(xml_out = switch_xml_parse_file(filename))) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error Parsing Result!\n");
+	}
+
+	/* debug by leaving the file behind for review */
+	if (keep_files_around) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CONSOLE, "Generated XML is in %s\n", filename);
 	} else {
-		goto cleanup;
+		if (unlink(filename) != 0) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Generated XML file [%s] delete failed\n", filename);
+		}
 	}
 
-	if (debug == SWITCH_TRUE) {
-		char *tmp_xml = switch_xml_toxml(xml_out, SWITCH_FALSE);
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of XML generated:\n%s", tmp_xml);
-		switch_safe_free(tmp_xml);
-	}
+	/* other things to free ?! */
 
-	ret = 0;
-
-  cleanup:
-
-	switch_safe_free(template_name);
-
-	if (ret) {
-		switch_xml_free(xml_out);
-		return NULL;
-	}
-	
 	return xml_out;
 }
 
