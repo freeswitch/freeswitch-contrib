@@ -1,7 +1,8 @@
+session:answer(); 
+while (session:ready() == true) do 
 session:setAutoHangup(false)
-session:answer();
 session:set_tts_parms("flite", "kal");
-session:speak("Welcome. Welcome to the VoIp World!. this is a Blind Users Community. powered by Freeswitch, the free / ultimate PBX. thank to anthm!");
+session:speak("Welcome. Welcome to the VoIp World!. this is a Blind Users Programing Community. powered by Freeswitch, the free / ultimate PBX. thank to anthm!");
 session:sleep(100);
 session:speak("please select an Action.");
 session:sleep(100);
@@ -14,7 +15,7 @@ session:sleep(100);
 session:speak("for Music on hold, press 4");
 session:sleep(100);
 session:speak("to call me, press 0");
-session:sleep(2000);
+session:sleep(3000);
 digits = session:getDigits(1, "", 3000);
 if (digits == "1")  then
   session:execute("transfer","3001");
@@ -30,4 +31,5 @@ if (digits == "4")  then
 end
 if (digits == "0")  then
   session:execute("transfer","voipaware@sip.voipuser.org");
+end
 end
