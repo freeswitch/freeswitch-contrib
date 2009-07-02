@@ -242,8 +242,6 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 	/* just copy xml_in_cur to xml_out */
 	if (switch_strlen_zero(helper->xml_out_cur->name)) {
-
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "COPYING helper->xml_in_cur->name=[%s]\n", helper->xml_in_cur->name);
 		helper->xml_out_cur->name = switch_core_strdup(helper->pool, helper->xml_in_cur->name);
 
 	} else if (!(helper->xml_out_cur = switch_xml_add_child_d(helper->xml_out_cur, helper->xml_in_cur->name, helper->xml_out_cur_off++))) {
