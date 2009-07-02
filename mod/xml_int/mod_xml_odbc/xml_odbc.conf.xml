@@ -3,6 +3,7 @@
   <settings>
     <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
     <param name="debug" value="true"/>
+    <param name="keep_files_around" value="true"/>
   </settings>
 
   <bindings>
