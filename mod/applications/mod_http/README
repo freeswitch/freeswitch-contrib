@@ -1,0 +1,1 @@
+NOTE:  This module has serious memory leaks, we strongly suggest you use mod_curl instead.
