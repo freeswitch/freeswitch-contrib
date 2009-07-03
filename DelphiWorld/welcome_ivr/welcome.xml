@@ -1,4 +1,5 @@
 <!!-- this is a dialplan extention to the sample Welcome IVR Script in LUA -->
+<!-- please put it in the /conf/dialplan/default folder to by included -->
 <include>
 <!-- extension name -->
     <extension name="flite">
