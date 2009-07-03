@@ -196,13 +196,17 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 	} 
 
 	if (!switch_strlen_zero(empty_result_break_to) && helper->tmp_i == 0) {
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "HIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIEIRRRRRR [%s]\n", empty_result_break_to);
 		helper->next_template_name = empty_result_break_to;
 	}
 	
 	status = SWITCH_STATUS_SUCCESS;
 
   done:
+
+	if (new_value != value) {
+		switch_safe_free(new_value);
+	}
+
 	return status;
 }
 
@@ -250,13 +254,14 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 	/* copy all attrs */
 	for (i=0; helper->xml_in_cur->attr[i]; i+=2) {
-		char *tmp_attr;
-		tmp_attr = switch_event_expand_headers(helper->event, helper->xml_in_cur->attr[i+1]);         // LEAK !!!!
-		switch_xml_set_attr(helper->xml_out_cur, helper->xml_in_cur->attr[i], tmp_attr);
+		char *tmp_attr, *tmp_attr2;
+		tmp_attr = switch_event_expand_headers(helper->event, helper->xml_in_cur->attr[i+1]);
+		tmp_attr2 = switch_core_strdup(helper->pool, tmp_attr); // BAH Can't I use a switch_event_expand_headers that uses helper->pool ?
+		switch_xml_set_attr(helper->xml_out_cur, helper->xml_in_cur->attr[i], tmp_attr2);
 
-		// if (tmp_attr != helper->xml_in->attr[i+1]) {
-		// 	switch_safe_free(tmp_attr);
-		// }
+		if (tmp_attr != helper->xml_in_cur->attr[i+1]) {
+			switch_safe_free(tmp_attr);
+		}
 	}
 
 	/* render all children */
@@ -266,6 +271,12 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 		if (xml_odbc_render_tag(helper) != SWITCH_STATUS_SUCCESS) {
 			goto done;
 		}
+
+		if (!switch_strlen_zero(helper->next_template_name)) {
+			status = SWITCH_STATUS_SUCCESS;
+			goto done;
+		}
+
 		helper->xml_out_cur = xml_out_tmp;
 	}
 
@@ -279,11 +290,8 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 {
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
-	/* free helper -> xml_out, xml_out_cur, xml_in and xml_in_cur */
+	/* free helper -> xml_out */
 	switch_xml_free(helper->xml_out);
-	switch_xml_free(helper->xml_out_cur);
-	switch_xml_free(helper->xml_in);
-	switch_xml_free(helper->xml_in_cur);
 
 	/* init helper-> xml_out and xml_out_cur */
 	if (!(helper->xml_out = helper->xml_out_cur = switch_xml_new(""))) {
@@ -403,6 +411,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	/* open (temporary) file */
 	if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR| S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) < 0) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error opening temp file [%s]!\n", filename);
+		switch_safe_free(xml_char);
 		goto cleanup;
 	}
 
@@ -410,12 +419,16 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	if (!write(fd, xml_char, (unsigned) strlen(xml_char))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error writing generated XML to temp file [%s]!\n", filename);
 		close(fd);
+		switch_safe_free(xml_char);
 		goto cleanup;
 	}
 
 	/* close (temporary) file */
 	close(fd);
 	fd = -1;
+
+	/* free xml_char */
+	switch_safe_free(xml_char);
 
 	/* copy the (temporary) file to switch_xml_t xml_out - this should never go wrong */
 	if (!(xml_out = switch_xml_parse_file(filename))) {
@@ -432,8 +445,8 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	}
 
   cleanup:
+	switch_xml_free(helper.xml_out);
 	switch_core_destroy_memory_pool(&pool);
-	/* free *xml_char */
 	/* free helper ?? */
 	/* free filename */
 
