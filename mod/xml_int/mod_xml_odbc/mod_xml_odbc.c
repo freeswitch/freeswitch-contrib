@@ -49,10 +49,10 @@ SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown,
 
 static struct {
 	char *odbc_dsn;
-	char *configuration_template_name;
-	char *directory_template_name;
-	char *dialplan_template_name;
-	char *phrases_template_name;
+//	char *configuration_template_name;
+//	char *directory_template_name;
+//	char *dialplan_template_name;
+//	char *phrases_template_name;
 	switch_xml_t templates_tag;
 	switch_mutex_t *mutex;
 	switch_memory_pool_t *pool;
@@ -109,13 +109,24 @@ typedef struct xml_binding {
 	char *bindings;
 } xml_binding_t;
 
+static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, switch_event_t *event, const char *in) /* perhaps it's handy if this is moved to switch_event.c ? */
+{
+    char *tmp, *out;
+
+    tmp = switch_event_expand_headers(event, in);
+    out = switch_core_strdup(pool, tmp);
+    if (tmp != in) switch_safe_free(tmp);
+
+    return out;
+}
+
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
 	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
 	switch_xml_t xml_in_tmp;
 	int i;
 
-// only continue if helper->next_template_name is set !
+// only continue if helper->next_template_name is NOT set !
 
 	/* up the row counter */
 	helper->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
@@ -128,7 +139,7 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 
 	/* render all children of xml_in */
 	for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-// only continue if helper->next_template_name is set !
+// only continue if helper->next_template_name is NOT set !
 		helper->xml_in_cur = xml_in_tmp;
 		xml_odbc_render_tag(helper);
 	}
@@ -146,19 +157,20 @@ static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t xml_odbc_do_if_header(xml_odbc_session_helper_t *helper)
+static switch_status_t xml_odbc_do_check_event_header(xml_odbc_session_helper_t *helper)
 {
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t xml_odbc_do_replace_header_value(xml_odbc_session_helper_t *helper)
+static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
 {
-	char *old_header_value = NULL;
 	char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
-	char *when_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "when-name");
-	char *when_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "when-value");
+	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
+	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
 	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
-	char *new_value = switch_event_expand_headers(helper->event, value);                   /////// LEAK !!!!!!!
+	char *old_value = NULL;
+	char *new_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, value);
+
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (switch_strlen_zero(value)) {
@@ -166,10 +178,10 @@ static switch_status_t xml_odbc_do_replace_header_value(xml_odbc_session_helper_
 		goto done;
 	}
 
-	if ((old_header_value = switch_event_get_header(helper->event, when_name))) {
-		if (switch_strlen_zero(when_value) || !strcasecmp(when_value, old_header_value)) {
-			switch_event_del_header(helper->event, when_name);
-			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, when_name, new_value);
+	if ((old_value = switch_event_get_header(helper->event, if_name))) {
+		if (switch_strlen_zero(if_value) || !strcasecmp(if_value, old_value)) {
+			switch_event_del_header(helper->event, if_name);
+			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, if_name, new_value);
 		}
 	}
 
@@ -227,14 +239,10 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 		if (!strcasecmp(name, "break-to")) {
 			status = xml_odbc_do_break_to(helper);
-		} else if (!strcasecmp(name, "if_header")) {
-			status = xml_odbc_do_if_header(helper);
-//		} else if (!strcasecmp(name, "set-header-name")) {
-//			status = xml_odbc_do_set_header_name(helper);
-//		} else if (!strcasecmp(name, "set-header-value")) {
-//			status = xml_odbc_do_set_header_value(helper);
-		} else if (!strcasecmp(name, "replace_header_value")) {	// DEPRECATED REMOVE THIS FUNCTION!!
-			status = xml_odbc_do_replace_header_value(helper);	// DEPRECATED REMOVE THIS FUNCTION!!
+		} else if (!strcasecmp(name, "check-event-header")) {
+			status = xml_odbc_do_check_event_header(helper);
+		} else if (!strcasecmp(name, "set-event-header")) {
+			status = xml_odbc_do_set_event_header(helper);
 		} else if (!strcasecmp(name, "query")) {
 			status = xml_odbc_do_query(helper);
 		} else {
@@ -252,16 +260,10 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 		goto done;
 	}
 
-	/* copy all attrs */
+	/* copy all expanded attrs */
 	for (i=0; helper->xml_in_cur->attr[i]; i+=2) {
-		char *tmp_attr, *tmp_attr2;
-		tmp_attr = switch_event_expand_headers(helper->event, helper->xml_in_cur->attr[i+1]);
-		tmp_attr2 = switch_core_strdup(helper->pool, tmp_attr); // BAH Can't I use a switch_event_expand_headers that uses helper->pool ?
-		switch_xml_set_attr(helper->xml_out_cur, helper->xml_in_cur->attr[i], tmp_attr2);
-
-		if (tmp_attr != helper->xml_in_cur->attr[i+1]) {
-			switch_safe_free(tmp_attr);
-		}
+		char *tmp_attr = switch_event_expand_headers_by_pool(helper->pool, helper->event, helper->xml_in_cur->attr[i+1]);
+		switch_xml_set_attr(helper->xml_in_cur, helper->xml_in_cur->attr[i], tmp_attr);
 	}
 
 	/* render all children */
@@ -354,7 +356,11 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	switch_core_new_memory_pool(&pool);
 	helper.pool = pool;
 
+	/* set the default template to render */
+	helper.next_template_name = "default";
+
 	/* find out what template to render, and put it in helper.next_template_name */
+/*
 	if (!strcmp(section, "configuration")) {
 		helper.next_template_name = switch_core_strdup(pool, globals.configuration_template_name);
 	} else if (!strcmp(section, "directory")) {
@@ -367,10 +373,11 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid section\n");
 		goto cleanup;
 	}
+*/
 
 	/* add some headers to event and put it in the helper */
 	gethostname(hostname, sizeof(hostname));
-	switch_event_add_header_string(event, SWITCH_STACK_TOP, "hostname", hostname);
+//	switch_event_add_header_string(event, SWITCH_STACK_TOP, "hostname", hostname); // IS THIS ALWAYS PASSED AS FreeSWITCH-Hostname ??
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "section", switch_str_nil(section));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "tag_name", switch_str_nil(tag_name));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "key_name", switch_str_nil(key_name));
