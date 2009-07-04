@@ -1,33 +1,25 @@
 <configuration name="xml_odbc.conf" description="XML ODBC Configuration">
 
   <settings>
+    <param name="binding" value="directory"/>
     <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
     <param name="debug" value="true"/>
     <param name="keep_files_around" value="true"/>
   </settings>
 
-  <bindings>
-<!--
-    <binding name="configuration">
-      <param name="template" value="configuration"/>
-    </binding>
--->
-    <binding name="directory">
-      <!-- <param name="template" value="directory_swk"/> -->
-      <param name="template" value="directory"/>
-    </binding>
-<!--
-    <binding name="dialplan">
-      <param name="template" value="dialplan"/>
-    </binding>
-
-    <binding name="phrases">
-      <param name="template" value="phrases"/>
-    </binding>
--->
-  </bindings>
-
   <templates>
+
+    <template name="default">
+      <xml-odbc-do name="break-to" value="${section}"/>
+    </template>
+
+    <template name="directory"> -->
+      <xml-odbc-do name="check-event-header" if-name="purpose"> 
+        <!-- catches purpose gateways and network-list (any more?) -->
+        <xml-odbc-do name="break-to" value="directory-${purpose}"/> 
+      </xml-odbc-do> 
+      <xml-odbc-do name="break-to" value="directory-user"/>
+    </template> 
 
     <template name="configuration">
       <xml-odbc-do name="break-to" value="${section}" on-no-template-break-to="simple_configuration"/>
@@ -43,7 +35,7 @@
               FROM
                 cnf_settings
               WHERE
-                hostname = '${hostname}' AND
+                hostname = '${FreeSWITCH-Hostname}' AND
                 section = '${section}';">
               <param name="${name}" value="${value}"/>
             </xml-odbc-do>

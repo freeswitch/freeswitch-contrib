@@ -1,8 +1,8 @@
 <include>
-  <template name="directory">
+  <template name="directory-user">
     <document type="freeswitch/xml">
-      <xml-odbc-do name="replace_header_value" when-name="key" when-value="id" value="username"/>
-      <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
+      <xml-odbc-do name="set-event-header" if-name="key" if-value="id" to-value="username"/>
+      <xml-odbc-do name="query" on-empty-result-break-to="not-found" value="
         SELECT
           dir_domains.id AS domain_id,
           dir_users.id AS user_id,
@@ -13,7 +13,7 @@
           dir_domains,
           dir_users
         WHERE
-          dir_users.username = '${user}' AND
+          dir_users.${key} = '${user}' AND
           dir_domains.name = '${domain}' AND
           dir_users.dir_domain_id = dir_domains.id AND
           dir_users.enabled = '1';"/>
@@ -46,7 +46,7 @@
               <users>
                 <user id="${user}" mailbox="${mailbox}" cidr="${cidr}" number-alias="${number-alias}">
                   <params>
-                    <xml-odbc-do name="query" on-empty-result-break-to="not_found" value="
+                    <xml-odbc-do name="query" on-empty-result-break-to="not-found" value="
                       SELECT
                         name, value
                       FROM
@@ -80,9 +80,7 @@
                 dir_groups_users.dir_group_id = dir_groups.id AND
                 dir_user_id = '${user_id}';">
               <group name="${group_name}">
-                <users>
-                  <user id="${user}" type="pointer"/>
-                </users>
+                <user id="${user}" type="pointer"/>
               </group>
             </xml-odbc-do>
           </groups>

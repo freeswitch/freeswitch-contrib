@@ -49,10 +49,6 @@ SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown,
 
 static struct {
 	char *odbc_dsn;
-//	char *configuration_template_name;
-//	char *directory_template_name;
-//	char *dialplan_template_name;
-//	char *phrases_template_name;
 	switch_xml_t templates_tag;
 	switch_mutex_t *mutex;
 	switch_memory_pool_t *pool;
@@ -137,7 +133,7 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
-	/* render all children of xml_in */
+	/* render all children of xml_in_cur */
 	for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
 // only continue if helper->next_template_name is NOT set !
 		helper->xml_in_cur = xml_in_tmp;
@@ -149,16 +145,41 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 
 static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 {
-	char *value = (char *) switch_xml_attr_soft(helper->xml_in, "value");
-	char *new_value = switch_event_expand_headers(helper->event, value);
+	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
+	char *new_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, value);
 
-	helper->next_template_name = switch_core_strdup(helper->pool, new_value);
+	helper->next_template_name = new_value;
 
 	return SWITCH_STATUS_SUCCESS;
 }
 
 static switch_status_t xml_odbc_do_check_event_header(xml_odbc_session_helper_t *helper)
 {
+	char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
+	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
+	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
+	char *tmp_value;
+	switch_xml_t xml_in_tmp;
+
+	if (switch_strlen_zero(if_name)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no if-name is given\n", name);
+		goto done;
+	}
+
+	if ((tmp_value = switch_event_get_header(helper->event, if_name))) {
+		if (!switch_strlen_zero(tmp_value)) {
+			if (switch_strlen_zero(if_value) || !strcasecmp(if_value, tmp_value)) {
+				for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
+					helper->xml_in_cur = xml_in_tmp;
+					xml_odbc_render_tag(helper);
+
+					if (!switch_strlen_zero(helper->next_template_name)) goto done;
+				}
+			}
+		}
+	}
+
+  done:
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -167,21 +188,20 @@ static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *h
 	char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
 	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
 	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
-	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
 	char *old_value = NULL;
-	char *new_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, value);
-
+	char *to_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "to-value");
+	char *new_to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value);
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
-	if (switch_strlen_zero(value)) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no value is given\n", name);
+	if (switch_strlen_zero(to_value)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no to-value is given\n", name);
 		goto done;
 	}
 
 	if ((old_value = switch_event_get_header(helper->event, if_name))) {
 		if (switch_strlen_zero(if_value) || !strcasecmp(if_value, old_value)) {
 			switch_event_del_header(helper->event, if_name);
-			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, if_name, new_value);
+			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, if_name, new_to_value);
 		}
 	}
 
@@ -195,7 +215,7 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 {
 	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
 	char *empty_result_break_to = (char *) switch_xml_attr_soft(helper->xml_in_cur, "on-empty-result-break-to");
-	char *new_value = switch_event_expand_headers(helper->event, value);
+	char *new_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, value);
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (globals.debug == SWITCH_TRUE) {
@@ -214,11 +234,6 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 	status = SWITCH_STATUS_SUCCESS;
 
   done:
-
-	if (new_value != value) {
-		switch_safe_free(new_value);
-	}
-
 	return status;
 }
 
@@ -262,8 +277,8 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 	/* copy all expanded attrs */
 	for (i=0; helper->xml_in_cur->attr[i]; i+=2) {
-		char *tmp_attr = switch_event_expand_headers_by_pool(helper->pool, helper->event, helper->xml_in_cur->attr[i+1]);
-		switch_xml_set_attr(helper->xml_in_cur, helper->xml_in_cur->attr[i], tmp_attr);
+		char *tmp_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, helper->xml_in_cur->attr[i+1]);
+		switch_xml_set_attr(helper->xml_out_cur, helper->xml_in_cur->attr[i], tmp_value);
 	}
 
 	/* render all children */
@@ -291,6 +306,11 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helper)
 {
 	switch_status_t status = SWITCH_STATUS_FALSE;
+	switch_xml_t xml_tmp;
+
+	if (globals.debug == SWITCH_TRUE) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG GOING TO RENDER TEMPLATE [%s]\n", helper->next_template_name);
+	}
 
 	/* free helper -> xml_out */
 	switch_xml_free(helper->xml_out);
@@ -305,20 +325,21 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 	/* reset helper->xml_out_cur_off */
 	helper->xml_out_cur_off = 0;
 
-	/* render child tag */
+	/* render children */
 	if ((helper->xml_in = helper->xml_in_cur = switch_xml_find_child(globals.templates_tag, "template", "name", helper->next_template_name))) {
-		helper->xml_in_cur = helper->xml_in_cur->child;
-		helper->next_template_name = "";
-		if (xml_odbc_render_tag(helper) != SWITCH_STATUS_SUCCESS) {
-			goto done;
-		}
+		for (xml_tmp = helper->xml_in_cur->child; xml_tmp; xml_tmp = xml_tmp->ordered) {
+			helper->xml_in_cur = xml_tmp;
+			helper->next_template_name = "";
+			if (xml_odbc_render_tag(helper) != SWITCH_STATUS_SUCCESS) {
+				goto done;
+			}
 
-		if (!switch_strlen_zero(helper->next_template_name)) {
-			goto reset;
+			if (!switch_strlen_zero(helper->next_template_name)) {
+				goto reset;
+			}
 		}
-
 	} else {
-		helper->next_template_name = "not_found";
+		helper->next_template_name = "not-found";
 		goto reset;
 	}
 
@@ -343,7 +364,6 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	switch_memory_pool_t *pool;			/* for easy memory cleanup */
 	xml_odbc_session_helper_t helper;	/* this helper is sent through all other functions to generate the xml */
 	switch_xml_t xml_out = NULL;		/* the xml that will be returned by this function */
-	char hostname[256] = "";			/* added as header to switch_event_t event */
 	char filename[512] = "";			/* the temporary, uuid-based filename */
 	int fd;
 
@@ -359,38 +379,12 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	/* set the default template to render */
 	helper.next_template_name = "default";
 
-	/* find out what template to render, and put it in helper.next_template_name */
-/*
-	if (!strcmp(section, "configuration")) {
-		helper.next_template_name = switch_core_strdup(pool, globals.configuration_template_name);
-	} else if (!strcmp(section, "directory")) {
-		helper.next_template_name = switch_core_strdup(pool, globals.directory_template_name);
-	} else if (!strcmp(section, "dialplan")) {
-		helper.next_template_name = switch_core_strdup(pool, globals.dialplan_template_name);
-	} else if (!strcmp(section, "phrases")) {
-		helper.next_template_name = switch_core_strdup(pool, globals.phrases_template_name);
-	} else {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid section\n");
-		goto cleanup;
-	}
-*/
-
 	/* add some headers to event and put it in the helper */
-	gethostname(hostname, sizeof(hostname));
-//	switch_event_add_header_string(event, SWITCH_STACK_TOP, "hostname", hostname); // IS THIS ALWAYS PASSED AS FreeSWITCH-Hostname ??
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "section", switch_str_nil(section));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "tag_name", switch_str_nil(tag_name));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "key_name", switch_str_nil(key_name));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "key_value", switch_str_nil(key_value));
 	helper.event = event;
-
-	/* generate a new uuid */
-	switch_uuid_get(&uuid);
-	switch_uuid_format(uuid_str, &uuid);
-
-	/* generate a temporary filename to store the generated xml in */
-	// use switch_core_sprintf here ?!?!
-	switch_snprintf(filename, sizeof(filename), "%s%s.tmp.xml", SWITCH_GLOBAL_dirs.temp_dir, uuid_str);
 
 	/* debug print all switch_event_t event headers */
 	if (globals.debug == SWITCH_TRUE) {
@@ -401,7 +395,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 		}
 	}
 
-	/* render xml from template */
+	/* render xml to helper.xml_out */
 	if (xml_odbc_render_template(&helper) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Something went horribly wrong while generating an XML template!\n");
 		goto cleanup;
@@ -414,6 +408,14 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	if (globals.debug == SWITCH_TRUE) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of generated XML:\n%s", xml_char);
 	}
+
+	/* generate a new uuid */
+	switch_uuid_get(&uuid);
+	switch_uuid_format(uuid_str, &uuid);
+
+	/* generate a temporary filename to store the generated xml in */
+	// use switch_core_sprintf here ?!?!
+	switch_snprintf(filename, sizeof(filename), "%s%s.tmp.xml", SWITCH_GLOBAL_dirs.temp_dir, uuid_str);
 
 	/* open (temporary) file */
 	if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR| S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) < 0) {
@@ -465,7 +467,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 static switch_status_t do_config()
 {
 	char *cf = "xml_odbc.conf";
-	switch_xml_t cfg, xml, settings_tag, bindings_tag, binding_tag, templates_tag, param;
+	switch_xml_t cfg, xml, settings_tag, templates_tag, param;
 	xml_binding_t *binding = NULL;
 
 	switch_status_t status = SWITCH_STATUS_FALSE;
@@ -484,17 +486,12 @@ static switch_status_t do_config()
 		goto done;
 	}
 
-	if (!(bindings_tag = switch_xml_child(cfg, "bindings"))) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Missing <bindings> tag!\n");
-		goto done;
-	}
-
 	if (!(templates_tag = switch_xml_child(cfg, "templates"))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Missing <templates> tag!\n");
 		goto done;
 	}
 
-// is this allowed ? or should I copy the entire tree ?
+// is this allowed ? or should I copy the entire tree ? can I register a callback function that is called when reloadxml is done ?
 	globals.templates_tag = templates_tag;
 
 	/* get all the settings */
@@ -505,8 +502,24 @@ static switch_status_t do_config()
 		var = (char *) switch_xml_attr_soft(param, "name");
 		val = (char *) switch_xml_attr_soft(param, "value");
 
-		/* set globals.odbc_dsn */
-		if (!strcasecmp(var, "odbc-dsn") && !switch_strlen_zero(val)) {
+		if (!strcasecmp(var, "binding") && !switch_strlen_zero(val)) {
+			if (!(binding = malloc(sizeof(*binding)))) {
+				goto done;
+			}
+			memset(binding, 0, sizeof(*binding));
+			binding->bindings = strdup(val); // use switch_core_strdup globals.pool for this ?
+
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding XML Search Function [%s]\n", val);
+
+			switch_xml_bind_search_function(xml_odbc_search, switch_xml_parse_section_string(binding->bindings), binding);
+
+			binding_count++;
+			binding = NULL;
+
+		// change odbc-dsn to something like odbc-handle with name=default and dsn=a:b:c
+		// so a linked list or something is created with multiple handles that can be
+		// selected from xml-odbc-do name=query !!! that would be COOL !!!
+		} else if (!strcasecmp(var, "odbc-dsn") && !switch_strlen_zero(val)) {
 			globals.odbc_dsn = switch_core_strdup(globals.pool, val);
 			if ((odbc_user = strchr(globals.odbc_dsn, ':'))) {
 				*odbc_user++ = '\0';
@@ -520,7 +533,7 @@ static switch_status_t do_config()
 			} else {
 				globals.debug = SWITCH_FALSE;
 			}
-		} else if (!strcasecmp(var, "keep_files_around") && !switch_strlen_zero(val)) {
+		} else if (!strcasecmp(var, "keep-files-around") && !switch_strlen_zero(val)) {
 			if (!strcasecmp(val, "true") || !strcasecmp(val, "on")) {
 				globals.keep_files_around = SWITCH_TRUE;
 			} else {
@@ -529,60 +542,15 @@ static switch_status_t do_config()
 		}
 	}
 
+	/* check if any bindings were done */
+	if (binding_count == 0) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "No bindings are set, is this really what you want?\n");
+	}
+
 	/* check if odbc_dsn is set */
 	if (!globals.odbc_dsn) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No odbc-dsn setting is set!\n");
 		goto done;
-	}
-
-	/* get all bindings */
-	for (binding_tag = switch_xml_child(bindings_tag, "binding"); binding_tag; binding_tag = binding_tag->next) {
-		char *bname = (char*) switch_xml_attr_soft(binding_tag, "name");
-
-		for (param = switch_xml_child(binding_tag, "param"); param; param = param->next) {
-			char *var = NULL;
-			char *val = NULL;
-
-			var = (char *) switch_xml_attr_soft(param, "name");
-			val = (char *) switch_xml_attr_soft(param, "value");
-
-			if (!strcasecmp(var, "template") && !switch_strlen_zero(val)) {
-				if (!strcmp(bname, "configuration")) {
-					globals.configuration_template_name = switch_core_strdup(globals.pool, val);
-				} else if (!strcmp(bname, "directory")) {
-					globals.directory_template_name = switch_core_strdup(globals.pool, val);
-				} else if (!strcmp(bname, "dialplan")) {
-					globals.dialplan_template_name = switch_core_strdup(globals.pool, val);
-				} else if (!strcmp(bname, "phrases")) {
-					globals.phrases_template_name = switch_core_strdup(globals.pool, val);
-				} else {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Invalid binding name [%s]\n", bname);
-					goto done;
-				}
-			}
-		}
-
-		binding_count++;
-
-		if (!(binding = malloc(sizeof(*binding)))) {
-			goto done;
-		}
-		memset(binding, 0, sizeof(*binding));
-
-		// use switch_core_strdup on globals.pool here as well ?
-		binding->bindings = strdup(bname);
-
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding [%s] XML ODBC Fetch Function [%s]\n",
-			switch_strlen_zero(bname) ? "N/A" : bname, binding->bindings);
-
-		switch_xml_bind_search_function(xml_odbc_search, switch_xml_parse_section_string(bname), binding);
-
-		binding = NULL;
-	}
-
-	/* check if a binding is set */
-	if (binding_count == 0) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "No binding is set, is this really what you want?\n");
 	}
 
 	/* make odbc connection */
