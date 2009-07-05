@@ -31,7 +31,7 @@
 
     <template name="simple_configuration">
       <document type="freeswitch/xml">
-        <configuration name="${section}">
+        <configuration name="${key_value}">
           <settings>
             <xml-odbc-do name="query" value="
               SELECT
