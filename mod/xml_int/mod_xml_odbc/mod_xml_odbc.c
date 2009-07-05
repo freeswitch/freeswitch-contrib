@@ -55,6 +55,7 @@ static struct {
 	switch_odbc_handle_t *master_odbc;
 	switch_bool_t debug;
 	switch_bool_t keep_files_around;
+	int max_render_template_count;
 } globals;
 
 typedef struct xml_odbc_session_helper {
@@ -66,6 +67,7 @@ typedef struct xml_odbc_session_helper {
 	switch_xml_t xml_out;		/* root tag of xml that is rendered to */
 	switch_xml_t xml_out_cur;	/* current tag in xml that is rendered to */
 	int xml_out_cur_off;		/* depth counter of xml_out_cur */
+	int render_template_count;	/* when this counter > globals.max_render_template_count then stop because there's probably a loop */
 	int tmp_i;					/* temporary counter, used for counting rows in the callback */
 } xml_odbc_session_helper_t;
 
@@ -312,6 +314,14 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG GOING TO RENDER TEMPLATE [%s]\n", helper->next_template_name);
 	}
 
+	/* up the helper->render_template_count and check whether it's > globals.max_render_template_count */
+	helper->render_template_count++;
+	if (helper->render_template_count > globals.max_render_template_count) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR,
+			"Stopped rendering template, called xml_odbc_render_template more than [%i] times, probably looping.\n", globals.max_render_template_count);
+		goto done;
+	}
+
 	/* free helper -> xml_out */
 	switch_xml_free(helper->xml_out);
 
@@ -375,6 +385,9 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	/* create a new memory pool for this session and put it in the helper */
 	switch_core_new_memory_pool(&pool);
 	helper.pool = pool;
+
+	/* set the render_template_count to 0 */
+	helper.render_template_count = 0;
 
 	/* set the default template to render */
 	helper.next_template_name = "default";
@@ -493,6 +506,9 @@ static switch_status_t do_config()
 
 // is this allowed ? or should I copy the entire tree ? can I register a callback function that is called when reloadxml is done ?
 	globals.templates_tag = templates_tag;
+
+	/* set a default globals.max_render_template_count to avoid loops in render_template */
+	globals.max_render_template_count = 32;
 
 	/* get all the settings */
 	for (param = switch_xml_child(settings_tag, "param"); param; param = param->next) {
