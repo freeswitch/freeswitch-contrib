@@ -9,7 +9,7 @@
             FROM
               cnf_console_mappings
             WHERE
-              hostname = '${hostname}';">
+              hostname = '${FreeSWITCH-Hostname}';">
             <mapping name="${name}" value="${value}"/>
           </xml-odbc-do>
         </mappings>
@@ -20,7 +20,7 @@
             FROM
               cnf_settings
             WHERE
-              hostname = '${hostname}' AND
+              hostname = '${FreeSWITCH-Hostname}' AND
               section = '${section}';">
             <param name="${name}" value="${value}"/>
           </xml-odbc-do>

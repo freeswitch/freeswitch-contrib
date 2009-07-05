@@ -22,7 +22,11 @@
     </template> 
 
     <template name="configuration">
-      <xml-odbc-do name="break-to" value="${section}" on-no-template-break-to="simple_configuration"/>
+      <xml-odbc-do name="check-event-header" if-name="tag_name" if-value="configuration">
+        <xml-odbc-do name="check-event-header" if-name="key_name" if-value="name">
+          <xml-odbc-do name="break-to" value="${key_value}" on-no-template-break-to="simple-configuration"/>
+        </xml-odbc-do>
+      </xml-odbc-do>
     </template>
 
     <template name="simple_configuration">

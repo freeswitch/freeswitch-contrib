@@ -1,17 +1,5 @@
 <include> <!-- NOT FINISHED ! -->
   <template name="dialplan">
-    <document type="freeswitch/xml">
-      <xml-odbc-do name="query" on-zero-rows-break-to="not_found" value="
-        SELECT * FROM dialplan WHERE dialed_number='${dialed_number}';"/>
-      <section name="dialplan" description="RE Dial Plan For FreeSwitch">
-        <context name="default">
-          <extension name="test9">
-            <condition field="destination_number" expression="^83789$">
-              <action application="bridge" data="iax/guest@conference.freeswitch.org/888"/>
-            </condition>
-          </extension>
-        </context>
-      </section>
-    </document>
+    <xml-odbc-do name="break-to" value="not-found"/>
   </template>
 </include>
