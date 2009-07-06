@@ -1,0 +1,1528 @@
+<?xml version="1.0"?>
+<cdr>
+  <variables>
+    <sip_authorized>true</sip_authorized>
+    <sip_mailbox>1006</sip_mailbox>
+    <sip_auth_username>1006</sip_auth_username>
+    <sip_auth_realm>10.0.1.250</sip_auth_realm>
+    <mailbox>1006</mailbox>
+    <accountcode>1006</accountcode>
+    <user_context>default</user_context>
+    <effective_caller_id_name>Extension%201006</effective_caller_id_name>
+    <effective_caller_id_number>1006</effective_caller_id_number>
+    <sip_from_user>1006</sip_from_user>
+    <sip_from_port>5060</sip_from_port>
+    <sip_from_uri>1006%4010.0.1.250%3A5060</sip_from_uri>
+    <sip_from_host>10.0.1.250</sip_from_host>
+    <sip_from_user_stripped>1006</sip_from_user_stripped>
+    <sofia_profile_name>default</sofia_profile_name>
+    <sip_req_user>1009</sip_req_user>
+    <sip_req_port>5060</sip_req_port>
+    <sip_req_uri>1009%4010.0.1.250%3A5060</sip_req_uri>
+    <sip_req_host>10.0.1.250</sip_req_host>
+    <sip_to_user>1009</sip_to_user>
+    <sip_to_port>5060</sip_to_port>
+    <sip_to_uri>1009%4010.0.1.250%3A5060</sip_to_uri>
+    <sip_to_host>10.0.1.250</sip_to_host>
+    <sip_contact_user>1006</sip_contact_user>
+    <sip_contact_port>5060</sip_contact_port>
+    <sip_contact_uri>1006%4010.0.1.240%3A5060</sip_contact_uri>
+    <sip_contact_host>10.0.1.240</sip_contact_host>
+    <channel_name>sofia/default/1006%4010.0.1.250%3A5060</channel_name>
+    <sip_call_id>1f9e6333-e0128840-f539ae8d%4010.0.1.240</sip_call_id>
+    <sip_via_host>10.0.1.240</sip_via_host>
+    <sip_via_port>5060</sip_via_port>
+    <sip_via_rport>34699</sip_via_rport>
+    <max_forwards>70</max_forwards>
+    <presence_id>1006%4010.0.1.250</presence_id>
+    <switch_r_sdp>v%3D0%0D%0Ao%3D-%201198125579%201198125579%20IN%20IP4%2010.0.1.240%0D%0As%3DPolycom%20IP%20Phone%0D%0Ac%3DIN%20IP4%2010.0.1.240%0D%0At%3D0%200%0D%0Aa%3Dsendrecv%0D%0Am%3Daudio%202236%20RTP/AVP%209%200%208%2018%20101%0D%0Aa%3Drtpmap%3A9%20G722/8000%0D%0Aa%3Drtpmap%3A0%20PCMU/8000%0D%0Aa%3Drtpmap%3A8%20PCMA/8000%0D%0Aa%3Drtpmap%3A18%20G729/8000%0D%0Aa%3Drtpmap%3A101%20telephone-event/8000%0D%0A</switch_r_sdp>
+    <remote_media_ip>10.0.1.240</remote_media_ip>
+    <remote_media_port>2236</remote_media_port>
+    <read_codec>G722</read_codec>
+    <read_rate>16000</read_rate>
+    <write_codec>G722</write_codec>
+    <write_rate>16000</write_rate>
+    <local_media_ip>10.0.1.250</local_media_ip>
+    <local_media_port>2236</local_media_port>
+    <endpoint_disposition>ANSWER</endpoint_disposition>
+    <fifo_target>7fa22ce4-9487-4501-965e-7e062792f6c3</fifo_target>
+    <fifo_status>DONE</fifo_status>
+    <fifo_timestamp>2007-12-20%2007%3A20%3A20</fifo_timestamp>
+    <use_profile>nat</use_profile>
+    <numbering_plan>US</numbering_plan>
+    <default_gateway>asterlink.com</default_gateway>
+    <default_area_code>918</default_area_code>
+    <user_name>default</user_name>
+    <domain_name>10.0.1.250</domain_name>
+    <dialed_ext>1002</dialed_ext>
+    <call_timeout>130</call_timeout>
+    <hangup_after_bridge>true</hangup_after_bridge>
+    <left_hanging_extension>5900</left_hanging_extension>
+    <continue_on_fail>true</continue_on_fail>
+    <dialed_user>1002</dialed_user>
+    <dialed_domain>10.0.1.250</dialed_domain>
+    <switch_m_sdp>v%3D0%0D%0Ao%3D1002%208000%208000%20IN%20IP4%2010.0.1.5%0D%0As%3DSIP%20Call%0D%0Ac%3DIN%20IP4%2010.0.1.5%0D%0At%3D0%200%0D%0Am%3Daudio%205004%20RTP/AVP%200%20101%0D%0Aa%3Drtpmap%3A0%20PCMU/8000%0D%0Aa%3Drtpmap%3A101%20telephone-event/8000%0D%0Aa%3Dfmtp%3A101%200-11%0D%0Aa%3Dptime%3A20%0D%0A</switch_m_sdp>
+    <originate_disposition>SUCCESS</originate_disposition>
+    <bridge_channel>sofia/default/1002</bridge_channel>
+    <bridge_uuid>cf150cd3-af80-49b1-90c9-da7484e9b033</bridge_uuid>
+    <signal_bond>cf150cd3-af80-49b1-90c9-da7484e9b033</signal_bond>
+    <hangup_cause>NORMAL_CLEARING</hangup_cause>
+    <start_stamp>2007-12-20%2007%3A21%3A28</start_stamp>
+    <answer_stamp>2007-12-20%2007%3A19%3A34</answer_stamp>
+    <end_stamp>2007-12-20%2007%3A21%3A32</end_stamp>
+    <start_epoch>1198156888</start_epoch>
+    <start_uepoch>1198156888447769</start_uepoch>
+    <answer_epoch>1198156774</answer_epoch>
+    <answer_uepoch>1198156774875311</answer_uepoch>
+    <end_epoch>1198156892</end_epoch>
+    <end_uepoch>1198156892250109</end_uepoch>
+    <last_app>bridge</last_app>
+    <last_arg>USER/1002%4010.0.1.250</last_arg>
+    <caller_id>%22Brian%20West%22%20%3C1006%3E</caller_id>
+    <duration>4</duration>
+    <billsec>118</billsec>
+    <mduration>3803</mduration>
+    <billmsec>117375</billmsec>
+    <uduration>3802340</uduration>
+    <billusec>117374798</billusec>
+  </variables>
+  <app_log>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/5900"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="fifo" app_data="5900@10.0.1.250 in undef local_stream://moh"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1009"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1009"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1009/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1009/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1009@10.0.1.250"></application>
+    <application app_name="playback" app_data="local_stream://moh"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@10.0.1.250"></application>
+    <application app_name="info" app_data=""></application>
+    <application app_name="db" app_data="insert/spymap/1006/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="db" app_data="insert/last_dial/1006/1002"></application>
+    <application app_name="db" app_data="insert/last_dial/global/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="set" app_data="dialed_ext=1002"></application>
+    <application app_name="ring_ready" app_data=""></application>
+    <application app_name="set" app_data="call_timeout=130"></application>
+    <application app_name="set" app_data="hangup_after_bridge=true"></application>
+    <application app_name="set" app_data="left_hanging_extension=5900"></application>
+    <application app_name="set" app_data="continue_on_fail=true"></application>
+    <application app_name="db" app_data="insert/call_return/1002/1006"></application>
+    <application app_name="db" app_data="insert/last_dial_ext/1002/f1d9f5e9-1ccd-4df7-876e-adf6e3602361"></application>
+    <application app_name="bridge" app_data="USER/1002@10.0.1.250"></application>
+  </app_log>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>cf150cd3-af80-49b1-90c9-da7484e9b033</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>cf150cd3-af80-49b1-90c9-da7484e9b033</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156888447769</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>1198156892250109</hangup_time>
+      <transfer_time>0</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>4b8d3f9d-0bbd-48b3-b0e0-3a8eb9ead4d7</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>4b8d3f9d-0bbd-48b3-b0e0-3a8eb9ead4d7</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156885001861</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156888447769</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>c68e2ba8-12b8-417f-a919-4caa5437bd9a</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>c68e2ba8-12b8-417f-a919-4caa5437bd9a</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156880578019</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156885001861</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>073c1939-561c-466a-b652-a39ca2aae77a</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>073c1939-561c-466a-b652-a39ca2aae77a</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156876612260</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156880578019</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>2a3db176-a105-4a44-92f2-6e3ac7048d5b</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>2a3db176-a105-4a44-92f2-6e3ac7048d5b</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156839911708</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156876612260</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>a36354f8-4804-4f76-805b-fa0a0ca8903e</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>a36354f8-4804-4f76-805b-fa0a0ca8903e</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156833485893</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156839911708</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>d01dbfc2-d692-48b8-bb10-8b62127f43cd</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>d01dbfc2-d692-48b8-bb10-8b62127f43cd</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156820268791</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156833485893</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="5900">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="fifo" app_data="5900@10.0.1.250 in undef local_stream://moh"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>5900</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originator>
+        <originator_caller_profile>
+          <username>1009</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Brian West</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1009</caller_id_number>
+          <network_addr>10.0.1.28</network_addr>
+          <rdnis></rdnis>
+          <destination_number>**park+5900</destination_number>
+          <uuid>7fa22ce4-9487-4501-965e-7e062792f6c3</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009@10.0.1.250:5060</chan_name>
+        </originator_caller_profile>
+      </originator>
+    </caller_profile>
+    <times>
+      <created_time>1198156812978484</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156820268791</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>22b5e34f-d334-40fe-b7e7-9ca54b2a7160</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>22b5e34f-d334-40fe-b7e7-9ca54b2a7160</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156806464364</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156812978484</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>6070e39b-71a4-4872-a851-a8c9ac45488d</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>6070e39b-71a4-4872-a851-a8c9ac45488d</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156801337500</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156806464364</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>a95fdc9d-1f64-4962-acb8-a26507c9d224</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>a95fdc9d-1f64-4962-acb8-a26507c9d224</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156797434745</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156801337500</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>a5dfe2cc-7754-4a82-a645-231a15decb3f</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>a5dfe2cc-7754-4a82-a645-231a15decb3f</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156792878476</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156797434745</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>fec1ae9e-546c-4cc5-b22a-55dc997a0e35</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>fec1ae9e-546c-4cc5-b22a-55dc997a0e35</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156788685547</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156792878476</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>4aa48010-4595-461c-936a-179f9fb4d1f3</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>4aa48010-4595-461c-936a-179f9fb4d1f3</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156784428990</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156788685547</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1002" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1002"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1002 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1002</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>545f4ba0-5978-4b41-892f-aca78f174a91</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1002</destination_number>
+          <uuid>545f4ba0-5978-4b41-892f-aca78f174a91</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1002</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156778376001</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156784428990</transfer_time>
+    </times>
+  </callflow>
+  <callflow dialplan="XML">
+    <extension name="global" number="1009" current_app="answer">
+      <application app_name="set" app_data="use_profile=${cond(${is_lan_addr(10.0.1.250)} == yes ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="info" app_data=""></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="set" app_data="dialed_ext=1009"></application>
+      <application app_name="ring_ready" app_data=""></application>
+      <application app_name="set" app_data="call_timeout=130"></application>
+      <application app_name="set" app_data="hangup_after_bridge=true"></application>
+      <application app_name="set" app_data="left_hanging_extension=5900"></application>
+      <application app_name="set" app_data="continue_on_fail=true"></application>
+      <application app_name="db" app_data="insert/call_return/${dialed_ext}/${caller_id_number}"></application>
+      <application app_name="db" app_data="insert/last_dial_ext/${dialed_ext}/${uuid}"></application>
+      <application app_name="bridge" app_data="USER/${dialed_ext}@10.0.1.250"></application>
+      <application last_executed="true" app_name="answer" app_data=""></application>
+      <application app_name="sleep" app_data="1000"></application>
+      <application app_name="voicemail" app_data="default 10.0.1.250 ${dialed_ext}"></application>
+      <application app_name="transfer" app_data="1009 enum"></application>
+    </extension>
+    <caller_profile>
+      <username>1006</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Brian West</caller_id_name>
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1006</caller_id_number>
+      <network_addr>10.0.1.240</network_addr>
+      <rdnis></rdnis>
+      <destination_number>1009</destination_number>
+      <uuid>f1d9f5e9-1ccd-4df7-876e-adf6e3602361</uuid>
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/default/1006@10.0.1.250:5060</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>efb71d06-c38c-4af9-a4bd-c5a23b501689</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+        <originatee_caller_profile>
+          <username>1006</username>
+          <dialplan>XML</dialplan>
+          <caller_id_name>Extension 1006</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>1006</caller_id_number>
+          <network_addr>10.0.1.240</network_addr>
+          <rdnis></rdnis>
+          <destination_number>10.0.1.250/1009</destination_number>
+          <uuid>efb71d06-c38c-4af9-a4bd-c5a23b501689</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>sofia/default/1009</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+    <times>
+      <created_time>1198156772841382</created_time>
+      <answered_time>1198156774875311</answered_time>
+      <hangup_time>0</hangup_time>
+      <transfer_time>1198156778376001</transfer_time>
+    </times>
+  </callflow>
+</cdr>
