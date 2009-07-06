@@ -121,10 +121,12 @@ static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, swi
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
 	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
-	switch_xml_t xml_in_tmp;
+	switch_xml_t xml_in_cur_tmp, xml_out_cur_tmp, xml_in_child;
 	int i;
 
-// only continue if helper->next_template_name is NOT set !
+switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "INSIDE CALLBACK FUNCTION\n");
+
+	if (!switch_strlen_zero(helper->next_template_name)) goto done;
 
 	/* up the row counter */
 	helper->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
@@ -135,13 +137,22 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
+	/* temporarily save helper->xml_in_cur and helper->xml_out_cur so they can be restored later */
+	xml_in_cur_tmp = helper->xml_in_cur;
+	xml_out_cur_tmp = helper->xml_out_cur;
+
 	/* render all children of xml_in_cur */
-	for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-// only continue if helper->next_template_name is NOT set !
-		helper->xml_in_cur = xml_in_tmp;
+	for (xml_in_child = helper->xml_in_cur->child; xml_in_child; xml_in_child = xml_in_child->ordered) {
+		helper->xml_in_cur = xml_in_child;
 		xml_odbc_render_tag(helper);
+		if (!switch_strlen_zero(helper->next_template_name)) goto done;
 	}
 
+	/* restore helper->xml_in_cur and helper->xml_out_cur */
+	helper->xml_in_cur = xml_in_cur_tmp;
+	helper->xml_out_cur = xml_out_cur_tmp;
+
+  done:
 	return 0;
 }
 
