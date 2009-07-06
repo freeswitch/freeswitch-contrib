@@ -499,8 +499,8 @@ static switch_status_t do_config()
 		goto done;
 	}
 
-// is this allowed ? or should I copy the entire tree ? can I register a callback function that is called when reloadxml is done ?
-	globals.templates_tag = templates_tag;
+	/* copy the templates to globals.templates_tag */
+	memcpy(&globals.templates_tag, &templates_tag, sizeof(templates_tag));
 
 	/* set a default globals.max_render_template_count to avoid loops in render_template */
 	globals.max_render_template_count = 32;
@@ -586,6 +586,7 @@ static switch_status_t do_config()
 	status = SWITCH_STATUS_SUCCESS;
 
   done:
+	switch_xml_free(xml);
 	return status;
 }
 
