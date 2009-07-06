@@ -62,7 +62,6 @@ typedef struct xml_odbc_session_helper {
 	switch_memory_pool_t *pool;	/* memory pool that is destroyed at the end of the session to ease free'ing */
 	char *next_template_name;	/* the name of the next template that has to be rendered */
 	switch_event_t *event;		/* contains headers which is a hash that can easily be expanded ${var} to *chars */
-	switch_xml_t xml_in;		/* root tag of xml template that is rendered from */
 	switch_xml_t xml_in_cur;	/* current tag in xml template that is rendered from */
 	switch_xml_t xml_out;		/* root tag of xml that is rendered to */
 	switch_xml_t xml_out_cur;	/* current tag in xml that is rendered to */
@@ -71,8 +70,9 @@ typedef struct xml_odbc_session_helper {
 	int tmp_i;					/* temporary counter, used for counting rows in the callback */
 } xml_odbc_session_helper_t;
 
-static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helper);
 static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper);
+static switch_status_t xml_odbc_render_children(xml_odbc_session_helper_t *helper);
+static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helper);
 
 #define XML_ODBC_SYNTAX "[debug_on|debug_off]"
 
@@ -121,15 +121,12 @@ static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, swi
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
 	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
-	switch_xml_t xml_in_cur_tmp, xml_out_cur_tmp, xml_in_child;
 	int i;
-
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "INSIDE CALLBACK FUNCTION\n");
 
 	if (!switch_strlen_zero(helper->next_template_name)) goto done;
 
 	/* up the row counter */
-	helper->tmp_i++; // TODO: THIS WILL GO WRONG FOR NESTED QUERIES.. THINK ABOUT IT !!!
+	helper->tmp_i++; // TODO: WILL THIS GO WRONG FOR NESTED QUERIES ?? THINK ABOUT IT !!!
 
 	/* loop through all columns and store them in helper->event->headers */
 	for (i = 0; i < argc; i++) {
@@ -137,20 +134,7 @@ switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "INSIDE CALLBACK FUNCTION
 		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
-	/* temporarily save helper->xml_in_cur and helper->xml_out_cur so they can be restored later */
-	xml_in_cur_tmp = helper->xml_in_cur;
-	xml_out_cur_tmp = helper->xml_out_cur;
-
-	/* render all children of xml_in_cur */
-	for (xml_in_child = helper->xml_in_cur->child; xml_in_child; xml_in_child = xml_in_child->ordered) {
-		helper->xml_in_cur = xml_in_child;
-		xml_odbc_render_tag(helper);
-		if (!switch_strlen_zero(helper->next_template_name)) goto done;
-	}
-
-	/* restore helper->xml_in_cur and helper->xml_out_cur */
-	helper->xml_in_cur = xml_in_cur_tmp;
-	helper->xml_out_cur = xml_out_cur_tmp;
+	xml_odbc_render_children(helper);
 
   done:
 	return 0;
@@ -172,7 +156,7 @@ static switch_status_t xml_odbc_do_check_event_header(xml_odbc_session_helper_t 
 	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
 	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
 	char *tmp_value;
-	switch_xml_t xml_in_tmp;
+	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (switch_strlen_zero(if_name)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no if-name is given\n", name);
@@ -182,18 +166,13 @@ static switch_status_t xml_odbc_do_check_event_header(xml_odbc_session_helper_t 
 	if ((tmp_value = switch_event_get_header(helper->event, if_name))) {
 		if (!switch_strlen_zero(tmp_value)) {
 			if (switch_strlen_zero(if_value) || !strcasecmp(if_value, tmp_value)) {
-				for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-					helper->xml_in_cur = xml_in_tmp;
-					xml_odbc_render_tag(helper);
-
-					if (!switch_strlen_zero(helper->next_template_name)) goto done;
-				}
+				status = xml_odbc_render_children(helper);
 			}
 		}
 	}
 
   done:
-	return SWITCH_STATUS_SUCCESS;
+	return status;
 }
 
 static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
@@ -250,9 +229,9 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 	return status;
 }
 
+/* render tag helper->xml_in_cur */
 static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 {
-	switch_xml_t xml_in_tmp, xml_out_tmp;
 	switch_status_t status = SWITCH_STATUS_FALSE;
 	int i;
 
@@ -294,32 +273,47 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 		switch_xml_set_attr(helper->xml_out_cur, helper->xml_in_cur->attr[i], tmp_value);
 	}
 
-	/* render all children */
-	xml_out_tmp = helper->xml_out_cur;
-	for (xml_in_tmp = helper->xml_in_cur->child; xml_in_tmp; xml_in_tmp = xml_in_tmp->ordered) {
-		helper->xml_in_cur = xml_in_tmp;
-		if (xml_odbc_render_tag(helper) != SWITCH_STATUS_SUCCESS) {
-			goto done;
-		}
-
-		if (!switch_strlen_zero(helper->next_template_name)) {
-			status = SWITCH_STATUS_SUCCESS;
-			goto done;
-		}
-
-		helper->xml_out_cur = xml_out_tmp;
-	}
-
-	status = SWITCH_STATUS_SUCCESS;
+	status = xml_odbc_render_children(helper);
 
   done:
 	return status;
 }
 
+/* render all children of helper->xml_in_cur */
+static switch_status_t xml_odbc_render_children(xml_odbc_session_helper_t *helper)
+{
+	switch_xml_t xml_in_cur_tmp, xml_out_cur_tmp, xml_in_cur_child;
+	switch_status_t status = SWITCH_STATUS_FALSE;
+
+	/* temporarily save helper->xml_in_cur and helper->xml_out_cur so they can be restored later */
+	xml_in_cur_tmp = helper->xml_in_cur;
+	xml_out_cur_tmp = helper->xml_out_cur;
+
+	/* render all children of xml_in_cur */
+	for (xml_in_cur_child = helper->xml_in_cur->child; xml_in_cur_child; xml_in_cur_child = xml_in_cur_child->ordered) {
+		helper->xml_in_cur = xml_in_cur_child;
+
+		xml_odbc_render_tag(helper);
+
+		/* restore helper->xml_out_cur in case it was changed during render_tag */
+		helper->xml_out_cur = xml_out_cur_tmp;
+
+		if (!switch_strlen_zero(helper->next_template_name)) goto done;
+	}
+
+	status = SWITCH_STATUS_SUCCESS;
+
+  done:
+	/* restore helper->xml_in_cur in case it was changed during render_tag */
+	helper->xml_in_cur = xml_in_cur_tmp;
+
+    return status;
+}
+
+/* free xml_out and render template given by name helper->next_template_name */
 static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helper)
 {
 	switch_status_t status = SWITCH_STATUS_FALSE;
-	switch_xml_t xml_tmp;
 
 	if (globals.debug == SWITCH_TRUE) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG GOING TO RENDER TEMPLATE [%s]\n", helper->next_template_name);
@@ -336,7 +330,7 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 	/* free helper -> xml_out */
 	switch_xml_free(helper->xml_out);
 
-	/* init helper-> xml_out and xml_out_cur */
+	/* init helper-> xml_out xml_out_cur to the same address */
 	if (!(helper->xml_out = helper->xml_out_cur = switch_xml_new(""))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Allocation Error!\n");
 		helper->next_template_name = "";
@@ -347,28 +341,18 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 	helper->xml_out_cur_off = 0;
 
 	/* render children */
-	if ((helper->xml_in = helper->xml_in_cur = switch_xml_find_child(globals.templates_tag, "template", "name", helper->next_template_name))) {
-		for (xml_tmp = helper->xml_in_cur->child; xml_tmp; xml_tmp = xml_tmp->ordered) {
-			helper->xml_in_cur = xml_tmp;
-			helper->next_template_name = "";
-			if (xml_odbc_render_tag(helper) != SWITCH_STATUS_SUCCESS) {
-				goto done;
-			}
-
-			if (!switch_strlen_zero(helper->next_template_name)) {
-				goto reset;
-			}
-		}
+	if ((helper->xml_in_cur = switch_xml_find_child(globals.templates_tag, "template", "name", helper->next_template_name))) {
+		helper->next_template_name = "";
+		status = xml_odbc_render_children(helper);
+		if (!switch_strlen_zero(helper->next_template_name)) goto reset;
 	} else {
 		helper->next_template_name = "not-found";
 		goto reset;
 	}
 
-	status = SWITCH_STATUS_SUCCESS;
 	goto done;
 
   reset:
-	/* remove all children of helper->xml_out here */
 	status = xml_odbc_render_template(helper);
 
   done:
