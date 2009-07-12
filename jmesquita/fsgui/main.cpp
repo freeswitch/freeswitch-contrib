@@ -1,10 +1,10 @@
 #include <QtGui/QApplication>
-#include "fsgui.h"
+#include "fs_gui.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    FSGui w;
+    Cfsgui w;
     w.show();
     return a.exec();
 }
