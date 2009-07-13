@@ -11,7 +11,7 @@ class Card < ActiveRecord::Base
     :adapter  => "mysql",
     :host     => "localhost",
     :username => "root",
-    :password => "leenuhks",
+    :password => "secret",
     :database => "fs_bill_development"
   )
 end
