@@ -1,7 +1,6 @@
 #include "fs_gui.h"
 #include "ui_fs_gui.h"
 #include "esl_oop.h"
-#include <iostream>
 
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
@@ -17,6 +16,10 @@ Cfsgui::Cfsgui(QWidget *parent) :
             serverDialog, SLOT(show()));
     connect(serverDialog, SIGNAL(doConnect(QString,QString,QString)),
             this, SLOT(newConnectionFromDialog(QString,QString,QString)));
+    connect(m_ui->lineCmd, SIGNAL(textChanged(QString)),
+            this, SLOT(typedCommand()));
+    connect(m_ui->btnSend, SIGNAL(clicked()),
+            this, SLOT(sendCommand()));
 }
 
 Cfsgui::~Cfsgui()
@@ -35,12 +38,26 @@ void Cfsgui::getDisconnectedSlot()
     eslConnection->doDisconnect();
 }
 
+void Cfsgui::typedCommand()
+{
+    m_ui->btnSend->setDisabled(m_ui->lineCmd->text().isEmpty());
+}
+
+void Cfsgui::sendCommand()
+{
+    QString cmd = m_ui->lineCmd->text();
+    eslConnection->sendCmd(cmd);
+    m_ui->lineCmd->clear();
+}
+
 void Cfsgui::gotConnectedSlot()
 {
     m_ui->statusBar->showMessage("Connected");
     appendConsoleText("Conneted!");
     m_ui->actionConnect->setDisabled(true);
     m_ui->actionDisconnect->setEnabled(true);
+    m_ui->lineCmd->setEnabled(true);
+    m_ui->lineCmd->setFocus();
 }
 void Cfsgui::gotDisconnectedSlot()
 {
@@ -48,6 +65,7 @@ void Cfsgui::gotDisconnectedSlot()
     appendConsoleText("Disconnected!");
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setDisabled(true);
+    m_ui->lineCmd->setDisabled(true);
 }
 
 void Cfsgui::gotEventSlot(ESLevent * event)

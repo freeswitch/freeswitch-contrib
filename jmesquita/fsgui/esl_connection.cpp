@@ -1,3 +1,4 @@
+#include <QtGui>
 #include "esl_oop.h"
 #include "esl_connection.h"
 
@@ -12,13 +13,30 @@ eslConnectionManager::eslConnectionManager(QString host, QString pass, QString p
 void eslConnectionManager::doConnect(QString host, QString pass, QString port)
 {
     connection = new ESLconnection(host.toAscii(), port.toAscii(), pass.toAscii());
-    eslSetLogLevel(0);
+    eslSetLogLevel(7);
     isConnected = false;
 }
 
 void eslConnectionManager::doDisconnect()
 {
         connection->disconnect();
+}
+
+void eslConnectionManager::sendCmd(QString string)
+{
+    if (connection->connected())
+    {
+        QStringList list = string.split(" ", QString::SkipEmptyParts, Qt::CaseSensitive);
+        QString cmd = list.takeFirst();
+        QString arg("");
+        for (int i=0; i < list.size(); i++)
+        {
+            arg.append(list[i]);
+            if (i != list.size()-1)
+                arg.append(" ");
+        }
+        connection->api(cmd.toAscii(), arg.toAscii());
+    }
 }
 
 void eslConnectionManager::run()
@@ -39,7 +57,6 @@ void eslConnectionManager::run()
         }
         else if (connection->connected() && isConnected)
         {
-            /* We should process our event queue here */
             ESLevent * event = connection->recvEventTimed(10);
             if (event)
             {

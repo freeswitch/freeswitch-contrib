@@ -16,6 +16,7 @@ public:
     eslConnectionManager(QString,QString,QString);
     void doConnect(QString, QString, QString);
     void doDisconnect();
+    void sendCmd(QString);
 signals:
     void gotDisconnected();
     void gotConnected();
