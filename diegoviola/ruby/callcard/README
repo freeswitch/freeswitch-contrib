@@ -1,0 +1,23 @@
+Installation.
+
+Dialplan XML.
+
+<extension name="outbound">
+  <condition field="destination_number" expression="^(8084)$">
+    <action application="socket" data="127.0.0.1:8084 sync full"/>
+  </condition>
+</extension>
+
+<extension name="hangup">
+  <condition field="destination_number" expression="^(hangup)$">
+    <action application="playback" data="prepaid-no-enough-credit-stop.gsm"/>
+    <action application="hangup"/>
+  </condition>
+</extension>
+
+Requirements.
+
+* ruby (>= 1.8)
+* freeswitcher ruby gem
+* activerecord ruby gem
+* freeswitch with mod_nibblebill
