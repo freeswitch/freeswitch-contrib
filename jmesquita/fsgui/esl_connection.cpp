@@ -37,26 +37,23 @@ void eslConnectionManager::run()
             ESLevent * event = connection->recvEventTimed(10);
             if (event)
             {
-                std::cout << "We received and event!" << std::endl;
-                emit gotEvent(event);
+                ESLevent * e = new ESLevent(event);
+                emit gotEvent(e);
             }
          }
         else if (!connection->connected() && isConnected)
         {
-            std::cout << "We just got disconnected." << std::endl;
             isConnected = false;
             emit gotDisconnected();
         }
         else if (connection->connected() && !isConnected)
         {
-            std::cout << "We just got connected." << std::endl;
             isConnected = true;
             connection->sendRecv("log 7");
             emit gotConnected();
         }
         else
         {
-            std::cout << "We are disconnected and should stop this." << std::endl;
             doDisconnect();
             break;
         }

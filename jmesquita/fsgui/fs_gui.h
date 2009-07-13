@@ -9,6 +9,8 @@ namespace Ui {
     class Cfsgui;
 }
 
+class ESLevent;
+
 class Cfsgui : public QMainWindow {
     Q_OBJECT
     Q_DISABLE_COPY(Cfsgui)
@@ -19,11 +21,13 @@ public:
 protected:
     virtual void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *e);
+    void appendConsoleText(const QString);
 
 private slots:
     void newConnectionFromDialog(QString,QString,QString);
     void gotConnectedSlot();
     void gotDisconnectedSlot();
+    void gotEventSlot(ESLevent *);
 
 private:
     Ui::Cfsgui *m_ui;
