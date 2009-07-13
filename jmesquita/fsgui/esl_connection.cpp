@@ -1,6 +1,5 @@
 #include "esl_oop.h"
 #include "esl_connection.h"
-#include <iostream>
 
 eslConnectionManager::eslConnectionManager() {}
 eslConnectionManager::eslConnectionManager(QString host, QString pass, QString port)
@@ -8,11 +7,6 @@ eslConnectionManager::eslConnectionManager(QString host, QString pass, QString p
 {
     doConnect(host, pass, port);
     start();
-}
-
-eslConnectionManager::~eslConnectionManager()
-{
-    doDisconnect();
 }
 
 void eslConnectionManager::doConnect(QString host, QString pass, QString port)
@@ -24,7 +18,7 @@ void eslConnectionManager::doConnect(QString host, QString pass, QString port)
 
 void eslConnectionManager::doDisconnect()
 {
-    delete connection;
+	connection->disconnect();
 }
 
 void eslConnectionManager::run()
@@ -52,10 +46,5 @@ void eslConnectionManager::run()
                 emit gotEvent(e);
             }
          }
-        else
-        {
-            doDisconnect();
-            break;
-        }
     }
 }

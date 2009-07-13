@@ -13,12 +13,12 @@ Cfsgui::Cfsgui(QWidget *parent) :
     // Set the default status bar message
     m_ui->statusBar->showMessage(tr("Ready"));
 
-    connect(m_ui->actionConnect, SIGNAL(triggered())
-            , serverDialog, SLOT(show()));
+    connect(m_ui->actionConnect, SIGNAL(triggered()),
+            serverDialog, SLOT(show()));
     connect(serverDialog, SIGNAL(doConnect(QString,QString,QString)),
             this, SLOT(newConnectionFromDialog(QString,QString,QString)));
+}
 
-    }
 Cfsgui::~Cfsgui()
 {
     delete m_ui;
@@ -30,15 +30,24 @@ void Cfsgui::appendConsoleText(const QString text)
     m_ui->textConsole->append(text);
 }
 
+void Cfsgui::getDisconnectedSlot()
+{
+    delete eslConnection;
+}
+
 void Cfsgui::gotConnectedSlot()
 {
     m_ui->statusBar->showMessage("Connected");
     appendConsoleText("Conneted!");
+    m_ui->actionConnect->setDisabled(true);
+    m_ui->actionDisconnect->setEnabled(true);
 }
 void Cfsgui::gotDisconnectedSlot()
 {
     appendConsoleText("Disconnected!");
     m_ui->textConsole->append("Conneted!");
+    m_ui->actionConnect->setEnabled(true);
+    m_ui->actionDisconnect->setDisabled(true);
 }
 
 void Cfsgui::gotEventSlot(ESLevent * event)
@@ -88,4 +97,7 @@ void Cfsgui::newConnectionFromDialog(QString host, QString pass, QString port)
             this, SLOT(gotDisconnectedSlot(void)));
     connect(eslConnection, SIGNAL(gotEvent(ESLevent*)),
             this, SLOT(gotEventSlot(ESLevent*)));
+    /* Connect the disconnect menu */
+    connect(m_ui->actionDisconnect, SIGNAL(triggered()),
+            this, SLOT(getDisconnectedSlot()));
 }

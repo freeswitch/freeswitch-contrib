@@ -13,7 +13,6 @@ class eslConnectionManager : public QThread
     Q_DISABLE_COPY(eslConnectionManager)
 public:
     eslConnectionManager();
-    virtual ~eslConnectionManager();
     eslConnectionManager(QString,QString,QString);
     void doConnect(QString, QString, QString);
     void doDisconnect();

@@ -28,6 +28,7 @@ private slots:
     void gotConnectedSlot();
     void gotDisconnectedSlot();
     void gotEventSlot(ESLevent *);
+    void getDisconnectedSlot();
 
 private:
     Ui::Cfsgui *m_ui;
