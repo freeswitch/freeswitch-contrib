@@ -37,8 +37,8 @@ class CallCard < FSR::Listener::Outbound
             FSR::Log.info "*** You have #{duration} minutes to talk."
             speak("You have #{duration} minutes to talk.")
             #api("sched_api +#{(duration*60)-60} none uuid_displace #{@session.headers[:unique_id]} start tone_stream://%(500,0,500)")
-            transfer("#{destination_number}", "XML", "default") { close_connection }
-            #bridge("sofia/internal/#{destination_number}@0.0.0.0")
+            #transfer("#{destination_number}", "XML", "default") { close_connection }
+            bridge("sofia/internal/#{destination_number}@0.0.0.0")
           end
         else
           FSR::Log.info "*** Failure, grabbed #{pin_number} from #{exten}"
