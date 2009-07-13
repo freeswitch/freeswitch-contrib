@@ -31,17 +31,7 @@ void eslConnectionManager::run()
 {
     forever
     {
-        if (connection->connected() && isConnected)
-        {
-            /* We should process our event queue here */
-            ESLevent * event = connection->recvEventTimed(10);
-            if (event)
-            {
-                ESLevent * e = new ESLevent(event);
-                emit gotEvent(e);
-            }
-         }
-        else if (!connection->connected() && isConnected)
+        if (!connection->connected() && isConnected)
         {
             isConnected = false;
             emit gotDisconnected();
@@ -52,6 +42,16 @@ void eslConnectionManager::run()
             connection->sendRecv("log 7");
             emit gotConnected();
         }
+        else if (connection->connected() && isConnected)
+        {
+            /* We should process our event queue here */
+            ESLevent * event = connection->recvEventTimed(10);
+            if (event)
+            {
+                ESLevent * e = new ESLevent(event);
+                emit gotEvent(e);
+            }
+         }
         else
         {
             doDisconnect();

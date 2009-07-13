@@ -11,7 +11,7 @@ Cfsgui::Cfsgui(QWidget *parent) :
     m_ui->setupUi(this);
 
     // Set the default status bar message
-    m_ui->statusBar->addPermanentWidget(new QLabel(tr("Ready")),true);
+    m_ui->statusBar->showMessage(tr("Ready"));
 
     connect(m_ui->actionConnect, SIGNAL(triggered())
             , serverDialog, SLOT(show()));
