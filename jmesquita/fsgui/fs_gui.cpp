@@ -32,7 +32,7 @@ void Cfsgui::appendConsoleText(const QString text)
 
 void Cfsgui::getDisconnectedSlot()
 {
-    delete eslConnection;
+    eslConnection->doDisconnect();
 }
 
 void Cfsgui::gotConnectedSlot()
@@ -44,8 +44,8 @@ void Cfsgui::gotConnectedSlot()
 }
 void Cfsgui::gotDisconnectedSlot()
 {
+    m_ui->statusBar->showMessage("Disconnected");
     appendConsoleText("Disconnected!");
-    m_ui->textConsole->append("Conneted!");
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setDisabled(true);
 }
@@ -81,7 +81,6 @@ void Cfsgui::changeEvent(QEvent *e)
 void Cfsgui::closeEvent(QCloseEvent *e)
 {
     /* TODO: We have to stop threads and do cleanup */
-    delete eslConnection;
     e->accept();
 }
 

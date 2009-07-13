@@ -18,7 +18,7 @@ void eslConnectionManager::doConnect(QString host, QString pass, QString port)
 
 void eslConnectionManager::doDisconnect()
 {
-	connection->disconnect();
+        connection->disconnect();
 }
 
 void eslConnectionManager::run()
@@ -29,6 +29,7 @@ void eslConnectionManager::run()
         {
             isConnected = false;
             emit gotDisconnected();
+            break;
         }
         else if (connection->connected() && !isConnected)
         {
