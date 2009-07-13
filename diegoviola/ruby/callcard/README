@@ -17,7 +17,9 @@ Dialplan XML.
 
 Requirements.
 
-* ruby (>= 1.8)
-* freeswitcher ruby gem
-* activerecord ruby gem
+* ruby (>= 1.8 - 1.9+ is preferred)
+* activerecord
+* rake
+* freeswitcher
 * freeswitch with mod_nibblebill
+
