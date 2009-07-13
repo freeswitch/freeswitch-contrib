@@ -6,6 +6,8 @@ CserverManager::CserverManager(QWidget *parent) :
     m_ui(new Ui::CserverManager)
 {
     m_ui->setupUi(this);
+    connect(this, SIGNAL(accepted()),
+            this, SLOT(newConnection()));
 }
 
 CserverManager::~CserverManager()
@@ -23,4 +25,12 @@ void CserverManager::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void CserverManager::newConnection()
+{
+    //TODO: Sanity checking needed.
+    emit doConnect(m_ui->host->text(),
+                   m_ui->pass->text(),
+                   m_ui->port->text());
 }

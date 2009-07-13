@@ -13,10 +13,12 @@ class CserverManager : public QDialog {
 public:
     explicit CserverManager(QWidget *parent = 0);
     virtual ~CserverManager();
-
+signals:
+    void doConnect(QString, QString, QString);
 protected:
     virtual void changeEvent(QEvent *e);
-
+private slots:
+    void newConnection();
 private:
     Ui::CserverManager *m_ui;
 };

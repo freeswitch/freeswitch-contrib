@@ -5,10 +5,12 @@ TARGET = fs_gui
 TEMPLATE = app
 SOURCES += main.cpp \
     fs_gui.cpp \
-    server_manager.cpp
-INCLUDEPATH += ../../../libs/esl/src/include/
+    server_manager.cpp \
+    esl_connection.cpp
+INCLUDEPATH += ../../../libs/esl/src/include
 HEADERS += fs_gui.h \
-    server_manager.h
+    server_manager.h \
+    esl_connection.h
 FORMS += fs_gui.ui \
     server_manager.ui
 LIBS += -L../../../libs/esl \
