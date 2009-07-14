@@ -83,8 +83,16 @@ void Cfsgui::typedCommand()
 
 void Cfsgui::sendCommand()
 {
-    QString cmd = m_ui->lineCmd->text();
-    //eslConnection->sendCmd(cmd);
+    QStringList cmdList = m_ui->lineCmd->text().split(" ");
+    QString args("");
+    for(int i = 1; i < cmdList.size(); i++)
+    {
+        args += cmdList[i];
+        if (i != cmdList.size()-1)
+            args += " ";
+    }
+    ESLevent *e = new ESLevent(eslConnection->api(cmdList[0].toAscii(), args.toAscii()));
+    gotEventSlot(e);
     m_ui->lineCmd->clear();
 }
 
@@ -116,10 +124,12 @@ void Cfsgui::connectionFailedSlot(QString msg)
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setDisabled(true);
     m_ui->lineCmd->setDisabled(true);
+    delete eslConnection;
 }
 
 void Cfsgui::gotEventSlot(ESLevent * event)
 {
+    qDebug() << event->getType();
     if (event->getBody())
     {
         QString text = event->getBody();
