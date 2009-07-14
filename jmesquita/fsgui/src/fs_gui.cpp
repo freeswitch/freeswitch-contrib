@@ -98,9 +98,8 @@ void Cfsgui::sendCommand()
 
 void Cfsgui::gotConnectedSlot()
 {
-    qDebug() << "We got connected.";
-    m_ui->statusBar->showMessage("Connected");
-    appendConsoleText("Conneted!");
+    m_ui->statusBar->showMessage(tr("Connected"));
+    appendConsoleText(tr("Connected!"));
     m_ui->actionConnect->setDisabled(true);
     m_ui->actionDisconnect->setEnabled(true);
     m_ui->lineCmd->setEnabled(true);
@@ -108,8 +107,8 @@ void Cfsgui::gotConnectedSlot()
 }
 void Cfsgui::gotDisconnectedSlot()
 {
-    m_ui->statusBar->showMessage("Disconnected");
-    appendConsoleText("Disconnected!");
+    m_ui->statusBar->showMessage(tr("Disconnected"));
+    appendConsoleText(tr("Disconnected!"));
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setDisabled(true);
     m_ui->lineCmd->setDisabled(true);
