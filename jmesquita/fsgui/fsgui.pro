@@ -1,17 +1,27 @@
-# -------------------------------------------------
-# Project created by QtCreator 2009-01-18T13:57:52
-# -------------------------------------------------
+
+DESTDIR = ./bin/
+message(The project will be installed in $$DESTDIR)
 TARGET = fs_gui
 TEMPLATE = app
-SOURCES += main.cpp \
-    fs_gui.cpp \
-    server_manager.cpp \
-    esl_connection.cpp
-INCLUDEPATH += ../../../libs/esl/src/include
-HEADERS += fs_gui.h \
-    server_manager.h \
-    esl_connection.h
-FORMS += fs_gui.ui \
-    server_manager.ui
+
+MOC_DIR = ./build/
+OBJECTS_DIR = ./build/
+UI_DIR = ./build/
+
+SOURCES += ./src/main.cpp \
+    ./src/fs_gui.cpp \
+    ./src/server_manager.cpp \
+    ./src/esl_connection.cpp
+
+INCLUDEPATH += ../../../libs/esl/src/include \
+    ./src/include
+
+HEADERS += ./src/include/fs_gui.h \
+    ./src/include/server_manager.h \
+    ./src/include/esl_connection.h
+
+FORMS += ./resources/fs_gui.ui \
+    ./resources/server_manager.ui
+
 LIBS += -L../../../libs/esl \
     -lesl
