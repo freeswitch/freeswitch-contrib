@@ -41,10 +41,11 @@
 #include "esl_connection.h"
 #include "esl.h"
 
+CserverManager *Cfsgui::serverDialog = NULL;
+
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
-    m_ui(new Ui::Cfsgui),
-    serverDialog(new CserverManager)
+    m_ui(new Ui::Cfsgui)
 {
     m_ui->setupUi(this);
 
@@ -52,36 +53,34 @@ Cfsgui::Cfsgui(QWidget *parent) :
     m_ui->statusBar->showMessage(tr("Ready"));
 
     connect(m_ui->actionConnect, SIGNAL(triggered()),
-            serverDialog, SLOT(show()));
-    connect(serverDialog, SIGNAL(doConnect(QString,QString,QString)),
-            this, SLOT(newConnectionFromDialog(QString,QString,QString)));
+            this, SLOT(newConnectionFromDialog()));
     connect(m_ui->lineCmd, SIGNAL(textChanged(QString)),
             this, SLOT(typedCommand()));
     connect(m_ui->btnSend, SIGNAL(clicked()),
             this, SLOT(sendCommand()));
-}
 
+    /* Why QtDesigner does not allow me to delete this? */
+    m_ui->tabWidget->removeTab(1);
+    delete m_ui->tab_2;
+
+}
 Cfsgui::~Cfsgui()
 {
     delete m_ui;
     delete serverDialog;
 }
-
 void Cfsgui::appendConsoleText(const QString text)
 {
     m_ui->textConsole->append(text);
 }
-
 void Cfsgui::getDisconnectedSlot()
 {
     eslConnection->disconnect();
 }
-
 void Cfsgui::typedCommand()
 {
     m_ui->btnSend->setDisabled(m_ui->lineCmd->text().isEmpty());
 }
-
 void Cfsgui::sendCommand()
 {
     QStringList cmdList = m_ui->lineCmd->text().split(" ");
@@ -96,7 +95,6 @@ void Cfsgui::sendCommand()
     gotEventSlot(e);
     m_ui->lineCmd->clear();
 }
-
 void Cfsgui::gotConnectedSlot()
 {
     m_ui->statusBar->showMessage(tr("Connected"));
@@ -115,7 +113,6 @@ void Cfsgui::gotDisconnectedSlot()
     m_ui->lineCmd->setDisabled(true);
     delete eslConnection;
 }
-
 void Cfsgui::connectionFailedSlot(QString msg)
 {
     qDebug() << msg;
@@ -126,7 +123,6 @@ void Cfsgui::connectionFailedSlot(QString msg)
     m_ui->lineCmd->setDisabled(true);
     delete eslConnection;
 }
-
 void Cfsgui::gotEventSlot(ESLevent * event)
 {
     QString type (event->getHeader("Content-Type"));
@@ -186,7 +182,6 @@ void Cfsgui::gotEventSlot(ESLevent * event)
     }
     delete event;
 }
-
 void Cfsgui::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
@@ -198,32 +193,41 @@ void Cfsgui::changeEvent(QEvent *e)
         break;
     }
 }
-
 void Cfsgui::closeEvent(QCloseEvent *e)
 {
     /* TODO: We have to stop threads and do cleanup */
     e->accept();
 }
-
-void Cfsgui::newConnectionFromDialog(QString host, QString pass, QString port)
+void Cfsgui::newConnectionFromDialog()
 {
-    m_ui->statusBar->showMessage("Connecting...");
-    eslConnection = new ESLconnection(host.toAscii(),
-                                      port.toAscii(),
-                                      pass.toAscii());
-    /* Connect signals from eslConnection */
-    connect(eslConnection, SIGNAL(gotConnected(void)),
-            this, SLOT(gotConnectedSlot(void)));
-    connect(eslConnection, SIGNAL(gotDisconnected(void)),
-            this, SLOT(gotDisconnectedSlot(void)));
-    connect(eslConnection, SIGNAL(connectionFailed(QString)),
-            this, SLOT(connectionFailedSlot(QString)));
-    connect(eslConnection, SIGNAL(gotEvent(ESLevent*)),
-            this, SLOT(gotEventSlot(ESLevent*)));
+    if (!serverDialog)
+    {
+        serverDialog = new CserverManager();
+    }
+    serverDialog->show();
+    serverDialog->raise();
+    serverDialog->activateWindow();
 
-    /* Connect the disconnect menu */
-    connect(m_ui->actionDisconnect, SIGNAL(triggered()),
-            this, SLOT(getDisconnectedSlot()));
+    if (serverDialog->exec())
+    {
+        m_ui->statusBar->showMessage("Connecting...");
+        eslConnection = new ESLconnection(serverDialog->getHost().toAscii(),
+                                          serverDialog->getPort().toAscii(),
+                                          serverDialog->getPass().toAscii());
+        /* Connect signals from eslConnection */
+        connect(eslConnection, SIGNAL(gotConnected(void)),
+                this, SLOT(gotConnectedSlot(void)));
+        connect(eslConnection, SIGNAL(gotDisconnected(void)),
+                this, SLOT(gotDisconnectedSlot(void)));
+        connect(eslConnection, SIGNAL(connectionFailed(QString)),
+                this, SLOT(connectionFailedSlot(QString)));
+        connect(eslConnection, SIGNAL(gotEvent(ESLevent*)),
+                this, SLOT(gotEventSlot(ESLevent*)));
 
-    eslConnection->doConnect();
+        /* Connect the disconnect menu */
+        connect(m_ui->actionDisconnect, SIGNAL(triggered()),
+                this, SLOT(getDisconnectedSlot()));
+
+        eslConnection->doConnect();
+    }
 }
