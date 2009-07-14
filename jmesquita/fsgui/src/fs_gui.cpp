@@ -39,6 +39,7 @@
 #include "fs_gui.h"
 #include "ui_fs_gui.h"
 #include "esl_connection.h"
+#include "esl.h"
 
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
@@ -128,7 +129,50 @@ void Cfsgui::connectionFailedSlot(QString msg)
 
 void Cfsgui::gotEventSlot(ESLevent * event)
 {
-    qDebug() << event->getType();
+    QString type (event->getHeader("Content-Type"));
+    if (QString::compare("log/data", type, Qt::CaseInsensitive) == 0)
+    {
+        switch (atoi(event->getHeader("log-level")))
+        {
+        case ESL_LOG_LEVEL_NOTICE:
+            {
+                m_ui->textConsole->setTextColor(Qt::cyan);
+                break;
+            }
+        case ESL_LOG_LEVEL_WARNING:
+            {
+                m_ui->textConsole->setTextColor(Qt::yellow);
+                break;
+            }
+        case ESL_LOG_LEVEL_ERROR:
+        case ESL_LOG_LEVEL_CRIT:
+            {
+                m_ui->textConsole->setTextColor(Qt::red);
+                break;
+            }
+        case ESL_LOG_LEVEL_ALERT:
+        case ESL_LOG_LEVEL_EMERG:
+        case ESL_LOG_LEVEL_INFO:
+            {
+                m_ui->textConsole->setTextColor(Qt::green);
+                break;
+            }
+        case ESL_LOG_LEVEL_DEBUG:
+            {
+                m_ui->textConsole->setTextColor(Qt::magenta);
+                break;
+            }
+        default:
+            {
+                m_ui->textConsole->setTextColor(Qt::black);
+            }
+        }
+    }
+    else
+    {
+        m_ui->textConsole->setTextColor(Qt::black);
+    }
+
     if (event->getBody())
     {
         QString text = event->getBody();
