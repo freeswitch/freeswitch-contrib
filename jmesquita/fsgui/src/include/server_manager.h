@@ -54,10 +54,19 @@ public:
     QString getHost();
     QString getPass();
     QString getPort();
+    void readSettings();
+    void writeSettings();
+    void addChildSettings(QSettings &, QTreeWidgetItem *, const QString &);
 protected:
     virtual void changeEvent(QEvent *e);
 private:
     Ui::CserverManager *m_ui;
+    QString settingsApplication;
+    QString settingsOrganization;
+private slots:
+    void addNewServer();
+    void deleteServer();
+    void serverSelected(QTreeWidgetItem *, int);
 };
 
 #endif // SERVER_MANAGER_H

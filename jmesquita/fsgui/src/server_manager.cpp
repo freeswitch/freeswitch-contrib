@@ -44,8 +44,18 @@ CserverManager::CserverManager(QWidget *parent) :
     m_ui(new Ui::CserverManager)
 {
     m_ui->setupUi(this);
-}
 
+    settingsApplication = "FsGUI";
+    settingsOrganization = "FreeSWITCH";
+    readSettings();
+    connect(m_ui->btnSave, SIGNAL(clicked()),
+            this, SLOT(addNewServer()));
+    connect(m_ui->btnDelete, SIGNAL(clicked()),
+            this, SLOT(deleteServer()));
+
+    connect(m_ui->serverTreeWidget, SIGNAL(itemClicked(QTreeWidgetItem*,int)),
+            this, SLOT(serverSelected(QTreeWidgetItem*,int)));
+}
 CserverManager::~CserverManager()
 {
     delete m_ui;
@@ -62,7 +72,6 @@ void CserverManager::changeEvent(QEvent *e)
         break;
     }
 }
-
 QString CserverManager::getHost()
 {
     return m_ui->host->text();
@@ -74,4 +83,74 @@ QString CserverManager::getPort()
 QString CserverManager::getPass()
 {
     return m_ui->pass->text();
+}
+void CserverManager::readSettings()
+{
+    QSettings settings(settingsOrganization, settingsApplication);
+    m_ui->serverTreeWidget->clear();
+    m_ui->serverTreeWidget->setFocus();
+    addChildSettings(settings, 0, "servers");
+}
+void CserverManager::writeSettings()
+{
+}
+void CserverManager::addChildSettings(QSettings &settings, QTreeWidgetItem *parent, const QString &group)
+{
+    if(!parent)
+        parent = m_ui->serverTreeWidget->invisibleRootItem();
+    QTreeWidgetItem *item;
+
+
+
+    settings.beginGroup(group);
+
+    foreach(QString group, settings.childGroups())
+    {
+        item = new QTreeWidgetItem(parent);
+        item->setText(0, group);
+    }
+    settings.endGroup();
+}
+void CserverManager::addNewServer()
+{
+    QSettings settings(settingsOrganization, settingsApplication);
+
+    settings.beginGroup("servers");
+    settings.beginGroup(m_ui->host->text());
+    settings.setValue("password", m_ui->pass->text());
+    settings.setValue("port", m_ui->port->text());
+    settings.endGroup();
+    settings.endGroup();
+
+    m_ui->serverTreeWidget->clear();
+    addChildSettings(settings, 0, "servers");
+}
+void CserverManager::deleteServer()
+{
+    QTreeWidgetItem *item = m_ui->serverTreeWidget->currentItem();
+    if (item)
+    {
+        QSettings settings(settingsOrganization, settingsApplication);
+        settings.beginGroup("servers");
+        settings.remove(item->text(0));
+        settings.endGroup();
+        readSettings();
+        m_ui->host->clear();
+        m_ui->pass->clear();
+        m_ui->port->clear();
+    }
+}
+void CserverManager::serverSelected(QTreeWidgetItem *item, int col)
+{
+    QSettings settings(settingsOrganization, settingsApplication);
+
+    settings.beginGroup("servers");
+    settings.beginGroup(item->text(col));
+
+    m_ui->host->setText(item->text(col));
+    m_ui->port->setText(settings.value("port").toString());
+    m_ui->pass->setText(settings.value("password").toString());
+
+    settings.endGroup();
+    settings.endGroup();
 }
