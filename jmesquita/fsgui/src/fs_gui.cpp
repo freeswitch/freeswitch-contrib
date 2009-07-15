@@ -41,11 +41,10 @@
 #include "esl_connection.h"
 #include "esl.h"
 
-CserverManager *Cfsgui::serverDialog = NULL;
-
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
-    m_ui(new Ui::Cfsgui)
+    m_ui(new Ui::Cfsgui),
+    serverDialog(NULL)
 {
     m_ui->setupUi(this);
 
@@ -54,6 +53,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
 
     connect(m_ui->actionConnect, SIGNAL(triggered()),
             this, SLOT(newConnectionFromDialog()));
+    connect(m_ui->actionAbout, SIGNAL(triggered()),
+            this, SLOT(showAbout()));
     connect(m_ui->lineCmd, SIGNAL(textChanged(QString)),
             this, SLOT(typedCommand()));
     connect(m_ui->btnSend, SIGNAL(clicked()),
@@ -62,7 +63,6 @@ Cfsgui::Cfsgui(QWidget *parent) :
     /* Why QtDesigner does not allow me to delete this? */
     m_ui->tabWidget->removeTab(1);
     delete m_ui->tab_2;
-
 }
 Cfsgui::~Cfsgui()
 {
@@ -72,6 +72,14 @@ Cfsgui::~Cfsgui()
 void Cfsgui::appendConsoleText(const QString text)
 {
     m_ui->textConsole->append(text);
+}
+void Cfsgui::showAbout()
+{
+    QMessageBox::about(this, tr("About FSGui"),
+                       tr("<h2>FSGui - The console for humans</h2>"
+                          "<p>Author: Jo&atilde;o Mesquita &lt;jmesquita@gmail.com>"
+                          "<p>This is small application that will help you connect "
+                          "to your FreeSWITCH&copy; installation."));
 }
 void Cfsgui::getDisconnectedSlot()
 {

@@ -63,6 +63,7 @@ protected:
     void appendConsoleText(const QString);
 
 private slots:
+    void showAbout();
     void newConnectionFromDialog();
     void gotConnectedSlot();
     void gotDisconnectedSlot();
@@ -74,8 +75,7 @@ private slots:
 
 private:
     Ui::Cfsgui *m_ui;
-    /*! Has to be static cos will be used by all server tabs */
-    static CserverManager *serverDialog;
+    CserverManager *serverDialog;
     ESLconnection *eslConnection;
 };
 

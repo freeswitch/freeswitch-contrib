@@ -104,6 +104,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>host</tabstop>
+  <tabstop>pass</tabstop>
+  <tabstop>port</tabstop>
+  <tabstop>treeView</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
