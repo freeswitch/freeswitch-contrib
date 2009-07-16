@@ -46,9 +46,6 @@ namespace Ui {
     class Cfsgui;
 }
 
-/* Forward declarations */
-class ESLevent;
-class ESLconnection;
 
 class Cfsgui : public QMainWindow {
     Q_OBJECT
@@ -60,23 +57,14 @@ public:
 protected:
     virtual void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *e);
-    void appendConsoleText(const QString);
 
 private slots:
     void showAbout();
     void newConnectionFromDialog();
-    void gotConnectedSlot();
-    void gotDisconnectedSlot();
-    void connectionFailedSlot(QString);
-    void gotEventSlot(ESLevent *);
-    void getDisconnectedSlot();
-    void typedCommand();
-    void sendCommand();
 
 private:
     Ui::Cfsgui *m_ui;
     CserverManager *serverDialog;
-    ESLconnection *eslConnection;
 };
 
 #endif // FS_GUI_H

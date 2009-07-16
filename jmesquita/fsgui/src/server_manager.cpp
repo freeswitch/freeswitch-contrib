@@ -45,7 +45,7 @@ CserverManager::CserverManager(QWidget *parent) :
 {
     m_ui->setupUi(this);
 
-    settingsApplication = "FsGUI";
+    settingsApplication = "FSGui";
     settingsOrganization = "FreeSWITCH";
     readSettings();
     connect(m_ui->btnSave, SIGNAL(clicked()),

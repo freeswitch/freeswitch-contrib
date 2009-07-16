@@ -86,7 +86,6 @@ void ESLconnection::doConnect()
     else
     {
         emit connectionFailed(QString(handle.err));
-        qDebug() << handle.err;
     }
 }
 
@@ -291,7 +290,6 @@ void ESLconnection::run(void)
         if (!connected())
         {
             emit gotDisconnected();
-            qDebug() << handle.err;
             break;
         }
         else
@@ -387,7 +385,7 @@ const char *ESLevent::firstHeader(void)
     return nextHeader();
 }
 
-const char *ESLevent::serialize(const char *format)
+const char *ESLevent::serialize()
 {
     this_check("");
 

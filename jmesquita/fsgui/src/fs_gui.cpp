@@ -38,8 +38,7 @@
 
 #include "fs_gui.h"
 #include "ui_fs_gui.h"
-#include "esl_connection.h"
-#include "esl.h"
+#include "consolepage.h"
 
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
@@ -55,23 +54,13 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(newConnectionFromDialog()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAbout()));
-    connect(m_ui->lineCmd, SIGNAL(textChanged(QString)),
-            this, SLOT(typedCommand()));
-    connect(m_ui->btnSend, SIGNAL(clicked()),
-            this, SLOT(sendCommand()));
 
-    /* Why QtDesigner does not allow me to delete this? */
-    m_ui->tabWidget->removeTab(1);
-    delete m_ui->tab_2;
+    m_ui->tabWidget->clear();
 }
 Cfsgui::~Cfsgui()
 {
     delete m_ui;
     delete serverDialog;
-}
-void Cfsgui::appendConsoleText(const QString text)
-{
-    m_ui->textConsole->append(text);
 }
 void Cfsgui::showAbout()
 {
@@ -81,115 +70,7 @@ void Cfsgui::showAbout()
                           "<p>This is small application that will help you connect "
                           "to your FreeSWITCH&copy; installation."));
 }
-void Cfsgui::getDisconnectedSlot()
-{
-    eslConnection->disconnect();
-}
-void Cfsgui::typedCommand()
-{
-    m_ui->btnSend->setDisabled(m_ui->lineCmd->text().isEmpty());
-}
-void Cfsgui::sendCommand()
-{
-    QStringList cmdList = m_ui->lineCmd->text().split(" ");
-    QString args("");
-    for(int i = 1; i < cmdList.size(); i++)
-    {
-        args += cmdList[i];
-        if (i != cmdList.size()-1)
-            args += " ";
-    }
-    ESLevent *e = new ESLevent(eslConnection->api(cmdList[0].toAscii(), args.toAscii()));
-    gotEventSlot(e);
-    m_ui->lineCmd->clear();
-}
-void Cfsgui::gotConnectedSlot()
-{
-    m_ui->statusBar->showMessage(tr("Connected"));
-    appendConsoleText(tr("Connected!"));
-    m_ui->actionConnect->setDisabled(true);
-    m_ui->actionDisconnect->setEnabled(true);
-    m_ui->lineCmd->setEnabled(true);
-    m_ui->lineCmd->setFocus();
-}
-void Cfsgui::gotDisconnectedSlot()
-{
-    m_ui->statusBar->showMessage(tr("Disconnected"));
-    appendConsoleText(tr("Disconnected!"));
-    m_ui->actionConnect->setEnabled(true);
-    m_ui->actionDisconnect->setDisabled(true);
-    m_ui->lineCmd->setDisabled(true);
-    delete eslConnection;
-}
-void Cfsgui::connectionFailedSlot(QString msg)
-{
-    qDebug() << msg;
-    m_ui->statusBar->showMessage("Connection Failed: "+msg);
-    appendConsoleText("Connection Failed: "+msg);
-    m_ui->actionConnect->setEnabled(true);
-    m_ui->actionDisconnect->setDisabled(true);
-    m_ui->lineCmd->setDisabled(true);
-    delete eslConnection;
-}
-void Cfsgui::gotEventSlot(ESLevent * event)
-{
-    QString type (event->getHeader("Content-Type"));
-    if (QString::compare("log/data", type, Qt::CaseInsensitive) == 0)
-    {
-        switch (atoi(event->getHeader("log-level")))
-        {
-        case ESL_LOG_LEVEL_NOTICE:
-            {
-                m_ui->textConsole->setTextColor(Qt::cyan);
-                break;
-            }
-        case ESL_LOG_LEVEL_WARNING:
-            {
-                m_ui->textConsole->setTextColor(Qt::yellow);
-                break;
-            }
-        case ESL_LOG_LEVEL_ERROR:
-        case ESL_LOG_LEVEL_CRIT:
-            {
-                m_ui->textConsole->setTextColor(Qt::red);
-                break;
-            }
-        case ESL_LOG_LEVEL_ALERT:
-        case ESL_LOG_LEVEL_EMERG:
-        case ESL_LOG_LEVEL_INFO:
-            {
-                m_ui->textConsole->setTextColor(Qt::green);
-                break;
-            }
-        case ESL_LOG_LEVEL_DEBUG:
-            {
-                m_ui->textConsole->setTextColor(Qt::magenta);
-                break;
-            }
-        default:
-            {
-                m_ui->textConsole->setTextColor(Qt::black);
-            }
-        }
-    }
-    else
-    {
-        m_ui->textConsole->setTextColor(Qt::black);
-    }
 
-    if (event->getBody())
-    {
-        QString text = event->getBody();
-
-        if (text.endsWith("\r\n"))
-            text.chop(2);
-        if (text.endsWith("\n"))
-            text.chop(1);
-
-        appendConsoleText(text);
-    }
-    delete event;
-}
 void Cfsgui::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
@@ -218,24 +99,8 @@ void Cfsgui::newConnectionFromDialog()
 
     if (serverDialog->exec())
     {
-        m_ui->statusBar->showMessage("Connecting...");
-        eslConnection = new ESLconnection(serverDialog->getHost().toAscii(),
-                                          serverDialog->getPort().toAscii(),
-                                          serverDialog->getPass().toAscii());
-        /* Connect signals from eslConnection */
-        connect(eslConnection, SIGNAL(gotConnected(void)),
-                this, SLOT(gotConnectedSlot(void)));
-        connect(eslConnection, SIGNAL(gotDisconnected(void)),
-                this, SLOT(gotDisconnectedSlot(void)));
-        connect(eslConnection, SIGNAL(connectionFailed(QString)),
-                this, SLOT(connectionFailedSlot(QString)));
-        connect(eslConnection, SIGNAL(gotEvent(ESLevent*)),
-                this, SLOT(gotEventSlot(ESLevent*)));
-
-        /* Connect the disconnect menu */
-        connect(m_ui->actionDisconnect, SIGNAL(triggered()),
-                this, SLOT(getDisconnectedSlot()));
-
-        eslConnection->doConnect();
+        consolePage *page = new consolePage();
+        m_ui->tabWidget->addTab(page, serverDialog->getHost());
+        page->init(serverDialog->getHost());
     }
 }
