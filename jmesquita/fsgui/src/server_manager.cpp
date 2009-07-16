@@ -47,6 +47,7 @@ CserverManager::CserverManager(QWidget *parent) :
     m_ui->setupUi(this);
 
     readSettings();
+
     connect(m_ui->btnSave, SIGNAL(clicked()),
             this, SLOT(addNewServer()));
     connect(m_ui->btnDelete, SIGNAL(clicked()),

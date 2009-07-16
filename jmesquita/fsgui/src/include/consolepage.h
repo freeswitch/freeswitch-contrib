@@ -9,6 +9,7 @@ namespace Ui {
 
 /* Forward declarations */
 class ESLevent;
+class ESLeventLog;
 class ESLconnection;
 
 class consolePage : public QWidget {
@@ -28,6 +29,7 @@ private slots:
     void gotDisconnectedSlot();
     void connectionFailedSlot(QString);
     void gotEventSlot(ESLevent *);
+    void gotConsoleEventSlot(ESLeventLog *);
     void getDisconnectedSlot();
     void typedCommand();
     void sendCommand();

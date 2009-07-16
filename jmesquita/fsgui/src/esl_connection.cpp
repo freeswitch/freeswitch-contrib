@@ -39,6 +39,7 @@
 #include <QtGui>
 #include <esl.h>
 #include <esl_connection.h>
+#include "global_defines.h"
 
 #define connection_construct_common() memset(&handle, 0, sizeof(handle)); last_event_obj = NULL
 #define event_construct_common() event = NULL; serialized_string = NULL; mine = 0; hp = NULL
@@ -284,8 +285,18 @@ void ESLconnection::run(void)
         ESLevent * event = recvEventTimed(10);
         if (event)
         {
-            ESLevent * e = new ESLevent(event);
-            emit gotEvent(e);
+            QString type (event->getHeader("Content-Type"));
+            if (QString::compare("log/data", type, Qt::CaseInsensitive) == 0)
+            {
+                ESLeventLog *e = new ESLeventLog(event);
+                e->readSettings();
+                emit gotConsoleEvent(e);
+            }
+            else
+            {
+                ESLevent * e = new ESLevent(event);
+                emit gotEvent(e);
+            }
         }
     }
     if (!QString(handle.err).isEmpty())
@@ -486,4 +497,18 @@ const char *ESLevent::getType(void)
     }
 
     return (char *) "invalid";
+}
+
+/* ESLeventLog */
+/***********************************************************************************************/
+ESLeventLog::ESLeventLog(ESLevent *e) : ESLevent(e){}
+ESLeventLog::~ESLeventLog(){}
+void ESLeventLog::readSettings()
+{
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    QColor consoleColor = settings.value(QString("Log-Level-%1-Color").arg(ESLevent::getHeader("Log-Level")), QColor(Qt::black)).value<QColor>();
+}
+QColor ESLeventLog::getConsoleColor()
+{
+    return consoleColor;
 }

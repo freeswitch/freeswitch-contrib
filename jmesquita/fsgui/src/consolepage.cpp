@@ -91,6 +91,8 @@ void consolePage::init(QString host)
             this, SLOT(connectionFailedSlot(QString)));
     connect(eslConnection, SIGNAL(gotEvent(ESLevent*)),
             this, SLOT(gotEventSlot(ESLevent*)));
+    connect(eslConnection, SIGNAL(gotConsoleEvent(ESLeventLog*)),
+            this, SLOT(gotConsoleEventSlot(ESLeventLog*)));
 
     eslConnection->doConnect();
 }
@@ -127,7 +129,7 @@ void consolePage::sendCommand()
         if (i != cmdList.size()-1)
             args += " ";
     }
-    ESLevent *e = new ESLevent(eslConnection->api(cmdList[0].toAscii(), args.toAscii()));
+    ESLevent *e = new ESLevent(eslConnection->bgapi(cmdList[0].toAscii(), args.toAscii()));
     gotEventSlot(e);
     m_ui->lineCmd->clear();
 }
@@ -138,6 +140,7 @@ void consolePage::gotConnectedSlot()
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
     m_ui->lineCmd->setFocus();
     readSettings();
+    eslConnection->sendRecv("event plain BACKGROUND_JOB");
 }
 void consolePage::gotDisconnectedSlot()
 {
@@ -153,50 +156,23 @@ void consolePage::connectionFailedSlot(QString msg)
 }
 void consolePage::gotEventSlot(ESLevent * event)
 {
-    QString type (event->getHeader("Content-Type"));
-    if (QString::compare("log/data", type, Qt::CaseInsensitive) == 0)
+    m_ui->textConsole->setTextColor(Qt::black);
+    if (event->getBody())
     {
-        switch (atoi(event->getHeader("log-level")))
-        {
-        case ESL_LOG_LEVEL_NOTICE:
-            {
-                m_ui->textConsole->setTextColor(Qt::cyan);
-                break;
-            }
-        case ESL_LOG_LEVEL_WARNING:
-            {
-                m_ui->textConsole->setTextColor(Qt::yellow);
-                break;
-            }
-        case ESL_LOG_LEVEL_ERROR:
-        case ESL_LOG_LEVEL_CRIT:
-            {
-                m_ui->textConsole->setTextColor(Qt::red);
-                break;
-            }
-        case ESL_LOG_LEVEL_ALERT:
-        case ESL_LOG_LEVEL_EMERG:
-        case ESL_LOG_LEVEL_INFO:
-            {
-                m_ui->textConsole->setTextColor(Qt::green);
-                break;
-            }
-        case ESL_LOG_LEVEL_DEBUG:
-            {
-                m_ui->textConsole->setTextColor(Qt::magenta);
-                break;
-            }
-        default:
-            {
-                m_ui->textConsole->setTextColor(Qt::black);
-            }
-        }
-    }
-    else
-    {
-        m_ui->textConsole->setTextColor(Qt::black);
-    }
+        QString text = event->getBody();
 
+        if (text.endsWith("\r\n"))
+            text.chop(2);
+        if (text.endsWith("\n"))
+            text.chop(1);
+
+        appendConsoleText(text);
+    }
+    delete event;
+}
+void consolePage::gotConsoleEventSlot(ESLeventLog * event)
+{
+    m_ui->textConsole->setTextColor(event->getConsoleColor());
     if (event->getBody())
     {
         QString text = event->getBody();

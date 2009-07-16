@@ -39,6 +39,7 @@
 #ifndef _ESL_CONNECTION_H_
 #define _ESL_CONNECTION_H_
 #include <QThread>
+#include <QtGui>
 #include <esl.h>
 
 /*#ifdef __cplusplus
@@ -71,6 +72,16 @@ class ESLevent {
 	bool delHeader(const char *header_name);
 	const char *firstHeader(void);
 	const char *nextHeader(void);
+};
+
+class ESLeventLog : public ESLevent {
+public:
+    ESLeventLog(ESLevent *e);
+    virtual ~ESLeventLog();
+    QColor getConsoleColor();
+    void readSettings();
+private:
+    QColor consoleColor;
 };
 
 class ESLconnection : public QThread
@@ -107,6 +118,7 @@ class ESLconnection : public QThread
     void gotDisconnected(void);
     void connectionFailed(QString);
     void gotEvent(ESLevent*);
+    void gotConsoleEvent(ESLeventLog*);
 protected:
     void run();
 };
