@@ -54,6 +54,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(newConnectionFromDialog()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAbout()));
+    connect(m_ui->tabWidget, SIGNAL(tabCloseRequested(int)),
+            this, SLOT(closeTab(int)));
 
     m_ui->tabWidget->clear();
 }
@@ -102,5 +104,12 @@ void Cfsgui::newConnectionFromDialog()
         consolePage *page = new consolePage();
         m_ui->tabWidget->addTab(page, serverDialog->getHost());
         page->init(serverDialog->getHost());
+        m_ui->tabWidget->setCurrentWidget(page);
     }
+}
+void Cfsgui::closeTab(int index)
+{
+    QWidget *tab = m_ui->tabWidget->widget(index);
+    m_ui->tabWidget->removeTab(index);
+    delete tab;
 }

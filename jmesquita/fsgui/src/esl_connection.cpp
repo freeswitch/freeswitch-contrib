@@ -75,8 +75,6 @@ void ESLconnection::doConnect()
 {
     int x_port = _port->toInt();
 
-    esl_global_set_default_logger(7);
-
     if (esl_connect(&handle, _host->toAscii(), x_port, _pass->toAscii()) == ESL_SUCCESS)
     {
         sendRecv("log 7");
@@ -302,6 +300,7 @@ void ESLconnection::run(void)
             }
         }
     }
+    qDebug() << "Do we ever get here?";
 
 }
 

@@ -61,6 +61,7 @@ protected:
 private slots:
     void showAbout();
     void newConnectionFromDialog();
+    void closeTab(int);
 
 private:
     Ui::Cfsgui *m_ui;

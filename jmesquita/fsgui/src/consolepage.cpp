@@ -50,6 +50,14 @@ consolePage::consolePage(QWidget *parent) :
 consolePage::~consolePage()
 {
     delete m_ui;
+    if (eslConnection->isRunning())
+    {
+        qDebug() << "Thread is running, lets wait.";
+        eslConnection->disconnect();
+        eslConnection->wait();
+    }
+    delete eslConnection;
+    qDebug() << "We quit!!!";
 }
 void consolePage::init(QString host)
 {
@@ -71,7 +79,6 @@ void consolePage::init(QString host)
     settings.endGroup();
     settings.endGroup();
 
-    qDebug() << settings.allKeys();
     eslConnection = new ESLconnection(host.toAscii(),
                                       port.toAscii(),
                                       pass.toAscii());
