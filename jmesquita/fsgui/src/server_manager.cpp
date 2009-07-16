@@ -38,6 +38,7 @@
 
 #include "server_manager.h"
 #include "ui_server_manager.h"
+#include "global_defines.h"
 
 CserverManager::CserverManager(QWidget *parent) :
     QDialog(parent),
@@ -45,8 +46,6 @@ CserverManager::CserverManager(QWidget *parent) :
 {
     m_ui->setupUi(this);
 
-    settingsApplication = "FSGui";
-    settingsOrganization = "FreeSWITCH";
     readSettings();
     connect(m_ui->btnSave, SIGNAL(clicked()),
             this, SLOT(addNewServer()));
@@ -86,7 +85,7 @@ QString CserverManager::getPass()
 }
 void CserverManager::readSettings()
 {
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     m_ui->serverTreeWidget->clear();
     m_ui->serverTreeWidget->setFocus();
     addChildSettings(settings, 0, "servers");
@@ -113,7 +112,7 @@ void CserverManager::addChildSettings(QSettings &settings, QTreeWidgetItem *pare
 }
 void CserverManager::addNewServer()
 {
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
 
     settings.beginGroup("servers");
     settings.beginGroup(m_ui->host->text());
@@ -130,7 +129,7 @@ void CserverManager::deleteServer()
     QTreeWidgetItem *item = m_ui->serverTreeWidget->currentItem();
     if (item)
     {
-        QSettings settings(settingsOrganization, settingsApplication);
+        QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
         settings.beginGroup("servers");
         settings.remove(item->text(0));
         settings.endGroup();
@@ -142,7 +141,7 @@ void CserverManager::deleteServer()
 }
 void CserverManager::serverSelected(QTreeWidgetItem *item, int col)
 {
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
 
     settings.beginGroup("servers");
     settings.beginGroup(item->text(col));

@@ -15,7 +15,8 @@ INCLUDEPATH += ../../../libs/esl/src/include \
 HEADERS += src/include/fs_gui.h \
     src/include/server_manager.h \
     src/include/esl_connection.h \
-    src/include/consolepage.h
+    src/include/consolepage.h \
+    src/include/global_defines.h
 FORMS += resources/fs_gui.ui \
     resources/server_manager.ui \
     resources/consolepage.ui

@@ -40,6 +40,7 @@
 #include "ui_consolepage.h"
 #include "esl_connection.h"
 #include "esl.h"
+#include "global_defines.h"
 
 consolePage::consolePage(QWidget *parent) :
     QWidget(parent),
@@ -68,10 +69,7 @@ void consolePage::init(QString host)
     connect(m_ui->btnSend, SIGNAL(clicked()),
             this, SLOT(sendCommand()));
 
-    QString settingsApplication = "FSGui";
-    QString settingsOrganization = "FreeSWITCH";
-
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
 
     settings.beginGroup("servers");
     settings.beginGroup(host);
@@ -231,15 +229,11 @@ void consolePage::loglevelChanged(int loglevel)
 }
 void consolePage::readSettings()
 {
-    QString settingsApplication = "FSGui";
-    QString settingsOrganization = "FreeSWITCH";
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     m_ui->comboLogLevel->setCurrentIndex(settings.value(QString("servers/%1/loglevel").arg(host)).toInt());
 }
 void consolePage::writeSettings()
 {
-    QString settingsApplication = "FSGui";
-    QString settingsOrganization = "FreeSWITCH";
-    QSettings settings(settingsOrganization, settingsApplication);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     settings.setValue(QString("servers/%1/loglevel").arg(host), m_ui->comboLogLevel->currentIndex());
 }

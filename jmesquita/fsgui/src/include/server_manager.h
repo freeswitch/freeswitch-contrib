@@ -61,8 +61,6 @@ protected:
     virtual void changeEvent(QEvent *e);
 private:
     Ui::CserverManager *m_ui;
-    QString settingsApplication;
-    QString settingsOrganization;
 private slots:
     void addNewServer();
     void deleteServer();
