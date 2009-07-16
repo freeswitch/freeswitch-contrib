@@ -241,6 +241,5 @@ void consolePage::writeSettings()
     QString settingsApplication = "FSGui";
     QString settingsOrganization = "FreeSWITCH";
     QSettings settings(settingsOrganization, settingsApplication);
-    qDebug() << m_ui->comboLogLevel->currentIndex();
     settings.setValue(QString("servers/%1/loglevel").arg(host), m_ui->comboLogLevel->currentIndex());
 }

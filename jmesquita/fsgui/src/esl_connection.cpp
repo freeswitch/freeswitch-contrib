@@ -291,12 +291,10 @@ void ESLconnection::run(void)
     if (!QString(handle.err).isEmpty())
     {
         emit connectionFailed(handle.err);
-        qDebug() << "Connection failed";
     }
     else
     {
         emit gotDisconnected();
-        qDebug() << "Connection ended";
     }
 }
 
