@@ -66,6 +66,7 @@ private slots:
 private:
     Ui::Cfsgui *m_ui;
     CserverManager *serverDialog;
+    void saveWindowSettings();
 };
 
 #endif // FS_GUI_H

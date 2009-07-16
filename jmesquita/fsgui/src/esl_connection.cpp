@@ -77,7 +77,6 @@ void ESLconnection::doConnect()
 
     if (esl_connect(&handle, _host->toAscii(), x_port, _pass->toAscii()) == ESL_SUCCESS)
     {
-        sendRecv("log 7");
         emit gotConnected();
     }
     start();

@@ -45,7 +45,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
     m_ui(new Ui::Cfsgui),
     serverDialog(NULL)
 {
-    m_ui->setupUi(this);
+
+        m_ui->setupUi(this);
 
     // Set the default status bar message
     m_ui->statusBar->showMessage(tr("Ready"));
@@ -58,6 +59,7 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(closeTab(int)));
 
     m_ui->tabWidget->clear();
+    showMaximized();
 }
 Cfsgui::~Cfsgui()
 {
@@ -86,7 +88,6 @@ void Cfsgui::changeEvent(QEvent *e)
 }
 void Cfsgui::closeEvent(QCloseEvent *e)
 {
-    /* TODO: We have to stop threads and do cleanup */
     e->accept();
 }
 void Cfsgui::newConnectionFromDialog()

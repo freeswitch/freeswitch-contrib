@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>274</width>
-    <height>244</height>
+    <width>570</width>
+    <height>443</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>consolePage</string>
@@ -18,27 +24,87 @@
     <widget class="QTextEdit" name="textConsole"/>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLineEdit" name="lineCmd"/>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="lineCmd"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSend">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Send</string>
+         </property>
+         <property name="shortcut">
+          <string>Return</string>
+         </property>
+         <property name="autoDefault">
+          <bool>true</bool>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="btnSend">
-       <property name="enabled">
-        <bool>false</bool>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>LogLevel</string>
        </property>
-       <property name="text">
-        <string>Send</string>
-       </property>
-       <property name="shortcut">
-        <string>Return</string>
-       </property>
-       <property name="autoDefault">
-        <bool>true</bool>
-       </property>
-       <property name="default">
-        <bool>true</bool>
-       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QComboBox" name="comboLogLevel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <item>
+           <property name="text">
+            <string>Console</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Alert</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Crit</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Err</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Warning</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Notice</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Info</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Debug</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

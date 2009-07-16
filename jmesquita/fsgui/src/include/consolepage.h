@@ -31,7 +31,10 @@ private slots:
     void getDisconnectedSlot();
     void typedCommand();
     void sendCommand();
+    void loglevelChanged(int loglevel);
 private:
+    void writeSettings();
+    void readSettings();
     Ui::consolePage *m_ui;
     ESLconnection *eslConnection;
     QString host;

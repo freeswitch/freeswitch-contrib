@@ -46,16 +46,19 @@ consolePage::consolePage(QWidget *parent) :
     m_ui(new Ui::consolePage)
 {
     m_ui->setupUi(this);
+    connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(loglevelChanged(int)));
 }
 consolePage::~consolePage()
 {
-    delete m_ui;
+    writeSettings();
     if (eslConnection->isRunning())
     {
         eslConnection->disconnect();
         eslConnection->wait();
     }
     delete eslConnection;
+    delete m_ui;
 }
 void consolePage::init(QString host)
 {
@@ -133,18 +136,22 @@ void consolePage::sendCommand()
 void consolePage::gotConnectedSlot()
 {
     appendConsoleText(tr("Connected!"));
-    m_ui->lineCmd->setEnabled(true);
+    m_ui->lineCmd->setEnabled(eslConnection->connected());
+    m_ui->comboLogLevel->setEnabled(eslConnection->connected());
     m_ui->lineCmd->setFocus();
+    readSettings();
 }
 void consolePage::gotDisconnectedSlot()
 {
     appendConsoleText(tr("Disconnected!"));
-    m_ui->lineCmd->setDisabled(true);
+    m_ui->lineCmd->setEnabled(eslConnection->connected());
+    m_ui->comboLogLevel->setEnabled(eslConnection->connected());
 }
 void consolePage::connectionFailedSlot(QString msg)
 {
     appendConsoleText("Connection Failed: "+msg);
-    m_ui->lineCmd->setDisabled(true);
+    m_ui->lineCmd->setEnabled(eslConnection->connected());
+    m_ui->comboLogLevel->setEnabled(eslConnection->connected());
 }
 void consolePage::gotEventSlot(ESLevent * event)
 {
@@ -204,4 +211,36 @@ void consolePage::gotEventSlot(ESLevent * event)
         appendConsoleText(text);
     }
     delete event;
+}
+void consolePage::loglevelChanged(int loglevel)
+{
+    if (!eslConnection->connected())
+    {
+        appendConsoleText(QString("Cannot change loglevel if not connected."));
+        return;
+    }
+    ESLevent *event = eslConnection->sendRecv(QString("log %1").arg(loglevel).toAscii());
+    if (event)
+    {
+        appendConsoleText(QString("Changed loglevel to %1").arg(m_ui->comboLogLevel->currentText()));
+    }
+    else
+    {
+        appendConsoleText(QString("Could not change loglevel"));
+    }
+}
+void consolePage::readSettings()
+{
+    QString settingsApplication = "FSGui";
+    QString settingsOrganization = "FreeSWITCH";
+    QSettings settings(settingsOrganization, settingsApplication);
+    m_ui->comboLogLevel->setCurrentIndex(settings.value(QString("servers/%1/loglevel").arg(host)).toInt());
+}
+void consolePage::writeSettings()
+{
+    QString settingsApplication = "FSGui";
+    QString settingsOrganization = "FreeSWITCH";
+    QSettings settings(settingsOrganization, settingsApplication);
+    qDebug() << m_ui->comboLogLevel->currentIndex();
+    settings.setValue(QString("servers/%1/loglevel").arg(host), m_ui->comboLogLevel->currentIndex());
 }
