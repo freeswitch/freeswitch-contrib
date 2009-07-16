@@ -52,12 +52,10 @@ consolePage::~consolePage()
     delete m_ui;
     if (eslConnection->isRunning())
     {
-        qDebug() << "Thread is running, lets wait.";
         eslConnection->disconnect();
         eslConnection->wait();
     }
     delete eslConnection;
-    qDebug() << "We quit!!!";
 }
 void consolePage::init(QString host)
 {
@@ -142,13 +140,11 @@ void consolePage::gotDisconnectedSlot()
 {
     appendConsoleText(tr("Disconnected!"));
     m_ui->lineCmd->setDisabled(true);
-    delete eslConnection;
 }
 void consolePage::connectionFailedSlot(QString msg)
 {
     appendConsoleText("Connection Failed: "+msg);
     m_ui->lineCmd->setDisabled(true);
-    delete eslConnection;
 }
 void consolePage::gotEventSlot(ESLevent * event)
 {

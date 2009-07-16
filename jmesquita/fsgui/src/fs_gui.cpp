@@ -106,6 +106,7 @@ void Cfsgui::newConnectionFromDialog()
         page->init(serverDialog->getHost());
         m_ui->tabWidget->setCurrentWidget(page);
     }
+    this->activateWindow();
 }
 void Cfsgui::closeTab(int index)
 {

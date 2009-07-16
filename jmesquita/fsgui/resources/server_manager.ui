@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Server Manager</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>9</x>
@@ -187,6 +187,22 @@
     <hint type="destinationlabel">
      <x>292</x>
      <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>serverTreeWidget</sender>
+   <signal>itemDoubleClicked(QTreeWidgetItem*,int)</signal>
+   <receiver>CserverManager</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>138</x>
+     <y>106</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>257</x>
+     <y>124</y>
     </hint>
    </hints>
   </connection>

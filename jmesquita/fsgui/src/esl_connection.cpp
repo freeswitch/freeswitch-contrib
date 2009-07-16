@@ -79,12 +79,8 @@ void ESLconnection::doConnect()
     {
         sendRecv("log 7");
         emit gotConnected();
-        start();
     }
-    else
-    {
-        emit connectionFailed(QString(handle.err));
-    }
+    start();
 }
 
 int ESLconnection::connected()
@@ -283,25 +279,26 @@ int ESLconnection::events(const char *etype, const char *value)
 
 void ESLconnection::run(void)
 {
-    forever
+
+    while(connected())
     {
-        if (!connected())
+        ESLevent * event = recvEventTimed(10);
+        if (event)
         {
-            emit gotDisconnected();
-            break;
-        }
-        else
-        {
-            ESLevent * event = recvEventTimed(10);
-            if (event)
-            {
-                ESLevent * e = new ESLevent(event);
-                emit gotEvent(e);
-            }
+            ESLevent * e = new ESLevent(event);
+            emit gotEvent(e);
         }
     }
-    qDebug() << "Do we ever get here?";
-
+    if (!QString(handle.err).isEmpty())
+    {
+        emit connectionFailed(handle.err);
+        qDebug() << "Connection failed";
+    }
+    else
+    {
+        emit gotDisconnected();
+        qDebug() << "Connection ended";
+    }
 }
 
 // ESLevent
