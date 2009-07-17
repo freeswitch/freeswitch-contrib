@@ -237,7 +237,7 @@ bool keyPressEventFilter::eventFilter(QObject *obj, QEvent *e)
     {
         // TODO: Might be good to check settings
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
-        if (keyEvent->key() == Qt::Key_Up)
+        if (keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down)
         {
             QLineEdit * lineCmd = static_cast<QLineEdit *>(obj);
             lineCmd->setCompleter(histCompleter);
