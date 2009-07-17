@@ -173,6 +173,7 @@ void consolePage::gotEventSlot(ESLevent * event)
 void consolePage::gotConsoleEventSlot(ESLeventLog * event)
 {
     m_ui->textConsole->setTextColor(event->getConsoleColor());
+    qDebug() << event->getConsoleColor();
     if (event->getBody())
     {
         QString text = event->getBody();

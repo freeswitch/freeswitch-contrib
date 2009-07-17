@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/preferences" >
+        <file>images/utilities-terminal.svg</file>
+    </qresource>
+</RCC>

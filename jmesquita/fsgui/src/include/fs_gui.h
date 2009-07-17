@@ -41,6 +41,7 @@
 
 #include <QtGui>
 #include "server_manager.h"
+#include "preferencesdialog.h"
 
 namespace Ui {
     class Cfsgui;
@@ -60,12 +61,15 @@ protected:
 
 private slots:
     void showAbout();
+    void showPreferences();
     void newConnectionFromDialog();
     void closeTab(int);
+    void backgroundColorChanged(QColor);
 
 private:
     Ui::Cfsgui *m_ui;
     CserverManager *serverDialog;
+    preferencesDialog *prefDialog;
     void saveWindowSettings();
 };
 

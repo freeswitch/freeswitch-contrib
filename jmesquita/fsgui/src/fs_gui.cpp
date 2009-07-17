@@ -43,7 +43,8 @@
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::Cfsgui),
-    serverDialog(NULL)
+    serverDialog(NULL),
+    prefDialog(NULL)
 {
 
         m_ui->setupUi(this);
@@ -57,6 +58,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(showAbout()));
     connect(m_ui->tabWidget, SIGNAL(tabCloseRequested(int)),
             this, SLOT(closeTab(int)));
+    connect(m_ui->actionPreferences, SIGNAL(triggered()),
+            this, SLOT(showPreferences()));
 
     m_ui->tabWidget->clear();
     showMaximized();
@@ -74,7 +77,18 @@ void Cfsgui::showAbout()
                           "<p>This is small application that will help you connect "
                           "to your FreeSWITCH&copy; installation."));
 }
-
+void Cfsgui::showPreferences()
+{
+    if (!prefDialog)
+    {
+        prefDialog = new preferencesDialog();
+        connect(prefDialog, SIGNAL(backgroundColorChanged(QColor)),
+                this, SLOT(backgroundColorChanged(QColor)));
+    }
+    prefDialog->show();
+    prefDialog->raise();
+    prefDialog->activateWindow();
+}
 void Cfsgui::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
@@ -114,4 +128,8 @@ void Cfsgui::closeTab(int index)
     QWidget *tab = m_ui->tabWidget->widget(index);
     m_ui->tabWidget->removeTab(index);
     delete tab;
+}
+void Cfsgui::backgroundColorChanged(QColor color)
+{
+    //TODO: Get tabs and set them all!
 }

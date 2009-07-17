@@ -510,5 +510,6 @@ void ESLeventLog::readSettings()
 }
 QColor ESLeventLog::getConsoleColor()
 {
+    qDebug() << consoleColor;
     return consoleColor;
 }
