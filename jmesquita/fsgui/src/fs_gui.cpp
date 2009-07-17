@@ -82,8 +82,8 @@ void Cfsgui::showPreferences()
     if (!prefDialog)
     {
         prefDialog = new preferencesDialog();
-        connect(prefDialog, SIGNAL(backgroundColorChanged(QColor)),
-                this, SLOT(backgroundColorChanged(QColor)));
+        connect(prefDialog, SIGNAL(backgroundColorChanged()),
+                this, SLOT(backgroundColorChanged()));
     }
     prefDialog->show();
     prefDialog->raise();
