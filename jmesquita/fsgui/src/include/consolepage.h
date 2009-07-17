@@ -1,7 +1,7 @@
 #ifndef CONSOLEPAGE_H
 #define CONSOLEPAGE_H
 
-#include <QtGui/QWidget>
+#include <QtGui>
 
 namespace Ui {
     class consolePage;
@@ -11,6 +11,7 @@ namespace Ui {
 class ESLevent;
 class ESLeventLog;
 class ESLconnection;
+class cmdHistory;
 
 class consolePage : public QWidget {
     Q_OBJECT
@@ -38,9 +39,12 @@ private slots:
 private:
     void writeSettings();
     void readSettings();
+    QAbstractItemModel *modelFromFile(const QString& fileName);
     Ui::consolePage *m_ui;
     ESLconnection *eslConnection;
     QString host;
+    cmdHistory *histCompleter;
+
 };
 
 #endif // CONSOLEPAGE_H

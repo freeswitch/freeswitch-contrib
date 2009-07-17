@@ -10,7 +10,8 @@ SOURCES += src/main.cpp \
     src/server_manager.cpp \
     src/esl_connection.cpp \
     src/consolepage.cpp \
-    src/preferencesdialog.cpp
+    src/preferencesdialog.cpp \
+    src/completers.cpp
 INCLUDEPATH += ../../../libs/esl/src/include \
     src/include
 HEADERS += src/include/fs_gui.h \
@@ -18,11 +19,12 @@ HEADERS += src/include/fs_gui.h \
     src/include/esl_connection.h \
     src/include/consolepage.h \
     src/include/global_defines.h \
-    src/include/preferencesdialog.h
+    src/include/preferencesdialog.h \
+    src/include/completers.h
 FORMS += resources/fs_gui.ui \
     resources/server_manager.ui \
     resources/consolepage.ui \
     resources/preferencesdialog.ui
 LIBS += -L../../../libs/esl \
     -lesl
-RESOURCES += resources/images.qrc
+RESOURCES += resources/resources.qrc

@@ -47,7 +47,7 @@
          <string>Console</string>
         </property>
         <property name="icon">
-         <iconset resource="images.qrc">
+         <iconset resource="resources.qrc">
           <normaloff>:/preferences/images/utilities-terminal.svg</normaloff>:/preferences/images/utilities-terminal.svg</iconset>
         </property>
        </item>

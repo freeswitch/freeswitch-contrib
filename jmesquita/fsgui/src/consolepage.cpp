@@ -37,6 +37,7 @@
  */
 #include <QtGui>
 #include "consolepage.h"
+#include "completers.h"
 #include "ui_consolepage.h"
 #include "esl_connection.h"
 #include "esl.h"
@@ -44,12 +45,14 @@
 
 consolePage::consolePage(QWidget *parent) :
     QWidget(parent),
-    m_ui(new Ui::consolePage)
+    m_ui(new Ui::consolePage),
+    histCompleter(new cmdHistory)
 {
     m_ui->setupUi(this);
     setConsoleBackground();
     connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
             this, SLOT(loglevelChanged(int)));
+    m_ui->lineCmd->setCompleter(histCompleter);
 }
 consolePage::~consolePage()
 {
@@ -60,6 +63,7 @@ consolePage::~consolePage()
         eslConnection->wait();
     }
     delete eslConnection;
+    delete histCompleter;
     delete m_ui;
 }
 void consolePage::setConsoleBackground()
@@ -137,6 +141,7 @@ void consolePage::sendCommand()
     }
     ESLevent *e = new ESLevent(eslConnection->bgapi(cmdList[0].toAscii(), args.toAscii()));
     gotEventSlot(e);
+    histCompleter->addStringToModel(m_ui->lineCmd->text());
     m_ui->lineCmd->clear();
 }
 void consolePage::gotConnectedSlot()
