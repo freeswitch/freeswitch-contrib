@@ -47,6 +47,7 @@ consolePage::consolePage(QWidget *parent) :
     m_ui(new Ui::consolePage)
 {
     m_ui->setupUi(this);
+    setConsoleBackground();
     connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
             this, SLOT(loglevelChanged(int)));
 }
@@ -60,6 +61,11 @@ consolePage::~consolePage()
     }
     delete eslConnection;
     delete m_ui;
+}
+void consolePage::setConsoleBackground()
+{
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setPalette(settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
 }
 void consolePage::init(QString host)
 {
@@ -173,7 +179,6 @@ void consolePage::gotEventSlot(ESLevent * event)
 void consolePage::gotConsoleEventSlot(ESLeventLog * event)
 {
     m_ui->textConsole->setTextColor(event->getConsoleColor());
-    qDebug() << event->getConsoleColor();
     if (event->getBody())
     {
         QString text = event->getBody();

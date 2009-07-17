@@ -129,7 +129,13 @@ void Cfsgui::closeTab(int index)
     m_ui->tabWidget->removeTab(index);
     delete tab;
 }
-void Cfsgui::backgroundColorChanged(QColor color)
+void Cfsgui::backgroundColorChanged()
 {
-    //TODO: Get tabs and set them all!
+    //TODO: Still don't know how to do it...
+    /*for (int i = 0; i < m_ui->tabWidget->count(); i++)
+    {
+        qDebug() << "Tab: " << i;
+        consolePage *tab = m_ui->tabWidget->widget(i);
+        tab->setConsoleBackground();
+    }*/
 }

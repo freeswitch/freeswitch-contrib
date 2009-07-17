@@ -506,10 +506,9 @@ ESLeventLog::~ESLeventLog(){}
 void ESLeventLog::readSettings()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
-    QColor consoleColor = settings.value(QString("Log-Level-%1-Color").arg(ESLevent::getHeader("Log-Level")), QColor(Qt::black)).value<QColor>();
+    consoleColor = new QColor(settings.value(QString("Log-Level-%1-Color").arg(ESLevent::getHeader("Log-Level")), QColor(Qt::black)).value<QColor>());
 }
 QColor ESLeventLog::getConsoleColor()
 {
-    qDebug() << consoleColor;
-    return consoleColor;
+    return QColor(*consoleColor);
 }

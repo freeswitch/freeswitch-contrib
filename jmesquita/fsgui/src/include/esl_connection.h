@@ -81,7 +81,7 @@ public:
     QColor getConsoleColor();
     void readSettings();
 private:
-    QColor consoleColor;
+    QColor *consoleColor;
 };
 
 class ESLconnection : public QThread

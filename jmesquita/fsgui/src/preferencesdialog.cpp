@@ -13,8 +13,25 @@ preferencesDialog::preferencesDialog(QWidget *parent) :
 
     connect(m_ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
             this, SLOT(changePage(QListWidgetItem*,QListWidgetItem*)));
+
     connect(m_ui->btnChangeBackgroundColor, SIGNAL(clicked()),
             this, SLOT(changeBackgroundColor()));
+
+    connect(m_ui->btnChangeConsoleLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeConsoleLogLevelColor()));
+    connect(m_ui->btnChangeCriticalLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeCriticalLogLevelColor()));
+    connect(m_ui->btnChangeDebugLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeDebugLogLevelColor()));
+    connect(m_ui->btnChangeErrorLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeErrorLogLevelColor()));
+    connect(m_ui->btnChangeInfoLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeInfoLogLevelColor()));
+    connect(m_ui->btnChangeNoticeLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeNoticeLogLevelColor()));
+    connect(m_ui->btnChangeWarningLogLevelColor, SIGNAL(clicked()),
+            this, SLOT(changeWarningLogLevelColor()));
+
     connect(this, SIGNAL(accepted()),
             this, SLOT(saveSettings()));
     connect(this, SIGNAL(rejected()),
@@ -53,6 +70,62 @@ void preferencesDialog::changeEvent(QEvent *e)
      m_ui->frmBackgroundColor->setPalette(colorChooser->getColor(
              m_ui->frmBackgroundColor->palette().color(QPalette::Background)));
  }
+void preferencesDialog::changeConsoleLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmConsoleLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmConsoleLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeCriticalLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmCriticalLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmCriticalLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeDebugLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmDebugLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmDebugLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeErrorLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmErrorLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmErrorLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeInfoLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmInfoLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmInfoLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeNoticeLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmNoticeLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmNoticeLogLevelColor->palette().color(QPalette::Background)));
+}
+void preferencesDialog::changeWarningLogLevelColor()
+{
+     if(!colorChooser)
+         colorChooser = new QColorDialog();
+
+     m_ui->frmWarningLogLevelColor->setPalette(colorChooser->getColor(
+             m_ui->frmWarningLogLevelColor->palette().color(QPalette::Background)));
+}
 void preferencesDialog::saveSettings()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
@@ -70,7 +143,7 @@ void preferencesDialog::saveSettings()
     settings.setValue(QString("Log-Level-%1-Color").arg(ESL_LOG_LEVEL_WARNING), m_ui->frmWarningLogLevelColor->palette().color(QPalette::Background));
 
     /* Make all tabs change their settings */
-    emit backgroundColorChanged(m_ui->frmBackgroundColor->palette().color(QPalette::Background));
+    emit backgroundColorChanged();
 }
 void preferencesDialog::readSettings()
 {

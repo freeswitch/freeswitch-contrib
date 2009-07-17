@@ -19,6 +19,7 @@ public:
     consolePage(QWidget *parent = 0);
     ~consolePage();
     void init(QString host);
+    void setConsoleBackground();
 
 protected:
     virtual void changeEvent(QEvent *e);

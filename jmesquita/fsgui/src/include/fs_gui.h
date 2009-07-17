@@ -64,7 +64,7 @@ private slots:
     void showPreferences();
     void newConnectionFromDialog();
     void closeTab(int);
-    void backgroundColorChanged(QColor);
+    void backgroundColorChanged();
 
 private:
     Ui::Cfsgui *m_ui;

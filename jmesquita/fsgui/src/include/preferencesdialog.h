@@ -20,10 +20,17 @@ protected:
 private slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
     void changeBackgroundColor();
+    void changeConsoleLogLevelColor();
+    void changeCriticalLogLevelColor();
+    void changeDebugLogLevelColor();
+    void changeErrorLogLevelColor();
+    void changeInfoLogLevelColor();
+    void changeNoticeLogLevelColor();
+    void changeWarningLogLevelColor();
     void saveSettings();
     void readSettings();
 signals:
-    void backgroundColorChanged(QColor);
+    void backgroundColorChanged();
 private:
     Ui::preferencesDialog *m_ui;
     QColorDialog *colorChooser;
