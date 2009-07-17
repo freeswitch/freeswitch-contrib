@@ -13,10 +13,9 @@ void cmdHistory::addStringToModel(QString cmd)
 {
     QStringList list = listModel->stringList();
     if (!list.contains(cmd, Qt::CaseInsensitive))
-        list << cmd;
+        list.prepend(cmd);
 
     listModel->setStringList(list);
-    qDebug() << list;
 }
 QAbstractItemModel *cmdHistory::modelFromFile(const QString& fileName)
  {

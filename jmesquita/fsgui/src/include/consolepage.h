@@ -12,6 +12,7 @@ class ESLevent;
 class ESLeventLog;
 class ESLconnection;
 class cmdHistory;
+class keyPressEventFilter;
 
 class consolePage : public QWidget {
     Q_OBJECT
@@ -42,9 +43,20 @@ private:
     QAbstractItemModel *modelFromFile(const QString& fileName);
     Ui::consolePage *m_ui;
     ESLconnection *eslConnection;
-    QString host;
     cmdHistory *histCompleter;
+    keyPressEventFilter *lineCmdEventFilter;
+    QString host;
+};
 
+class keyPressEventFilter : public QObject {
+    Q_OBJECT
+public:
+    keyPressEventFilter(cmdHistory * histCompleter);
+    virtual ~keyPressEventFilter();
+protected:
+    bool eventFilter(QObject *obj, QEvent *e);
+private:
+    cmdHistory *histCompleter;
 };
 
 #endif // CONSOLEPAGE_H

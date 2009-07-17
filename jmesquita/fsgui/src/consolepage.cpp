@@ -46,13 +46,14 @@
 consolePage::consolePage(QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::consolePage),
-    histCompleter(new cmdHistory)
+    histCompleter(new cmdHistory),
+    lineCmdEventFilter(new keyPressEventFilter(histCompleter))
 {
     m_ui->setupUi(this);
     setConsoleBackground();
     connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
             this, SLOT(loglevelChanged(int)));
-    m_ui->lineCmd->setCompleter(histCompleter);
+    m_ui->lineCmd->installEventFilter(lineCmdEventFilter);
 }
 consolePage::~consolePage()
 {
@@ -223,4 +224,27 @@ void consolePage::writeSettings()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     settings.setValue(QString("servers/%1/loglevel").arg(host), m_ui->comboLogLevel->currentIndex());
+}
+/************************************************************************/
+/* keyPressEventFilter                                                  */
+/************************************************************************/
+keyPressEventFilter::keyPressEventFilter(cmdHistory* histCompleter) :
+        histCompleter(histCompleter){}
+keyPressEventFilter::~keyPressEventFilter(){}
+bool keyPressEventFilter::eventFilter(QObject *obj, QEvent *e)
+{
+    if (e->type() == QEvent::KeyPress)
+    {
+        // TODO: Might be good to check settings
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+        if (keyEvent->key() == Qt::Key_Up)
+        {
+            QLineEdit * lineCmd = static_cast<QLineEdit *>(obj);
+            lineCmd->setCompleter(histCompleter);
+            histCompleter->setCompletionPrefix(lineCmd->text());
+            histCompleter->complete();
+            return true;
+        }
+    }
+    return QObject::eventFilter(obj, e);
 }
