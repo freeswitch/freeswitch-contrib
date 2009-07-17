@@ -131,11 +131,9 @@ void Cfsgui::closeTab(int index)
 }
 void Cfsgui::backgroundColorChanged()
 {
-    //TODO: Still don't know how to do it...
-    /*for (int i = 0; i < m_ui->tabWidget->count(); i++)
+    for (int i = 0; i < m_ui->tabWidget->count(); i++)
     {
-        qDebug() << "Tab: " << i;
-        consolePage *tab = m_ui->tabWidget->widget(i);
+        consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(i));
         tab->setConsoleBackground();
-    }*/
+    }
 }
