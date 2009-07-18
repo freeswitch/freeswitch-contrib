@@ -80,6 +80,8 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="separator"/>
+    <addaction name="actionRegisterClueCon"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -136,6 +138,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionRegisterClueCon">
+   <property name="text">
+    <string>Register to &amp;ClueCon</string>
    </property>
   </action>
  </widget>

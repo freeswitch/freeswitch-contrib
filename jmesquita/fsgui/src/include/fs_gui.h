@@ -66,6 +66,7 @@ private slots:
     void closeTab(int);
     void changeTab(int);
     void backgroundColorChanged();
+    void registerClueCon();
     void doConnect();
     void doDisconnect();
     void gotDisconnected();

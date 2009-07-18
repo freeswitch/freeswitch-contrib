@@ -60,6 +60,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(doDisconnect()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAbout()));
+    connect(m_ui->actionRegisterClueCon, SIGNAL(triggered()),
+            this, SLOT(registerClueCon()));
     connect(m_ui->tabWidget, SIGNAL(tabCloseRequested(int)),
             this, SLOT(closeTab(int)));
     connect(m_ui->tabWidget, SIGNAL(currentChanged(int)),
@@ -171,6 +173,10 @@ void Cfsgui::backgroundColorChanged()
         consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(i));
         tab->setConsoleBackground();
     }
+}
+void Cfsgui::registerClueCon()
+{
+    QDesktopServices::openUrl(QUrl("http://www.cluecon.com/user/register"));
 }
 void Cfsgui::doDisconnect()
 {

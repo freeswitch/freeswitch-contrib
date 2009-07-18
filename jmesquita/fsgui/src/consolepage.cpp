@@ -74,8 +74,7 @@ void consolePage::setConsoleBackground()
 }
 int consolePage::isConnected()
 {
-    if (eslConnection)
-        return eslConnection->connected();
+    return eslConnection->connected();
 }
 void consolePage::doDisconnect()
 {
