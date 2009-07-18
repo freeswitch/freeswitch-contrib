@@ -22,10 +22,16 @@ public:
     ~consolePage();
     void init(QString host);
     void setConsoleBackground();
+    int isConnected();
+    void doConnect();
+    void doDisconnect();
 
 protected:
     virtual void changeEvent(QEvent *e);
     void appendConsoleText(const QString);
+signals:
+    void gotConnected();
+    void gotDisconnected();
 
 private slots:
     void gotConnectedSlot();

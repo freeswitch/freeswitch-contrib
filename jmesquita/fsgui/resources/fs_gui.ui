@@ -68,6 +68,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="actionServerManager"/>
+    <addaction name="separator"/>
     <addaction name="actionConnect"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
@@ -126,6 +128,14 @@
   <action name="actionPreferences">
    <property name="text">
     <string>&amp;Preferences</string>
+   </property>
+  </action>
+  <action name="actionServerManager">
+   <property name="text">
+    <string>&amp;Server Manager</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>

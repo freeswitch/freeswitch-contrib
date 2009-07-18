@@ -52,12 +52,18 @@ Cfsgui::Cfsgui(QWidget *parent) :
     // Set the default status bar message
     m_ui->statusBar->showMessage(tr("Ready"));
 
-    connect(m_ui->actionConnect, SIGNAL(triggered()),
+    connect(m_ui->actionServerManager, SIGNAL(triggered()),
             this, SLOT(newConnectionFromDialog()));
+    connect(m_ui->actionConnect, SIGNAL(triggered()),
+            this, SLOT(doConnect()));
+    connect(m_ui->actionDisconnect, SIGNAL(triggered()),
+            this, SLOT(doDisconnect()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAbout()));
     connect(m_ui->tabWidget, SIGNAL(tabCloseRequested(int)),
             this, SLOT(closeTab(int)));
+    connect(m_ui->tabWidget, SIGNAL(currentChanged(int)),
+            this, SLOT(changeTab(int)));
     connect(m_ui->actionPreferences, SIGNAL(triggered()),
             this, SLOT(showPreferences()));
 
@@ -117,6 +123,10 @@ void Cfsgui::newConnectionFromDialog()
     if (serverDialog->exec())
     {
         consolePage *page = new consolePage();
+        connect(page, SIGNAL(gotConnected()),
+                this, SLOT(gotConnected()));
+        connect(page, SIGNAL(gotDisconnected()),
+                this, SLOT(gotDisconnected()));
         m_ui->tabWidget->addTab(page, serverDialog->getHost());
         page->init(serverDialog->getHost());
         m_ui->tabWidget->setCurrentWidget(page);
@@ -129,6 +139,31 @@ void Cfsgui::closeTab(int index)
     m_ui->tabWidget->removeTab(index);
     delete tab;
 }
+void Cfsgui::changeTab(int index)
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(index));
+    if (tab)
+    {
+        if (tab->isConnected())
+        {
+            gotConnected();
+        }
+        else
+        {
+            gotDisconnected();
+        }
+    }
+}
+void Cfsgui::gotConnected()
+{
+    m_ui->actionConnect->setDisabled(true);
+    m_ui->actionDisconnect->setEnabled(true);
+}
+void Cfsgui::gotDisconnected()
+{
+    m_ui->actionConnect->setEnabled(true);
+    m_ui->actionDisconnect->setDisabled(true);
+}
 void Cfsgui::backgroundColorChanged()
 {
     for (int i = 0; i < m_ui->tabWidget->count(); i++)
@@ -136,4 +171,14 @@ void Cfsgui::backgroundColorChanged()
         consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(i));
         tab->setConsoleBackground();
     }
+}
+void Cfsgui::doDisconnect()
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
+    tab->doDisconnect();
+}
+void Cfsgui::doConnect()
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
+    tab->doConnect();
 }

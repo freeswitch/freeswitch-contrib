@@ -64,7 +64,12 @@ private slots:
     void showPreferences();
     void newConnectionFromDialog();
     void closeTab(int);
+    void changeTab(int);
     void backgroundColorChanged();
+    void doConnect();
+    void doDisconnect();
+    void gotDisconnected();
+    void gotConnected();
 
 private:
     Ui::Cfsgui *m_ui;

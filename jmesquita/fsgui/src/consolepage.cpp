@@ -50,9 +50,9 @@ consolePage::consolePage(QWidget *parent) :
     lineCmdEventFilter(new keyPressEventFilter(histCompleter))
 {
     m_ui->setupUi(this);
-    setConsoleBackground();
     connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
             this, SLOT(loglevelChanged(int)));
+    setConsoleBackground();
     m_ui->lineCmd->installEventFilter(lineCmdEventFilter);
 }
 consolePage::~consolePage()
@@ -71,6 +71,19 @@ void consolePage::setConsoleBackground()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     m_ui->textConsole->setPalette(settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
+}
+int consolePage::isConnected()
+{
+    if (eslConnection)
+        return eslConnection->connected();
+}
+void consolePage::doDisconnect()
+{
+    eslConnection->disconnect();
+}
+void consolePage::doConnect()
+{
+    eslConnection->doConnect();
 }
 void consolePage::init(QString host)
 {
@@ -153,18 +166,21 @@ void consolePage::gotConnectedSlot()
     m_ui->lineCmd->setFocus();
     readSettings();
     eslConnection->sendRecv("event plain BACKGROUND_JOB");
+    emit gotConnected();
 }
 void consolePage::gotDisconnectedSlot()
 {
     appendConsoleText(tr("Disconnected!"));
     m_ui->lineCmd->setEnabled(eslConnection->connected());
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
+    emit gotDisconnected();
 }
 void consolePage::connectionFailedSlot(QString msg)
 {
     appendConsoleText("Connection Failed: "+msg);
     m_ui->lineCmd->setEnabled(eslConnection->connected());
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
+    emit gotDisconnected();
 }
 void consolePage::gotEventSlot(ESLevent * event)
 {
