@@ -70,7 +70,6 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(showPreferences()));
 
     m_ui->tabWidget->clear();
-    showMaximized();
 }
 Cfsgui::~Cfsgui()
 {
@@ -83,7 +82,7 @@ void Cfsgui::showAbout()
                        tr("<h2>FSGui - The console for humans</h2>"
                           "<p>Author: Jo&atilde;o Mesquita &lt;jmesquita@gmail.com>"
                           "<p>This is small application that will help you connect "
-                          "to your FreeSWITCH&copy; installation."));
+                          "to your FreeSWITCH&trade; installation."));
 }
 void Cfsgui::showPreferences()
 {
