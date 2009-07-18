@@ -54,16 +54,17 @@ consolePage::consolePage(QWidget *parent) :
             this, SLOT(loglevelChanged(int)));
     setConsoleBackground();
     m_ui->lineCmd->installEventFilter(lineCmdEventFilter);
+	eslConnection = NULL;
 }
 consolePage::~consolePage()
 {
     writeSettings();
-    if (eslConnection->isRunning())
+    if (eslConnection && eslConnection->isRunning())
     {
         eslConnection->disconnect();
         eslConnection->wait();
+	    delete eslConnection;
     }
-    delete eslConnection;
     delete histCompleter;
     delete m_ui;
 }
@@ -74,11 +75,14 @@ void consolePage::setConsoleBackground()
 }
 int consolePage::isConnected()
 {
-    return eslConnection->connected();
+    return eslConnection && eslConnection->connected();
 }
 void consolePage::doDisconnect()
 {
-    eslConnection->disconnect();
+	if (eslConnection) 
+	{
+	    eslConnection->disconnect();	
+	}
 }
 void consolePage::doConnect()
 {
