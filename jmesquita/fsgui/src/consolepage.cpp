@@ -116,8 +116,6 @@ void consolePage::init(QString host)
             this, SLOT(gotEventSlot(ESLevent*)));
     connect(eslConnection, SIGNAL(gotConsoleEvent(ESLeventLog*)),
             this, SLOT(gotConsoleEventSlot(ESLeventLog*)));
-
-    eslConnection->doConnect();
 }
 void consolePage::changeEvent(QEvent *e)
 {
@@ -220,8 +218,7 @@ void consolePage::loglevelChanged(int loglevel)
         appendConsoleText(QString("Cannot change loglevel if not connected."));
         return;
     }
-    ESLevent *event = eslConnection->sendRecv(QString("log %1").arg(loglevel).toAscii());
-    if (event)
+    if (eslConnection->setConsoleLogLevel(loglevel))
     {
         appendConsoleText(QString("Changed loglevel to %1").arg(m_ui->comboLogLevel->currentText()));
     }

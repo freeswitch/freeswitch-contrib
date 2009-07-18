@@ -88,7 +88,7 @@ class ESLconnection : public QThread
 {
     Q_OBJECT
  private:
-    esl_handle_t handle;
+    esl_handle_t *handle;
     ESLevent *last_event_obj;
     QString *_host;
     QString *_port;
@@ -113,6 +113,7 @@ class ESLconnection : public QThread
     int setAsyncExecute(const char *val);
     int setEventLock(const char *val);
     int disconnect(void);
+    bool setConsoleLogLevel(int);
  signals:
     void gotConnected(void);
     void gotDisconnected(void);

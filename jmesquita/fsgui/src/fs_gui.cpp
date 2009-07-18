@@ -47,7 +47,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
     prefDialog(NULL)
 {
 
-        m_ui->setupUi(this);
+    m_ui->setupUi(this);
+    m_ui->tabWidget->clear();
 
     // Set the default status bar message
     m_ui->statusBar->showMessage(tr("Ready"));
@@ -69,7 +70,6 @@ Cfsgui::Cfsgui(QWidget *parent) :
     connect(m_ui->actionPreferences, SIGNAL(triggered()),
             this, SLOT(showPreferences()));
 
-    m_ui->tabWidget->clear();
 }
 Cfsgui::~Cfsgui()
 {
@@ -131,6 +131,7 @@ void Cfsgui::newConnectionFromDialog()
         m_ui->tabWidget->addTab(page, serverDialog->getHost());
         page->init(serverDialog->getHost());
         m_ui->tabWidget->setCurrentWidget(page);
+        page->doConnect();
     }
     this->activateWindow();
 }
@@ -180,10 +181,12 @@ void Cfsgui::registerClueCon()
 void Cfsgui::doDisconnect()
 {
     consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
-    tab->doDisconnect();
+    if (tab)
+        tab->doDisconnect();
 }
 void Cfsgui::doConnect()
 {
     consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
-    tab->doConnect();
+    if (tab)
+        tab->doConnect();
 }
