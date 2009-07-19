@@ -46,6 +46,7 @@
 consolePage::consolePage(QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::consolePage),
+    eslConnection(NULL),
     histCompleter(new cmdHistory),
     lineCmdEventFilter(new keyPressEventFilter(histCompleter))
 {
@@ -54,7 +55,9 @@ consolePage::consolePage(QWidget *parent) :
             this, SLOT(loglevelChanged(int)));
     setConsoleBackground();
     m_ui->lineCmd->installEventFilter(lineCmdEventFilter);
-	eslConnection = NULL;
+
+    /* Just for now */
+    m_ui->serverTabs->removeTab(1);
 }
 consolePage::~consolePage()
 {
@@ -161,6 +164,9 @@ void consolePage::sendCommand()
 }
 void consolePage::gotConnectedSlot()
 {
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setTextColor(settings.value(QString("Log-Level-0-Color"), Qt::black).value<QColor>());
+
     appendConsoleText(tr("Connected!"));
     m_ui->lineCmd->setEnabled(eslConnection->connected());
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
@@ -171,6 +177,9 @@ void consolePage::gotConnectedSlot()
 }
 void consolePage::gotDisconnectedSlot()
 {
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setTextColor(settings.value(QString("Log-Level-0-Color"), Qt::black).value<QColor>());
+
     appendConsoleText(tr("Disconnected!"));
     m_ui->lineCmd->setEnabled(eslConnection->connected());
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
@@ -178,6 +187,9 @@ void consolePage::gotDisconnectedSlot()
 }
 void consolePage::connectionFailedSlot(QString msg)
 {
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setTextColor(settings.value(QString("Log-Level-0-Color"), Qt::black).value<QColor>());
+
     appendConsoleText("Connection Failed: "+msg);
     m_ui->lineCmd->setEnabled(eslConnection->connected());
     m_ui->comboLogLevel->setEnabled(eslConnection->connected());
@@ -185,7 +197,8 @@ void consolePage::connectionFailedSlot(QString msg)
 }
 void consolePage::gotEventSlot(ESLevent * event)
 {
-    m_ui->textConsole->setTextColor(Qt::black);
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setTextColor(settings.value(QString("Log-Level-0-Color"), Qt::black).value<QColor>());
     if (event->getBody())
     {
         QString text = event->getBody();
@@ -201,9 +214,9 @@ void consolePage::gotEventSlot(ESLevent * event)
 }
 void consolePage::gotConsoleEventSlot(ESLeventLog * event)
 {
-    m_ui->textConsole->setTextColor(event->getConsoleColor());
     if (event->getBody())
     {
+        m_ui->textConsole->setTextColor(event->getConsoleColor());
         QString text = event->getBody();
 
         if (text.endsWith("\r\n"))
@@ -217,6 +230,8 @@ void consolePage::gotConsoleEventSlot(ESLeventLog * event)
 }
 void consolePage::loglevelChanged(int loglevel)
 {
+    QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    m_ui->textConsole->setTextColor(settings.value(QString("Log-Level-0-Color"), Qt::black).value<QColor>());
     if (!eslConnection->connected())
     {
         appendConsoleText(QString("Cannot change loglevel if not connected."));

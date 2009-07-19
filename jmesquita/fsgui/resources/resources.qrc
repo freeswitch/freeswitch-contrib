@@ -1,5 +1,6 @@
 <RCC>
-    <qresource prefix="/preferences" >
-        <file>images/utilities-terminal.svg</file>
-    </qresource>
+  <qresource prefix="/preferences" >
+    <file>network-idle.png</file>
+    <file>images/utilities-terminal.svg</file>
+  </qresource>
 </RCC>

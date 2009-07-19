@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>296</width>
-    <height>303</height>
+    <width>728</width>
+    <height>523</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,23 +25,9 @@
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Console</string>
+        <string>Server Name</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QTextEdit" name="textConsole">
-          <property name="undoRedoEnabled">
-           <bool>false</bool>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout"/>
       </widget>
       <widget class="QWidget" name="tab_2">
        <property name="enabled">
@@ -60,7 +46,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>296</width>
+     <width>728</width>
      <height>26</height>
     </rect>
    </property>
@@ -147,7 +133,9 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionQuit</sender>

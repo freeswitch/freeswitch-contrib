@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>570</width>
-    <height>443</height>
+    <width>392</width>
+    <height>301</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,98 +19,146 @@
   <property name="windowTitle">
    <string>consolePage</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout_3">
    <item>
-    <widget class="QTextEdit" name="textConsole"/>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+    <widget class="QTabWidget" name="serverTabs">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="tabPosition">
+      <enum>QTabWidget::West</enum>
+     </property>
+     <property name="tabShape">
+      <enum>QTabWidget::Triangular</enum>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="movable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="tabConsole">
+      <attribute name="icon">
+       <iconset resource="resources.qrc">
+        <normaloff>:/preferences/images/utilities-terminal.svg</normaloff>:/preferences/images/utilities-terminal.svg</iconset>
+      </attribute>
+      <attribute name="title">
+       <string>Console</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLineEdit" name="lineCmd"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnSend">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Send</string>
-         </property>
-         <property name="shortcut">
-          <string>Return</string>
-         </property>
-         <property name="autoDefault">
-          <bool>true</bool>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTextEdit" name="textConsole"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLineEdit" name="lineCmd"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnSend">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Send</string>
+               </property>
+               <property name="shortcut">
+                <string>Return</string>
+               </property>
+               <property name="autoDefault">
+                <bool>true</bool>
+               </property>
+               <property name="default">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>LogLevel</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
+               <widget class="QComboBox" name="comboLogLevel">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Console</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Alert</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Crit</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Err</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Warning</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Notice</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Info</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Debug</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>LogLevel</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
-         <widget class="QComboBox" name="comboLogLevel">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <item>
-           <property name="text">
-            <string>Console</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Alert</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Crit</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Err</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Warning</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Notice</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Info</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Debug</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
+     </widget>
+     <widget class="QWidget" name="tabExtensions">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <attribute name="icon">
+       <iconset resource="resources.qrc">
+        <normaloff>:/preferences/network-idle.png</normaloff>:/preferences/network-idle.png</iconset>
+      </attribute>
+      <attribute name="title">
+       <string>Extensions</string>
+      </attribute>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
