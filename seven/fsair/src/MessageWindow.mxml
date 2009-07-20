@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="400" height="70">
+	<mx:Label x="39" y="19" text="Incoming Call ..." id="MessageLabel" width="220"/>
+	<mx:Button x="71" y="36" label="Accept"/>
+	<mx:Button x="217" y="36" label="Reject"/>
+
+		
+</mx:Window>
