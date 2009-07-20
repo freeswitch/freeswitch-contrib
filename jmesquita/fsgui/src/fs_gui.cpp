@@ -39,12 +39,15 @@
 #include "fs_gui.h"
 #include "ui_fs_gui.h"
 #include "consolepage.h"
+#include <QtNetwork>
 
 Cfsgui::Cfsgui(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::Cfsgui),
     serverDialog(NULL),
-    prefDialog(NULL)
+    prefDialog(NULL),
+    fileDialog(NULL),
+    pasteDialog(NULL)
 {
 
     m_ui->setupUi(this);
@@ -59,10 +62,15 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(doConnect()));
     connect(m_ui->actionDisconnect, SIGNAL(triggered()),
             this, SLOT(doDisconnect()));
+    connect(m_ui->actionSaveLog, SIGNAL(triggered()),
+            this, SLOT(saveLog()));
+    connect(m_ui->actionPastebinLog, SIGNAL(triggered()),
+            this, SLOT(pastebinLog()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAbout()));
     connect(m_ui->actionRegisterClueCon, SIGNAL(triggered()),
             this, SLOT(registerClueCon()));
+
     connect(m_ui->tabWidget, SIGNAL(tabCloseRequested(int)),
             this, SLOT(closeTab(int)));
     connect(m_ui->tabWidget, SIGNAL(currentChanged(int)),
@@ -160,11 +168,15 @@ void Cfsgui::gotConnected()
 {
     m_ui->actionConnect->setDisabled(true);
     m_ui->actionDisconnect->setEnabled(true);
+    m_ui->actionSaveLog->setEnabled(true);
+    m_ui->actionPastebinLog->setEnabled(true);
 }
 void Cfsgui::gotDisconnected()
 {
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setDisabled(true);
+    m_ui->actionSaveLog->setDisabled(true);
+    m_ui->actionPastebinLog->setDisabled(true);
 }
 void Cfsgui::backgroundColorChanged()
 {
@@ -172,6 +184,43 @@ void Cfsgui::backgroundColorChanged()
     {
         consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(i));
         tab->setConsoleBackground();
+    }
+}
+void Cfsgui::saveLog()
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
+    if (tab)
+    {
+        if(!fileDialog)
+        {
+            fileDialog = new QFileDialog(this);
+        }
+
+        fileDialog->setAcceptMode(QFileDialog::AcceptSave);
+
+        if (fileDialog->exec())
+        {
+            QStringList fileNames = fileDialog->selectedFiles();
+            QFile file(fileNames[0]);
+            file.open(QIODevice::WriteOnly|QIODevice::Truncate|QIODevice::Text);
+            file.write(tab->getConsoleText().toAscii());
+            file.close();
+        }
+    }
+}
+void Cfsgui::pastebinLog()
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
+    if (tab)
+    {
+        if (!pasteDialog)
+        {
+            pasteDialog = new pastebinDialog(this);
+        }
+        pasteDialog->setText(tab->getConsoleText());
+        pasteDialog->show();
+        pasteDialog->raise();
+        pasteDialog->activateWindow();
     }
 }
 void Cfsgui::registerClueCon()

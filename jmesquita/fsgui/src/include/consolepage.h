@@ -25,6 +25,7 @@ public:
     int isConnected();
     void doConnect();
     void doDisconnect();
+    QString getConsoleText();
 
 protected:
     virtual void changeEvent(QEvent *e);

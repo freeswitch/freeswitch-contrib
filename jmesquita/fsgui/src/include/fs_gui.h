@@ -42,11 +42,11 @@
 #include <QtGui>
 #include "server_manager.h"
 #include "preferencesdialog.h"
+#include "pastebindialog.h"
 
 namespace Ui {
     class Cfsgui;
 }
-
 
 class Cfsgui : public QMainWindow {
     Q_OBJECT
@@ -66,6 +66,8 @@ private slots:
     void closeTab(int);
     void changeTab(int);
     void backgroundColorChanged();
+    void saveLog();
+    void pastebinLog();
     void registerClueCon();
     void doConnect();
     void doDisconnect();
@@ -76,6 +78,8 @@ private:
     Ui::Cfsgui *m_ui;
     CserverManager *serverDialog;
     preferencesDialog *prefDialog;
+    QFileDialog *fileDialog;
+    pastebinDialog *pasteDialog;
     void saveWindowSettings();
 };
 

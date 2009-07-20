@@ -87,6 +87,10 @@ void consolePage::doDisconnect()
 	    eslConnection->disconnect();	
 	}
 }
+QString consolePage::getConsoleText()
+{
+    return m_ui->textConsole->toPlainText();
+}
 void consolePage::doConnect()
 {
     eslConnection->doConnect();
