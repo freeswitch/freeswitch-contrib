@@ -9,6 +9,8 @@ namespace Ui {
 
 class QHttp;
 class QString;
+class QProgressDialog;
+class QHttpResponseHeader;
 
 class pastebinDialog : public QDialog {
     Q_OBJECT
@@ -24,11 +26,16 @@ protected:
 private:
     Ui::pastebinDialog *m_ui;
     QString text;
+    QString pasteURL;
     QHttp * pastebinHttp;
+    int postId;
+    QProgressDialog *progressDialog;
 
 private slots:
     void pastebinFinished(int, bool);
     void pasteIt();
+    void readResponseHeader(const QHttpResponseHeader &);
+    void updateDataSendProgress(int, int);
 };
 
 #endif // PASTEBINDIALOG_H

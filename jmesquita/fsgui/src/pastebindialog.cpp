@@ -5,7 +5,8 @@
 
 pastebinDialog::pastebinDialog(QWidget *parent) :
     QDialog(parent),
-    m_ui(new Ui::pastebinDialog)
+    m_ui(new Ui::pastebinDialog),
+    progressDialog(new QProgressDialog(this))
 {
     m_ui->setupUi(this);
 
@@ -29,22 +30,6 @@ void pastebinDialog::changeEvent(QEvent *e)
         break;
     }
 }
-void pastebinDialog::pastebinFinished(int req, bool isError)
-{
-    QMessageBox msgBox;
-    if (isError)
-    {
-        msgBox.setText(QString("Error on pastebin: %1").arg(pastebinHttp->errorString()));
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.exec();
-    }
-    else
-    {
-        msgBox.setText("Pastebin correctly pasted!");
-        msgBox.setIcon(QMessageBox::Information);
-        msgBox.exec();
-    }
-}
 void pastebinDialog::pasteIt()
 {
 
@@ -53,6 +38,10 @@ void pastebinDialog::pasteIt()
     /* TODO: Make a progress thing? */
     connect(pastebinHttp, SIGNAL(requestFinished(int,bool)),
             this, SLOT(pastebinFinished(int,bool)));
+     connect(pastebinHttp, SIGNAL(dataSendProgress(int, int)),
+             this, SLOT(updateDataSendProgress(int, int)));
+     connect(pastebinHttp, SIGNAL(responseHeaderReceived(const QHttpResponseHeader &)),
+             this, SLOT(readResponseHeader(const QHttpResponseHeader &)));
 
     QHttpRequestHeader header( "POST",  "/pastebin.php") ;
     header.setValue( "Host", "pastebin.freeswitch.org" ) ;
@@ -61,19 +50,78 @@ void pastebinDialog::pasteIt()
     pastebinHttp->setHost(m_ui->lineURL->text(), QHttp::ConnectionModeHttp, m_ui->linePort->text().toInt());
     pastebinHttp->setUser(m_ui->lineUsername->text(), m_ui->linePassword->text());
     header.setValue( "User-Agent", "FsGUI");
-    QString params("parent_pid=&format=fslog");
-    params.append("&code2=%1").arg(text);
-    if (m_ui->lineName->text().trimmed() == "")
-        params.append("&poster=%1&paste=Send&remember=0").arg(tr("Anonymous"));
+    QString params = QString("parent_pid=&format=fslog&code2=%1").arg(QString(QUrl::toPercentEncoding(text)));
+
+    /* Set the paste user identification */
+    if (m_ui->lineName->text().trimmed().isEmpty())
+    {
+        params += QString("&poster=%1&paste=Send&remember=0").arg(QString(QUrl::toPercentEncoding(tr("Anonymous"))));
+    }
+    else
+    {
+        params += QString("&poster=%1&paste=Send&remember=0").arg(QString(QUrl::toPercentEncoding(m_ui->lineName->text())));
+    }
+
+    /* Set the duration of the paste */
     if (m_ui->radioDay->isChecked())
-        params.append("&expiry=%1").arg("d");
+    {
+        params += QString("&expiry=%1").arg("d");
+    }
     if (m_ui->radioMonth->isChecked())
-        params.append("&expiry=%1").arg("m");
+    {
+        params += QString("&expiry=%1").arg("m");
+    }
     if (m_ui->radioForever->isChecked())
-        params.append("&expiry=%1").arg("f");
-    pastebinHttp->request(header, params.toUtf8());
+    {
+        params += QString("&expiry=%1").arg("f");
+    }
+    /* Paste it! */
+    postId = pastebinHttp->request(header, params.toAscii());
+    progressDialog->setWindowTitle(tr("Pastebin"));
+    progressDialog->setLabelText(tr("Pasting..."));
 }
 void pastebinDialog::setText(QString consoleText)
 {
     text = consoleText;
+}
+void pastebinDialog::pastebinFinished(int req, bool isError)
+{
+    if (req == postId)
+    {
+        progressDialog->hide();
+        QMessageBox::information(this, tr("Sucess"),
+                                 tr("You pastebin was successful"
+                                " and copied to clipboard: %1.")
+                                 .arg(pasteURL));
+        QApplication::clipboard()->setText(pasteURL);
+    }
+
+}
+void pastebinDialog::updateDataSendProgress(int bytesRead, int totalBytes)
+{
+    progressDialog->setMaximum(totalBytes);
+    progressDialog->setValue(bytesRead);
+}
+void pastebinDialog::readResponseHeader(const QHttpResponseHeader &responseHeader)
+{
+    switch (responseHeader.statusCode())
+    {
+    case 200:                   // Ok
+    case 301:                   // Moved Permanently
+    case 303:                   // See Other
+    case 307:                   // Temporary Redirect
+        // these are not error conditions
+        break;
+
+    case 302:                   // Found
+        pasteURL = responseHeader.value("Location");
+        break;
+
+    default:
+        QMessageBox::information(this, tr("HTTP"),
+                                 tr("Pastebin Failed: %1.")
+                                 .arg(responseHeader.reasonPhrase()));
+        progressDialog->hide();
+        pastebinHttp->abort();
+    }
 }
