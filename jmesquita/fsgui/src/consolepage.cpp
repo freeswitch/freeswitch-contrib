@@ -54,6 +54,7 @@ consolePage::consolePage(QWidget *parent) :
     connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
             this, SLOT(loglevelChanged(int)));
     setConsoleBackground();
+    m_ui->textConsole->setReadOnly(true);
     m_ui->lineCmd->installEventFilter(lineCmdEventFilter);
 
     /* Just for now */
@@ -75,7 +76,7 @@ void consolePage::setConsoleBackground()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     QPalette p = palette();
-    p.setColor(QPalette::Active, QPalette::Base,settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
+    p.setColor(QPalette::Base,settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
     m_ui->textConsole->setPalette(p);
 }
 int consolePage::isConnected()
