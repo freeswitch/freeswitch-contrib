@@ -73,7 +73,7 @@ QAbstractItemModel *cmdHistory::modelFromFile(const QString& fileName)
      listModel = new QStringListModel(words, this);
      return listModel;
  }
-void cmdHistory::writeHistoryFile(const QString& fileName)
+void cmdHistory::writeHistoryFile(const QString& /*fileName*/)
 {
     /*QFile file(fileName);
     file.remove(fileName);

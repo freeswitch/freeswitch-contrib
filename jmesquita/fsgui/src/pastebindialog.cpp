@@ -84,7 +84,7 @@ void pastebinDialog::setText(QString consoleText)
 {
     text = consoleText;
 }
-void pastebinDialog::pastebinFinished(int req, bool isError)
+void pastebinDialog::pastebinFinished(int req, bool /*isError*/)
 {
     if (req == postId)
     {

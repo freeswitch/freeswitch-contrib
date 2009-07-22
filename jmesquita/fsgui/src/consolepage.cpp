@@ -74,7 +74,9 @@ consolePage::~consolePage()
 void consolePage::setConsoleBackground()
 {
     QSettings settings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
-    m_ui->textConsole->setPalette(settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
+    QPalette p = palette();
+    p.setColor(QPalette::Active, QPalette::Base,settings.value("consoleBackgroundColor",QColor(Qt::white)).value<QColor>());
+    m_ui->textConsole->setPalette(p);
 }
 int consolePage::isConnected()
 {
