@@ -13,7 +13,8 @@ SOURCES += src/main.cpp \
     src/consolepage.cpp \
     src/preferencesdialog.cpp \
     src/completers.cpp \
-    src/pastebindialog.cpp
+    src/pastebindialog.cpp \
+    src/finddialog.cpp
 INCLUDEPATH += ../../../libs/esl/src/include \
     src/include
 HEADERS += src/include/fs_gui.h \
@@ -23,12 +24,14 @@ HEADERS += src/include/fs_gui.h \
     src/include/global_defines.h \
     src/include/preferencesdialog.h \
     src/include/completers.h \
-    src/include/pastebindialog.h
+    src/include/pastebindialog.h \
+    src/include/finddialog.h
 FORMS += resources/fs_gui.ui \
     resources/server_manager.ui \
     resources/consolepage.ui \
     resources/preferencesdialog.ui \
-    resources/pastebindialog.ui
+    resources/pastebindialog.ui \
+    resources/finddialog.ui
 LIBS += -L../../../libs/esl \
     -lesl
 RESOURCES += resources/resources.qrc

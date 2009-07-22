@@ -26,6 +26,7 @@ public:
     void doConnect();
     void doDisconnect();
     QString getConsoleText();
+    QTextEdit *getTextDocument();
 
 protected:
     virtual void changeEvent(QEvent *e);

@@ -48,6 +48,8 @@ namespace Ui {
     class Cfsgui;
 }
 
+class findDialog;
+
 class Cfsgui : public QMainWindow {
     Q_OBJECT
     Q_DISABLE_COPY(Cfsgui)
@@ -73,6 +75,7 @@ private slots:
     void doDisconnect();
     void gotDisconnected();
     void gotConnected();
+    void showFind();
 
 private:
     Ui::Cfsgui *m_ui;
@@ -80,6 +83,7 @@ private:
     preferencesDialog *prefDialog;
     QFileDialog *fileDialog;
     pastebinDialog *pasteDialog;
+    findDialog *findDlg;
     void saveWindowSettings();
 };
 

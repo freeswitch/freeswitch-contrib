@@ -39,6 +39,7 @@
 #include "fs_gui.h"
 #include "ui_fs_gui.h"
 #include "consolepage.h"
+#include "finddialog.h"
 #include <QtNetwork>
 
 Cfsgui::Cfsgui(QWidget *parent) :
@@ -47,7 +48,8 @@ Cfsgui::Cfsgui(QWidget *parent) :
     serverDialog(NULL),
     prefDialog(NULL),
     fileDialog(NULL),
-    pasteDialog(NULL)
+    pasteDialog(NULL),
+    findDlg(NULL)
 {
 
     m_ui->setupUi(this);
@@ -64,6 +66,10 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(doDisconnect()));
     connect(m_ui->actionSaveLog, SIGNAL(triggered()),
             this, SLOT(saveLog()));
+    connect(m_ui->actionPreferences, SIGNAL(triggered()),
+            this, SLOT(showPreferences()));
+    connect(m_ui->actionFind, SIGNAL(triggered()),
+            this, SLOT(showFind()));
     connect(m_ui->actionPastebinLog, SIGNAL(triggered()),
             this, SLOT(pastebinLog()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
@@ -75,8 +81,6 @@ Cfsgui::Cfsgui(QWidget *parent) :
             this, SLOT(closeTab(int)));
     connect(m_ui->tabWidget, SIGNAL(currentChanged(int)),
             this, SLOT(changeTab(int)));
-    connect(m_ui->actionPreferences, SIGNAL(triggered()),
-            this, SLOT(showPreferences()));
 
 }
 Cfsgui::~Cfsgui()
@@ -170,6 +174,7 @@ void Cfsgui::gotConnected()
     m_ui->actionDisconnect->setEnabled(true);
     m_ui->actionSaveLog->setEnabled(true);
     m_ui->actionPastebinLog->setEnabled(true);
+    m_ui->actionFind->setEnabled(true);
 }
 void Cfsgui::gotDisconnected()
 {
@@ -177,6 +182,21 @@ void Cfsgui::gotDisconnected()
     m_ui->actionDisconnect->setDisabled(true);
     m_ui->actionSaveLog->setDisabled(true);
     m_ui->actionPastebinLog->setDisabled(true);
+    m_ui->actionFind->setDisabled(true);
+}
+void Cfsgui::showFind()
+{
+    consolePage *tab = static_cast<consolePage *>(m_ui->tabWidget->widget(m_ui->tabWidget->currentIndex()));
+    if (tab)
+    {
+        if (!findDlg)
+        {
+            findDlg = new findDialog(this, tab->getTextDocument());
+        }
+        findDlg->show();
+        findDlg->raise();
+        findDlg->activateWindow();
+    }
 }
 void Cfsgui::backgroundColorChanged()
 {

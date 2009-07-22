@@ -91,6 +91,10 @@ QString consolePage::getConsoleText()
 {
     return m_ui->textConsole->toPlainText();
 }
+QTextEdit *consolePage::getTextDocument()
+{
+    return m_ui->textConsole;
+}
 void consolePage::doConnect()
 {
     eslConnection->doConnect();
