@@ -94,7 +94,9 @@ void Cfsgui::showAbout()
                        tr("<h2>FSGui - The console for humans</h2>"
                           "<p>Author: Jo&atilde;o Mesquita &lt;jmesquita@gmail.com>"
                           "<p>This is small application that will help you connect "
-                          "to your FreeSWITCH&trade; installation."));
+                          "to your FreeSWITCH&trade; installation."
+                          "<p>The FreeSWITCH&trade; images and name are trademark of"
+                          " Anthony Minessale II, primary author of FreeSWITCH&trade;."));
 }
 void Cfsgui::showPreferences()
 {
