@@ -12,11 +12,18 @@
 		
 		var ring_win:MessageWindow = new MessageWindow();
 		
+		var connect_timer:Timer  = new Timer(2000);
+		var re_connect_timer:Timer  = new Timer(2000);
+		
 		function initApp():void {
 			trace(NativeApplication.nativeApplication.runtimeVersion);
 			ringBox.visible = false;
 			getSettings();
 			esl = new ESL(esl_pass.text);
+			
+			connect_timer.addEventListener(TimerEvent.TIMER, post_connect);
+			re_connect_timer.addEventListener(TimerEvent.TIMER, re_connect);
+					
 			connect();
 			
 		}
@@ -40,9 +47,7 @@
 				esl.addEventCallback("CUSTOM|portaudio::ringing", onRing);
 				esl.addEventCallback("CHANNEL_HANGUP|-", onHangup);
 			   
-			    var timer:Timer = new Timer(2000);
-				timer.addEventListener(TimerEvent.TIMER, post_connect);
-				timer.start();
+				connect_timer.start();
 				msg("timer started");
 			}
 			  
@@ -54,8 +59,31 @@
 		 
 		}
 		
-		function post_connect(event:TimerEvent):void {
+		function re_connect(event:TimerEvent):void {
+
 			event.target.stop();
+			
+			event.target.delay += 2000;
+			
+			if (event.target.delay > 120000) {
+				event.target.delay = 2000;
+			}
+			  
+			msg("Connect faild. will reconnect in " + event.target.delay + " seconds" );
+			connect();
+			
+		}
+		
+		function post_connect(event:TimerEvent):void {
+			
+			event.target.stop();
+			
+			if (!esl.connected) {
+				event.target.stop();
+				re_connect_timer.start();
+				return;
+			}
+			
 			msg("timer stoped");
 			initDevList();
 //			esl.esl_event("ALL");
@@ -91,11 +119,20 @@
 		}
 		function ioErrorHandler(event:IOErrorEvent):void {
 			msg(event.type + ' ' + event.toString());
-			setTitle('IOError');	
+			setTitle('IOError');
+			
+			if (!esl.connected) {
+				connect();
+			}	
 		}
 		function securityErrorHandler(event:SecurityErrorEvent):void {
 			msg(event.type + ' ' + event.toString());
-			setTitle('SecurityError');	
+			setTitle('SecurityError');
+
+ 			if (!esl.connected) {
+				connect();
+			}	
+	
 		}
 		
 		function onRing(eslev:ESL_event):void {
@@ -303,4 +340,13 @@
 			esl_port.text = _get_settings("esl_port") || "8021";
 			esl_pass.text = _get_settings("esl_pass") || "ClueCon";
 		}
+		
+		function runFS():void {
+			
+		}
+		
+		function shutdownFS():void {
+			esl.api("fsctl shutdown");
+		}
+		
 		

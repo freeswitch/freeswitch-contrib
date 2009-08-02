@@ -62,7 +62,8 @@
 			<mx:Button x="271" y="182" label="Save" click="saveSettings()"/>
 			<mx:Label x="175" y="80" text="Password" width="58"/>
 			<mx:TextInput x="175" y="106" width="71" text="ClueCon" id="esl_pass"/>
-
+			<mx:Button x="10" y="182" label="Shutdown FS" click="shutdownFS()"/>
+			
 		</mx:Canvas>
 		<mx:Panel label="Logs" width="100%" height="100%" layout="absolute">
 			<mx:TextArea width="326" height="196" id="logBox" x="0" y="2"/>
