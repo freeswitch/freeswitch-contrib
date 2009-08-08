@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/icons" >
+        <file>fsgui_logo.png</file>
+        <file>new_server_icon.png</file>
+        <file>remove_server_icon.png</file>
+        <file>connect_icon.png</file>
+        <file>save.png</file>
+        <file>server_icon.png</file>
+        <file>edit_icon.png</file>
+    </qresource>
+</RCC>

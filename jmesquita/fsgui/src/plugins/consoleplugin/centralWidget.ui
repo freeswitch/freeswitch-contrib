@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>consoleWindow</class>
+ <widget class="QMainWindow" name="consoleWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>673</width>
+    <height>536</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Console for human beings</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../../resources/resources.qrc">
+    <normaloff>:/icons/fsgui_logo.png</normaloff>:/icons/fsgui_logo.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QTabWidget" name="tabConsole">
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Tab 1</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Tab 2</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>673</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_Server">
+    <property name="title">
+     <string>&amp;Server</string>
+    </property>
+    <addaction name="action_Server_Manager"/>
+    <addaction name="separator"/>
+    <addaction name="action_Connect"/>
+    <addaction name="action_Disconnect"/>
+   </widget>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="action_Close"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_Server"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Connect">
+   <property name="text">
+    <string>&amp;Connect</string>
+   </property>
+  </action>
+  <action name="action_Disconnect">
+   <property name="text">
+    <string>&amp;Disconnect</string>
+   </property>
+  </action>
+  <action name="action_Close">
+   <property name="text">
+    <string>&amp;Close</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="action_Server_Manager">
+   <property name="text">
+    <string>&amp;Server Manager</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../../resources/resources.qrc"/>
+  <include location="../../resources/resources.qrc"/>
+  <include location="../../resources/resources.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>action_Close</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>consoleWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>197</x>
+     <y>169</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

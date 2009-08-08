@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>configPage</class>
+ <widget class="QWidget" name="configPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>438</width>
+    <height>387</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="minimumSize">
+        <size>
+         <width>372</width>
+         <height>318</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>372</width>
+         <height>318</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>Colors</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLineEdit" name="lineConsole">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Console message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundConsole">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundConsole">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLineEdit" name="lineAlert">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Alert message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundAlert">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundAlert">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLineEdit" name="lineCritical">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Critical message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundCritical">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundCritical">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLineEdit" name="lineError">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Error message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundError">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundError">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLineEdit" name="lineWarning">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Warning message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundWarning">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundWarning">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLineEdit" name="lineNotice">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Notice message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundNotice">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundNotice">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="lineInfo">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Info message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundInfo">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundInfo">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QLineEdit" name="lineDebug">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Debug message</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnBackgroundDebug">
+            <property name="minimumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>95</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Background</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnForegroundDebug">
+            <property name="minimumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>91</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
