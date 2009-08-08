@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/preferences" >
-        <file>images/fs_icon.gif</file>
-        <file>images/utilities-terminal.svg</file>
-        <file>images/network-idle.png</file>
-    </qresource>
-</RCC>
