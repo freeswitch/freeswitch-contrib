@@ -61,7 +61,6 @@ void AppManager::createMenus(QMenuBar * menu_bar)
     bool help_exists = false;
     QList<QAction *> list = menu_bar->actions();
     for (int i = 0; i < list.size(); ++i) {
-        qDebug() << "I am trying";
         if (QString::compare(list.at(i)->text(), tr("&File"), Qt::CaseInsensitive) == 0)
         {
             list.at(i)->menu()->addAction(action_exit);
@@ -69,7 +68,6 @@ void AppManager::createMenus(QMenuBar * menu_bar)
         }
         if (QString::compare(list.at(i)->text(), tr("&Preferences"), Qt::CaseInsensitive) == 0)
         {
-            qDebug() << "Teste!";
             list.at(i)->menu()->addAction(action_preferences);
             edit_exists = true;
         }

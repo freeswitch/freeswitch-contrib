@@ -15,6 +15,16 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
 {
     consoleWindow->setupUi(this);
     consoleWindow->tabConsole->clear();
+
+    QObject::connect(consoleWindow->tabConsole, SIGNAL(tabCloseRequested(int)),
+                     this, SLOT(tabClose(int)));
+    QObject::connect(consoleWindow->tabConsole, SIGNAL(currentChanged(int)),
+                     this, SLOT(tabChanged(int)));
+
+    QObject::connect(consoleWindow->action_Connect, SIGNAL(triggered()),
+                     this, SLOT(connect()));
+    QObject::connect(consoleWindow->action_Disconnect, SIGNAL(triggered()),
+                     this, SLOT(disconnect()));
 }
 
 ConsolePlugin::~ConsolePlugin(){}
@@ -92,51 +102,49 @@ void ConsolePlugin::setServerManager(ServerManager *manager)
                      this, SLOT(newConnection()));
 }
 
-void ConsolePlugin::connected()
-{
-    consoleWindow->action_Connect->setEnabled(false);
-    consoleWindow->action_Disconnect->setEnabled(true);
-}
-
-void ConsolePlugin::disconnected()
-{
-    consoleWindow->action_Connect->setEnabled(true);
-    consoleWindow->action_Disconnect->setEnabled(false);
-}
-
-void ConsolePlugin::connectionFailed(QString /*reason*/)
-{
-}
-
 void ConsolePlugin::newConnection()
 {
     if (serverManager->exec())
     {
         ESLconnection *esl = serverManager->getESLconnection();
-        consoleWindow->tabConsole->addTab(new ConsoleTabWidget(this, esl), esl->getName());
+
         if (hashESL.contains(esl->getName()))
         {
-            esl->disconnect();
-            esl->wait();
-            hashESL.remove(esl->getName());
-            delete esl;
+            for (int i = 0; i < consoleWindow->tabConsole->count(); i++)
+            {
+                if (consoleWindow->tabConsole->tabText(i) == esl->getName())
+                {
+                    consoleWindow->tabConsole->setCurrentIndex(i);
+                    delete esl;
+                    return;
+                }
+            }
         }
+
+        ConsoleTabWidget *newTab = new ConsoleTabWidget(this, esl);
+        consoleWindow->tabConsole->addTab(newTab, esl->getName());
+        consoleWindow->tabConsole->setCurrentWidget(newTab);
         hashESL.insert(esl->getName(), esl);
         QObject::connect(esl, SIGNAL(connected()),
-                         this, SLOT(connected()));
-        QObject::connect(esl, SIGNAL(connectionFailed(QString)),
-                         this, SLOT(connectionFailed(QString)));
+                         this, SLOT(connectionStateChanged()));
         QObject::connect(esl, SIGNAL(disconnected()),
-                         this, SLOT(disconnected()));
+                         this, SLOT(connectionStateChanged()));
+        QObject::connect(esl, SIGNAL(connectionFailed(QString)),
+                         this, SLOT(connectionStateChanged()));
     }
+}
+
+void ConsolePlugin::connectionStateChanged()
+{
+    tabChanged(consoleWindow->tabConsole->currentIndex());
 }
 
 void ConsolePlugin::setPalette(QLineEdit *control, QString key)
 {
-	QSettings settings;
-	if (settings.contains(key)) {
-		control->setPalette(settings.value(key).value<QPalette>());
-	}
+    QSettings settings;
+    if (settings.contains(key)) {
+        control->setPalette(settings.value(key).value<QPalette>());
+    }
 }
 
 void ConsolePlugin::readSettings()
@@ -353,6 +361,54 @@ void ConsolePlugin::changeDebugForegroundColor()
         QPalette palette = consoleConfigPage->lineDebug->palette();
         palette.setColor(QPalette::Text, color);
         consoleConfigPage->lineDebug->setPalette(palette);
+    }
+}
+
+void ConsolePlugin::tabClose(int index)
+{
+    QWidget *tab = consoleWindow->tabConsole->widget(index);
+    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(index), NULL);
+    if (esl)
+    {
+        hashESL.remove(consoleWindow->tabConsole->tabText(index));
+        esl->disconnect();
+        esl->wait();
+        delete esl;
+    }
+    consoleWindow->tabConsole->removeTab(index);
+    delete tab;
+    if (consoleWindow->tabConsole->count() == 0)
+    {
+        consoleWindow->action_Connect->setEnabled(false);
+        consoleWindow->action_Disconnect->setEnabled(false);
+    }
+}
+
+void ConsolePlugin::tabChanged(int index)
+{
+    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(index), NULL);
+    if (esl)
+    {
+        consoleWindow->action_Connect->setDisabled(esl->isConnected());
+        consoleWindow->action_Disconnect->setEnabled(esl->isConnected());
+    }
+}
+
+void ConsolePlugin::connect()
+{
+    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
+    if (esl)
+    {
+        esl->connect();
+    }
+}
+
+void ConsolePlugin::disconnect()
+{
+    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
+    if (esl)
+    {
+        esl->disconnect();
     }
 }
 

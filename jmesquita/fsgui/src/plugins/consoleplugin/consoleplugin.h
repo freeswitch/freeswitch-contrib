@@ -28,9 +28,9 @@ public:
     void setServerManager(ServerManager *manager);
 
 private slots:
-    void connected();
-    void disconnected();
-    void connectionFailed(QString);
+    void connectionStateChanged();
+    void connect();
+    void disconnect();
     void newConnection();
     void changeConsoleBackgroundColor();
     void changeAlertBackgroundColor();
@@ -48,6 +48,8 @@ private slots:
     void changeNoticeForegroundColor();
     void changeInfoForegroundColor();
     void changeDebugForegroundColor();
+    void tabClose(int index);
+    void tabChanged(int index);
     void readSettings();
     void writeSettings();
 
@@ -57,7 +59,7 @@ private:
     ServerManager *serverManager;
     QHash<QString, ESLconnection *> hashESL;
 
-	void setPalette(QLineEdit *control, QString key);
+    void setPalette(QLineEdit *control, QString key);
 };
 
 #endif // CONSOLEPLUGIN_H
