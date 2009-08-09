@@ -17,7 +17,7 @@ AppManager::AppManager(QObject *parent)
     QCoreApplication::setApplicationName("FsGui");
     settings = new SettingsDialog();
     QWidget *base = new QWidget;
-    pluginConfigPage = new Ui::configPage;
+    pluginConfigPage = new Ui::configPage();
     pluginConfigPage->setupUi(base);
     settings->addConfigItem("Plugins", base);
     QObject::connect(pluginConfigPage->btnRun, SIGNAL(clicked()),
@@ -56,9 +56,12 @@ void AppManager::createActions()
 
 void AppManager::createMenus(QMenuBar * menu_bar)
 {
-    bool file_exists, edit_exists, help_exists = false;
+    bool file_exists = false;
+    bool edit_exists = false;
+    bool help_exists = false;
     QList<QAction *> list = menu_bar->actions();
     for (int i = 0; i < list.size(); ++i) {
+        qDebug() << "I am trying";
         if (QString::compare(list.at(i)->text(), tr("&File"), Qt::CaseInsensitive) == 0)
         {
             list.at(i)->menu()->addAction(action_exit);
@@ -66,6 +69,7 @@ void AppManager::createMenus(QMenuBar * menu_bar)
         }
         if (QString::compare(list.at(i)->text(), tr("&Preferences"), Qt::CaseInsensitive) == 0)
         {
+            qDebug() << "Teste!";
             list.at(i)->menu()->addAction(action_preferences);
             edit_exists = true;
         }
@@ -75,19 +79,19 @@ void AppManager::createMenus(QMenuBar * menu_bar)
             help_exists = true;
         }
     }
-    if (!file_exists)
+    if (file_exists == false)
     {
         QMenu * menu_file = new QMenu(tr("&File"), menu_bar);
         menu_file->addAction(action_exit);
         menu_bar->insertMenu(list.at(0), menu_file);
     }
-    if (!edit_exists)
+    if (edit_exists == false)
     {
         QMenu * menu_edit = new QMenu(tr("&Edit"), menu_bar);
         menu_edit->addAction(action_preferences);
         menu_bar->insertMenu(list.at(1), menu_edit);
     }
-    if (!help_exists)
+    if (help_exists == false)
     {
         QMenu *menu_help = menu_bar->addMenu(tr("&Help"));
         menu_help->addAction(action_about);
