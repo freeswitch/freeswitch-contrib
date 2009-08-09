@@ -5,7 +5,7 @@
 #include <QtCore>
 
 namespace Ui {
-    class configPage;
+    class pluginConfigPage;
 }
 class QMainWindow;
 class QAction;
@@ -50,7 +50,7 @@ private:
     QMenu *menu_help; /*< The help menu on menu bar */
     ServerManager *serverManager; /*< The dialog that can fetch new esl connections from the config */
     SettingsDialog *settings; /*< Settings dialog */
-    Ui::configPage *pluginConfigPage; /*< The plugin config page being used */
+    Ui::pluginConfigPage *pluginConfigPage; /*< The plugin config page being used */
 
 private slots:
     /*!

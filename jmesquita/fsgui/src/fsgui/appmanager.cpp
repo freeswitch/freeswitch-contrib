@@ -17,7 +17,7 @@ AppManager::AppManager(QObject *parent)
     QCoreApplication::setApplicationName("FsGui");
     settings = new SettingsDialog();
     QWidget *base = new QWidget;
-    pluginConfigPage = new Ui::configPage();
+    pluginConfigPage = new Ui::pluginConfigPage();
     pluginConfigPage->setupUi(base);
     settings->addConfigItem("Plugins", base);
     QObject::connect(pluginConfigPage->btnRun, SIGNAL(clicked()),
