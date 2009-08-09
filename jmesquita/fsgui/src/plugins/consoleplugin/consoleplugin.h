@@ -56,6 +56,8 @@ private:
     Ui::configPage *consoleConfigPage;
     ServerManager *serverManager;
     QHash<QString, ESLconnection *> hashESL;
+
+	void setPalette(QLineEdit *control, QString key);
 };
 
 #endif // CONSOLEPLUGIN_H

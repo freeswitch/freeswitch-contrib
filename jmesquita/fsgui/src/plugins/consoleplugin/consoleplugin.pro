@@ -13,8 +13,7 @@ SOURCES = consoleplugin.cpp \
 FORMS += centralWidget.ui \
     console_settings.ui \
     consoletabwidget.ui
-LIBS += -L \
-    ../../interfaces \
+LIBS += -L../../interfaces \
     -linterfaces \
     -L../../../../../../libs/esl/ \
     -lesl
