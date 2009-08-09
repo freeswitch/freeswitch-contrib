@@ -25,6 +25,8 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(connect()));
     QObject::connect(consoleWindow->action_Disconnect, SIGNAL(triggered()),
                      this, SLOT(disconnect()));
+    QObject::connect(consoleWindow->action_Clear, SIGNAL(triggered()),
+                     this, SLOT(clearLogContents()));
 }
 
 ConsolePlugin::~ConsolePlugin(){}
@@ -132,6 +134,13 @@ void ConsolePlugin::newConnection()
         QObject::connect(esl, SIGNAL(connectionFailed(QString)),
                          this, SLOT(connectionStateChanged()));
     }
+}
+
+void ConsolePlugin::clearLogContents()
+{
+    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
+    if (tab)
+        tab->clearConsoleContents();
 }
 
 void ConsolePlugin::connectionStateChanged()

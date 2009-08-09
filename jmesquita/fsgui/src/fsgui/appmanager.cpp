@@ -10,6 +10,7 @@
 AppManager::AppManager(QObject *parent)
     : QObject(parent)
 {
+    reallyClose = NULL;
     QObject::connect(qApp, SIGNAL(lastWindowClosed()),
                      this, SLOT(lastWindowClosed()));
 
@@ -40,16 +41,16 @@ void AppManager::createActions()
     action_exit = new QAction(tr("E&xit"), this);
     action_exit->setShortcut(tr("Ctrl+Q"));
     action_exit->setToolTip(tr("Exit FsGui"));
-    QWidget::connect(action_exit, SIGNAL(triggered()),
+    QObject::connect(action_exit, SIGNAL(triggered()),
                      qApp, SLOT(closeAllWindows()));
 
     action_preferences = new QAction(tr("&Preferences"), this);
-    QWidget::connect(action_preferences, SIGNAL(triggered()),
+    QObject::connect(action_preferences, SIGNAL(triggered()),
                      settings, SLOT(show()));
 
     action_about = new QAction(tr("&About"), this);
     action_about->setShortcut(QKeySequence::HelpContents);
-    QWidget::connect(action_about, SIGNAL(triggered()),
+    QObject::connect(action_about, SIGNAL(triggered()),
                      this, SLOT(about()));
 }
 
@@ -66,7 +67,7 @@ void AppManager::createMenus(QMenuBar * menu_bar)
             list.at(i)->menu()->addAction(action_exit);
             file_exists = true;
         }
-        if (QString::compare(list.at(i)->text(), tr("&Preferences"), Qt::CaseInsensitive) == 0)
+        if (QString::compare(list.at(i)->text(), tr("&Edit"), Qt::CaseInsensitive) == 0)
         {
             list.at(i)->menu()->addAction(action_preferences);
             edit_exists = true;
@@ -153,9 +154,30 @@ void AppManager::runPlugin()
 
 void AppManager::lastWindowClosed()
 {
-    for (int i = 0; i < list_available_monitor_plugins.size(); ++i)
+    if (!reallyClose)
     {
-        list_available_monitor_plugins.at(i)->unload();
+        reallyClose = new QMessageBox();
+        reallyClose->setText("Do you really want to close FsGui?");
+        reallyClose->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        reallyClose->setDefaultButton(QMessageBox::Yes);
+        reallyClose->setIcon(QMessageBox::Warning);
+        int ret = reallyClose->exec();
+        if(ret == QMessageBox::Yes)
+        {
+            for (int i = 0; i < list_available_monitor_plugins.size(); ++i)
+            {
+                list_available_monitor_plugins.at(i)->unload();
+            }
+            exit(0);
+        }
+        else
+        {
+            delete reallyClose;
+            reallyClose = NULL;
+            settings->show();
+            settings->raise();
+            settings->activateWindow();
+        }
     }
 }
 

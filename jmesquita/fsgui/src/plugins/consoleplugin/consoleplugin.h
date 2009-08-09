@@ -32,6 +32,7 @@ private slots:
     void connect();
     void disconnect();
     void newConnection();
+    void clearLogContents();
     void changeConsoleBackgroundColor();
     void changeAlertBackgroundColor();
     void changeCriticalBackgroundColor();

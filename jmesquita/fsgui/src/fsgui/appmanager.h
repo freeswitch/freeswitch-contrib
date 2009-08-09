@@ -12,6 +12,7 @@ class QAction;
 class QMenu;
 class QMenuBar;
 class QListWidgetItem;
+class QMessageBox;
 class MonitorInterface;
 class SettingsDialog;
 class ServerManager;
@@ -51,6 +52,7 @@ private:
     ServerManager *serverManager; /*< The dialog that can fetch new esl connections from the config */
     SettingsDialog *settings; /*< Settings dialog */
     Ui::pluginConfigPage *pluginConfigPage; /*< The plugin config page being used */
+    QMessageBox *reallyClose;
 
 private slots:
     /*!

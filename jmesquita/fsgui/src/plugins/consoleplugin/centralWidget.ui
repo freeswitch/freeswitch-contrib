@@ -65,7 +65,14 @@
     </property>
     <addaction name="action_Close"/>
    </widget>
+   <widget class="QMenu" name="menu_Edit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="action_Clear"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Edit"/>
    <addaction name="menu_Server"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -96,6 +103,11 @@
   <action name="action_Server_Manager">
    <property name="text">
     <string>&amp;Server Manager</string>
+   </property>
+  </action>
+  <action name="action_Clear">
+   <property name="text">
+    <string>&amp;Clear</string>
    </property>
   </action>
  </widget>

@@ -19,6 +19,9 @@ public:
     ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection);
     ~ConsoleTabWidget();
 
+public slots:
+    void clearConsoleContents();
+
 protected:
     void changeEvent(QEvent *e);
 

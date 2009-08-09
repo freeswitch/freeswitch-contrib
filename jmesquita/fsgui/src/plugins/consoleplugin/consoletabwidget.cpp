@@ -50,6 +50,11 @@ ConsoleTabWidget::~ConsoleTabWidget()
     delete m_ui;
 }
 
+void ConsoleTabWidget::clearConsoleContents()
+{
+    sourceModel->clear();
+}
+
 void ConsoleTabWidget::changeEvent(QEvent *e)
 {
     QWidget::changeEvent(e);
