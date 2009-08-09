@@ -31,7 +31,7 @@ public:
     /*!
       \brief Add a new configuration item to the settings dialog
       */
-    virtual void addConfigItens(SettingsDialog *settings) = 0;
+    virtual void addConfigItems(SettingsDialog *settings) = 0;
     /*!
       \brief Sets a pointer to ServerManager object
       */

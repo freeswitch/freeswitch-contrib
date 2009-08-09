@@ -118,10 +118,10 @@ void AppManager::loadPlugins()
                 list_available_monitor_plugins.append(loader);
                 interface_window->setWindowTitle(QString("FsGui - ") + interface_window->windowTitle());
                 interface_window->setAttribute(Qt::WA_QuitOnClose);
-                interface->addConfigItens(settings);
+                interface->addConfigItems(settings);
                 interface->setServerManager(serverManager);
                 createMenus(interface_window->menuBar());
-                pluginConfigPage->listWidget->addItem(QString("%1 - %2").arg(interface->appName(),
+                pluginConfigPage->listWidget->addItem(QString("%1\n     %2").arg(interface->appName(),
                                                                              interface->appDescription()));
             }
             else

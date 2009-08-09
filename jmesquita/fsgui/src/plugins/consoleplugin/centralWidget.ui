@@ -70,11 +70,17 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Connect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Connect</string>
    </property>
   </action>
   <action name="action_Disconnect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Disconnect</string>
    </property>

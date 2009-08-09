@@ -23,7 +23,7 @@ public:
     QObject *getMonitorInterfaceObject();
     QString appName();
     QString appDescription();
-    void addConfigItens(SettingsDialog *);
+    void addConfigItems(SettingsDialog *);
     void newInstance();
     void setServerManager(ServerManager *manager);
 

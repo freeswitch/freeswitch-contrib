@@ -34,7 +34,7 @@ QString ConsolePlugin::appDescription()
     return tr("This application will do the same as fs_cli does.");
 }
 
-void ConsolePlugin::addConfigItens(SettingsDialog *settings)
+void ConsolePlugin::addConfigItems(SettingsDialog *settings)
 {
     consoleConfigPage = new Ui::configPage;
     QWidget *base = new QWidget;

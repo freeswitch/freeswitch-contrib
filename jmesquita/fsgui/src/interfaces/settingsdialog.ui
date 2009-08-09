@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>333</width>
-    <height>248</height>
+    <width>661</width>
+    <height>269</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>General Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset resource="../resources/resources.qrc">
     <normaloff>:/icons/fsgui_logo.png</normaloff>:/icons/fsgui_logo.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -97,7 +97,9 @@
   </layout>
  </widget>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections>
   <connection>
