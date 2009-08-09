@@ -36,7 +36,7 @@ QString ConsolePlugin::appDescription()
 
 void ConsolePlugin::addConfigItems(SettingsDialog *settings)
 {
-    consoleConfigPage = new Ui::configPage;
+    consoleConfigPage = new Ui::configPage();
     QWidget *base = new QWidget;
     consoleConfigPage->setupUi(base);
     settings->addConfigItem("Console", base);
