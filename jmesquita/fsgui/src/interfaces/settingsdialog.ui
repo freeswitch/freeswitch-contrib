@@ -72,13 +72,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="btnApply">
-       <property name="text">
-        <string>&amp;Apply</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btnOk">
        <property name="text">
         <string>&amp;OK</string>
@@ -109,12 +102,28 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>279</x>
-     <y>226</y>
+     <x>650</x>
+     <y>258</y>
     </hint>
     <hint type="destinationlabel">
      <x>330</x>
      <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnOk</sender>
+   <signal>clicked()</signal>
+   <receiver>SettingsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>503</x>
+     <y>252</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>480</x>
+     <y>262</y>
     </hint>
    </hints>
   </connection>

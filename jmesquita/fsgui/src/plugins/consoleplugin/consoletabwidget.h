@@ -18,6 +18,7 @@ class ConsoleTabWidget : public QWidget {
 public:
     ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection);
     ~ConsoleTabWidget();
+    void find();
 
 public slots:
     void clearConsoleContents();

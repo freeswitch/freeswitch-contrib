@@ -69,7 +69,9 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
+    <addaction name="action_Find"/>
     <addaction name="action_Clear"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
@@ -108,6 +110,14 @@
   <action name="action_Clear">
    <property name="text">
     <string>&amp;Clear</string>
+   </property>
+  </action>
+  <action name="action_Find">
+   <property name="text">
+    <string>&amp;Find</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
  </widget>

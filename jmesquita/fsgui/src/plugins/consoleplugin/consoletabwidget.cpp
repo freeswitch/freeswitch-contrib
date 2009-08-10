@@ -67,6 +67,10 @@ void ConsoleTabWidget::changeEvent(QEvent *e)
     }
 }
 
+void ConsoleTabWidget::find()
+{
+}
+
 void ConsoleTabWidget::connected()
 {
     m_ui->btnSend->setEnabled(true);

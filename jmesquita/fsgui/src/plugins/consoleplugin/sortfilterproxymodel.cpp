@@ -4,7 +4,6 @@
 SortFilterProxyModel::SortFilterProxyModel(QObject *parent)
         : QSortFilterProxyModel(parent)
 {
-    // Get from config?
     for(int i = 0; i < 8; i++)
         loglevels.insert(i, true);
 }
