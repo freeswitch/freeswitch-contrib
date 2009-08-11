@@ -25,8 +25,6 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(connect()));
     QObject::connect(consoleWindow->action_Disconnect, SIGNAL(triggered()),
                      this, SLOT(disconnect()));
-    QObject::connect(consoleWindow->action_Find, SIGNAL(triggered()),
-                     this, SLOT(find()));
     QObject::connect(consoleWindow->action_Clear, SIGNAL(triggered()),
                      this, SLOT(clearLogContents()));
 }
@@ -104,12 +102,6 @@ void ConsolePlugin::setServerManager(ServerManager *manager)
     serverManager = manager;
     QObject::connect(consoleWindow->action_Server_Manager, SIGNAL(triggered()),
                      this, SLOT(newConnection()));
-}
-
-void ConsolePlugin::find()
-{
-   ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
-   tab->find();
 }
 
 void ConsolePlugin::newConnection()

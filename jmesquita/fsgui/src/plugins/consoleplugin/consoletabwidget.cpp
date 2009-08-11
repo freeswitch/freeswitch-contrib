@@ -5,7 +5,8 @@
 ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection) :
     QWidget(parent),
     m_ui(new Ui::ConsoleTabWidget),
-    esl(eslconnection)
+    esl(eslconnection),
+    findNext(false)
 {
     m_ui->setupUi(this);
     sourceModel = new QStandardItemModel(this);
@@ -32,6 +33,11 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
                      this, SLOT(checkInfo(bool)));
     QObject::connect(m_ui->checkDebug, SIGNAL(clicked(bool)),
                      this, SLOT(checkDebug(bool)));
+
+    QObject::connect(m_ui->btnFind, SIGNAL(clicked()),
+                     this, SLOT(find()));
+    QObject::connect(m_ui->lineFind, SIGNAL(textChanged(QString)),
+                     this, SLOT(findStringChanged(QString)));
 
     QObject::connect(esl, SIGNAL(connected()),
                      this, SLOT(connected()));
@@ -69,6 +75,45 @@ void ConsoleTabWidget::changeEvent(QEvent *e)
 
 void ConsoleTabWidget::find()
 {
+    if (m_ui->lineFind->text().isEmpty())
+        return;
+
+    QModelIndexList index;
+    if (m_ui->consoleListView->currentIndex().isValid())
+    {
+        index = model->match(m_ui->consoleListView->currentIndex(), Qt::DisplayRole, m_ui->lineFind->text(), -1, Qt::MatchContains|Qt::MatchWrap);
+    }
+    else
+    {
+        index =  model->match(model->index(0,0), Qt::DisplayRole, m_ui->lineFind->text(), -1, Qt::MatchContains|Qt::MatchWrap);
+    }
+
+    if (index.isEmpty())
+    {
+        QMessageBox::warning(this, tr("No match"), tr("No match found!"));
+    }
+    else
+    {
+        if (findNext == true && index.count() > 1)
+        {
+            m_ui->consoleListView->scrollTo(index.at(1));
+            m_ui->consoleListView->setCurrentIndex(index.at(1));
+        }
+        else
+        {
+            m_ui->consoleListView->scrollTo(index.at(0));
+            m_ui->consoleListView->setCurrentIndex(index.at(0));
+        }
+        findNext = true;
+        m_ui->btnFind->setText(tr("Find Next"));
+    }
+}
+
+void ConsoleTabWidget::findStringChanged(QString findString)
+{
+    m_ui->btnFind->setDisabled(findString.isEmpty());
+    m_ui->btnFind->setText(tr("Find"));
+    findNext = false;
 }
 
 void ConsoleTabWidget::connected()

@@ -7,5 +7,6 @@
         <file>save.png</file>
         <file>server_icon.png</file>
         <file>edit_icon.png</file>
+        <file>find_icon.png</file>
     </qresource>
 </RCC>

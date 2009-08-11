@@ -28,7 +28,6 @@ public:
     void setServerManager(ServerManager *manager);
 
 private slots:
-    void find();
     void connectionStateChanged();
     void connect();
     void disconnect();

@@ -18,7 +18,6 @@ class ConsoleTabWidget : public QWidget {
 public:
     ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection);
     ~ConsoleTabWidget();
-    void find();
 
 public slots:
     void clearConsoleContents();
@@ -27,6 +26,8 @@ protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void find();
+    void findStringChanged(QString);
     void connected();
     void disconnected();
     void connectionFailed(QString);
@@ -45,8 +46,10 @@ private slots:
 private:
     Ui::ConsoleTabWidget *m_ui;
     QStandardItemModel *sourceModel;
+    QModelIndexList foundItems;
     SortFilterProxyModel *model;
     ESLconnection *esl;
+    bool findNext;
 };
 
 #endif // CONSOLETABWIDGET_H
