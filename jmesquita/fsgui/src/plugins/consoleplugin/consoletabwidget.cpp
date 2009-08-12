@@ -94,7 +94,6 @@ void ConsoleTabWidget::flipScrollTimer()
 
 void ConsoleTabWidget::setAutomaticScroll(bool enabled)
 {
-    qDebug() << "setAutomaticScroll to:" << enabled;
     autoScroll = enabled;
 }
 
@@ -105,9 +104,8 @@ bool ConsoleTabWidget::getAutomaticScroll()
 
 void ConsoleTabWidget::conditionalScroll()
 {
-    //if (m_ui->consoleListView->verticalScrollBar()->value() == m_ui->consoleListView->verticalScrollBar()->maximum())
-    qDebug() << "Asked to scroll!";
-    m_ui->consoleListView->scrollToBottom();
+    if (autoScroll)
+        m_ui->consoleListView->scrollToBottom();
 }
 
 void ConsoleTabWidget::find()
