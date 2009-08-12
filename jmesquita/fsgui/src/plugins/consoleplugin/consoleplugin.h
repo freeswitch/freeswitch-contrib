@@ -51,6 +51,7 @@ private slots:
     void changeDebugForegroundColor();
     void tabClose(int index);
     void tabChanged(int index);
+    void setAutoScroll(bool checked);
     void readSettings();
     void writeSettings();
 

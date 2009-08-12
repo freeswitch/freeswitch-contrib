@@ -72,9 +72,16 @@
     <addaction name="action_Clear"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menu_Console">
+    <property name="title">
+     <string>&amp;Console</string>
+    </property>
+    <addaction name="actionAutomatic_Scroll"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
    <addaction name="menu_Server"/>
+   <addaction name="menu_Console"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Connect">
@@ -109,6 +116,17 @@
   <action name="action_Clear">
    <property name="text">
     <string>&amp;Clear</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_Scroll">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Automatic Scroll</string>
    </property>
   </action>
  </widget>

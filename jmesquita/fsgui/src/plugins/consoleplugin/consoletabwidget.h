@@ -10,6 +10,7 @@ namespace Ui {
 
 class QStandardItem;
 class QStandardItemModel;
+class QTimer;
 class ESLconnection;
 class ESLevent;
 
@@ -21,11 +22,15 @@ public:
 
 public slots:
     void clearConsoleContents();
+    void flipScrollTimer();
+    void setAutomaticScroll(bool enabled);
+    bool getAutomaticScroll();
 
 protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void conditionalScroll();
     void find();
     void findStringChanged(QString);
     void connected();
@@ -49,7 +54,10 @@ private:
     QModelIndexList foundItems;
     SortFilterProxyModel *model;
     ESLconnection *esl;
+    QTimer *scrollTimer;
     bool findNext;
+    bool autoScroll;
+
 };
 
 #endif // CONSOLETABWIDGET_H

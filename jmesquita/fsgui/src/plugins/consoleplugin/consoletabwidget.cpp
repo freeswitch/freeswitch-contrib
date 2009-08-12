@@ -6,7 +6,9 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QWidget(parent),
     m_ui(new Ui::ConsoleTabWidget),
     esl(eslconnection),
-    findNext(false)
+    scrollTimer(new QTimer),
+    findNext(false),
+    autoScroll(true)
 {
     m_ui->setupUi(this);
     sourceModel = new QStandardItemModel(this);
@@ -48,6 +50,9 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(esl, SIGNAL(gotEvent(ESLevent*)),
                      this, SLOT(gotEvent(ESLevent*)));
 
+    QObject::connect(scrollTimer, SIGNAL(timeout()),
+                     this, SLOT(conditionalScroll()));
+
     esl->connect();
 }
 
@@ -71,6 +76,38 @@ void ConsoleTabWidget::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void ConsoleTabWidget::flipScrollTimer()
+{
+    if (!esl->isConnected())
+    {
+        scrollTimer->stop();
+        return;
+    }
+
+    if (scrollTimer->isActive())
+        scrollTimer->stop();
+    else if (autoScroll)
+        scrollTimer->start(500);
+}
+
+void ConsoleTabWidget::setAutomaticScroll(bool enabled)
+{
+    qDebug() << "setAutomaticScroll to:" << enabled;
+    autoScroll = enabled;
+}
+
+bool ConsoleTabWidget::getAutomaticScroll()
+{
+    return autoScroll;
+}
+
+void ConsoleTabWidget::conditionalScroll()
+{
+    //if (m_ui->consoleListView->verticalScrollBar()->value() == m_ui->consoleListView->verticalScrollBar()->maximum())
+    qDebug() << "Asked to scroll!";
+    m_ui->consoleListView->scrollToBottom();
 }
 
 void ConsoleTabWidget::find()
@@ -155,12 +192,8 @@ void ConsoleTabWidget::gotEvent(ESLevent * event)
         for (int line = 0; line<textList.size(); line++)
         {
             final_str += textList[line];
-            if (line == textList.size()-1)
-            {
-                final_str.chop(1);
-            }
         }
-        QStringList lines = final_str.split('\n', QString::SkipEmptyParts);
+        QStringList lines = final_str.split(QRegExp("(\n+)"), QString::SkipEmptyParts);
         for (int line = 0; line < lines.size(); ++line)
         {
             QStandardItem *item = new QStandardItem(lines[line]);
@@ -178,15 +211,7 @@ void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
     QPalette palette = settings.value(QString("log-level-%1-palette").arg(item->data(Qt::UserRole).toInt())).value<QPalette>();
     item->setBackground(palette.base());
     item->setForeground(palette.text());
-    if (m_ui->consoleListView->verticalScrollBar()->value() == m_ui->consoleListView->verticalScrollBar()->maximum())
-    {
-        sourceModel->appendRow(item);
-        m_ui->consoleListView->scrollToBottom();
-    }
-    else
-    {
-        sourceModel->appendRow(item);
-    }
+    sourceModel->appendRow(item);
 }
 
 void ConsoleTabWidget::cmdSendClicked()
