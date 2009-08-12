@@ -163,14 +163,14 @@ void ConsolePlugin::readSettings()
     QSettings settings;
     settings.beginGroup("Console");
 
-	setPalette(consoleConfigPage->lineConsole, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_EMERG));
-	setPalette(consoleConfigPage->lineAlert, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ALERT));
-	setPalette(consoleConfigPage->lineCritical, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_CRIT));
-	setPalette(consoleConfigPage->lineError, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ERROR));
-	setPalette(consoleConfigPage->lineWarning, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_WARNING));
-	setPalette(consoleConfigPage->lineNotice, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_NOTICE));
-	setPalette(consoleConfigPage->lineInfo, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_INFO));
-	setPalette(consoleConfigPage->lineDebug, QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_DEBUG));
+    consoleConfigPage->lineConsole->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_EMERG)).value<QPalette>());
+    consoleConfigPage->lineAlert->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ALERT)).value<QPalette>());
+    consoleConfigPage->lineCritical->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_CRIT)).value<QPalette>());
+    consoleConfigPage->lineError->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ERROR)).value<QPalette>());
+    consoleConfigPage->lineWarning->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_WARNING)).value<QPalette>());
+    consoleConfigPage->lineNotice->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_NOTICE)).value<QPalette>());
+    consoleConfigPage->lineInfo->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_INFO)).value<QPalette>());
+    consoleConfigPage->lineDebug->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_DEBUG)).value<QPalette>());;
 
     settings.endGroup();
 }
