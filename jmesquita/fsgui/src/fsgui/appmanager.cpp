@@ -259,7 +259,7 @@ void AppManager::pluginSelected(QListWidgetItem *current, QListWidgetItem */*pre
 
 void AppManager::about()
 {
-    /*QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()),
+    QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()->_loader->instance()),
                        tr("About FsGui"),
-                       tr("Hey, this is FsGui!!!"));*/
+                       tr("Version: %1").arg(FSGUI_SVN_VERSION));
 }
