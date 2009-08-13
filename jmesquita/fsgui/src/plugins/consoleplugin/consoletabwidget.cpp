@@ -36,10 +36,14 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(m_ui->checkDebug, SIGNAL(clicked(bool)),
                      this, SLOT(checkDebug(bool)));
 
-    QObject::connect(m_ui->btnFind, SIGNAL(clicked()),
-                     this, SLOT(find()));
-    QObject::connect(m_ui->lineFind, SIGNAL(textChanged(QString)),
-                     this, SLOT(findStringChanged(QString)));
+    QObject::connect(m_ui->btnFilterClear, SIGNAL(clicked()),
+                     this, SLOT(filterClear()));
+    QObject::connect(m_ui->lineFilter, SIGNAL(textChanged(QString)),
+                     this, SLOT(filterStringChanged()));
+    QObject::connect(m_ui->filterCaseSensitivityCheckBox, SIGNAL(toggled(bool)),
+                     this, SLOT(filterStringChanged()));
+    QObject::connect(m_ui->filterSyntaxComboBox, SIGNAL(currentIndexChanged(int)),
+                     this, SLOT(filterStringChanged()));
 
     QObject::connect(esl, SIGNAL(connected()),
                      this, SLOT(connected()));
@@ -108,47 +112,23 @@ void ConsoleTabWidget::conditionalScroll()
         m_ui->consoleListView->scrollToBottom();
 }
 
-void ConsoleTabWidget::find()
+void ConsoleTabWidget::filterClear()
 {
-    if (m_ui->lineFind->text().isEmpty())
-        return;
-
-    QModelIndexList index;
-    if (m_ui->consoleListView->currentIndex().isValid())
-    {
-        index = model->match(m_ui->consoleListView->currentIndex(), Qt::DisplayRole, m_ui->lineFind->text(), -1, Qt::MatchContains|Qt::MatchWrap);
-    }
-    else
-    {
-        index =  model->match(model->index(0,0), Qt::DisplayRole, m_ui->lineFind->text(), -1, Qt::MatchContains|Qt::MatchWrap);
-    }
-
-    if (index.isEmpty())
-    {
-        QMessageBox::warning(this, tr("No match"), tr("No match found!"));
-    }
-    else
-    {
-        if (findNext == true && index.count() > 1)
-        {
-            m_ui->consoleListView->scrollTo(index.at(1));
-            m_ui->consoleListView->setCurrentIndex(index.at(1));
-        }
-        else
-        {
-            m_ui->consoleListView->scrollTo(index.at(0));
-            m_ui->consoleListView->setCurrentIndex(index.at(0));
-        }
-        findNext = true;
-        m_ui->btnFind->setText(tr("Find Next"));
-    }
+    m_ui->lineFilter->clear();
 }
 
-void ConsoleTabWidget::findStringChanged(QString findString)
+void ConsoleTabWidget::filterStringChanged()
 {
-    m_ui->btnFind->setDisabled(findString.isEmpty());
-    m_ui->btnFind->setText(tr("Find"));
-    findNext = false;
+    QRegExp::PatternSyntax syntax =
+            QRegExp::PatternSyntax(m_ui->filterSyntaxComboBox->itemData(
+                    m_ui->filterSyntaxComboBox->currentIndex()).toInt());
+    Qt::CaseSensitivity caseSensitivity =
+            m_ui->filterCaseSensitivityCheckBox->isChecked() ? Qt::CaseSensitive
+            : Qt::CaseInsensitive;
+
+    QRegExp regExp(m_ui->lineFilter->text(), caseSensitivity, syntax);
+    model->setFilterRegExp(regExp);
+    m_ui->btnFilterClear->setDisabled(m_ui->lineFilter->text().isEmpty());
 }
 
 void ConsoleTabWidget::connected()
@@ -200,6 +180,7 @@ void ConsoleTabWidget::gotEvent(ESLevent * event)
         }
     }
     delete event;
+
 }
 
 void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)

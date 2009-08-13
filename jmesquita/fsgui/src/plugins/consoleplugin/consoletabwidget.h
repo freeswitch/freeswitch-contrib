@@ -31,8 +31,8 @@ protected:
 
 private slots:
     void conditionalScroll();
-    void find();
-    void findStringChanged(QString);
+    void filterClear();
+    void filterStringChanged();
     void connected();
     void disconnected();
     void connectionFailed(QString);

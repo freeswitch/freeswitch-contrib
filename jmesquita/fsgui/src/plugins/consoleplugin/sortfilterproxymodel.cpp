@@ -19,5 +19,6 @@ bool SortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
 {
     QModelIndex index0 = sourceModel()->index(source_row, 0, source_parent);
 
-    return loglevels.value(sourceModel()->data(index0, Qt::UserRole).toInt()) == true;
+    return (loglevels.value(sourceModel()->data(index0, Qt::UserRole).toInt()) == true
+            && sourceModel()->data(index0).toString().contains(filterRegExp()));
 }
