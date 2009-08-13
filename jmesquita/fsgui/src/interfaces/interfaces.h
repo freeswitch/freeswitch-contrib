@@ -3,6 +3,8 @@
 
 #include <QtPlugin>
 
+class QListWidgetItem;
+class QWidget;
 class ESLevent;
 class SettingsDialog;
 class ServerManager;
@@ -30,8 +32,10 @@ public:
     virtual QString appDescription() = 0;
     /*!
       \brief Add a new configuration item to the settings dialog
+      \param[in] SettingsDialog A pointer to the settings dialog
+      \param[out] QMap<QListWidgetItem *, QWidget *> A QMap that has a items associated to config pages.
       */
-    virtual void addConfigItems(SettingsDialog *settings) = 0;
+    virtual void addConfigItems(SettingsDialog *, QMap<QListWidgetItem *, QWidget *>&) = 0;
     /*!
       \brief Sets a pointer to ServerManager object
       */

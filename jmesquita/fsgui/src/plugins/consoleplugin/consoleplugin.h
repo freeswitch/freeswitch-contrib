@@ -12,6 +12,7 @@ namespace Ui
     class configPage;
 }
 class ESLconnection;
+class SettingsDialog;
 
 class ConsolePlugin : public QMainWindow, public MonitorInterface
 {
@@ -23,7 +24,7 @@ public:
     QObject *getMonitorInterfaceObject();
     QString appName();
     QString appDescription();
-    void addConfigItems(SettingsDialog *);
+    void addConfigItems(SettingsDialog *, QMap<QListWidgetItem *, QWidget *>&);
     void newInstance();
     void setServerManager(ServerManager *manager);
 
@@ -60,6 +61,7 @@ private:
     Ui::configPage *consoleConfigPage;
     ServerManager *serverManager;
     QHash<QString, ESLconnection *> hashESL;
+    SettingsDialog *settingsDialog;
 
     void setPalette(QLineEdit *control, QString key);
 };

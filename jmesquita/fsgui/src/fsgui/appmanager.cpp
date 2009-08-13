@@ -16,13 +16,18 @@ AppManager::AppManager(QObject *parent)
 
     QCoreApplication::setOrganizationName("FreeSWITCH");
     QCoreApplication::setApplicationName("FsGui");
-    settings = new SettingsDialog();
+
+    settingsDialog = new SettingsDialog();
     QWidget *base = new QWidget;
     pluginConfigPage = new Ui::pluginConfigPage();
     pluginConfigPage->setupUi(base);
-    settings->addConfigItem("Plugins", base);
+    settingsDialog->addConfigItem(new QListWidgetItem("Plugins"), base);
     QObject::connect(pluginConfigPage->btnRun, SIGNAL(clicked()),
                      this, SLOT(runPlugin()));
+    QObject::connect(pluginConfigPage->btnChangePluginDir, SIGNAL(clicked()),
+                     this, SLOT(changePluginDir()));
+    QObject::connect(settingsDialog, SIGNAL(accepted()),
+                     this, SLOT(writeSettings()));
     QObject::connect(pluginConfigPage->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
                      this, SLOT(pluginSelected(QListWidgetItem*, QListWidgetItem*)));
 
@@ -30,11 +35,27 @@ AppManager::AppManager(QObject *parent)
 
     qApp->setWindowIcon(QIcon(":/icons/fsgui_logo.png"));
 
+    readSettings();
     createActions();
     loadPlugins();
-    settings->show();
+    settingsDialog->show();
 }
 
+void AppManager::changePluginDir()
+{
+     QString dir = QFileDialog::getExistingDirectory(settingsDialog, tr("Plugin Location"),
+                                                 pluginsDir->currentPath(),
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+     if(!dir.isEmpty())
+     {
+         pluginConfigPage->linePluginDir->setText(dir);
+         pluginsDir->setCurrent(dir);
+         writeSettings();
+         unloadPlugins();
+         loadPlugins();
+     }
+}
 
 void AppManager::createActions()
 {
@@ -46,7 +67,7 @@ void AppManager::createActions()
 
     action_preferences = new QAction(tr("&Preferences"), this);
     QObject::connect(action_preferences, SIGNAL(triggered()),
-                     settings, SLOT(show()));
+                     settingsDialog, SLOT(show()));
 
     action_about = new QAction(tr("&About"), this);
     action_about->setShortcut(QKeySequence::HelpContents);
@@ -97,31 +118,80 @@ void AppManager::createMenus(QMenuBar * menu_bar)
     }
 }
 
+void AppManager::readSettings()
+{
+    pluginsDir = new QDir;
+    QSettings settings;
+    QString dir = settings.value("PluginDir").toString();
+    if (dir.isEmpty())
+    {
+        pluginsDir->setCurrent(qApp->applicationDirPath());
+#if defined(Q_OS_WIN)
+        if (pluginsDir->dirName().toLower() == "debug" || pluginsDir->dirName().toLower() == "release")
+            pluginsDir->cdUp();
+#elif defined(Q_OS_MAC)
+        if (pluginsDir->dirName() == "MacOS") {
+            pluginsDir->cdUp();
+            pluginsDir->cdUp();
+            pluginsDir->cdUp();
+        }
+#endif
+        pluginsDir->cd("plugins");
+    }
+    else
+    {
+         pluginsDir->setCurrent(dir);
+    }
+    pluginConfigPage->linePluginDir->setText(pluginsDir->absolutePath());
+}
+
+void AppManager::writeSettings()
+{
+    QSettings settings;
+    settings.setValue("PluginDir", pluginConfigPage->linePluginDir->text());
+}
+
+void AppManager::unloadPlugins()
+{
+    /* Pop and unload all plugins doing proper cleanup */
+    for (int i = 0; i < list_available_monitor_plugins.size(); i++)
+    {
+        QMapIterator<QListWidgetItem*, QWidget*> j(*list_available_monitor_plugins.at(i)->_configItems);
+        while(j.hasNext())
+        {
+            j.next();
+            settingsDialog->removeConfigItem(j.key(), j.value());
+        }
+        list_available_monitor_plugins.at(i)->_loader->unload();
+        delete list_available_monitor_plugins.takeAt(i);
+    }
+}
+
 void AppManager::loadPlugins()
 {
-    QDir pluginsDir = QDir(qApp->applicationDirPath());
-#if defined(Q_OS_WIN)
-    if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-        pluginsDir.cdUp();
-#elif defined(Q_OS_MAC)
-    if (pluginsDir.dirName() == "MacOS") {
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-    }
-#endif
-    pluginsDir.cd("plugins");
-    foreach (QString fileName, pluginsDir.entryList(QDir::Files))
+    pluginConfigPage->listWidget->clear();
+
+    foreach (QString fileName, pluginsDir->entryList(QDir::Files))
     {
-        QPluginLoader *loader = new QPluginLoader(pluginsDir.absoluteFilePath(fileName));
+        QPluginLoader *loader = new QPluginLoader(pluginsDir->absoluteFilePath(fileName));
         if (MonitorInterface *interface = qobject_cast<MonitorInterface *>(loader->instance()))
         {
             if(QMainWindow *interface_window = qobject_cast<QMainWindow *>(loader->instance()))
             {
-                list_available_monitor_plugins.append(loader);
+                MonitorPlugin *plugin = new MonitorPlugin(loader);
+                list_available_monitor_plugins.append(plugin);
                 interface_window->setWindowTitle(QString("FsGui - ") + interface_window->windowTitle());
                 interface_window->setAttribute(Qt::WA_QuitOnClose);
-                interface->addConfigItems(settings);
+                interface->addConfigItems(settingsDialog, *plugin->_configItems);
+
+                /* Add config items */
+                QMapIterator<QListWidgetItem*, QWidget*> i(*plugin->_configItems);
+                while(i.hasNext())
+                {
+                    i.next();
+                    settingsDialog->addConfigItem(i.key(), i.value());
+                }
+
                 interface->setServerManager(serverManager);
                 createMenus(interface_window->menuBar());
                 pluginConfigPage->listWidget->addItem(QString("%1\n     %2").arg(interface->appName(),
@@ -138,17 +208,16 @@ void AppManager::loadPlugins()
     {
         QMessageBox::critical(0, tr("Error!"),
                                       tr("No available plugins. Install compatible plugins before running FsGui."));
-        exit(1);
     }
 }
 
 void AppManager::runPlugin()
 {
-    if (list_available_monitor_plugins.at(pluginConfigPage->listWidget->currentRow())->isLoaded())
+    if (list_available_monitor_plugins.at(pluginConfigPage->listWidget->currentRow())->_loader->isLoaded())
     {
-        MonitorInterface * interface = qobject_cast<MonitorInterface *>(list_available_monitor_plugins.at(pluginConfigPage->listWidget->currentRow())->instance());
+        MonitorInterface * interface = qobject_cast<MonitorInterface *>(list_available_monitor_plugins.at(pluginConfigPage->listWidget->currentRow())->_loader->instance());
         interface->newInstance();
-        settings->hide();
+        settingsDialog->hide();
     }
 }
 
@@ -166,17 +235,16 @@ void AppManager::lastWindowClosed()
         {
             for (int i = 0; i < list_available_monitor_plugins.size(); ++i)
             {
-                list_available_monitor_plugins.at(i)->unload();
+                list_available_monitor_plugins.takeAt(i)->_loader->unload();
             }
-            exit(0);
         }
         else
         {
             delete reallyClose;
             reallyClose = NULL;
-            settings->show();
-            settings->raise();
-            settings->activateWindow();
+            settingsDialog->show();
+            settingsDialog->raise();
+            settingsDialog->activateWindow();
         }
     }
 }
@@ -191,7 +259,7 @@ void AppManager::pluginSelected(QListWidgetItem *current, QListWidgetItem */*pre
 
 void AppManager::about()
 {
-    QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()),
+    /*QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()),
                        tr("About FsGui"),
-                       tr("Hey, this is FsGui!!!"));
+                       tr("Hey, this is FsGui!!!"));*/
 }

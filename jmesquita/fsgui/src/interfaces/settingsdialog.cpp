@@ -29,12 +29,6 @@ void SettingsDialog::changeEvent(QEvent *e)
     }
 }
 
-void SettingsDialog::addConfigItem(QString item, QWidget *page)
-{
-    QListWidgetItem *item_widget = new QListWidgetItem(item);
-    addConfigItem(item_widget, page);
-}
-
 void SettingsDialog::addConfigItem(QListWidgetItem *item, QWidget *page)
 {
     m_ui->listConfig->addItem(item);
@@ -49,3 +43,10 @@ void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previ
     m_ui->configPages->setCurrentIndex(m_ui->listConfig->row(current));
 }
 
+void SettingsDialog::removeConfigItem(QListWidgetItem *item, QWidget *page)
+{
+    m_ui->listConfig->removeItemWidget(item);
+    m_ui->configPages->removeWidget(page);
+    delete item;
+    delete page;
+}

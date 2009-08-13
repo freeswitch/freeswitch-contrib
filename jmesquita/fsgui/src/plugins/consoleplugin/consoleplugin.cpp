@@ -48,13 +48,14 @@ QString ConsolePlugin::appDescription()
     return tr("This application will do the same as fs_cli does.");
 }
 
-void ConsolePlugin::addConfigItems(SettingsDialog *settings)
+void ConsolePlugin::addConfigItems(SettingsDialog *settings, QMap<QListWidgetItem *, QWidget *>&configItems)
 {
+    settingsDialog = settings;
+
     consoleConfigPage = new Ui::configPage();
     QWidget *base = new QWidget(this);
 
     consoleConfigPage->setupUi(base);
-    settings->addConfigItem("Console", base);
 
     QObject::connect(consoleConfigPage->btnBackgroundConsole, SIGNAL(clicked()),
                      this, SLOT(changeConsoleBackgroundColor()));
@@ -91,6 +92,7 @@ void ConsolePlugin::addConfigItems(SettingsDialog *settings)
     readSettings();
     QObject::connect(settings, SIGNAL(accepted()),
                      this, SLOT(writeSettings()));
+    configItems.insert(new QListWidgetItem("Console"), base);
 }
 
 void ConsolePlugin::newInstance()

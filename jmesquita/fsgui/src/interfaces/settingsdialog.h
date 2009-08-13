@@ -15,7 +15,7 @@ public:
     SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
     void addConfigItem(QListWidgetItem *item, QWidget *page);
-    void addConfigItem(QString item, QWidget *page);
+    void removeConfigItem(QListWidgetItem *item, QWidget *page);
 
 protected:
     void changeEvent(QEvent *e);
