@@ -11,18 +11,25 @@ contains(QT_VERSION, ^4\.[0-4]\..*) {
 # Generates the version of FsGui
 # based on SVN Revision
 #####################################
-SVN_REV = $$system(svnversion -n .)
-isEmpty ( SVN_REV ) {
+!win32 {
+    SVN_REV = $$system(svnversion -n .)
+    isEmpty ( SVN_REV ) {
     SVN_REV = \\"Unknown or SVN not present\\"
+    }
+    DEFINES += 'FSGUI_SVN_VERSION=\\"$$SVN_REV\\"'
 }
-DEFINES += 'FSGUI_SVN_VERSION=\\"$$SVN_REV\\"'
+win32 {
+    INCLUDEPATH += ../../../../../src/include/
+}
 ######################################
 
 #####################################
 # ESL must be compiled
 #####################################
-!exists ( ../../../../../libs/esl/libesl.a ) {
-    error("lib esl must be compiled before FsGui")
+!win32 {
+    !exists ( ../../../../../libs/esl/libesl.a ) {
+        error("lib esl must be compiled before FsGui")
+    }
 }
 #####################################
 
@@ -30,7 +37,7 @@ DEFINES += 'FSGUI_SVN_VERSION=\\"$$SVN_REV\\"'
 TEMPLATE = lib
 CONFIG += staticlib
 VERSION = 0.1
-INCLUDEPATH = ../fsgui/ \
+INCLUDEPATH += ../fsgui/ \
     ../../../../../libs/esl/src/include/
 HEADERS = interfaces.h \
     settingsdialog.h \

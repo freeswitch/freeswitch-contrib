@@ -6,6 +6,9 @@
 #include "appmanager.h"
 #include "interfaces.h"
 #include "ui_config_plugin_widget.h"
+#if defined(Q_OS_WIN)
+#include "switch_version.h"
+#endif
 
 AppManager::AppManager(QObject *parent)
     : QObject(parent)
@@ -241,7 +244,13 @@ void AppManager::pluginSelected(QListWidgetItem *current, QListWidgetItem */*pre
 
 void AppManager::about()
 {
+#if defined(Q_OS_WIN)
+    QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()->_loader->instance()),
+                       tr("About FsGui"),
+                       tr("Compiled with FreeSWITCH version: %1").arg(SWITCH_VERSION_FULL));
+#else
     QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()->_loader->instance()),
                        tr("About FsGui"),
                        tr("Version: %1").arg(FSGUI_SVN_VERSION));
+#endif
 }

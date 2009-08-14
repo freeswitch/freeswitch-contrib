@@ -11,11 +11,16 @@ contains(QT_VERSION, ^4\.[0-4]\..*) {
 # Generates the version of FsGui
 # based on SVN Revision
 #####################################
-SVN_REV = $$system(svnversion -n .)
-isEmpty ( SVN_REV ) {
-SVN_REV = \\"Unknown or SVN not present\\"
+!win32 {
+    SVN_REV = $$system(svnversion -n .)
+    isEmpty ( SVN_REV ) {
+    SVN_REV = \\"Unknown or SVN not present\\"
+    }
+    DEFINES += 'FSGUI_SVN_VERSION=\\"$$SVN_REV\\"'
 }
-DEFINES += 'FSGUI_SVN_VERSION=\\"$$SVN_REV\\"'
+win32 {
+    INCLUDEPATH += ../../../../../src/include/
+}
 ######################################
 
 TEMPLATE    = lib
