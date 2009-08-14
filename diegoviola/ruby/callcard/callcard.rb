@@ -75,8 +75,12 @@ class CallCard < FSR::Listener::Outbound
     FSR::Log.info "=================================================="
     FSR::Log.info "*** Destination rate: #{@destination.rate}"
     FSR::Log.info "*** Card ID: #{@card.id}"
-    FSR::Log.info "*** Destination: #{@destination.country}"
+    FSR::Log.info "*** Calling to: #{@destination.country}"
     FSR::Log.info "=================================================="
+  end
+
+  def unbind
+    FSR::Log.info "*** Disconnected."
   end
 end
 
