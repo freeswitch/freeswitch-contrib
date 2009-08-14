@@ -122,26 +122,8 @@ void AppManager::readSettings()
 {
     pluginsDir = new QDir;
     QSettings settings;
-    QString dir = settings.value("PluginDir").toString();
-    if (dir.isEmpty())
-    {
-        pluginsDir->setCurrent(qApp->applicationDirPath());
-#if defined(Q_OS_WIN)
-        if (pluginsDir->dirName().toLower() == "debug" || pluginsDir->dirName().toLower() == "release")
-            pluginsDir->cdUp();
-#elif defined(Q_OS_MAC)
-        if (pluginsDir->dirName() == "MacOS") {
-            pluginsDir->cdUp();
-            pluginsDir->cdUp();
-            pluginsDir->cdUp();
-        }
-#endif
-        pluginsDir->cd("plugins");
-    }
-    else
-    {
-         pluginsDir->setCurrent(dir);
-    }
+    QString dir = settings.value("PluginDir", FSGUI_PLUGINDIR).toString();
+    pluginsDir->setCurrent(dir);
     pluginConfigPage->linePluginDir->setText(pluginsDir->absolutePath());
 }
 
