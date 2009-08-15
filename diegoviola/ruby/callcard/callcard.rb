@@ -45,9 +45,11 @@ class CallCard < FSR::Listener::Outbound
               @destination = Destination.find_by_prefix(prefix)
               FSR::Log.info "*** Success, grabbed #{destination_number} from #{exten}"
               FSR::Log.info "*** Setting up the billing variables."
-              uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination.rate)
+              uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination.rate) if @destination.respond_to?(:rate)
               uuid_setvar(@session.headers[:unique_id], 'nibble_account', @card.id)
-              destination_info
+	      FSR::Log.info "*** Destination rate: #{@destination.rate}" if @destination.respond_to?(:rate)
+	      FSR::Log.info "*** Card ID: #{@card.id}"
+	      FSR::Log.info "*** Calling to: #{@destination.country}" if @destination.respond_to?(:country)
               FSR::Log.info "*** Bridging."
               FSR::Log.info "*** You have #{duration} minutes to talk."
               speak("You have #{duration} minutes to talk.")
@@ -67,18 +69,8 @@ class CallCard < FSR::Listener::Outbound
   end
   
   def duration
-    @duration = @card.balance.to_i / @destination.rate.to_i
+    @duration = @card.balance.to_i / @destination.rate.to_i if @destination.respond_to?(:rate)
     return @duration
-  end
-
-  def destination_info
-    FSR::Log.info "*** Destination rate: #{@destination.rate}"
-    FSR::Log.info "*** Card ID: #{@card.id}"
-    FSR::Log.info "*** Calling to: #{@destination.country}"
-  end
-
-  def unbind
-    FSR::Log.info "*** Disconnected."
   end
 end
 
