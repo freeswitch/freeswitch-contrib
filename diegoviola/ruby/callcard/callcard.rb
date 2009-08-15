@@ -47,14 +47,14 @@ class CallCard < FSR::Listener::Outbound
               FSR::Log.info "*** Setting up the billing variables."
               uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination.rate) if @destination.respond_to?(:rate)
               uuid_setvar(@session.headers[:unique_id], 'nibble_account', @card.id)
-	      FSR::Log.info "*** Destination rate: #{@destination.rate}" if @destination.respond_to?(:rate)
-	      FSR::Log.info "*** Card ID: #{@card.id}"
-	      FSR::Log.info "*** Calling to: #{@destination.country}" if @destination.respond_to?(:country)
+              FSR::Log.info "*** Destination rate: #{@destination.rate}" if @destination.respond_to?(:rate)
+              FSR::Log.info "*** Card ID: #{@card.id}"
+              FSR::Log.info "*** Calling to: #{@destination.country}" if @destination.respond_to?(:country)
               FSR::Log.info "*** Bridging."
               FSR::Log.info "*** You have #{duration} minutes to talk."
               speak("You have #{duration} minutes to talk.")
               transfer("#{destination_number}", "XML", "default") { close_connection }
-	      #api("sched_api +#{(duration*60)-60} none uuid_displace #{@session.headers[:unique_id]} start tone_stream://%(500,0,500)")
+              #api("sched_api +#{(duration*60)-60} none uuid_displace #{@session.headers[:unique_id]} start tone_stream://%(500,0,500)")
               #bridge("sofia/internal/#{destination_number}@0.0.0.0")
             end
           else
