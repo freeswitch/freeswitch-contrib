@@ -7,14 +7,15 @@ require 'activerecord'
 
 FSR.load_all_commands
 
+ActiveRecord::Base.establish_connection(
+  :adapter  => "mysql",
+  :host     => "localhost",
+  :username => "root",
+  :password => "",
+  :database => "callcard_development"
+)
+
 class Card < ActiveRecord::Base
-  ActiveRecord::Base.establish_connection(
-    :adapter  => "mysql",
-    :host     => "localhost",
-    :username => "root",
-    :password => "",
-    :database => "callcard_development"
-  )
 end
 
 class Destination < ActiveRecord::Base
