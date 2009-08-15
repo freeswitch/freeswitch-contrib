@@ -47,7 +47,7 @@ class CallCard < FSR::Listener::Outbound
               FSR::Log.info "*** Bridging."
               FSR::Log.info "*** You have #{duration} minutes to talk."
               speak("You have #{duration} minutes to talk.")
-              transfer("#{destination_number}", "XML", "default") { close_connection }
+              transfer(destination_number, "XML", "default") { close_connection }
               #bridge("sofia/internal/#{destination_number}@0.0.0.0")
             end
           else
