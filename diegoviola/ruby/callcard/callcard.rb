@@ -18,13 +18,6 @@ class Card < ActiveRecord::Base
 end
 
 class Destination < ActiveRecord::Base
-  ActiveRecord::Base.establish_connection(
-    :adapter  => "mysql",                 
-    :host     => "localhost",             
-    :username => "root",                  
-    :password => "",
-    :database => "callcard_development"
-  )
 end
 
 class CallCard < FSR::Listener::Outbound
@@ -54,7 +47,6 @@ class CallCard < FSR::Listener::Outbound
               FSR::Log.info "*** You have #{duration} minutes to talk."
               speak("You have #{duration} minutes to talk.")
               transfer("#{destination_number}", "XML", "default") { close_connection }
-              #api("sched_api +#{(duration*60)-60} none uuid_displace #{@session.headers[:unique_id]} start tone_stream://%(500,0,500)")
               #bridge("sofia/internal/#{destination_number}@0.0.0.0")
             end
           else
