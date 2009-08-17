@@ -10,6 +10,7 @@ namespace Ui {
 class QListWidgetItem;
 class MonitorStateMachine;
 class Channel;
+class Call;
 
 class RealtimeStatisticsDialog : public QDialog {
     Q_OBJECT
@@ -24,7 +25,10 @@ protected:
 private slots:
     void channelCreate(Channel *);
     void channelDestroy(Channel *);
+    void channelStateChanged(Channel *);
     void channelSelected(QListWidgetItem *);
+    void callCreate(Call *);
+    void callDestroy(Call *);
 
 private:
     Ui::RealtimeStatisticsDialog *m_ui;

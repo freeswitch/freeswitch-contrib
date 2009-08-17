@@ -299,7 +299,6 @@ void ESLconnection::run(void)
             {
                 commandTransaction = _commandQueue.dequeue();
                 event = bgapi(commandTransaction->getCommand());
-                qDebug() << "Sent a command and got this response : " << event;
                 if (event)
                     _commandHash.insert(event->_headers.value("Job-UUID"), commandTransaction);
             }
