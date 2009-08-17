@@ -49,13 +49,24 @@ void eslSetLogLevel(int level)
 
 ESLconnection::ESLconnection(const char *host, const char *port, const char *password, const char *name)
         : handle(NULL),_host(new QString(host)), _port(new QString(port)),
-        _pass(new QString(password)), _name(new QString(name)){}
+        _pass(new QString(password)), _name(new QString(name))
+{
+    qRegisterMetaType<ESLevent>("ESLevent");
+}
+
 ESLconnection::~ESLconnection()
 {
     if (isConnected()) {
+
+        {
+            QMutexLocker locker(&_commandQueueMutex);
+            while(!_commandQueue.isEmpty())
+                _commandQueue.dequeue();
+        }
+
         esl_disconnect(handle);
     }
-
+    wait();
 }
 
 QString ESLconnection::getName()
@@ -107,12 +118,13 @@ ESLevent *ESLconnection::sendRecv(const char *cmd)
     if (esl_send_recv(handle, cmd) == ESL_SUCCESS) {
         esl_event_t *event;
         esl_event_dup(&event, handle->last_sr_event);
-        return new ESLevent(event, 1);
+        return new ESLevent(event);
     }
 
     return NULL;
 }
 
+/*
 void ESLconnection::api(QString cmd)
 {
     if (cmd.isEmpty()) {
@@ -125,18 +137,20 @@ void ESLconnection::api(QString cmd)
         emit gotEvent(new ESLevent(event, 1));
     }
 }
+*/
 
-void ESLconnection::bgapi(QString cmd)
+ESLevent * ESLconnection::bgapi(QString cmd)
 {
     if (cmd.isEmpty()) {
-        return;
+        return NULL;
     }
 
     if (esl_send_recv(handle, QString("bgapi %1").arg(cmd).toAscii()) == ESL_SUCCESS) {
         esl_event_t *event;
         esl_event_dup(&event, handle->last_sr_event);
-        emit gotEvent(new ESLevent(event, 1));
+        return new ESLevent(event);;
     }
+    return NULL;
 }
 
 ESLevent *ESLconnection::getInfo()
@@ -144,7 +158,7 @@ ESLevent *ESLconnection::getInfo()
     if (handle->connected && handle->info_event) {
         esl_event_t *event;
         esl_event_dup(&event, handle->info_event);
-        return new ESLevent(event, 1);
+        return new ESLevent(event);
     }
 
     return NULL;
@@ -184,46 +198,38 @@ int ESLconnection::executeAsync(const char *app, const char *arg, const char *uu
     return r;
 }
 
+/*
 int ESLconnection::sendEvent(ESLevent *send_me)
 {
     return esl_sendevent(handle, send_me->event);
 }
+*/
 
 ESLevent *ESLconnection::recvEvent()
 {
-    if (last_event_obj) {
-        delete last_event_obj;
-    }
 
     if (esl_recv_event(handle, 1, NULL) == ESL_SUCCESS) {
         esl_event_t *e = handle->last_ievent ? handle->last_ievent : handle->last_event;
         if (e) {
             esl_event_t *event;
             esl_event_dup(&event, e);
-            last_event_obj = new ESLevent(event, 1);
-            return last_event_obj;
+            return new ESLevent(event);
         }
     }
 
-    last_event_obj = new ESLevent("server_disconnected");
+    //last_event_obj = new ESLevent("server_disconnected");
 
-    return last_event_obj;
+    return NULL;
 }
 
 ESLevent *ESLconnection::recvEventTimed(int ms)
 {
-    if (last_event_obj) {
-        delete last_event_obj;
-        last_event_obj = NULL;
-    }
-
     if (esl_recv_event_timed(handle, ms, 1, NULL) == ESL_SUCCESS) {
         esl_event_t *e = handle->last_ievent ? handle->last_ievent : handle->last_event;
         if (e) {
             esl_event_t *event;
             esl_event_dup(&event, e);
-            last_event_obj = new ESLevent(event, 1);
-            return last_event_obj;
+            return new ESLevent(event);
         }
     }
 
@@ -237,7 +243,7 @@ ESLevent *ESLconnection::filter(const char *header, const char *value)
     if (status == ESL_SUCCESS && handle->last_sr_event) {
         esl_event_t *event;
         esl_event_dup(&event, handle->last_sr_event);
-        return new ESLevent(event, 1);
+        return new ESLevent(event);
     }
 
     return NULL;
@@ -255,25 +261,48 @@ int ESLconnection::events(const char *etype, const char *value)
     return esl_events(handle, type_id, value);
 }
 
+void ESLconnection::addCommand(CommandTransaction *commandT)
+{
+    QMutexLocker locker(&_commandQueueMutex);
+    _commandQueue.enqueue(commandT);
+}
+
 void ESLconnection::run(void)
 {
 
     handle = new esl_handle_t;
     memset(handle, 0, sizeof(esl_handle_t));
-    last_event_obj = NULL;
+
+    CommandTransaction *commandTransaction = 0;
+    ESLevent * event = NULL;
+
     if (esl_connect(handle, _host->toAscii(), _port->toInt(), _pass->toAscii()) == ESL_SUCCESS)
     {
-        send("event plain ALL");
+        events("plain", "all");
         send("log 7");
         emit connected();
     }
+
     while(isConnected())
     {
-        ESLevent * event = recvEventTimed(10);
+        // Process 1 received event
+        event = recvEventTimed(10);
         if (event)
         {
-            ESLevent * e = new ESLevent(event);
-            emit gotEvent(e);
+            processReceivedEvent(event);
+        }
+
+        // Process all pending commands
+        {
+            QMutexLocker locker(&_commandQueueMutex);
+            while (!_commandQueue.isEmpty())
+            {
+                commandTransaction = _commandQueue.dequeue();
+                event = bgapi(commandTransaction->getCommand());
+                qDebug() << "Sent a command and got this response : " << event;
+                if (event)
+                    _commandHash.insert(event->_headers.value("Job-UUID"), commandTransaction);
+            }
         }
     }
     if (!QString(handle->err).isEmpty())
@@ -286,193 +315,37 @@ void ESLconnection::run(void)
     }
 }
 
-// ESLevent
-///////////////////////////////////////////////////////////////////////
-
-ESLevent::ESLevent(const char *type, const char *subclass_name)
+void ESLconnection::processReceivedEvent(ESLevent *event)
 {
-    esl_event_types_t event_id;
-
-    event_construct_common();
-
-    if (esl_name_event(type, &event_id) != ESL_SUCCESS) {
-        event_id = ESL_EVENT_MESSAGE;
+    CommandTransaction *commandTransaction = 0;
+    /* Process all log messages */
+    if (QString(event->_headers.value("Content-Type")) == QString("log/data"))
+    {
+        emit receivedLogMessage(*event);
     }
-
-    if (!esl_strlen_zero(subclass_name) && event_id != ESL_EVENT_CUSTOM) {
-        esl_log(ESL_LOG_WARNING, "Changing event type to custom because you specified a subclass name!\n");
-        event_id = ESL_EVENT_CUSTOM;
+    /* Process command responses */
+    if (event->_headers.value("Job-UUID") != NULL)
+    {
+        if(_commandHash.contains(event->_headers.value("Job-UUID")))
+        {
+            commandTransaction = _commandHash.value(event->_headers.value("Job-UUID"));
+            commandTransaction->setResponse(*event);
+        }
+        else
+        {
+            qDebug() << "Something went wrong... We should log this...";
+        }
     }
-
-    if (esl_event_create_subclass(&event, event_id, subclass_name) != ESL_SUCCESS) {
-        esl_log(ESL_LOG_ERROR, "Failed to create event!\n");
-        event = NULL;
-    }
-
-    serialized_string = NULL;
-    mine = 1;
+    /* Process all other events*/
+    emit receivedChannelEvent(*event);
 }
 
-ESLevent::ESLevent(esl_event_t *wrap_me, int free_me)
+CommandTransaction::CommandTransaction(QString command)
 {
-    event_construct_common();
-    event = wrap_me;
-    mine = free_me;
-    serialized_string = NULL;
+    _command = command;
 }
 
-
-ESLevent::ESLevent(ESLevent *me)
+void CommandTransaction::setResponse(ESLevent e)
 {
-    /* workaround for silly php thing */
-    event = me->event;
-    mine = me->mine;
-    serialized_string = NULL;
-    me->event = NULL;
-    me->mine = 0;
-    esl_safe_free(me->serialized_string);
+    emit gotResponse(e);
 }
-
-ESLevent::~ESLevent()
-{
-
-    if (serialized_string) {
-        free(serialized_string);
-    }
-
-    if (event && mine) {
-        esl_event_destroy(&event);
-    }
-}
-
-const char *ESLevent::nextHeader(void)
-{
-    const char *name = NULL;
-
-    if (hp) {
-        name = hp->name;
-        hp = hp->next;
-    }
-
-    return name;
-}
-
-const char *ESLevent::firstHeader(void)
-{
-    if (event) {
-        hp = event->headers;
-    }
-
-    return nextHeader();
-}
-
-const char *ESLevent::serialize()
-{
-    this_check("");
-
-    esl_safe_free(serialized_string);
-
-    if (!event) {
-        return "";
-    }
-
-    if (esl_event_serialize(event, &serialized_string, ESL_TRUE) == ESL_SUCCESS) {
-        return serialized_string;
-    }
-
-    return "";
-
-}
-
-bool ESLevent::setPriority(esl_priority_t priority)
-{
-    this_check(false);
-
-    if (event) {
-        esl_event_set_priority(event, priority);
-        return true;
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to setPriority an event that does not exist!\n");
-    }
-    return false;
-}
-
-const char *ESLevent::getHeader(const char *header_name)
-{
-    this_check("");
-
-    if (event) {
-        return esl_event_get_header(event, header_name);
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to getHeader an event that does not exist!\n");
-    }
-    return NULL;
-}
-
-bool ESLevent::addHeader(const char *header_name, const char *value)
-{
-    this_check(false);
-
-    if (event) {
-        return esl_event_add_header_string(event, ESL_STACK_BOTTOM, header_name, value) == ESL_SUCCESS ? true : false;
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to addHeader an event that does not exist!\n");
-    }
-
-    return false;
-}
-
-bool ESLevent::delHeader(const char *header_name)
-{
-    this_check(false);
-
-    if (event) {
-        return esl_event_del_header(event, header_name) == ESL_SUCCESS ? true : false;
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to delHeader an event that does not exist!\n");
-    }
-
-    return false;
-}
-
-
-bool ESLevent::addBody(const char *value)
-{
-    this_check(false);
-
-    if (event) {
-        return esl_event_add_body(event, "%s", value) == ESL_SUCCESS ? true : false;
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to addBody an event that does not exist!\n");
-    }
-
-    return false;
-}
-
-char *ESLevent::getBody(void)
-{
-
-    this_check((char *)"");
-
-    if (event) {
-        return esl_event_get_body(event);
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to getBody an event that does not exist!\n");
-    }
-
-    return NULL;
-}
-
-const char *ESLevent::getType(void)
-{
-    this_check("");
-
-    if (event) {
-        return esl_event_name(event->event_id);
-    } else {
-        esl_log(ESL_LOG_ERROR, "Trying to getType an event that does not exist!\n");
-    }
-
-    return (char *) "invalid";
-}
-

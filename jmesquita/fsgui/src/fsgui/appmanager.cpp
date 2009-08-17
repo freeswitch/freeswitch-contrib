@@ -210,7 +210,7 @@ void AppManager::lastWindowClosed()
 {
     if (!reallyClose)
     {
-        reallyClose = new QMessageBox();
+        reallyClose = new QMessageBox(settingsDialog);
         reallyClose->setText("Do you really want to close FsGui?");
         reallyClose->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         reallyClose->setDefaultButton(QMessageBox::Yes);

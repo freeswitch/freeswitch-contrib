@@ -1,12 +1,15 @@
 #include "consoletabwidget.h"
 #include "ui_consoletabwidget.h"
 #include "eslconnection.h"
+#include "monitorstatemachine.h"
+#include "realtimestatisticsdialog.h"
 
 ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection) :
     QWidget(parent),
     m_ui(new Ui::ConsoleTabWidget),
     esl(eslconnection),
     scrollTimer(new QTimer),
+    _rtStatsDlg(NULL),
     findNext(false),
     autoScroll(true)
 {
@@ -51,13 +54,16 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
                      this, SLOT(connectionFailed(QString)));
     QObject::connect(esl, SIGNAL(disconnected()),
                      this, SLOT(disconnected()));
-    QObject::connect(esl, SIGNAL(gotEvent(ESLevent*)),
-                     this, SLOT(gotEvent(ESLevent*)));
+    QObject::connect(esl, SIGNAL(receivedLogMessage(ESLevent)),
+                     this, SLOT(gotEvent(ESLevent)));
 
     QObject::connect(scrollTimer, SIGNAL(timeout()),
                      this, SLOT(conditionalScroll()));
 
     esl->connect();
+
+    msm = new MonitorStateMachine();
+    msm->addESLconnection(esl);
 }
 
 ConsoleTabWidget::~ConsoleTabWidget()
@@ -158,11 +164,11 @@ void ConsoleTabWidget::connectionFailed(QString reason)
     addNewConsoleItem(item);
 }
 
-void ConsoleTabWidget::gotEvent(ESLevent * event)
+void ConsoleTabWidget::gotEvent(ESLevent event)
 {
-    if (event->getBody())
+    if (!event.getBody().isEmpty())
     {
-        QString text(event->getBody());
+        QString text(event.getBody());
 
         /* Remove \r\n */
         QStringList textList = text.split(QRegExp("(\r+)"), QString::SkipEmptyParts);
@@ -175,12 +181,11 @@ void ConsoleTabWidget::gotEvent(ESLevent * event)
         for (int line = 0; line < lines.size(); ++line)
         {
             QStandardItem *item = new QStandardItem(lines[line]);
-            item->setData(QString(event->getHeader("Log-Level")).toInt(), Qt::UserRole);
+            item->setData(event._headers.value("Log-Level").toInt(), Qt::UserRole);
             addNewConsoleItem(item);
         }
     }
-    delete event;
-
+    //delete event;
 }
 
 void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
@@ -195,8 +200,23 @@ void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
 
 void ConsoleTabWidget::cmdSendClicked()
 {
-    esl->bgapi(m_ui->lineCmd->text());
+    CommandTransaction *transaction = new CommandTransaction(m_ui->lineCmd->text());
+    QObject::connect(transaction, SIGNAL(gotResponse(ESLevent)),
+                     this, SLOT(gotEvent(ESLevent)));
+    esl->addCommand(transaction);
     m_ui->lineCmd->clear();
+}
+
+void ConsoleTabWidget::showRealtimeStats()
+{
+    if (!_rtStatsDlg)
+    {
+        _rtStatsDlg = new RealtimeStatisticsDialog(this, msm);
+    }
+
+    _rtStatsDlg->show();
+    _rtStatsDlg->raise();
+    _rtStatsDlg->activateWindow();
 }
 
 void ConsoleTabWidget::lineCmdChanged(QString text)

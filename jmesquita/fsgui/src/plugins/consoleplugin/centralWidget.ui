@@ -77,6 +77,8 @@
      <string>&amp;Console</string>
     </property>
     <addaction name="actionAutomatic_Scroll"/>
+    <addaction name="separator"/>
+    <addaction name="actionRealtime_Statistics"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
@@ -127,6 +129,11 @@
    </property>
    <property name="text">
     <string>&amp;Automatic Scroll</string>
+   </property>
+  </action>
+  <action name="actionRealtime_Statistics">
+   <property name="text">
+    <string>Realtime &amp;Statistics</string>
    </property>
   </action>
  </widget>

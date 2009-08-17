@@ -41,33 +41,20 @@
 #include <QThread>
 #include <QtGui>
 #include <esl.h>
+#include "eslevent.h"
 
-#define this_check(x) do { if (!this) { esl_log(ESL_LOG_ERROR, "object is not initalized\n"); return x;}} while(0)
-#define this_check_void() do { if (!this) { esl_log(ESL_LOG_ERROR, "object is not initalized\n"); return;}} while(0)
-
-
-class ESLevent {
- private:
-        esl_event_header_t *hp;
- public:
-        esl_event_t *event;
-        char *serialized_string;
-        int mine;
-
-        ESLevent(const char *type, const char *subclass_name = NULL);
-        ESLevent(esl_event_t *wrap_me, int free_me = 0);
-        ESLevent(ESLevent *me);
-        virtual ~ESLevent();
-        const char *serialize();
-        bool setPriority(esl_priority_t priority = ESL_PRIORITY_NORMAL);
-        const char *getHeader(const char *header_name);
-        char *getBody(void);
-        const char *getType(void);
-        bool addBody(const char *value);
-        bool addHeader(const char *header_name, const char *value);
-        bool delHeader(const char *header_name);
-        const char *firstHeader(void);
-        const char *nextHeader(void);
+class CommandTransaction : public QObject
+{
+    Q_OBJECT
+public:
+    CommandTransaction(QString command);
+    QString getCommand() { return _command; }
+    void setCommand(QString command) { _command = command; }
+    void setResponse(ESLevent e);
+signals:
+    void gotResponse(ESLevent);
+private:
+    QString _command;
 };
 
 class ESLconnection : public QThread
@@ -75,38 +62,44 @@ class ESLconnection : public QThread
     Q_OBJECT
  private:
     esl_handle_t *handle;
-    ESLevent *last_event_obj;
     QString *_host;
     QString *_port;
     QString *_pass;
     QString *_name;
+    QQueue<CommandTransaction *> _commandQueue;
+    QHash<QString, CommandTransaction *> _commandHash;
+    QMutex _commandQueueMutex;
+
+    void processReceivedEvent(ESLevent *);
+    ESLevent *sendRecv(const char *cmd);
+    //int sendEvent(ESLevent *send_me);
+    ESLevent *recvEvent();
+    ESLevent *recvEventTimed(int ms);
+    bool setConsoleLogLevel(int);
+    /*void api(QString cmd);*/
+    ESLevent* bgapi(QString cmd);
+    void send(QString cmd);
+    ESLevent *filter(const char *header, const char *value);
+    int events(const char *etype, const char *value);
  public:
     ESLconnection(const char *host, const char *port, const char *password, const char *name);
     virtual ~ESLconnection();
+    void addCommand(CommandTransaction *);
     int isConnected();
     void connect();
     ESLevent *getInfo();
-    ESLevent *sendRecv(const char *cmd);
-    int sendEvent(ESLevent *send_me);
-    ESLevent *recvEvent();
-    ESLevent *recvEventTimed(int ms);
-    ESLevent *filter(const char *header, const char *value);
-    int events(const char *etype, const char *value);
     int execute(const char *app, const char *arg = NULL, const char *uuid = NULL);
     int executeAsync(const char *app, const char *arg = NULL, const char *uuid = NULL);
     int setAsyncExecute(const char *val);
     int setEventLock(const char *val);
     int disconnect(void);
-    bool setConsoleLogLevel(int);
-    void api(QString cmd);
-    void bgapi(QString cmd);
-    void send(QString cmd);
     QString getName();
 signals:
     void connected(void);
     void disconnected(void);
     void connectionFailed(QString);
-    void gotEvent(ESLevent*);
+    void receivedLogMessage(ESLevent);
+    void receivedChannelEvent(ESLevent);
 protected:
     void run();
 };

@@ -3,6 +3,7 @@
 
 #include <QtGui/QWidget>
 #include "sortfilterproxymodel.h"
+#include "eslevent.h"
 
 namespace Ui {
     class ConsoleTabWidget;
@@ -12,7 +13,8 @@ class QStandardItem;
 class QStandardItemModel;
 class QTimer;
 class ESLconnection;
-class ESLevent;
+class MonitorStateMachine;
+class RealtimeStatisticsDialog;
 
 class ConsoleTabWidget : public QWidget {
     Q_OBJECT
@@ -22,6 +24,7 @@ public:
 
 public slots:
     void clearConsoleContents();
+    void showRealtimeStats();
     void flipScrollTimer();
     void setAutomaticScroll(bool enabled);
     bool getAutomaticScroll();
@@ -36,7 +39,7 @@ private slots:
     void connected();
     void disconnected();
     void connectionFailed(QString);
-    void gotEvent(ESLevent *);
+    void gotEvent(ESLevent);
     void addNewConsoleItem(QStandardItem *item);
     void cmdSendClicked();
     void lineCmdChanged(QString);
@@ -55,6 +58,8 @@ private:
     SortFilterProxyModel *model;
     ESLconnection *esl;
     QTimer *scrollTimer;
+    MonitorStateMachine *msm;
+    RealtimeStatisticsDialog *_rtStatsDlg;
     bool findNext;
     bool autoScroll;
 

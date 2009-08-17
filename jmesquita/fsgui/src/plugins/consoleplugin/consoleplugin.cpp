@@ -27,6 +27,8 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(disconnect()));
     QObject::connect(consoleWindow->action_Clear, SIGNAL(triggered()),
                      this, SLOT(clearLogContents()));
+    QObject::connect(consoleWindow->actionRealtime_Statistics, SIGNAL(triggered()),
+                     this, SLOT(showRealtimeStats()));
     QObject::connect(consoleWindow->actionAutomatic_Scroll, SIGNAL(toggled(bool)),
                      this, SLOT(setAutoScroll(bool)));
 }
@@ -145,6 +147,13 @@ void ConsolePlugin::clearLogContents()
     ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
     if (tab)
         tab->clearConsoleContents();
+}
+
+void ConsolePlugin::showRealtimeStats()
+{
+    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
+    if (tab)
+        tab->showRealtimeStats();
 }
 
 void ConsolePlugin::connectionStateChanged()
