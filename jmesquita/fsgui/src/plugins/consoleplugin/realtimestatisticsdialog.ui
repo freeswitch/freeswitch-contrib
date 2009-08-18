@@ -36,7 +36,7 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QListWidget" name="listActiveChannels">
+             <widget class="QListView" name="listActiveChannels">
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
@@ -61,6 +61,9 @@
               </property>
               <property name="alternatingRowColors">
                <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
              </widget>
             </item>
@@ -107,7 +110,7 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
-             <widget class="QListWidget" name="listInactiveChannels">
+             <widget class="QListView" name="listInactiveChannels">
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
@@ -132,6 +135,9 @@
               </property>
               <property name="alternatingRowColors">
                <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
              </widget>
             </item>

@@ -56,6 +56,9 @@ public:
     int channelCount() { return _channels.count(); }
     QList<Channel *> getChannels() { return _channels.values(); }
     Channel * getChannel(QString uuid) { return _channels.value(uuid, NULL); }
+    Channel * getInactiveChannel(QString uuid) { return _inactive_channels.value(uuid, NULL); }
+    Call * getCall(QString uuid) { return _calls.value(uuid, NULL); }
+    Call * getInactiveCall(QString uuid) { return _inactive_calls.value(uuid, NULL); }
 private slots:
     void processEvent(ESLevent);
 signals:

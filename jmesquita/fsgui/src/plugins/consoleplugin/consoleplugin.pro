@@ -29,11 +29,13 @@ INCLUDEPATH = ../../fsgui/ \
 HEADERS = consoleplugin.h \
     sortfilterproxymodel.h \
     consoletabwidget.h \
-    realtimestatisticsdialog.h
+    realtimestatisticsdialog.h \
+    realtimemodels.h
 SOURCES = consoleplugin.cpp \
     sortfilterproxymodel.cpp \
     consoletabwidget.cpp \
-    realtimestatisticsdialog.cpp
+    realtimestatisticsdialog.cpp \
+    realtimemodels.cpp
 FORMS += centralWidget.ui \
     console_settings.ui \
     consoletabwidget.ui \
