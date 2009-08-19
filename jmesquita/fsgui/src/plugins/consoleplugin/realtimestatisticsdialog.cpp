@@ -84,7 +84,7 @@ void RealtimeStatisticsDialog::channelCreate(Channel *ch)
     if (!ch)
         return;
 
-    QStandardItem *item = new QStandardItem(QString("%1 - %2").arg(ch->getUUID()));
+    QStandardItem *item = new QStandardItem(QString("%1").arg(ch->getUUID()));
     item->setData(ch->getUUID(), Qt::UserRole);
     _channel_model->appendRow(item);
 }
