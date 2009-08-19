@@ -1,0 +1,65 @@
+--- pcapsipdump-0.1.4/pcapsipdump.cpp	2007-05-11 18:03:04.000000000 -0500
++++ pcapsipdump-0.1.4-patched/pcapsipdump.cpp	2009-08-19 12:50:43.000000000 -0500
+@@ -80,6 +80,7 @@
+     int opt_fork=1;
+     int opt_promisc=1;
+     int opt_packetbuffered=0;
++	int opt_port=5060;
+     int verbosity=0;
+ 
+     ifname=NULL;
+@@ -88,7 +89,7 @@
+     while(1) {
+         char c;
+ 
+-        c = getopt_long (argc, argv, "i:r:d:v:fpU",
++        c = getopt_long (argc, argv, "i:r:d:v:P:fpU",
+                         NULL, NULL);
+         if (c == -1)
+             break;
+@@ -106,6 +107,9 @@
+             case 'd':
+                 opt_chdir=optarg;
+                 break;
++		case 'P':
++			opt_port=atoi(optarg);
++			break;
+             case 'f':
+                 opt_fork=0;
+                 break;
+@@ -125,9 +129,10 @@
+ 
+     if ((fname==NULL)&&(ifname==NULL)){
+ 	printf( "pcapsipdump version %s\n"
+-		"Usage: pcapsipdump [-fpU] [-i <interface>] [-r <file>] [-d <working directory>] [-v level]\n"
++				"Usage: pcapsipdump [-fpU] [-i <interface>] [-r <file>] [-d <working directory>] [-v <level>] [-P <port number>]\n"
+ 		" -f   Do not fork or detach from controlling terminal.\n"
+ 		" -p   Do not put the interface into promiscuous mode.\n"
++				" -P   Specify the port on which to listen\n"
+ 		" -U   Make .pcap files writing ‘‘packet-buffered’’ - more slow method,\n"
+ 		"      but you can use partitialy writen file anytime, it will be consistent.\n"
+ 		" -v   Set verbosity level (higher is more verbose).\n"
+@@ -216,8 +221,8 @@
+ 			pcap_dump((u_char *)ct->table[idx].f_pcap,&header,packet);
+ 			if (opt_packetbuffered) {pcap_dump_flush(ct->table[idx].f_pcap);}
+ 		    }
+-		}else if (htons(header_udp->source)==5060||
+-		    htons(header_udp->dest)==5060){
++				}else if (htons(header_udp->source)==opt_port||
++						  htons(header_udp->dest)==opt_port){
+ 		    data[datalen]=0;
+ 		    s=gettag(data,datalen,"Call-ID:",&l);
+ 		    if ((idx=ct->find_by_call_id(s,l))<0){
+@@ -249,9 +254,10 @@
+ 				sprintf(str2,"%04d%02d%02d/%02d",
+ 					t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour);
+ 				mkdir(str2,0700);
+-				sprintf(str2,"%04d%02d%02d/%02d/%04d%02d%02d-%02d%02d%02d-%s-%s",
++								sprintf(str2,"%04d%02d%02d/%02d/%04d%02d%02d-%02d%02d%02d-%s-%d-%s-%s",
++										t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,
+ 					t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,
+-					t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,caller,called);
++										t->tm_min,t->tm_sec,ifname,opt_port,caller,called);
+ 				memcpy(str1,s,l);
+ 				str1[l]='\0';
+ 				strcat(str2,"-");
