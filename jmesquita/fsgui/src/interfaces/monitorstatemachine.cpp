@@ -144,7 +144,6 @@ void MonitorStateMachine::processEvent(ESLevent e)
                 Channel * chan = _channels.take(e._headers.value("Unique-ID"));
                 _inactive_channels.insert(e._headers.value("Unique-ID"), chan);
                 chan->stateChanged(state);
-                qDebug() << chan->getStates();
                 emit channelDestroyed(chan);
             }
             break;
