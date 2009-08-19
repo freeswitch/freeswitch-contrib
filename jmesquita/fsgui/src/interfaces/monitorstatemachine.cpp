@@ -2,6 +2,10 @@
 #include "eslconnection.h"
 #include "esl.h"
 
+Event::Event(QHash<QString, QString> headers)
+        : _headers(headers)
+{}
+
 State::State(int state_id, QString state_name, QHash<QString, QString> variables)
         : _state_id(state_id),
         _state_name(state_name),
@@ -154,4 +158,17 @@ void MonitorStateMachine::processEvent(ESLevent e)
         }
     }
 
+    /* Append new event to uuid */
+    QString event_uuid = e._headers.value("Unique-ID");
+    if (!event_uuid.isEmpty())
+    {
+        Event *event = new Event(e._headers);
+        Channel * chan = _channels.value(event_uuid, NULL);
+        if (!chan)
+            chan = _inactive_channels.value(event_uuid, NULL);
+        if (!chan)
+            qDebug() << QString("Event %1 has no uuid.").arg(e.getType());
+        chan->addEvent(event);
+        emit newEvent(chan, event);
+    }
 }

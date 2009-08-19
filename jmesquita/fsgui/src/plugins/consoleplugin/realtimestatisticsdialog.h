@@ -8,9 +8,11 @@ namespace Ui {
 }
 
 class MonitorStateMachine;
+class Event;
 class Channel;
 class Call;
 class ChannelSortModel;
+class EventSortModel;
 
 
 class RealtimeStatisticsDialog : public QDialog {
@@ -29,18 +31,27 @@ private slots:
     void channelStateChanged(Channel *);
     void activeChannelSelected(QModelIndex);
     void inactiveChannelSelected(QModelIndex);
+    void activeEventSelected(QModelIndex);
+    void inactiveEventSelected(QModelIndex);
     void activeCallSelectionChanged();
     void inactiveCallSelectionChanged();
     void callCreate(Call *);
     void callDestroy(Call *);
+    void newEvent(Channel *, Event *);
 
 private:
     Ui::RealtimeStatisticsDialog *m_ui;
     MonitorStateMachine *_sm;
+    /* Channel models */
     QStandardItemModel *_channel_model;
     ChannelSortModel *_channel_sort_model;
     QStandardItemModel *_inactive_channel_model;
     ChannelSortModel *_inactive_channel_sort_model;
+    /* Event models */
+    QStandardItemModel *_event_model;
+    EventSortModel *_event_sort_model;
+    QStandardItemModel *_inactive_event_model;
+    EventSortModel *_inactive_event_sort_model;
 };
 
 #endif // REALTIMESTATISTICSDIALOG_H

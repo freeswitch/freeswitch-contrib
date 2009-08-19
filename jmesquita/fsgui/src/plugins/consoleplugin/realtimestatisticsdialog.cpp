@@ -11,6 +11,14 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
 {
     m_ui->setupUi(this);
 
+    /* Connect event stuff */
+    connect(sm, SIGNAL(newEvent(Channel*,Event*)),
+            this, SLOT(newEvent(Channel*,Event*)));
+    connect(m_ui->listActiveEvents, SIGNAL(clicked(QModelIndex)),
+            this, SLOT(activeEventSelected(QModelIndex)));
+    connect(m_ui->listInactiveEvents, SIGNAL(clicked(QModelIndex)),
+            this, SLOT(inactiveEventSelected(QModelIndex)));
+
     /* Connect channel stuff */
     connect(sm, SIGNAL(channelCreated(Channel*)),
             this, SLOT(channelCreate(Channel*)));
@@ -33,6 +41,7 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
     connect(m_ui->listInactiveCalls, SIGNAL(itemSelectionChanged()),
             this, SLOT(inactiveCallSelectionChanged()));
 
+    /* Channel models */
     _channel_model = new QStandardItemModel(this);
     _channel_sort_model = new ChannelSortModel(this);
     _channel_sort_model->setSourceModel(_channel_model);
@@ -42,6 +51,13 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
     _inactive_channel_sort_model = new ChannelSortModel(this);
     _inactive_channel_sort_model->setSourceModel(_inactive_channel_model);
     m_ui->listInactiveChannels->setModel(_inactive_channel_sort_model);
+
+    /* Event models */
+    _event_model = new QStandardItemModel(this);
+    _event_sort_model = new EventSortModel(this);
+    _event_sort_model->setSourceModel(_event_model);
+    m_ui->listActiveEvents->setModel(_event_sort_model);
+    m_ui->listInactiveEvents->setModel(_event_sort_model);
 
 }
 
@@ -68,9 +84,9 @@ void RealtimeStatisticsDialog::channelCreate(Channel *ch)
     if (!ch)
         return;
 
-    QStandardItem *item = new QStandardItem(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
+    QStandardItem *item = new QStandardItem(QString("%1 - %2").arg(ch->getUUID()));
     item->setData(ch->getUUID(), Qt::UserRole);
-    _channel_model->insertRow(0, item);
+    _channel_model->appendRow(item);
 }
 
 void RealtimeStatisticsDialog::channelDestroy(Channel *ch)
@@ -86,10 +102,13 @@ void RealtimeStatisticsDialog::channelDestroy(Channel *ch)
         if (item->data(Qt::UserRole) == ch->getUUID())
         {
             if (selectedIndex.isValid() && selectedIndex.data(Qt::UserRole) == ch->getUUID())
-                m_ui->listActiveVariables->clear();
+            {
+                m_ui->listActiveHeaders->clear();
+            }
 
             _channel_model->takeRow(item->index().row());
-            _inactive_channel_model->insertRow(0, item);
+            _inactive_channel_model->appendRow(item);
+            _event_sort_model->setUUIDFilter("");
         }
     }
 }
@@ -107,7 +126,6 @@ void RealtimeStatisticsDialog::channelStateChanged(Channel * ch)
             {
                 activeChannelSelected(_channel_model->indexFromItem(item));
             }
-        item->setText(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
     }
 
     foreach (QStandardItem *item, _inactive_channel_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
@@ -117,35 +135,59 @@ void RealtimeStatisticsDialog::channelStateChanged(Channel * ch)
             {
                 inactiveChannelSelected(_inactive_channel_model->indexFromItem(item));
             }
-        item->setText(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
     }
 }
 
 void RealtimeStatisticsDialog::activeChannelSelected(QModelIndex index)
 {
-    m_ui->listActiveVariables->clear();
+
+    m_ui->listActiveHeaders->clear();
 
     Channel * ch = _sm->getChannel(index.data(Qt::UserRole).toString());
     if (!ch)
         return;
 
-    foreach (QString key, ch->getCurrentStateVariables().keys())
-    {
-        m_ui->listActiveVariables->addItem(QString("%1 = %2").arg(key, ch->getCurrentStateVariables().value(key)));
-    }
+    _event_sort_model->setUUIDFilter(ch->getUUID());
 }
 
 void RealtimeStatisticsDialog::inactiveChannelSelected(QModelIndex index)
 {
-    m_ui->listInactiveVariables->clear();
+    m_ui->listActiveHeaders->clear();
 
     Channel * ch = _sm->getInactiveChannel(index.data(Qt::UserRole).toString());
     if (!ch)
         return;
 
-    foreach (QString key, ch->getCurrentStateVariables().keys())
+    _event_sort_model->setUUIDFilter(ch->getUUID());
+}
+
+void RealtimeStatisticsDialog::activeEventSelected(QModelIndex index)
+{
+    Channel *ch = _sm->getChannel(index.data(Qt::UserRole).toString());
+    if (!ch)
+        return;
+
+    m_ui->listActiveHeaders->clear();
+
+    Event * e = ch->getEvent(index.row());
+    foreach (QString key, e->getHeaders().keys())
     {
-        m_ui->listInactiveVariables->addItem(QString("%1 = %2").arg(key, ch->getCurrentStateVariables().value(key)));
+        m_ui->listActiveHeaders->addItem(QString("%1 = %2").arg(key, e->getHeaders().value(key)));
+    }
+}
+
+void RealtimeStatisticsDialog::inactiveEventSelected(QModelIndex index)
+{
+    Channel *ch = _sm->getInactiveChannel(index.data(Qt::UserRole).toString());
+    if (!ch)
+        return;
+
+    m_ui->listInactiveHeaders->clear();
+
+    Event * e = ch->getEvent(index.row());
+    foreach (QString key, e->getHeaders().keys())
+    {
+        m_ui->listInactiveHeaders->addItem(QString("%1 = %2").arg(key, e->getHeaders().value(key)));
     }
 }
 
@@ -211,4 +253,14 @@ void RealtimeStatisticsDialog::callDestroy(Call *c)
             m_ui->listInactiveCalls->addItem(item);
         }
     }
+}
+
+void RealtimeStatisticsDialog::newEvent(Channel *ch, Event *e)
+{
+    if (!ch && !e)
+        return;
+
+    QStandardItem *item = new QStandardItem(e->getEventName());
+    item->setData(ch->getUUID(), Qt::UserRole);
+    _event_model->appendRow(item);
 }

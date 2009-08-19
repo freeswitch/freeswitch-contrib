@@ -7,6 +7,16 @@
 
 class ESLconnection;
 
+class Event
+{
+private:
+    QHash<QString, QString> _headers;
+public:
+    Event(QHash<QString, QString> headers);
+    QString getEventName() { return _headers.value("Event-Name"); }
+    QHash<QString, QString> getHeaders() { return _headers; }
+};
+
 class State
 {
 private:
@@ -27,6 +37,7 @@ private:
     QString *_uuid;
     QList <State *> _states;
     State *_currentConfig;
+    QList<Event *> _events;
 public:
     Channel(QString uuid, State *state);
     QHash<QString, QString> getCurrentStateVariables() { return _currentConfig->getHeaders(); }
@@ -35,6 +46,9 @@ public:
     QString getCurrentStateHeader(QString header) { return _currentConfig->getHeader(header); }
     void stateChanged(State *state) { _states.append(state); _currentConfig = state; }
     QList <State *> getStates() { return _states; }
+    void addEvent(Event * event) { _events.append(event); }
+    QList<Event *> getEvents() { return _events; }
+    Event * getEvent(int i) { return _events.at(i); }
 };
 
 class Call
@@ -79,6 +93,7 @@ signals:
     void callCreated(Call *);
     void callDestroyed(Call *);
     void channelDestroyed(Channel *);
+    void newEvent(Channel *, Event *);
 };
 
 #endif // MONITORSTATEMACHINE_H

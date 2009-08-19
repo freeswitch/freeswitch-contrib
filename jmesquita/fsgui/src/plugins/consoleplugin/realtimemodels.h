@@ -16,4 +16,17 @@ protected:
     QList<QString> _uuid_list;
 };
 
+class EventSortModel : public QSortFilterProxyModel {
+
+    Q_OBJECT
+
+public:
+    EventSortModel(QObject *parent = 0);
+    void setUUIDFilter(QString uuid);
+
+protected:
+     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
+    QString _uuid;
+};
+
 #endif // REALTIMEMODELS_H
