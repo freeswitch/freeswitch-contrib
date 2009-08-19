@@ -68,7 +68,7 @@ void RealtimeStatisticsDialog::channelCreate(Channel *ch)
     if (!ch)
         return;
 
-    QStandardItem *item = new QStandardItem(QString("%1 - %2").arg(ch->getUUID(), ch->getHeader("Channel-State")));
+    QStandardItem *item = new QStandardItem(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
     item->setData(ch->getUUID(), Qt::UserRole);
     _channel_model->insertRow(0, item);
 }
@@ -107,7 +107,17 @@ void RealtimeStatisticsDialog::channelStateChanged(Channel * ch)
             {
                 activeChannelSelected(_channel_model->indexFromItem(item));
             }
-        item->setText(QString("%1 - %2").arg(ch->getUUID(), ch->getHeader("Channel-State")));
+        item->setText(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
+    }
+
+    foreach (QStandardItem *item, _inactive_channel_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
+    {
+        if (item->data(Qt::UserRole) == ch->getUUID())
+            if (_inactive_channel_model->itemFromIndex(m_ui->listInactiveChannels->currentIndex()) == item)
+            {
+                inactiveChannelSelected(_inactive_channel_model->indexFromItem(item));
+            }
+        item->setText(QString("%1 - %2").arg(ch->getUUID(), ch->getCurrentStateHeader("Channel-State")));
     }
 }
 
@@ -119,9 +129,9 @@ void RealtimeStatisticsDialog::activeChannelSelected(QModelIndex index)
     if (!ch)
         return;
 
-    foreach (QString key, ch->getVariables().keys())
+    foreach (QString key, ch->getCurrentStateVariables().keys())
     {
-        m_ui->listActiveVariables->addItem(QString("%1 = %2").arg(key, ch->getVariables().value(key)));
+        m_ui->listActiveVariables->addItem(QString("%1 = %2").arg(key, ch->getCurrentStateVariables().value(key)));
     }
 }
 
@@ -133,9 +143,9 @@ void RealtimeStatisticsDialog::inactiveChannelSelected(QModelIndex index)
     if (!ch)
         return;
 
-    foreach (QString key, ch->getVariables().keys())
+    foreach (QString key, ch->getCurrentStateVariables().keys())
     {
-        m_ui->listInactiveVariables->addItem(QString("%1 = %2").arg(key, ch->getVariables().value(key)));
+        m_ui->listInactiveVariables->addItem(QString("%1 = %2").arg(key, ch->getCurrentStateVariables().value(key)));
     }
 }
 
@@ -178,9 +188,9 @@ void RealtimeStatisticsDialog::callCreate(Call *c)
     /* Sanity checking */
     if (!c)
         return;
-    QString caller_cidnum = c->getCallerChannel()->getHeader("Caller-Caller-ID-Number");
-    QString caller_cidname = c->getCallerChannel()->getHeader("variable_effective_caller_id_name");
-    QString orig_cidnum = c->getCallerChannel()->getHeader("Caller-Destination-Number");
+    QString caller_cidnum = c->getCallerChannel()->getCurrentStateHeader("Caller-Caller-ID-Number");
+    QString caller_cidname = c->getCallerChannel()->getCurrentStateHeader("variable_effective_caller_id_name");
+    QString orig_cidnum = c->getCallerChannel()->getCurrentStateHeader("Caller-Destination-Number");
     QString caller_uuid = c->getCallerUUID();
     QString callTitle = QString("%1(%2) <-> %3 (Caller UUID: %4)").arg(caller_cidnum, caller_cidname, orig_cidnum, caller_uuid);
     QListWidgetItem *item = new QListWidgetItem(callTitle, m_ui->listActiveCalls);

@@ -7,33 +7,45 @@
 
 class ESLconnection;
 
+class State
+{
+private:
+    int _state_id;
+    QString _state_name;
+    QHash<QString, QString> _variables;
+public:
+    State(int state_id, QString state_name, QHash<QString, QString> variables);
+    QHash<QString, QString> getHeaders() { return _variables; }
+    QString getHeader(QString header) { return _variables.value(header, NULL); }
+    QString getStateName() { return _state_name; }
+    int getStateId() { return _state_id; }
+};
+
 class Channel
 {
 private:
-    QString _uuid;
-    QHash<QString, QString> _variables;
+    QString *_uuid;
+    QList <State *> _states;
+    State *_currentConfig;
 public:
-    Channel() {}
-    Channel(QString uuid, QHash<QString, QString> variables) : _uuid(uuid), _variables(variables) {}
-    QHash<QString, QString> getVariables() { return _variables; }
-    QString getUUID() { return _uuid; }
-    QString getHeader(QString header) { return _variables.value(header, ""); }
-    QHash<QString, QString> getHeaders() { return _variables; }
-    void stateChanged(QHash<QString, QString> variables) { _variables = variables; }
+    Channel(QString uuid, State *state);
+    QHash<QString, QString> getCurrentStateVariables() { return _currentConfig->getHeaders(); }
+    QString getUUID() { return *_uuid; }
+    void setUUID(QString uuid) { delete _uuid; _uuid = new QString(uuid); }
+    QString getCurrentStateHeader(QString header) { return _currentConfig->getHeader(header); }
+    void stateChanged(State *state) { _states.append(state); _currentConfig = state; }
+    QList <State *> getStates() { return _states; }
 };
 
 class Call
 {
 private:
-    QString _orig_uuid;
     Channel *_orig_channel;
-    QString _caller_uuid;
     Channel *_caller_channel;
 public:
-    Call(QString orig_uuid, Channel *orig_channel,
-         QString caller_uuid, Channel *caller_channel);
-    QString getCallerUUID() { return _caller_uuid; }
-    QString getOriginateeUUID() { return _orig_uuid; }
+    Call(Channel *orig_channel, Channel *caller_channel);
+    QString getCallerUUID() { return _caller_channel->getUUID(); }
+    QString getOriginateeUUID() { return _orig_channel->getUUID(); }
     Channel *getCallerChannel() { return _caller_channel; }
     Channel *getOriginateeChannel() { return _orig_channel; }
 };
