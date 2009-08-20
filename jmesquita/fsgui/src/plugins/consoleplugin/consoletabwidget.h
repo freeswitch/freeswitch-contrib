@@ -25,12 +25,10 @@ public:
 public slots:
     void clearConsoleContents();
     void showRealtimeStats();
-    void flipScrollTimer();
-    void setAutomaticScroll(bool enabled);
-    bool getAutomaticScroll();
 
 protected:
     void changeEvent(QEvent *e);
+    void timerEvent(QTimerEvent *);
 
 private slots:
     void conditionalScroll();
@@ -56,12 +54,13 @@ private:
     QStandardItemModel *sourceModel;
     QModelIndexList foundItems;
     SortFilterProxyModel *model;
+    QBasicTimer *scrollTimer;
     ESLconnection *esl;
-    QTimer *scrollTimer;
     MonitorStateMachine *msm;
     RealtimeStatisticsDialog *_rtStatsDlg;
     bool findNext;
-    bool autoScroll;
+    QList<QStandardItem *> _list_items;
+    int batch;
 
 };
 

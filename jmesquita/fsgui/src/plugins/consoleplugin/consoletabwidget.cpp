@@ -8,10 +8,8 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QWidget(parent),
     m_ui(new Ui::ConsoleTabWidget),
     esl(eslconnection),
-    scrollTimer(new QTimer),
     _rtStatsDlg(NULL),
-    findNext(false),
-    autoScroll(true)
+    findNext(false)
 {
     m_ui->setupUi(this);
     sourceModel = new QStandardItemModel(this);
@@ -57,13 +55,16 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(esl, SIGNAL(receivedLogMessage(ESLevent)),
                      this, SLOT(gotEvent(ESLevent)));
 
-    QObject::connect(scrollTimer, SIGNAL(timeout()),
-                     this, SLOT(conditionalScroll()));
 
     esl->connect();
 
     msm = new MonitorStateMachine();
     msm->addESLconnection(esl);
+
+    scrollTimer = new QBasicTimer;
+    scrollTimer->start(0, this);
+    /* Number of items to be inserted */
+    batch = 40;
 }
 
 ConsoleTabWidget::~ConsoleTabWidget()
@@ -88,34 +89,23 @@ void ConsoleTabWidget::changeEvent(QEvent *e)
     }
 }
 
-void ConsoleTabWidget::flipScrollTimer()
+void ConsoleTabWidget::timerEvent(QTimerEvent *e)
 {
-    if (!esl->isConnected())
+    bool scroll = false;
+    if (e->timerId() == scrollTimer->timerId())
     {
-        scrollTimer->stop();
-        return;
+        if (m_ui->consoleListView->verticalScrollBar()->value() == m_ui->consoleListView->verticalScrollBar()->maximum())
+            scroll = true;
+
+        int inserted_items = 0;
+        while( !_list_items.isEmpty() && inserted_items < batch)
+        {
+            sourceModel->appendRow(_list_items.takeFirst());
+            inserted_items++;
+        }
+        if (scroll)
+            m_ui->consoleListView->scrollToBottom();
     }
-
-    if (scrollTimer->isActive())
-        scrollTimer->stop();
-    else if (autoScroll)
-        scrollTimer->start(500);
-}
-
-void ConsoleTabWidget::setAutomaticScroll(bool enabled)
-{
-    autoScroll = enabled;
-}
-
-bool ConsoleTabWidget::getAutomaticScroll()
-{
-    return autoScroll;
-}
-
-void ConsoleTabWidget::conditionalScroll()
-{
-    if (autoScroll)
-        m_ui->consoleListView->scrollToBottom();
 }
 
 void ConsoleTabWidget::filterClear()
@@ -195,7 +185,8 @@ void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
     QPalette palette = settings.value(QString("log-level-%1-palette").arg(item->data(Qt::UserRole).toInt())).value<QPalette>();
     item->setBackground(palette.base());
     item->setForeground(palette.text());
-    sourceModel->appendRow(item);
+    //sourceModel->appendRow(item);
+    _list_items.append(item);
 }
 
 void ConsoleTabWidget::cmdSendClicked()

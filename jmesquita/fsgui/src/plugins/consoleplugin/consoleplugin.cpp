@@ -29,8 +29,6 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(clearLogContents()));
     QObject::connect(consoleWindow->actionRealtime_Statistics, SIGNAL(triggered()),
                      this, SLOT(showRealtimeStats()));
-    QObject::connect(consoleWindow->actionAutomatic_Scroll, SIGNAL(toggled(bool)),
-                     this, SLOT(setAutoScroll(bool)));
 }
 
 ConsolePlugin::~ConsolePlugin(){}
@@ -409,44 +407,29 @@ void ConsolePlugin::tabClose(int index)
 void ConsolePlugin::tabChanged(int index)
 {
     ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(index), NULL);
-    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget *>(consoleWindow->tabConsole->currentWidget());
     if (esl)
     {
         consoleWindow->action_Connect->setDisabled(esl->isConnected());
         consoleWindow->action_Disconnect->setEnabled(esl->isConnected());
-        consoleWindow->actionAutomatic_Scroll->setChecked(tab->getAutomaticScroll());
-        consoleWindow->actionAutomatic_Scroll->setEnabled(esl->isConnected());
-        tab->flipScrollTimer();
     }
 }
 
 void ConsolePlugin::connect()
 {
     ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
-    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget *>(consoleWindow->tabConsole->currentWidget());
     if (esl)
     {
         esl->connect();
-        tab->flipScrollTimer();
     }
 }
 
 void ConsolePlugin::disconnect()
 {
     ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
-    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget *>(consoleWindow->tabConsole->currentWidget());
     if (esl)
     {
         esl->disconnect();
-        tab->flipScrollTimer();
     }
-}
-
-void ConsolePlugin::setAutoScroll(bool checked)
-{
-    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget *>(consoleWindow->tabConsole->currentWidget());
-    tab->setAutomaticScroll(checked);
-    tab->flipScrollTimer();
 }
 
 Q_EXPORT_PLUGIN2(consoleplugin, ConsolePlugin)

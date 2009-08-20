@@ -76,8 +76,6 @@
     <property name="title">
      <string>&amp;Console</string>
     </property>
-    <addaction name="actionAutomatic_Scroll"/>
-    <addaction name="separator"/>
     <addaction name="actionRealtime_Statistics"/>
    </widget>
    <addaction name="menu_File"/>
