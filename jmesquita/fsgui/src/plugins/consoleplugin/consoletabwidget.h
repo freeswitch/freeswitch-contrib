@@ -28,9 +28,9 @@ public slots:
 
 protected:
     void changeEvent(QEvent *e);
-    void timerEvent(QTimerEvent *);
 
 private slots:
+    void setConditionalScroll();
     void conditionalScroll();
     void filterClear();
     void filterStringChanged();
@@ -48,20 +48,22 @@ private slots:
     void checkNotice(bool);
     void checkInfo(bool);
     void checkDebug(bool);
+    void changeLogLevel(int);
 
 private:
     Ui::ConsoleTabWidget *m_ui;
-    QStandardItemModel *sourceModel;
+    ConsoleModel *sourceModel;
     QModelIndexList foundItems;
     SortFilterProxyModel *model;
-    QBasicTimer *scrollTimer;
     ESLconnection *esl;
     MonitorStateMachine *msm;
     RealtimeStatisticsDialog *_rtStatsDlg;
     bool findNext;
-    QList<QStandardItem *> _list_items;
-    int batch;
+    bool autoScroll;
+    int currentLogLevel;
 
+    void readSettings();
+    void writeSettings();
 };
 
 #endif // CONSOLETABWIDGET_H

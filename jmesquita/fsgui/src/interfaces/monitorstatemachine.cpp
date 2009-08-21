@@ -165,9 +165,15 @@ void MonitorStateMachine::processEvent(ESLevent e)
         Event *event = new Event(e._headers);
         Channel * chan = _channels.value(event_uuid, NULL);
         if (!chan)
+        {
             chan = _inactive_channels.value(event_uuid, NULL);
+            return;
+        }
         if (!chan)
+        {
             qDebug() << QString("Event %1 has no uuid.").arg(e.getType());
+            return;
+        }
         chan->addEvent(event);
         emit newEvent(chan, event);
     }

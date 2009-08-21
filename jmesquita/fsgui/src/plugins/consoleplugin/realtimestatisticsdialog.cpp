@@ -24,8 +24,6 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
             this, SLOT(channelCreate(Channel*)));
     connect(sm, SIGNAL(channelDestroyed(Channel*)),
             this, SLOT(channelDestroy(Channel*)));
-    connect(sm, SIGNAL(channelStateChanged(Channel*)),
-            this, SLOT(channelStateChanged(Channel*)));
     connect(m_ui->listActiveChannels, SIGNAL(clicked(QModelIndex)),
             this, SLOT(activeChannelSelected(QModelIndex)));
     connect(m_ui->listInactiveChannels, SIGNAL(clicked(QModelIndex)),
@@ -110,31 +108,6 @@ void RealtimeStatisticsDialog::channelDestroy(Channel *ch)
             _inactive_channel_model->appendRow(item);
             _event_sort_model->setUUIDFilter("");
         }
-    }
-}
-
-void RealtimeStatisticsDialog::channelStateChanged(Channel * ch)
-{
-    /* Sanity checking */
-    if (!ch)
-        return;
-
-    foreach (QStandardItem *item, _channel_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
-    {
-        if (item->data(Qt::UserRole) == ch->getUUID())
-            if (_channel_model->itemFromIndex(m_ui->listActiveChannels->currentIndex()) == item)
-            {
-                activeChannelSelected(_channel_model->indexFromItem(item));
-            }
-    }
-
-    foreach (QStandardItem *item, _inactive_channel_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
-    {
-        if (item->data(Qt::UserRole) == ch->getUUID())
-            if (_inactive_channel_model->itemFromIndex(m_ui->listInactiveChannels->currentIndex()) == item)
-            {
-                inactiveChannelSelected(_inactive_channel_model->indexFromItem(item));
-            }
     }
 }
 

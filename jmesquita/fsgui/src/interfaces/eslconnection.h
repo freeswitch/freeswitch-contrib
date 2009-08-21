@@ -75,7 +75,6 @@ class ESLconnection : public QThread
     //int sendEvent(ESLevent *send_me);
     ESLevent *recvEvent();
     ESLevent *recvEventTimed(int ms);
-    bool setConsoleLogLevel(int);
     /*void api(QString cmd);*/
     ESLevent* bgapi(QString cmd);
     void send(QString cmd);
@@ -94,6 +93,7 @@ class ESLconnection : public QThread
     int setEventLock(const char *val);
     int disconnect(void);
     QString getName();
+    bool setConsoleLogLevel(int);
 signals:
     void connected(void);
     void disconnected(void);

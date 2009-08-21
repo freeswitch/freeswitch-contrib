@@ -12,11 +12,16 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     findNext(false)
 {
     m_ui->setupUi(this);
-    sourceModel = new QStandardItemModel(this);
+    sourceModel = new ConsoleModel(this);
     model = new SortFilterProxyModel(this);
     model->setSourceModel(sourceModel);
     model->setFilterKeyColumn(0);
     m_ui->consoleListView->setModel(model);
+
+    QObject::connect(sourceModel, SIGNAL(layoutAboutToBeChanged()),
+                     this, SLOT(setConditionalScroll()));
+    QObject::connect(sourceModel, SIGNAL(layoutChanged()),
+                     this, SLOT(conditionalScroll()));
 
     QObject::connect(m_ui->btnSend, SIGNAL(clicked()),
                      this, SLOT(cmdSendClicked()));
@@ -36,6 +41,8 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
                      this, SLOT(checkInfo(bool)));
     QObject::connect(m_ui->checkDebug, SIGNAL(clicked(bool)),
                      this, SLOT(checkDebug(bool)));
+    QObject::connect(m_ui->comboLogLevel, SIGNAL(currentIndexChanged(int)),
+                     this, SLOT(changeLogLevel(int)));
 
     QObject::connect(m_ui->btnFilterClear, SIGNAL(clicked()),
                      this, SLOT(filterClear()));
@@ -61,15 +68,23 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     msm = new MonitorStateMachine();
     msm->addESLconnection(esl);
 
-    scrollTimer = new QBasicTimer;
-    scrollTimer->start(0, this);
-    /* Number of items to be inserted */
-    batch = 40;
 }
 
 ConsoleTabWidget::~ConsoleTabWidget()
 {
+    writeSettings();
     delete m_ui;
+}
+
+void ConsoleTabWidget::setConditionalScroll()
+{
+    autoScroll = (m_ui->consoleListView->verticalScrollBar()->maximum() == m_ui->consoleListView->verticalScrollBar()->value());
+}
+
+void ConsoleTabWidget::conditionalScroll()
+{
+    if (autoScroll)
+        m_ui->consoleListView->scrollToBottom();
 }
 
 void ConsoleTabWidget::clearConsoleContents()
@@ -86,25 +101,6 @@ void ConsoleTabWidget::changeEvent(QEvent *e)
         break;
     default:
         break;
-    }
-}
-
-void ConsoleTabWidget::timerEvent(QTimerEvent *e)
-{
-    bool scroll = false;
-    if (e->timerId() == scrollTimer->timerId())
-    {
-        if (m_ui->consoleListView->verticalScrollBar()->value() == m_ui->consoleListView->verticalScrollBar()->maximum())
-            scroll = true;
-
-        int inserted_items = 0;
-        while( !_list_items.isEmpty() && inserted_items < batch)
-        {
-            sourceModel->appendRow(_list_items.takeFirst());
-            inserted_items++;
-        }
-        if (scroll)
-            m_ui->consoleListView->scrollToBottom();
     }
 }
 
@@ -131,15 +127,18 @@ void ConsoleTabWidget::connected()
 {
     m_ui->btnSend->setEnabled(true);
     m_ui->lineCmd->setEnabled(true);
+    m_ui->comboLogLevel->setEnabled(true);
     QStandardItem *item = new QStandardItem(tr("Connected!"));
     item->setData(ESL_LOG_LEVEL_EMERG, Qt::UserRole);
     addNewConsoleItem(item);
+    readSettings();
 }
 
 void ConsoleTabWidget::disconnected()
 {
     m_ui->btnSend->setEnabled(false);
     m_ui->lineCmd->setEnabled(false);
+    m_ui->comboLogLevel->setEnabled(false);
     QStandardItem *item = new QStandardItem(tr("Disconnected!"));
     item->setData(ESL_LOG_LEVEL_EMERG, Qt::UserRole);
     addNewConsoleItem(item);
@@ -149,6 +148,7 @@ void ConsoleTabWidget::connectionFailed(QString reason)
 {
     m_ui->btnSend->setEnabled(false);
     m_ui->lineCmd->setEnabled(false);
+    m_ui->comboLogLevel->setEnabled(false);
     QStandardItem *item = new QStandardItem(tr("Connection Failed! Reason: %1").arg(reason));
     item->setData(ESL_LOG_LEVEL_EMERG, Qt::UserRole);
     addNewConsoleItem(item);
@@ -175,7 +175,6 @@ void ConsoleTabWidget::gotEvent(ESLevent event)
             addNewConsoleItem(item);
         }
     }
-    //delete event;
 }
 
 void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
@@ -185,8 +184,7 @@ void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
     QPalette palette = settings.value(QString("log-level-%1-palette").arg(item->data(Qt::UserRole).toInt())).value<QPalette>();
     item->setBackground(palette.base());
     item->setForeground(palette.text());
-    //sourceModel->appendRow(item);
-    _list_items.append(item);
+    sourceModel->appendRow(item);
 }
 
 void ConsoleTabWidget::cmdSendClicked()
@@ -248,4 +246,54 @@ void ConsoleTabWidget::checkInfo(bool state)
 void ConsoleTabWidget::checkDebug(bool state)
 {
     model->setLogLevelFilter(ESL_LOG_LEVEL_DEBUG, state);
+}
+
+void ConsoleTabWidget::changeLogLevel(int level)
+{
+    if (esl->setConsoleLogLevel(level))
+    {
+        currentLogLevel = level;
+        QStandardItem *item = new QStandardItem(QString("Changed loglevel to %1").arg(level));
+        item->setData(ESL_LOG_LEVEL_EMERG, Qt::UserRole);
+        addNewConsoleItem(item);
+        if (level > 4)
+        {
+            m_ui->lblWarningMsg->show();
+            m_ui->lblWarningMsg->setText("High loglevels connected to high load servers can cause network consgestion!");
+            m_ui->lblWarningMsg->setAutoFillBackground(true);
+            m_ui->lblWarningMsg->setPalette(QPalette(Qt::yellow));
+            QTimer::singleShot(5000, m_ui->lblWarningMsg, SLOT(hide()));
+        }
+    }
+    else
+    {
+        currentLogLevel = level;
+        QStandardItem *item = new QStandardItem(QString("Could not change loglevel to %1").arg(level));
+        item->setData(ESL_LOG_LEVEL_ALERT, Qt::UserRole);
+        m_ui->comboLogLevel->blockSignals(true);
+        m_ui->comboLogLevel->setCurrentIndex(currentLogLevel);
+        m_ui->comboLogLevel->blockSignals(false);
+    }
+}
+
+void ConsoleTabWidget::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup("Console");
+    settings.beginGroup(esl->getName());
+    /* Set the saved loglevel */
+    m_ui->comboLogLevel->setCurrentIndex(settings.value("Loglevel", 0).toInt());
+    settings.endGroup();
+    settings.endGroup();
+}
+
+void ConsoleTabWidget::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup("Console");
+    settings.beginGroup(esl->getName());
+    /* Save the current loglevel */
+    settings.setValue("Loglevel", currentLogLevel);
+    settings.endGroup();
+    settings.endGroup();
 }

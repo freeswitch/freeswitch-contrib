@@ -279,7 +279,6 @@ void ESLconnection::run(void)
     if (esl_connect(handle, _host->toAscii(), _port->toInt(), _pass->toAscii()) == ESL_SUCCESS)
     {
         events("plain", "all");
-        send("log 7");
         emit connected();
     }
 
