@@ -139,7 +139,7 @@ void RealtimeStatisticsDialog::activeChannelSelected(QModelIndex index)
 
 void RealtimeStatisticsDialog::inactiveChannelSelected(QModelIndex index)
 {
-    m_ui->listActiveHeaders->clear();
+    m_ui->listInactiveHeaders->clear();
 
     Channel * ch = _sm->getInactiveChannel(index.data(Qt::UserRole).toString());
     if (!ch)
