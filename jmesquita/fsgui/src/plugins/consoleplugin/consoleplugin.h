@@ -28,6 +28,10 @@ public:
     void newInstance();
     void setServerManager(ServerManager *manager);
 
+protected:
+    void closeEvent(QCloseEvent *event);
+    void showEvent ( QShowEvent * event );
+
 private slots:
     void connectionStateChanged();
     void connect();

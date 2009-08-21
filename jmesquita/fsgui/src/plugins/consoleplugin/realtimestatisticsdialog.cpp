@@ -55,7 +55,11 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
     _event_sort_model = new EventSortModel(this);
     _event_sort_model->setSourceModel(_event_model);
     m_ui->listActiveEvents->setModel(_event_sort_model);
-    m_ui->listInactiveEvents->setModel(_event_sort_model);
+
+    _inactive_event_model = new QStandardItemModel(this);
+    _inactive_event_sort_model = new EventSortModel(this);
+    _inactive_event_sort_model->setSourceModel(_inactive_event_model);
+    m_ui->listInactiveEvents->setModel(_inactive_event_sort_model);
 
 }
 
@@ -97,16 +101,26 @@ void RealtimeStatisticsDialog::channelDestroy(Channel *ch)
 
     foreach (QStandardItem *item, _channel_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
     {
+
+        if (selectedIndex.isValid() && selectedIndex.data(Qt::UserRole) == ch->getUUID())
+        {
+            m_ui->listActiveHeaders->clear();
+            _event_sort_model->setUUIDFilter("");
+        }
+
         if (item->data(Qt::UserRole) == ch->getUUID())
         {
-            if (selectedIndex.isValid() && selectedIndex.data(Qt::UserRole) == ch->getUUID())
-            {
-                m_ui->listActiveHeaders->clear();
-            }
-
             _channel_model->takeRow(item->index().row());
             _inactive_channel_model->appendRow(item);
-            _event_sort_model->setUUIDFilter("");
+
+            foreach (QStandardItem *item, _event_model->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive))
+            {
+                if (item->data(Qt::UserRole) == ch->getUUID())
+                {
+                    _event_model->takeRow(item->index().row());
+                    _inactive_event_model->appendRow(item);
+                }
+            }
         }
     }
 }
@@ -131,7 +145,7 @@ void RealtimeStatisticsDialog::inactiveChannelSelected(QModelIndex index)
     if (!ch)
         return;
 
-    _event_sort_model->setUUIDFilter(ch->getUUID());
+    _inactive_event_sort_model->setUUIDFilter(ch->getUUID());
 }
 
 void RealtimeStatisticsDialog::activeEventSelected(QModelIndex index)

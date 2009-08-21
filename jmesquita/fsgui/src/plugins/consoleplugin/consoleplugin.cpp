@@ -33,6 +33,24 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
 
 ConsolePlugin::~ConsolePlugin(){}
 
+void ConsolePlugin::closeEvent(QCloseEvent *event)
+ {
+    QSettings settings;
+    settings.beginGroup("Console");
+    settings.setValue("WindowGeometry", this->saveGeometry());
+    settings.endGroup();
+    QWidget::closeEvent(event);
+ }
+
+void ConsolePlugin::showEvent ( QShowEvent * event )
+{
+    QSettings settings;
+    settings.beginGroup("Console");
+    this->restoreGeometry(settings.value("WindowGeometry").toByteArray());
+    settings.endGroup();
+    QWidget::showEvent(event);
+}
+
 QObject * ConsolePlugin::getMonitorInterfaceObject()
 {
     return this;
