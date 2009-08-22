@@ -25,5 +25,9 @@
         include CHEMIN_VUE. 'colonne_gateway.tpl.php';
 
     include CHEMIN_VUE. 'bas_liste_gateways.tpl.php';
+if  (!$gateway->countGateways()){
+echo ('<ul><li>no gateway to display</li></ul>');
+};
+
 
 ?>

@@ -3,7 +3,7 @@
   define('SQL_DSN',      'localhost');
     define('SQL_USERNAME', 'root'     );
     define('SQL_PASSWORD', 'root'  );
-    define('SQL_BDD',      'easyroute'  );
+    define('SQL_BDD',      'fs2bill'  );
 
     // Chemins à utiliser pour accéder aux vues/modeles/librairies
     $module = empty($module) ? !empty($_GET['module']) ? $_GET['module'] : 'accueil' : $module;

@@ -11,7 +11,7 @@
     require CHEMIN_LIB.    'fonction.paigner.php';
     include CHEMIN_MODELE. 'number.class.php';
 
-    $head['titre'] = 'Liste des "Numbers".';
+    $head['titre'] = 'Manage Numbers';
 
     // Instanciation de la classe Commentaires
     $number = new Number();
@@ -32,7 +32,8 @@
 
     while($data = mysql_fetch_assoc($requete))
         include CHEMIN_VUE. 'colonne_number.tpl.php';
-
     include CHEMIN_VUE. 'bas_liste_numbers.tpl.php';
-
+if  (!$number->countNumbers()){
+echo ('<ul><li>no number to display</li></ul>');
+};
 ?>

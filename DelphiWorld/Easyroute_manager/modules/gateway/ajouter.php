@@ -24,7 +24,7 @@
             $erreurs[] = "limit est vide.";
 
         if(empty($_POST['techprofile']) )
-            $erreurs[] = "limit est vide.";
+            $erreurs[] = "Techprofile est vide.";
 
         if(empty($erreurs))
         {
