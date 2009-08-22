@@ -75,10 +75,21 @@ void SortFilterProxyModel::setLogLevelFilter(int level, bool state)
     invalidateFilter();
 }
 
+void SortFilterProxyModel::setUUIDFilterLog(QString uuid)
+{
+    _uuid = uuid;
+    invalidateFilter();
+}
+
 bool SortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     QModelIndex index0 = sourceModel()->index(source_row, 0, source_parent);
+    bool uuidMatch = true;
+
+    if (!_uuid.isEmpty())
+        uuidMatch = (sourceModel()->data(index0, ConsoleModel::UUIDRole).toString() == _uuid);
 
     return (loglevels.value(sourceModel()->data(index0, Qt::UserRole).toInt()) == true
-            && sourceModel()->data(index0).toString().contains(filterRegExp()));
+            && sourceModel()->data(index0).toString().contains(filterRegExp())
+            && uuidMatch);
 }

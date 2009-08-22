@@ -62,6 +62,16 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(esl, SIGNAL(receivedLogMessage(ESLevent)),
                      this, SLOT(gotEvent(ESLevent)));
 
+    /* Test SVN version to enable or disable UUID searching */
+    bool ok;
+    int version = QString(FSGUI_SVN_VERSION).toInt(&ok);
+    if (ok) {
+        if (version >= 14598)
+            m_ui->filterSyntaxComboBox->addItem("UUID");
+    /* User is running modified version and must be responsible */
+    } else {
+        m_ui->filterSyntaxComboBox->addItem("UUID");
+    }
 
     esl->connect();
 
@@ -111,15 +121,39 @@ void ConsoleTabWidget::filterClear()
 
 void ConsoleTabWidget::filterStringChanged()
 {
-    QRegExp::PatternSyntax syntax =
-            QRegExp::PatternSyntax(m_ui->filterSyntaxComboBox->itemData(
-                    m_ui->filterSyntaxComboBox->currentIndex()).toInt());
     Qt::CaseSensitivity caseSensitivity =
             m_ui->filterCaseSensitivityCheckBox->isChecked() ? Qt::CaseSensitive
             : Qt::CaseInsensitive;
-
-    QRegExp regExp(m_ui->lineFilter->text(), caseSensitivity, syntax);
-    model->setFilterRegExp(regExp);
+    switch (m_ui->filterSyntaxComboBox->currentIndex())
+    {
+        case 0:
+        {
+            QRegExp regExp(m_ui->lineFilter->text(), caseSensitivity, QRegExp::RegExp2);
+            model->setUUIDFilterLog(QString());
+            model->setFilterRegExp(regExp);
+            break;
+        }
+        case 1:
+        {
+            QRegExp regExp(m_ui->lineFilter->text(), caseSensitivity, QRegExp::Wildcard);
+            model->setUUIDFilterLog(QString());
+            model->setFilterRegExp(regExp);
+            break;
+        }
+        case 2:
+        {
+            QRegExp regExp(m_ui->lineFilter->text(), caseSensitivity, QRegExp::FixedString);
+            model->setUUIDFilterLog(QString());
+            model->setFilterRegExp(regExp);
+            break;
+        }
+        default:
+        {
+            model->setFilterRegExp(QString());
+            model->setUUIDFilterLog(m_ui->lineFilter->text());
+            break;
+        }
+    }
     m_ui->btnFilterClear->setDisabled(m_ui->lineFilter->text().isEmpty());
 }
 
@@ -171,7 +205,8 @@ void ConsoleTabWidget::gotEvent(ESLevent event)
         for (int line = 0; line < lines.size(); ++line)
         {
             QStandardItem *item = new QStandardItem(lines[line]);
-            item->setData(event._headers.value("Log-Level").toInt(), Qt::UserRole);
+            item->setData(event._headers.value("Log-Level").toInt(), ConsoleModel::LogLevelRole);
+            item->setData(event._headers.value("User-Data"), ConsoleModel::UUIDRole);
             addNewConsoleItem(item);
         }
     }

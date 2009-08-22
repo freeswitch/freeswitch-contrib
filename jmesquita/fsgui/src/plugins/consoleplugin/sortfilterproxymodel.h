@@ -19,6 +19,11 @@ public:
     QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
     void appendRow ( QStandardItem* item );
     void clear();
+
+    enum {
+        LogLevelRole = Qt::UserRole,
+        UUIDRole
+    };
 protected:
     void timerEvent(QTimerEvent *);
 private:
@@ -35,12 +40,14 @@ class SortFilterProxyModel : public QSortFilterProxyModel
 public:
     SortFilterProxyModel(QObject *parent = 0);
     void setLogLevelFilter(int level, bool state);
+    void setUUIDFilterLog(QString uuid);
 
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
 
 private:
     QVector<bool> loglevels;
+    QString _uuid;
 };
 
 #endif // SORTFILTERPROXYMODEL_H
