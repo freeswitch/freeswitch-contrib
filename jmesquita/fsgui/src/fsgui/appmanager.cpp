@@ -147,8 +147,8 @@ void AppManager::unloadPlugins()
             j.next();
             settingsDialog->removeConfigItem(j.key(), j.value());
         }
-        list_available_monitor_plugins.at(i)->_loader->unload();
-        delete list_available_monitor_plugins.takeAt(i);
+        delete list_available_monitor_plugins.at(i);
+        list_available_monitor_plugins.takeAt(i)->_loader->unload();
     }
 }
 
