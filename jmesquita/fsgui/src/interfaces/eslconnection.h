@@ -32,7 +32,7 @@
  *
  * Contributor(s):
  *
- * Joao Mesquita <jmesquita (at) gmail.com>
+ * Joao Mesquita <jmesquita (at) freeswitch.org>
  *
  */
 
