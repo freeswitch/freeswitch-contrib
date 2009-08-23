@@ -28,7 +28,6 @@ protected:
 private slots:
     void channelCreate(Channel *);
     void channelDestroy(Channel *);
-    void channelStateChanged(Channel *);
     void activeChannelSelected(QModelIndex);
     void inactiveChannelSelected(QModelIndex);
     void activeEventSelected(QModelIndex);
