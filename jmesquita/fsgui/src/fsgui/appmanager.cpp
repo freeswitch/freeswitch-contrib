@@ -44,6 +44,11 @@ AppManager::AppManager(QObject *parent)
     settingsDialog->show();
 }
 
+AppManager::~AppManager()
+{
+    unloadPlugins();
+}
+
 void AppManager::changePluginDir()
 {
      QString dir = QFileDialog::getExistingDirectory(settingsDialog, tr("Plugin Location"),
@@ -148,7 +153,7 @@ void AppManager::unloadPlugins()
             settingsDialog->removeConfigItem(j.key(), j.value());
         }
         delete list_available_monitor_plugins.at(i);
-        list_available_monitor_plugins.takeAt(i)->_loader->unload();
+        //list_available_monitor_plugins.takeAt(i)->_loader->unload();
     }
 }
 

@@ -75,6 +75,7 @@ class AppManager : public QObject
 
 public:
     AppManager(QObject *parent = 0);
+    ~AppManager();
 
 private:
     /*!
