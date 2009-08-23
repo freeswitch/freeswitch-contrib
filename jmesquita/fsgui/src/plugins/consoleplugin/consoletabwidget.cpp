@@ -62,16 +62,6 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(esl, SIGNAL(receivedLogMessage(ESLevent)),
                      this, SLOT(gotEvent(ESLevent)));
 
-    /* Test SVN version to enable or disable UUID searching */
-    bool ok;
-    int version = QString(FSGUI_SVN_VERSION).toInt(&ok);
-    if (ok) {
-        if (version >= 14598)
-            m_ui->filterSyntaxComboBox->addItem("UUID");
-    /* User is running modified version and must be responsible */
-    } else {
-        m_ui->filterSyntaxComboBox->addItem("UUID");
-    }
 
     esl->connect();
 
@@ -331,4 +321,10 @@ void ConsoleTabWidget::writeSettings()
     settings.setValue("Loglevel", currentLogLevel);
     settings.endGroup();
     settings.endGroup();
+}
+
+void ConsoleTabWidget::filterLogUUID(QString uuid)
+{
+    m_ui->filterSyntaxComboBox->setCurrentIndex(3);
+    m_ui->lineFilter->setText(uuid);
 }

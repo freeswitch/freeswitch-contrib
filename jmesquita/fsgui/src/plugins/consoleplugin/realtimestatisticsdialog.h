@@ -26,6 +26,7 @@ protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void filterLogs();
     void channelCreate(Channel *);
     void channelDestroy(Channel *);
     void activeChannelSelected(QModelIndex);
@@ -51,6 +52,8 @@ private:
     EventSortModel *_event_sort_model;
     QStandardItemModel *_inactive_event_model;
     EventSortModel *_inactive_event_sort_model;
+
+    void readModels();
 };
 
 #endif // REALTIMESTATISTICSDIALOG_H

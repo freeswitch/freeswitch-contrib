@@ -81,6 +81,9 @@ public:
     void delESLconnection(ESLconnection *);
     int channelCount() { return _channels.count(); }
     QList<Channel *> getChannels() { return _channels.values(); }
+    QList<Channel *> getInactiveChannels() { return _inactive_channels.values(); }
+    QList<Call *> getCalls() { return _calls.values(); }
+    QList<Call *> getInactiveCalls() { return _inactive_calls.values(); }
     Channel * getChannel(QString uuid) { return _channels.value(uuid, NULL); }
     Channel * getInactiveChannel(QString uuid) { return _inactive_channels.value(uuid, NULL); }
     Call * getCall(QString uuid) { return _calls.value(uuid, NULL); }

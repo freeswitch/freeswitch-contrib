@@ -3,6 +3,7 @@
 #include "ui_realtimestatisticsdialog.h"
 #include "monitorstatemachine.h"
 #include "realtimemodels.h"
+#include "consoletabwidget.h"
 
 RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorStateMachine *sm) :
     QDialog(parent),
@@ -28,6 +29,8 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
             this, SLOT(activeChannelSelected(QModelIndex)));
     connect(m_ui->listInactiveChannels, SIGNAL(clicked(QModelIndex)),
             this, SLOT(inactiveChannelSelected(QModelIndex)));
+    connect(m_ui->btnFilterLog, SIGNAL(clicked()),
+            this, SLOT(filterLogs()));
 
     /* Connect call stuff */
     connect(sm, SIGNAL(callCreated(Call*)),
@@ -61,6 +64,7 @@ RealtimeStatisticsDialog::RealtimeStatisticsDialog(QWidget *parent, MonitorState
     _inactive_event_sort_model->setSourceModel(_inactive_event_model);
     m_ui->listInactiveEvents->setModel(_inactive_event_sort_model);
 
+    readModels();
 }
 
 RealtimeStatisticsDialog::~RealtimeStatisticsDialog()
@@ -250,4 +254,50 @@ void RealtimeStatisticsDialog::newEvent(Channel *ch, Event *e)
     QStandardItem *item = new QStandardItem(e->getEventName());
     item->setData(ch->getUUID(), Qt::UserRole);
     _event_model->appendRow(item);
+}
+
+void RealtimeStatisticsDialog::filterLogs()
+{
+    ConsoleTabWidget *consoleTab = qobject_cast<ConsoleTabWidget *>(parent());
+
+    QModelIndex selectedIndex;
+    /* Get the UUID */
+    if (m_ui->tabWidget->currentIndex() == 0)
+    {
+        selectedIndex = m_ui->listActiveChannels->currentIndex();
+    }
+    else
+    {
+        selectedIndex = m_ui->listInactiveChannels->currentIndex();
+    }
+    consoleTab->filterLogUUID(selectedIndex.data(Qt::UserRole).toString());
+    this->hide();
+}
+
+void RealtimeStatisticsDialog::readModels()
+{
+    /* Active channels and calls */
+    foreach(Channel *ch, _sm->getChannels())
+    {
+        channelCreate(ch);
+    }
+    foreach(Call *c, _sm->getCalls())
+    {
+        callCreate(c);
+    }
+    /* Inactive channels and calls */
+    foreach(Channel *ch, _sm->getInactiveChannels())
+    {
+        QStandardItem *item = new QStandardItem(ch->getUUID());
+        item->setData(ch->getUUID(), Qt::UserRole);
+        _inactive_channel_model->appendRow(item);
+    }
+    foreach(Call *c, _sm->getCalls())
+    {
+        QString caller_uuid = c->getCallerUUID();
+        QString callTitle = QString("Call: %1").arg(caller_uuid);
+        QListWidgetItem *item = new QListWidgetItem(callTitle, m_ui->listActiveCalls);
+        item->setData(Qt::UserRole, c->getCallerUUID());
+        m_ui->listInactiveCalls->addItem(item);
+    }
 }

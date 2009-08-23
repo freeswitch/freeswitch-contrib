@@ -57,6 +57,11 @@
             <string>Fixed String</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>UUID</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

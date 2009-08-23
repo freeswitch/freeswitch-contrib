@@ -25,6 +25,7 @@ public:
 public slots:
     void clearConsoleContents();
     void showRealtimeStats();
+    void filterLogUUID(QString);
 
 protected:
     void changeEvent(QEvent *e);
