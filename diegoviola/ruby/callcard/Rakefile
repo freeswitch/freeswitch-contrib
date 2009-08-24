@@ -6,13 +6,13 @@ end
 
 namespace :server do
   task :start do
-    ruby "server.rb"
+    ruby "script/server.rb"
   end
 end
 
 namespace :load do
   task :rates do
-    ruby "load_rates.rb"
+    ruby "script/load_rates.rb"
   end
 end
 
