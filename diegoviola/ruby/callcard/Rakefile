@@ -1,0 +1,18 @@
+task :default => [:test]
+
+task :test do
+  ruby "test/unittest.rb"
+end
+
+namespace :server do
+  task :start do
+    ruby "server.rb"
+  end
+end
+
+namespace :load do
+  task :rates do
+    ruby "load_rates.rb"
+  end
+end
+

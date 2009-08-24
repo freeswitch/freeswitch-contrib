@@ -6,7 +6,7 @@ require 'activerecord'
 
 ActiveRecord::Base.establish_connection(
   :adapter  => "mysql",
-  :host     => "localhost",
+  :host     => "192.168.0.2",
   :username => "root",
   :password => "",
   :database => "callcard_development"
