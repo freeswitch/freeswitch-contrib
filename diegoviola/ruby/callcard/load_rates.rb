@@ -15,7 +15,7 @@ ActiveRecord::Base.establish_connection(
 class Destination < ActiveRecord::Base
 end
 
-FasterCSV.foreach(ARGV.to_s) do |row|
+FasterCSV.foreach('outbound_rates.csv') do |row|
   destination = Destination.new(:country => row[0], :prefix => row[1], :rate => row[4])
   destination.save
 end
