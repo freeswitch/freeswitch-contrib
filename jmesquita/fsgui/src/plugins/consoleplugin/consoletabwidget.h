@@ -62,6 +62,7 @@ public:
 public slots:
     void clearConsoleContents();
     void showRealtimeStats();
+    void saveLogToFile();
     void filterLogUUID(QString);
 
 protected:

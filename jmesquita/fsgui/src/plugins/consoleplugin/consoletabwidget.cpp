@@ -330,3 +330,27 @@ void ConsoleTabWidget::filterLogUUID(QString uuid)
     m_ui->filterSyntaxComboBox->setCurrentIndex(3);
     m_ui->lineFilter->setText(uuid);
 }
+
+void ConsoleTabWidget::saveLogToFile()
+{
+    QString fileName = QFileDialog::getSaveFileName(this);
+    if (fileName.isEmpty())
+        return;
+
+    QFile file(fileName);
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot write file %1:\n%2.")
+                             .arg(fileName)
+                             .arg(file.errorString()));
+        return;
+    }
+
+    QTextStream out(&file);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    foreach(QStandardItem *item, sourceModel->modelData())
+    {
+        out << item->data(Qt::DisplayRole).toString() << "\n";
+    }
+    QApplication::restoreOverrideCursor();
+}

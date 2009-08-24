@@ -56,6 +56,7 @@ public:
     QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
     void appendRow ( QStandardItem* item );
     void clear();
+    QList<QStandardItem *> modelData() { return _listDisplayModel; }
 
     enum {
         LogLevelRole = Qt::UserRole,

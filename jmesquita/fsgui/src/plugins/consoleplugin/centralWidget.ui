@@ -47,7 +47,7 @@
      <x>0</x>
      <y>0</y>
      <width>673</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Server">
@@ -63,6 +63,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="action_Save_log"/>
+    <addaction name="separator"/>
     <addaction name="action_Close"/>
    </widget>
    <widget class="QMenu" name="menu_Edit">
@@ -132,6 +134,11 @@
   <action name="actionRealtime_Statistics">
    <property name="text">
     <string>Realtime &amp;Statistics</string>
+   </property>
+  </action>
+  <action name="action_Save_log">
+   <property name="text">
+    <string>&amp;Save log</string>
    </property>
   </action>
  </widget>
