@@ -31,6 +31,8 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(saveLogToFile()));
     QObject::connect(consoleWindow->actionRealtime_Statistics, SIGNAL(triggered()),
                      this, SLOT(showRealtimeStats()));
+    QObject::connect(consoleWindow->action_Pastebin_Log, SIGNAL(triggered()),
+                     this, SLOT(pastebinLog()));
 }
 
 ConsolePlugin::~ConsolePlugin(){}
@@ -172,6 +174,13 @@ void ConsolePlugin::saveLogToFile()
     ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
     if (tab)
         tab->saveLogToFile();
+}
+
+void ConsolePlugin::pastebinLog()
+{
+    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
+    if (tab)
+        tab->pastebinLog();
 }
 
 void ConsolePlugin::showRealtimeStats()

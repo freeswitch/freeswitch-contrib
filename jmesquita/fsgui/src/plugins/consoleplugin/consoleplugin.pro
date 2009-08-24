@@ -19,6 +19,7 @@ contains(QT_VERSION, ^4\.[0-4]\..*) {
 win32:INCLUDEPATH += ../../../../../src/include/
 
 # #####################################
+QT += network
 TEMPLATE = lib
 TARGET = consoleplugin
 DESTDIR = ../../../bin/plugins/
@@ -30,16 +31,19 @@ HEADERS = consoleplugin.h \
     sortfilterproxymodel.h \
     consoletabwidget.h \
     realtimestatisticsdialog.h \
-    realtimemodels.h
+    realtimemodels.h \
+    pastebindialog.h
 SOURCES = consoleplugin.cpp \
     sortfilterproxymodel.cpp \
     consoletabwidget.cpp \
     realtimestatisticsdialog.cpp \
-    realtimemodels.cpp
+    realtimemodels.cpp \
+    pastebindialog.cpp
 FORMS += centralWidget.ui \
     console_settings.ui \
     consoletabwidget.ui \
-    realtimestatisticsdialog.ui
+    realtimestatisticsdialog.ui \
+    pastebindialog.ui
 LIBS += -L../../interfaces \
     -linterfaces \
     -L../../../../../../libs/esl/ \

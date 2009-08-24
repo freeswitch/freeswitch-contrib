@@ -76,6 +76,7 @@ private slots:
     void newConnection();
     void clearLogContents();
     void saveLogToFile();
+    void pastebinLog();
     void showRealtimeStats();
     void changeConsoleBackgroundColor();
     void changeAlertBackgroundColor();

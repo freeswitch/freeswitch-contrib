@@ -3,12 +3,14 @@
 #include "eslconnection.h"
 #include "monitorstatemachine.h"
 #include "realtimestatisticsdialog.h"
+#include "pastebindialog.h"
 
 ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection) :
     QWidget(parent),
     m_ui(new Ui::ConsoleTabWidget),
     esl(eslconnection),
     _rtStatsDlg(NULL),
+    _pastebinDlg(NULL),
     findNext(false)
 {
     m_ui->setupUi(this);
@@ -353,4 +355,20 @@ void ConsoleTabWidget::saveLogToFile()
         out << item->data(Qt::DisplayRole).toString() << "\n";
     }
     QApplication::restoreOverrideCursor();
+}
+
+void ConsoleTabWidget::pastebinLog()
+{
+    QString text;
+    foreach(QStandardItem *item, sourceModel->modelData())
+    {
+        text.append(item->data(Qt::DisplayRole).toString());
+        text.append("\n");
+    }
+    if (!_pastebinDlg)
+        _pastebinDlg = new pastebinDialog;
+    _pastebinDlg->setText(text);
+    _pastebinDlg->show();
+    _pastebinDlg->raise();
+    _pastebinDlg->activateWindow();
 }

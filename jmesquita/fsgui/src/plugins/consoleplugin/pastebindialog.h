@@ -35,77 +35,45 @@
  * Joao Mesquita <jmesquita (at) freeswitch.org>
  *
  */
-#ifndef CONSOLETABWIDGET_H
-#define CONSOLETABWIDGET_H
+#ifndef PASTEBINDIALOG_H
+#define PASTEBINDIALOG_H
 
-#include <QtGui/QWidget>
-#include "sortfilterproxymodel.h"
-#include "eslevent.h"
+#include <QtGui/QDialog>
 
 namespace Ui {
-    class ConsoleTabWidget;
+    class pastebinDialog;
 }
 
+class QHttp;
+class QString;
+class QProgressDialog;
+class QHttpResponseHeader;
 class QStandardItem;
-class QStandardItemModel;
-class QTimer;
-class ESLconnection;
-class MonitorStateMachine;
-class RealtimeStatisticsDialog;
-class pastebinDialog;
 
-class ConsoleTabWidget : public QWidget {
+class pastebinDialog : public QDialog {
     Q_OBJECT
+    Q_DISABLE_COPY(pastebinDialog)
 public:
-    ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection);
-    ~ConsoleTabWidget();
-
-public slots:
-    void clearConsoleContents();
-    void showRealtimeStats();
-    void saveLogToFile();
-    void pastebinLog();
-    void filterLogUUID(QString);
+    explicit pastebinDialog(QWidget *parent = 0);
+    virtual ~pastebinDialog();
+    void setText(QString);
 
 protected:
-    void changeEvent(QEvent *e);
-
-private slots:
-    void setConditionalScroll();
-    void conditionalScroll();
-    void filterClear();
-    void filterStringChanged();
-    void connected();
-    void disconnected();
-    void connectionFailed(QString);
-    void gotEvent(ESLevent);
-    void addNewConsoleItem(QStandardItem *item);
-    void cmdSendClicked();
-    void lineCmdChanged(QString);
-    void checkEmerg(bool);
-    void checkAlert(bool);
-    void checkCrit(bool);
-    void checkError(bool);
-    void checkNotice(bool);
-    void checkInfo(bool);
-    void checkDebug(bool);
-    void changeLogLevel(int);
+    virtual void changeEvent(QEvent *e);
 
 private:
-    Ui::ConsoleTabWidget *m_ui;
-    ConsoleModel *sourceModel;
-    QModelIndexList foundItems;
-    SortFilterProxyModel *model;
-    ESLconnection *esl;
-    MonitorStateMachine *msm;
-    RealtimeStatisticsDialog *_rtStatsDlg;
-    pastebinDialog *_pastebinDlg;
-    bool findNext;
-    bool autoScroll;
-    int currentLogLevel;
+    Ui::pastebinDialog *m_ui;
+    QString text;
+    QString pasteURL;
+    QHttp * pastebinHttp;
+    int postId;
+    QProgressDialog *progressDialog;
 
-    void readSettings();
-    void writeSettings();
+private slots:
+    void pastebinFinished(int, bool);
+    void pasteIt();
+    void readResponseHeader(const QHttpResponseHeader &);
+    void updateDataSendProgress(int, int);
 };
 
-#endif // CONSOLETABWIDGET_H
+#endif // PASTEBINDIALOG_H

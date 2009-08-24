@@ -79,6 +79,7 @@
      <string>&amp;Console</string>
     </property>
     <addaction name="actionRealtime_Statistics"/>
+    <addaction name="action_Pastebin_Log"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
@@ -93,6 +94,9 @@
    <property name="text">
     <string>&amp;Connect</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
   </action>
   <action name="action_Disconnect">
    <property name="enabled">
@@ -100,6 +104,9 @@
    </property>
    <property name="text">
     <string>&amp;Disconnect</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="action_Close">
@@ -114,31 +121,34 @@
    <property name="text">
     <string>&amp;Server Manager</string>
    </property>
+   <property name="shortcut">
+    <string>F4</string>
+   </property>
   </action>
   <action name="action_Clear">
    <property name="text">
     <string>&amp;Clear</string>
    </property>
   </action>
-  <action name="actionAutomatic_Scroll">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Automatic Scroll</string>
-   </property>
-  </action>
   <action name="actionRealtime_Statistics">
    <property name="text">
     <string>Realtime &amp;Statistics</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
   <action name="action_Save_log">
    <property name="text">
     <string>&amp;Save log</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_Pastebin_Log">
+   <property name="text">
+    <string>&amp;Pastebin Log</string>
    </property>
   </action>
  </widget>
