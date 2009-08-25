@@ -33,6 +33,8 @@ isEmpty ( PLUGINDIR ) {
 DEFINES += FSGUI_PLUGINDIR='\\"$${PLUGINDIR}\\"'
 ######################################
 
+macx:ICON=../resources/mac_icon.icns
+
 QT         += network
 TARGET      = fsgui
 DESTDIR     = ../../bin/

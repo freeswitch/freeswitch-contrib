@@ -132,6 +132,12 @@ void AppManager::readSettings()
     QSettings settings;
     QString dir = settings.value("PluginDir", FSGUI_PLUGINDIR).toString();
     pluginsDir->setCurrent(dir);
+#if defined(Q_OS_MAC)
+    dir = qApp->applicationDirPath();
+    qDebug() << dir;
+    pluginsDir->setCurrent(dir);
+    pluginsDir->cd("../PlugIns/fsgui/");
+#endif
     pluginConfigPage->linePluginDir->setText(pluginsDir->absolutePath());
 }
 

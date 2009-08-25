@@ -22,7 +22,10 @@ win32:INCLUDEPATH += ../../../../../src/include/
 QT += network
 TEMPLATE = lib
 TARGET = consoleplugin
+
 DESTDIR = ../../../bin/plugins/
+macx:DESTDIR = ../../../bin/fsgui.app/Contents/PlugIns/fsgui
+
 CONFIG += plugin
 INCLUDEPATH = ../../fsgui/ \
     ../../interfaces \
