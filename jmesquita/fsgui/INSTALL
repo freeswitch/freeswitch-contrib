@@ -1,0 +1,27 @@
+To compile FsGui you need at least Qt 4.5 installed on your system.
+
+== For Linux ==
+
+Compile libesl, cd into the project root directory and type the following commands:
+
+qmake -config release
+make
+
+Binaires will be place into the bin/ directory located on project root directory.
+Plugins will be placed under bin/plugins. This can be changed by:
+
+qmake PLUGINDIR=[desired location] -config release
+
+== For MacOSX ==
+
+Compile libesl, cd into the project root directory and type the following commands:
+
+qmake -config release -spec macx-g++
+make
+
+Binaires will be place into the bin/ directory located on project root directory.
+Applications will be place into the application bundle.
+
+== For Windows XP/Vista ==
+
+I still have no idea. Carlos Talbot, please!!! :-)

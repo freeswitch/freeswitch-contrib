@@ -1,0 +1,12 @@
+
+== Description ==
+
+FsGui is an extend able platform for call control applications. Making intensive use o Qt plugin infrastructure and lib esl, FsGui intention is to provide means for applications to enable use of call control features on the desktop such as conference management, click to call, outlook integration, etc...
+
+== Applications ==
+
+** Console - A FreeSWITCH console for human beings **
+
+Console is the very first application developed in the new FsGui estructure. It will show the information that is shown on fs_cli and cli on a interface similar to what Wireshark has for IP packet dumps.
+Console has a server manager tool that allows you to manage multiple FreeSWITCH instances and a tabbed interface that allows you to connect simultaneously to as many instances as you like.
+Console also allows you to perform common tasks fast such as pastebin logs, save logs to disk or search existing logs. 
