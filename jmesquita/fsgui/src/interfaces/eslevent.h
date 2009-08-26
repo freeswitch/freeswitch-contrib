@@ -44,17 +44,32 @@
 class ESLevent
 {
 private:
-    QString _body;
-    int _event_id;
-    QString _event_name;
+    QString _body; /*< The event body */
+    int _event_id; /*< The event ID (libesl relates that as well) */
+    QString _event_name; /*< The event name/type related to its ID */
 public:
     ESLevent();
+    /*!
+      \brief Copy constructor
+      */
     ESLevent(esl_event_t *e);
+    /*!
+      \brief Gets the event body
+      \return The event body
+      */
     QString getBody() { return _body; }
+    /*!
+      \brief Gets the event ID
+      \return The event ID
+      */
     int getID() { return _event_id; }
+    /*!
+      \brief Gets the event name/type
+      \return The event name/type
+      */
     QString getType() { return _event_name; }
 
-    QHash<QString, QString> _headers;
+    QHash<QString, QString> _headers; /*< A hash containing all the event headers */
 };
 
 Q_DECLARE_METATYPE(ESLevent)

@@ -45,29 +45,56 @@ namespace Ui {
 }
 
 class ESLconnection;
-
 class QTreeWidgetItem;
 
+/*!
+  \brief This dialog controls all server entries and can be used by any plugin.
+  */
 class ServerManager : public QDialog {
     Q_OBJECT
 public:
     ServerManager(QWidget *parent = 0);
     ~ServerManager();
+    /*!
+      \brief Gets a new ESLconnection object from the selected server entry
+      \return The ESLconnection object
+      */
     ESLconnection * getESLconnection();
 
 protected:
+    /*!
+      \brief Used for changing translation on runtime
+      */
     void changeEvent(QEvent *e);
 
 private slots:
+    /*!
+      \brief Change the line edits according to what server entry is selected
+      \param current The item that was selected
+      \param previous The previous item selected
+      */
     void currentItemChanged ( QTreeWidgetItem * current, QTreeWidgetItem * previous );
+    /*!
+      \brief Used when user click on add a new server
+      */
     void addServer();
+    /*!
+      \brief Used when user click on edit a server
+      */
     void editServer();
+    /*!
+      \brief Used when user is saving server settings
+      */
     void saveServer();
+    /*!
+      \brief Used when user deletes a server
+      */
     void deleteServer();
 
 private:
-    Ui::ServerManager *m_ui;
+    Ui::ServerManager *m_ui; /*< Holds the ui for this dialog */
 
+    /*! The roles used for each item entry on the server list */
     enum {
         Host = Qt::UserRole,
         Port,
@@ -75,6 +102,9 @@ private:
         Name
     };
 
+    /*!
+      \brief Read all servers and populate the interface
+    */
     void readSettings();
 };
 

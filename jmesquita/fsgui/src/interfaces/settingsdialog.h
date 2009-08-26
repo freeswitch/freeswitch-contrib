@@ -46,23 +46,46 @@ namespace Ui {
 class QListWidgetItem;
 class QSettings;
 
+/*!
+  \brief This is a centralized preferences dialog. AppManager will call a method on
+  each plugin interface that can then populate its own configuration pages and bind to
+  signals of this dialog to control its settings.
+  */
 class SettingsDialog : public QDialog {
     Q_OBJECT
 public:
     SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
+    /*!
+      \brief Adds config a item/page pair
+      \param Item to be added to config list
+      \param The corresponding page
+      */
     void addConfigItem(QListWidgetItem *item, QWidget *page);
+    /*!
+      \brief Removes a config item/page pair
+      \param Item to be removed from the list
+      \param The page to be removed
+      */
     void removeConfigItem(QListWidgetItem *item, QWidget *page);
 
 protected:
+    /*!
+      \brief Used for changing translation on runtime
+      */
     void changeEvent(QEvent *e);
 
 private slots:
+    /*!
+      \brief Change the configuration page
+      \param The current page selected
+      \param The previous page
+      */
     void changePage(QListWidgetItem*, QListWidgetItem*);
 
 private:
-    Ui::SettingsDialog *m_ui;
-    QSettings *settings;
+    Ui::SettingsDialog *m_ui; /*< Holds the UI specified on the ui file. */
+    QSettings *settings; /*< Holds the settings. */
 };
 
 #endif // SETTINGSDIALOG_H

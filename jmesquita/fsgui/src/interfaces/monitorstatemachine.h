@@ -54,6 +54,7 @@ public:
     QHash<QString, QString> getHeaders() { return _headers; }
 };
 
+
 class State
 {
 private:

@@ -43,67 +43,166 @@
 #include <esl.h>
 #include "eslevent.h"
 
+/*!
+  \brief Objects of this type are queued on ESLconnection for further processing.
+  */
 class CommandTransaction : public QObject
 {
     Q_OBJECT
 public:
+    /*!
+      \brief CommandTransaction constructor
+      \param command The command to be executed
+      */
     CommandTransaction(QString command);
+    /*!
+      \brief Retrieves the command to be executed.
+      \return The command string currently set
+      */
     QString getCommand() { return _command; }
+    /*!
+      \brief Set/override the current command
+      \param command The new command string
+      */
     void setCommand(QString command) { _command = command; }
+    /*!
+      \brief After ESLconnection has properly executed the command,
+        it will set the response event using this method. The object will later emit a signal with the event set.
+       \param e Response event that is being set
+      */
     void setResponse(ESLevent e);
 signals:
+    /*!
+      \brief Signal is emitted when setResponse is called by ESLconnection.
+      \param The event that has been set on setResponse
+      */
     void gotResponse(ESLevent);
 private:
+    /*! Current command set. */
     QString _command;
 };
 
+
+/*!
+  \brief This class is the interface to the esl library. It will process comands and events
+  coming from the lib.
+  */
 class ESLconnection : public QThread
 {
     Q_OBJECT
- private:
-    esl_handle_t *handle;
-    QString *_host;
-    QString *_port;
-    QString *_pass;
-    QString *_name;
-    QQueue<CommandTransaction *> _commandQueue;
-    QHash<QString, CommandTransaction *> _commandHash;
-    QMutex _commandQueueMutex;
 
-    void processReceivedEvent(ESLevent *);
-    ESLevent *sendRecv(const char *cmd);
-    //int sendEvent(ESLevent *send_me);
-    ESLevent *recvEvent();
-    ESLevent *recvEventTimed(int ms);
-    /*void api(QString cmd);*/
-    ESLevent* bgapi(QString cmd);
-    void send(QString cmd);
-    ESLevent *filter(const char *header, const char *value);
-    int events(const char *etype, const char *value);
  public:
+    /*!
+      \brief Constructor
+      \param host The host to connect to
+      \param port The port to connect to
+      \param password The password to be used
+      \param name The name of this connection. This is used so that plugins can lookup esl connections.
+      */
     ESLconnection(const char *host, const char *port, const char *password, const char *name);
     virtual ~ESLconnection();
+    /*!
+      \brief Adds a new command object to the queue of commands to be processed.
+      \param The command to be queued.
+      */
     void addCommand(CommandTransaction *);
+    /*!
+      \brief Method that returns if handle is connected to server
+      \return 1 if connected and 0 if not
+      */
     int isConnected();
+    /*!
+      \brief Connects the handle to server
+      */
     void connect();
-    ESLevent *getInfo();
-    int execute(const char *app, const char *arg = NULL, const char *uuid = NULL);
-    int executeAsync(const char *app, const char *arg = NULL, const char *uuid = NULL);
-    int setAsyncExecute(const char *val);
-    int setEventLock(const char *val);
+    /*!
+      \brief Disconnects the handle from the server
+      */
     int disconnect(void);
+    /*!
+      \brief Retrieves the name of this connection
+      \return Connection name
+      */
     QString getName();
+    /*!
+      \brief Sets the console log level on server side
+      \param loglevel to be set
+      */
     bool setConsoleLogLevel(int);
 signals:
+    /*!
+      \brief Emitted when this object gets connected to server
+      */
     void connected(void);
+    /*!
+      \brief Emitted when this object gets disconnected from server
+      */
     void disconnected(void);
+    /*!
+      \brief Emitted when a connection failure happens
+      \param The error description as informed by libesl
+      */
     void connectionFailed(QString);
+    /*!
+      \brief Emitted when a console log message is received
+      \param Event corresponding to the log message
+      */
     void receivedLogMessage(ESLevent);
+    /*!
+      \brief Emitted when a channel message is received
+      \param Event corresponding the channel event
+      */
     void receivedChannelEvent(ESLevent);
 protected:
+    /*!
+      \brief This is the thread loop. It will proceed with polling libesl for new incoming events and
+      processing commands sent by FsGui and its plugins.
+      */
     void run();
+private:
+    esl_handle_t *handle; /*< The handle that is used by libesl */
+    QString *_host; /*< The hostname used */
+    QString *_port; /*< The port used */
+    QString *_pass; /*< The password used */
+    QString *_name; /*< The connection name */
+    QQueue<CommandTransaction *> _commandQueue; /*< The command queue, processed on ESLconnection::run() */
+    QHash<QString, CommandTransaction *> _commandHash; /*< Data structure that will hash command resposes so it know where to dispatch events */
+    QMutex _commandQueueMutex; /*< A mutex that will make sure no read/write problems occur on _commandHash */
+
+    /*!
+      \brief Process every received event so it knows where to dispatch
+      \param The newly received event
+      */
+    void processReceivedEvent(ESLevent *);
+    /*!
+      \brief Sends a command and it blocks until respose event is reseived
+      \param The command to be sent
+      \return The response event
+      */
+    ESLevent *sendRecv(const char *cmd);
+    /*!
+      \brief Polls the handle for new events on a timely fashion
+      \param ms Maximum number of miliseconds to block
+      \return And event received or NULL
+      */
+    ESLevent *recvEventTimed(int ms);
+    /*!
+      \brief Sends a command and waits for server to respond with the command UUID
+      \param cmd The command to send
+      \return The event containing the command UUID header
+      */
+    ESLevent* bgapi(QString cmd);
+    /*!
+      \brief Sends a command without blocking
+      \param cmd The command to send
+      */
+    void send(QString cmd);
 };
 
+/*!
+  \brief This global function will set what is the log verbosity of the esl lib. Used for debugging only.
+  \param level The log level to be set.
+  */
 void eslSetLogLevel(int level);
 
 #endif // ESLCONNECTION_H

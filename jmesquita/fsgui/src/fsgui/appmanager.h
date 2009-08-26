@@ -61,13 +61,13 @@ class MonitorPlugin
 {
 public:
     MonitorPlugin(QPluginLoader *loader) : _loader(loader), _configItems(new QMap<QListWidgetItem*, QWidget*>){}
-    QPluginLoader *_loader;
-    QMap<QListWidgetItem*, QWidget*> *_configItems;
+    QPluginLoader *_loader; /*< The QPluginLoader object of this plugin */
+    QMap<QListWidgetItem*, QWidget*> *_configItems; /*< Holds pairs of items for the settings dialog */
 };
 
 /*!
-  \brief This class will be the center of each installation
-  and will load some plugins.
+  \brief This class is responsible for loading plugins and connecting the dots of the application.
+  main() instantiates this and this class initiates the rest of the app.
   */
 class AppManager : public QObject
 {

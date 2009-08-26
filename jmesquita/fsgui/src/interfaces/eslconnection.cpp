@@ -153,75 +153,6 @@ ESLevent * ESLconnection::bgapi(QString cmd)
     return NULL;
 }
 
-ESLevent *ESLconnection::getInfo()
-{
-    if (handle->connected && handle->info_event) {
-        esl_event_t *event;
-        esl_event_dup(&event, handle->info_event);
-        return new ESLevent(event);
-    }
-
-    return NULL;
-}
-
-int ESLconnection::setAsyncExecute(const char *val)
-{
-    if (val) {
-        handle->async_execute = esl_true(val);
-    }
-    return handle->async_execute;
-}
-
-int ESLconnection::setEventLock(const char *val)
-{
-    if (val) {
-        handle->event_lock = esl_true(val);
-    }
-    return handle->event_lock;
-}
-
-int ESLconnection::execute(const char *app, const char *arg, const char *uuid)
-{
-    return esl_execute(handle, app, arg, uuid);
-}
-
-
-int ESLconnection::executeAsync(const char *app, const char *arg, const char *uuid)
-{
-    int async = handle->async_execute;
-    int r;
-
-    handle->async_execute = 1;
-    r = esl_execute(handle, app, arg, uuid);
-    handle->async_execute = async;
-
-    return r;
-}
-
-/*
-int ESLconnection::sendEvent(ESLevent *send_me)
-{
-    return esl_sendevent(handle, send_me->event);
-}
-*/
-
-ESLevent *ESLconnection::recvEvent()
-{
-
-    if (esl_recv_event(handle, 1, NULL) == ESL_SUCCESS) {
-        esl_event_t *e = handle->last_ievent ? handle->last_ievent : handle->last_event;
-        if (e) {
-            esl_event_t *event;
-            esl_event_dup(&event, e);
-            return new ESLevent(event);
-        }
-    }
-
-    //last_event_obj = new ESLevent("server_disconnected");
-
-    return NULL;
-}
-
 ESLevent *ESLconnection::recvEventTimed(int ms)
 {
     if (esl_recv_event_timed(handle, ms, 1, NULL) == ESL_SUCCESS) {
@@ -234,31 +165,6 @@ ESLevent *ESLconnection::recvEventTimed(int ms)
     }
 
     return NULL;
-}
-
-ESLevent *ESLconnection::filter(const char *header, const char *value)
-{
-    esl_status_t status = esl_filter(handle, header, value);
-
-    if (status == ESL_SUCCESS && handle->last_sr_event) {
-        esl_event_t *event;
-        esl_event_dup(&event, handle->last_sr_event);
-        return new ESLevent(event);
-    }
-
-    return NULL;
-
-}
-
-int ESLconnection::events(const char *etype, const char *value)
-{
-    esl_event_type_t type_id = ESL_EVENT_TYPE_PLAIN;
-
-    if (!strcmp(etype, "xml")) {
-        type_id = ESL_EVENT_TYPE_XML;
-    }
-
-    return esl_events(handle, type_id, value);
 }
 
 void ESLconnection::addCommand(CommandTransaction *commandT)
@@ -278,7 +184,7 @@ void ESLconnection::run(void)
 
     if (esl_connect(handle, _host->toAscii(), _port->toInt(), _pass->toAscii()) == ESL_SUCCESS)
     {
-        events("plain", "all");
+        send("events plain all");
         emit connected();
     }
 
