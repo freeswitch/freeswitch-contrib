@@ -60,6 +60,9 @@ class acl_conf extends fs_configuration {
      * @param array $acl
      */
     private function write_acl($acl) {
+        $this -> xmlw -> startElement('configuration');
+        $this -> xmlw -> writeAttribute('name', 'acl.conf');
+        $this -> xmlw -> writeAttribute('description', 'Access Control Lists');
         $this -> xmlw -> startElement('network-lists');
         $node_count = count($acl);
         for ($i=0; $i<$node_count; $i++) {
@@ -78,6 +81,7 @@ class acl_conf extends fs_configuration {
             	$this -> xmlw -> endElement();
             }
         }
+        $this -> xmlw -> endElement();
         $this -> xmlw -> endElement();
     }
 }

@@ -21,7 +21,7 @@ define('DEFAULT_DSN_LOGIN', 'freeswitch');
 /**
  * Defines the default dsn password for the PDOclass
  */
-define('DEFAULT_DSN_PASSWORD', 'fr33sw1tch');
+define('DEFAULT_DSN_PASSWORD', 'Fr33Sw1tch');
 /**
  * Generic return success
  */
