@@ -48,15 +48,21 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
             } else {
                  toBeInserted = batchSize - 1;
             }
+            QModelIndex topLeft = QModelIndex();
+            if (!_listDisplayModel.isEmpty())
+            {
+                topLeft =  index(_listDisplayModel.size()-1,0,QModelIndex());
+            }
+            emit beforeInserting();
             beginInsertRows( QModelIndex(), _listDisplayModel.size(), _listDisplayModel.size() + toBeInserted );
-            emit layoutAboutToBeChanged();
             while( !_listInsertModel.isEmpty() && inserted_items < batchSize)
             {
                 _listDisplayModel.append(_listInsertModel.takeFirst());
                 inserted_items++;
             }
             endInsertRows();
-            emit layoutChanged();
+            QModelIndex bottomRight = index(_listDisplayModel.size()-1,0,QModelIndex());
+            emit dataChanged( topLeft, bottomRight );
         }
     }
 }

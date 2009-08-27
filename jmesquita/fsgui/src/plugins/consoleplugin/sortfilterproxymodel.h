@@ -62,6 +62,8 @@ public:
         LogLevelRole = Qt::UserRole,
         UUIDRole
     };
+signals:
+    void beforeInserting();
 protected:
     void timerEvent(QTimerEvent *);
 private:

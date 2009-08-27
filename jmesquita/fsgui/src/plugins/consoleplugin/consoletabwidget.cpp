@@ -20,9 +20,11 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     model->setFilterKeyColumn(0);
     m_ui->consoleListView->setModel(model);
 
-    QObject::connect(sourceModel, SIGNAL(layoutAboutToBeChanged()),
+    QObject::connect(sourceModel, SIGNAL(beforeInserting()),
                      this, SLOT(setConditionalScroll()));
-    QObject::connect(sourceModel, SIGNAL(layoutChanged()),
+    /*QObject::connect(sourceModel, SIGNAL(layoutChanged()),
+                     this, SLOT(conditionalScroll()));*/
+    QObject::connect(sourceModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
                      this, SLOT(conditionalScroll()));
 
     QObject::connect(m_ui->btnSend, SIGNAL(clicked()),
