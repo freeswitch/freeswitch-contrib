@@ -148,7 +148,7 @@ class IVR {
 				$ret[strtolower($key)] = strtolower(trim( urldecode($val) ));
 			}
 			else
-				mail('tristan@telemaque.fr',"Wrong line",$line);
+				$this->log("Wrong line: $line");
 		}
 		return $ret;
 	}
