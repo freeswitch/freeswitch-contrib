@@ -1,17 +1,22 @@
 <?php
+require_once('ESL.php');
+
 declare(ticks=1);
 pcntl_signal(SIGPIPE,  "sig_fs");
+pcntl_signal(SIGHUP,  "sig_fs");
+pcntl_signal(SIGTERM,  "sig_fs");
 
 function sig_fs($signo) {
-	file_put_contents('/devel/log/ivr.log',date("Y-m-d H:i:s").": BROKEN PIPE, call has been hung up\n",FILE_APPEND);
+	file_put_contents('/telephony/freeswitch/log/ivr.log',date("Y-m-d H:i:s")." call has been hung up by $signo signal\n",FILE_APPEND);
 	exit();
 }
 
 class IVR {
 	var $in = NULL;
 	var $out = NULL;
+	var $esl = NULL;
 	var $con_data = array();
-	var $logfile = '/devel/log/ivr.log';
+	var $logfile = '/telephony/freeswitch/log/ivr.log';
 
 	function IVR() {
 		ob_implicit_flush(true);
@@ -28,10 +33,11 @@ class IVR {
 		}
 		$this->con_data = $this->parse_response($buf);
 		$this->log("New call uuid:{$this->con_data['channel-unique-id']}");
-/*
-		fwrite($this->out,"myevents\n\n");
-		$buf = $this->wait_answer();
-*/
+
+		/*
+			Set pid to kill on hangup :)
+		*/
+		$this->set_var('pid2kill',getmypid());
 	}
 
 	function log($str) {
@@ -137,8 +143,12 @@ class IVR {
 			return $ret;
 		$tmp = explode("\n",$tmp);
 		foreach ($tmp as $line) {
-			list($key,$val) = explode(':',$line);
-			$ret[strtolower($key)] = strtolower(trim( urldecode($val) ));
+			if ( eregi(':',$line) ) {
+				list($key,$val) = explode(':',$line);
+				$ret[strtolower($key)] = strtolower(trim( urldecode($val) ));
+			}
+			else
+				mail('tristan@telemaque.fr',"Wrong line",$line);
 		}
 		return $ret;
 	}
@@ -165,6 +175,12 @@ class IVR {
 				exit();
 			}
 		}	
+	}
+
+	function set_var($var,$value) {
+		$ret = $this->parse_response($this->execute_wait('Set',"$var=$value"));
+		if ( ! $this->check_retcode($ret) )
+			$this->log("Huhooo Set_Var wasn't ack'd");
 	}
 
 	function hangup() {

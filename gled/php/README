@@ -1,0 +1,33 @@
+Simple translation for AGI based scripts.
+
+* TODO:
+	+ transform class.ivr.php to phpagi names so that scripts are not aware they're no more under *.
+	+ add bindings to more functions ( record session, get variable, dial, ...).
+	+ config file for event_listener ESL connection and other stuff...
+	+ refactor check_hangup to already read data, and not reading and discarding stuff like that, it's awfull...
+
+* Files:
+	+ class.ivr.php:
+		- simple bindings for IVR functions.
+
+	+ processhandler.php:
+		- included by event_listener.php, ease the creation of always running daemons launched by cron, to be sure there's only
+		one instance running at the same time.
+
+	+ event_listener.php:
+		- listen via event_socket ( inbound mode ) to CHANNEL_HANGUP_COMPLETE events, checking if variable_pid2kill is present, and 
+		if so, 	will send a SIGHUP to that pid ( AGI behaviour ).
+
+* Usage example:
+	+ launch event_listener.php via cron on the box running the scripts ( be sure that you edited the socket connection part ).
+	+ launch fs_ivrd on that same box ( ./fs_ivrd -h host -p port ).
+	+ write an extension to be handled by your scripts ( be carefull of the full path to the script ):
+		<condition field="destination_number" expression="^sockettest$">
+                        <action application="log" data="WARNING ${caller_id_number}:${destination_number} EVENTSOCKET_TEST"/>
+                        <action application="set" data="ivr_path=/usr/local/src/freeswitch/contrib/gled/php/test.php"/>
+                        <action application="socket" data="127.0.0.1:9099 full"/>
+                        <action application="hangup"/>
+                </condition>
+	+ be sure the test.php is executable ( chmod +755 test.php ).
+	+ call that extention ;)
+	
