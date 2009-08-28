@@ -1,0 +1,7 @@
+<include>
+  <extension name="welcome_ivr">
+     <condition field="destination_number" expression="^2910$">
+<action application="lua" data="welcome.lua"/> 
+      </condition>
+    </extension>
+</include>
