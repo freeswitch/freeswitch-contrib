@@ -52,3 +52,4 @@ LIBS += -L../../interfaces \
     -L../../../../../../libs/esl/ \
     -lesl
 RESOURCES += ../../resources/resources.qrc
+

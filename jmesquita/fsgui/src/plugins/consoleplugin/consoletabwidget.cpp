@@ -20,10 +20,13 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     model->setFilterKeyColumn(0);
     m_ui->consoleListView->setModel(model);
 
+    m_ui->consoleListView->setShowGrid(false);
+    m_ui->consoleListView->verticalHeader()->hide();
+    m_ui->consoleListView->horizontalHeader()->hide();
+
     QObject::connect(sourceModel, SIGNAL(beforeInserting()),
                      this, SLOT(setConditionalScroll()));
-    /*QObject::connect(sourceModel, SIGNAL(layoutChanged()),
-                     this, SLOT(conditionalScroll()));*/
+
     QObject::connect(sourceModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
                      this, SLOT(conditionalScroll()));
 

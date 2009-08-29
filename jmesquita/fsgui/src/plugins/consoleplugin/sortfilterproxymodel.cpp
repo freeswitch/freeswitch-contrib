@@ -26,6 +26,7 @@ QVariant ConsoleModel::data ( const QModelIndex & index, int role ) const
 void ConsoleModel::clear()
 {
     _listDisplayModel.clear();
+    reset();
 }
 
 void ConsoleModel::appendRow ( QStandardItem* item )
