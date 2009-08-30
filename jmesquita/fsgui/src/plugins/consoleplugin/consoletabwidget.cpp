@@ -75,8 +75,6 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
 
 ConsoleTabWidget::~ConsoleTabWidget()
 {
-    esl->disconnect();
-    esl->wait();
     writeSettings();
     delete m_ui;
 }

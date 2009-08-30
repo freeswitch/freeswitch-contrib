@@ -29,13 +29,58 @@ ServerManager::~ServerManager()
     delete m_ui;
 }
 
-ESLconnection * ServerManager::getESLconnection()
+ESLconnection *ServerManager::getESLconnection(QString pluginName, QString name)
 {
     QTreeWidgetItem * item = m_ui->listServers->selectedItems().first();
-    return new ESLconnection(item->data(0, ServerManager::Host).toByteArray(),
-                             item->data(0, ServerManager::Port).toByteArray(),
-                             item->data(0, ServerManager::Password).toByteArray(),
-                             item->data(0, ServerManager::Name).toByteArray());
+    if (name.isNull())
+    {
+        name = item->data(0, ServerManager::Name).toByteArray();
+    }
+
+    if(! _ESLpool.contains(name) )
+    {
+        _ESLpool.insert(name, new ESLconnection(item->data(0, ServerManager::Host).toByteArray(),
+                                                item->data(0, ServerManager::Port).toByteArray(),
+                                                item->data(0, ServerManager::Password).toByteArray(),
+                                                item->data(0, ServerManager::Name).toByteArray()));
+        if ( _ESLpoolCount.contains(name) )
+            qDebug() << "Something really bad happened here.";
+
+        QList<QString> pluginRefs;
+        pluginRefs.append(pluginName);
+        _ESLpoolCount.insert(name, pluginRefs);
+    }
+    else
+    {
+        if ( !_ESLpoolCount.contains(name) )
+            qDebug() << "Something really bad happened here.";
+
+        QList<QString> list = _ESLpoolCount.value(name);
+        list.append(pluginName);
+    }
+    return _ESLpool.value(name);
+}
+
+void ServerManager::endESLconnection(QString pluginName, QString name)
+{
+    if ( _ESLpool.contains(name) )
+    {
+        QList<QString> pluginList = _ESLpoolCount.value(name);
+        for ( int i=0; i < pluginList.size();  i++)
+        {
+            if ( pluginList[i] == pluginName )
+            {
+                pluginList.removeAt(i);
+                break;
+            }
+        }
+
+        if ( _ESLpoolCount.value(name).count() == 0 )
+        {
+            delete _ESLpool.take(name);
+            _ESLpoolCount.remove(name);
+        }
+    }
 }
 
 void ServerManager::changeEvent(QEvent *e)

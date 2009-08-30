@@ -134,16 +134,15 @@ void ConsolePlugin::newConnection()
 {
     if (serverManager->exec())
     {
-        ESLconnection *esl = serverManager->getESLconnection();
+        ESLconnection *esl = serverManager->getESLconnection(PLUGIN_NAME);
 
-        if (hashESL.contains(esl->getName()))
+        if (esl)
         {
             for (int i = 0; i < consoleWindow->tabConsole->count(); i++)
             {
                 if (consoleWindow->tabConsole->tabText(i) == esl->getName())
                 {
                     consoleWindow->tabConsole->setCurrentIndex(i);
-                    delete esl;
                     return;
                 }
             }
@@ -152,7 +151,6 @@ void ConsolePlugin::newConnection()
         ConsoleTabWidget *newTab = new ConsoleTabWidget(this, esl);
         consoleWindow->tabConsole->addTab(newTab, esl->getName());
         consoleWindow->tabConsole->setCurrentWidget(newTab);
-        hashESL.insert(esl->getName(), esl);
         QObject::connect(esl, SIGNAL(connected()),
                          this, SLOT(connectionStateChanged()));
         QObject::connect(esl, SIGNAL(disconnected()),
@@ -423,14 +421,7 @@ void ConsolePlugin::changeDebugForegroundColor()
 void ConsolePlugin::tabClose(int index)
 {
     QWidget *tab = consoleWindow->tabConsole->widget(index);
-    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(index), NULL);
-    if (esl)
-    {
-        hashESL.remove(consoleWindow->tabConsole->tabText(index));
-        esl->disconnect();
-        esl->wait();
-        delete esl;
-    }
+    serverManager->endESLconnection(PLUGIN_NAME, consoleWindow->tabConsole->tabText(index));
     consoleWindow->tabConsole->removeTab(index);
     delete tab;
     if (consoleWindow->tabConsole->count() == 0)
@@ -442,7 +433,7 @@ void ConsolePlugin::tabClose(int index)
 
 void ConsolePlugin::tabChanged(int index)
 {
-    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(index), NULL);
+    ESLconnection *esl = serverManager->getESLconnection(PLUGIN_NAME, consoleWindow->tabConsole->tabText(index));
     if (esl)
     {
         consoleWindow->action_Connect->setDisabled(esl->isConnected());
@@ -452,7 +443,7 @@ void ConsolePlugin::tabChanged(int index)
 
 void ConsolePlugin::connect()
 {
-    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
+    ESLconnection *esl = serverManager->getESLconnection(PLUGIN_NAME, consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()));
     if (esl)
     {
         esl->connect();
@@ -461,7 +452,7 @@ void ConsolePlugin::connect()
 
 void ConsolePlugin::disconnect()
 {
-    ESLconnection *esl = hashESL.value(consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()), NULL);
+    ESLconnection *esl = serverManager->getESLconnection(PLUGIN_NAME, consoleWindow->tabConsole->tabText(consoleWindow->tabConsole->currentIndex()));
     if (esl)
     {
         esl->disconnect();

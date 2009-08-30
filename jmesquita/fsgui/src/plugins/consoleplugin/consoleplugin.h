@@ -44,6 +44,8 @@
 #include "interfaces.h"
 #include "ui_centralWidget.h"
 
+#define PLUGIN_NAME "Console"
+
 namespace Ui
 {
     class configPage;
@@ -103,7 +105,6 @@ private:
     Ui::consoleWindow *consoleWindow;
     Ui::configPage *consoleConfigPage;
     ServerManager *serverManager;
-    QHash<QString, ESLconnection *> hashESL;
     SettingsDialog *settingsDialog;
 
     void setPalette(QLineEdit *control, QString key);

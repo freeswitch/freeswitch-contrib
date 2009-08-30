@@ -39,6 +39,9 @@
 #define SERVERMANAGER_H
 
 #include <QtGui/QDialog>
+#include <QSharedPointer>
+#include <QHash>
+#include <QList>
 
 namespace Ui {
     class ServerManager;
@@ -56,10 +59,19 @@ public:
     ServerManager(QWidget *parent = 0);
     ~ServerManager();
     /*!
-      \brief Gets a new ESLconnection object from the selected server entry
+      \brief Gets a new ESLconnection from pool
+      \param pluginName Name of the plugin that requests the connection
+      \param name Name of the connection to return. If NULL, new one from dialog is returned
       \return The ESLconnection object
       */
-    ESLconnection * getESLconnection();
+    ESLconnection *getESLconnection(QString pluginName, QString name = NULL);
+
+    /*!
+      \brief Tells ServerManager that we have finnished using a ESLconnection
+      \param pluginName Name of the plugin that ends the connection
+      \param name Name of the connection that the plugin is no longer using
+      */
+    void endESLconnection(QString pluginName, QString name);
 
 protected:
     /*!
@@ -101,6 +113,11 @@ private:
         Password,
         Name
     };
+
+    /*! Holds  all already initiated ESLconnections */
+    QHash <QString, ESLconnection *> _ESLpool;
+    /*! Holds ref cont for ESLconnections */
+    QHash <QString, QList<QString> > _ESLpoolCount;
 
     /*!
       \brief Read all servers and populate the interface
