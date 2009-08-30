@@ -10,8 +10,10 @@ ConsoleModel::ConsoleModel (QObject *parent)
     insertionTimer->start(0, this);
 }
 
-int ConsoleModel::rowCount ( const QModelIndex & /*parent*/ ) const
+int ConsoleModel::rowCount ( const QModelIndex & parent ) const
 {
+    if (parent.isValid())
+        return 0;
     return _listDisplayModel.count();
 }
 
@@ -49,21 +51,15 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
             } else {
                  toBeInserted = batchSize - 1;
             }
-            QModelIndex topLeft = QModelIndex();
-            if (!_listDisplayModel.isEmpty())
-            {
-                topLeft =  index(_listDisplayModel.size()-1,0,QModelIndex());
-            }
             emit beforeInserting();
             beginInsertRows( QModelIndex(), _listDisplayModel.size(), _listDisplayModel.size() + toBeInserted );
-            while( !_listInsertModel.isEmpty() && inserted_items < batchSize)
+            while( !_listInsertModel.isEmpty() && inserted_items <= batchSize)
             {
                 _listDisplayModel.append(_listInsertModel.takeFirst());
                 inserted_items++;
             }
             endInsertRows();
-            QModelIndex bottomRight = index(_listDisplayModel.size()-1,0,QModelIndex());
-            emit dataChanged( topLeft, bottomRight );
+            emit afterInserting();
         }
     }
 }

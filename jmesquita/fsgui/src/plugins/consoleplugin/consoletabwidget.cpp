@@ -23,7 +23,7 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     QObject::connect(sourceModel, SIGNAL(beforeInserting()),
                      this, SLOT(setConditionalScroll()));
 
-    QObject::connect(sourceModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+    QObject::connect(sourceModel, SIGNAL(afterInserting()),
                      this, SLOT(conditionalScroll()));
 
     QObject::connect(m_ui->btnSend, SIGNAL(clicked()),

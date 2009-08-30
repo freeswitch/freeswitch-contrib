@@ -64,6 +64,7 @@ public:
     };
 signals:
     void beforeInserting();
+    void afterInserting();
 protected:
     void timerEvent(QTimerEvent *);
 private:
