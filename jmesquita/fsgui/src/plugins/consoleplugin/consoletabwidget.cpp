@@ -67,6 +67,7 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
 
 
     esl->connect();
+    eslName = esl->getName();
 
     msm = new MonitorStateMachine();
     msm->addESLconnection(esl);
@@ -319,7 +320,7 @@ void ConsoleTabWidget::writeSettings()
 {
     QSettings settings;
     settings.beginGroup("Console");
-    settings.beginGroup(esl->getName());
+    settings.beginGroup(eslName);
     /* Save the current loglevel */
     settings.setValue("Loglevel", currentLogLevel);
     settings.endGroup();

@@ -97,6 +97,7 @@ private:
     QModelIndexList foundItems;
     SortFilterProxyModel *model;
     ESLconnection *esl;
+    QString eslName;
     MonitorStateMachine *msm;
     RealtimeStatisticsDialog *_rtStatsDlg;
     pastebinDialog *_pastebinDlg;

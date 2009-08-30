@@ -134,7 +134,6 @@ void AppManager::readSettings()
     pluginsDir->setCurrent(dir);
 #if defined(Q_OS_MAC)
     dir = qApp->applicationDirPath();
-    qDebug() << dir;
     pluginsDir->setCurrent(dir);
     pluginsDir->cd("../PlugIns/fsgui/");
 #endif

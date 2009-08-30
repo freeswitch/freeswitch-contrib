@@ -433,6 +433,8 @@ void ConsolePlugin::tabClose(int index)
 
 void ConsolePlugin::tabChanged(int index)
 {
+    if (index == -1)
+        return;
     ESLconnection *esl = serverManager->getESLconnection(PLUGIN_NAME, consoleWindow->tabConsole->tabText(index));
     if (esl)
     {

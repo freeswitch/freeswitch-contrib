@@ -68,7 +68,7 @@ public:
     void setServerManager(ServerManager *manager);
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent( QCloseEvent *event );
     void showEvent ( QShowEvent * event );
 
 private slots:
