@@ -71,10 +71,10 @@ void ServerManager::endESLconnection(QString pluginName, QString name)
             if ( pluginList[i] == pluginName )
             {
                 pluginList.removeAt(i);
+                _ESLpoolCount.insert(name, pluginList);
                 break;
             }
         }
-
         if ( _ESLpoolCount.value(name).count() == 0 )
         {
             delete _ESLpool.take(name);
