@@ -77,7 +77,6 @@ void ServerManager::endESLconnection(QString pluginName, QString name)
         }
         if ( _ESLpoolCount.value(name).count() == 0 )
         {
-            qDebug() << "We are deleting";
             delete _ESLpool.take(name);
             _ESLpoolCount.remove(name);
         }
