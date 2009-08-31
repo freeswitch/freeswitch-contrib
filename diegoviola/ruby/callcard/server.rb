@@ -3,22 +3,16 @@
 require 'rubygems'
 require 'fsr'
 require 'fsr/listener/outbound'
-require 'activerecord'
+require 'sequel'
 
 FSR.load_all_commands
 
-ActiveRecord::Base.establish_connection(
-  :adapter  => "mysql",
-  :host     => "localhost",
-  :username => "root",
-  :password => "",
-  :database => "callcard_development"
-)
+DB = Sequel.connect('mysql://root@localhost/callcard_development')
 
-class Card < ActiveRecord::Base
+class Card < Sequel::Model
 end
 
-class Destination < ActiveRecord::Base
+class Destination < Sequel::Model
 end
 
 class CallCard < FSR::Listener::Outbound
@@ -31,12 +25,12 @@ class CallCard < FSR::Listener::Outbound
     answer do
       fs_sleep(2000) do
         play_and_get_digits(pin_wav, bad_pin_wav, 2, 10, 3, 7000, ["#"], "pin_number", "\\d") do |pin_number|
-          @card = Card.find_by_card_number(pin_number)
+	  @card = Card.find(:card_number => pin_number)
           if @card
             FSR::Log.info "*** Success, grabbed #{pin_number} from #{exten}"
             play_and_get_digits(dial_tone, bad_pin_wav, 2, 11, 3, 7000, ["#"], "destination_number", "\\d") do |destination_number|
               prefix = destination_number[0,5]
-              @destination = Destination.find_by_prefix(prefix)
+	      @destination = Destination.find(:prefix => prefix)
               FSR::Log.info "*** Success, grabbed #{destination_number} from #{exten}"
               FSR::Log.info "*** Setting up the billing variables."
               uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination.rate) if @destination.respond_to?(:rate)
