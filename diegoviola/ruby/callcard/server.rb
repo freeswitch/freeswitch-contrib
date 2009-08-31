@@ -5,6 +5,8 @@ require 'fsr'
 require 'fsr/listener/outbound'
 require 'sequel'
 
+# TODO: we don't really need models, just use the dataset and add exception handling for @destination.rate.
+
 FSR.load_all_commands
 
 DB = Sequel.connect('mysql://root@localhost/callcard')
