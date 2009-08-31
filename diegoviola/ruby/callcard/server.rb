@@ -24,10 +24,10 @@ class CallCard < FSR::Listener::Outbound
     FSR::Log.info "*** Answering incoming call from #{exten}"
     answer do
       fs_sleep(2000) do
-        play_and_get_digits(pin_wav, bad_pin_wav, 2, 10, 3, 7000, ["#"], "pin_number", "\\d") do |pin_number|
-	  @card = Card.find(:card_number => pin_number)
+        play_and_get_digits(pin_wav, bad_pin_wav, 2, 10, 3, 7000, ["#"], "pin", "\\d") do |pin|
+	  @card = Card.find(:card_number => pin)
           if @card
-            FSR::Log.info "*** Success, grabbed #{pin_number} from #{exten}"
+            FSR::Log.info "*** Success, grabbed #{pin} from #{exten}"
             play_and_get_digits(dial_tone, bad_pin_wav, 2, 11, 3, 7000, ["#"], "destination_number", "\\d") do |destination_number|
               prefix = destination_number[0,5]
 	      @destination = Destination.find(:prefix => prefix)
@@ -42,7 +42,7 @@ class CallCard < FSR::Listener::Outbound
               #bridge("sofia/internal/#{destination_number}@0.0.0.0")
             end
           else
-            FSR::Log.info "*** Failure, grabbed #{pin_number} from #{exten}"
+            FSR::Log.info "*** Failure, grabbed #{pin} from #{exten}"
             playback(bad_pin_wav)
             FSR::Log.info "*** Hanging up the call."
             hangup
