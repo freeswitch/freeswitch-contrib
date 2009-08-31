@@ -27,10 +27,9 @@ win32 {
 # Let user change the plugin location
 # upon compilation
 #####################################
-isEmpty ( PLUGINDIR ) {
-    PLUGINDIR = $${PWD}/../../bin/plugins
+!isEmpty ( PLUGINDIR ) {
+    DEFINES += FSGUI_PLUGINDIR='\\"$${PLUGINDIR}\\"'
 }
-DEFINES += FSGUI_PLUGINDIR='\\"$${PLUGINDIR}\\"'
 ######################################
 
 macx:ICON=../resources/mac_icon.icns
