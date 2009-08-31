@@ -5,17 +5,11 @@ require 'fsr'
 require 'fsr/listener/outbound'
 require 'sequel'
 
-# TODO: we don't really need models, just use the dataset and add exception handling for @destination.rate.
+# TODO: add exception handlers for @destination[:rate] and other hashes (need debugging).
 
 FSR.load_all_commands
 
 DB = Sequel.connect('mysql://root@localhost/callcard')
-
-class Card < Sequel::Model
-end
-
-class Destination < Sequel::Model
-end
 
 class CallCard < FSR::Listener::Outbound
   def session_initiated
@@ -27,16 +21,16 @@ class CallCard < FSR::Listener::Outbound
     answer do
       fs_sleep(2000) do
         play_and_get_digits(pin_wav, bad_pin_wav, 2, 10, 3, 7000, ["#"], "pin", "\\d") do |pin|
-	  @card = Card.find(:card_number => pin)
+	  @card = DB[:cards][:card_number => pin]
           if @card
             FSR::Log.info "*** Success, grabbed #{pin} from #{exten}"
             play_and_get_digits(dial_tone, bad_pin_wav, 2, 11, 3, 7000, ["#"], "destination_number", "\\d") do |destination_number|
               prefix = destination_number[0,5]
-	      @destination = Destination.find(:prefix => prefix)
+	      @destination = DB[:destinations][:prefix => prefix]
               FSR::Log.info "*** Success, grabbed #{destination_number} from #{exten}"
               FSR::Log.info "*** Setting up the billing variables."
-              uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination.rate) if @destination.respond_to?(:rate)
-              uuid_setvar(@session.headers[:unique_id], 'nibble_account', @card.id)
+              uuid_setvar(@session.headers[:unique_id], 'nibble_rate', @destination[:rate])
+              uuid_setvar(@session.headers[:unique_id], 'nibble_account', @card[:id])
               FSR::Log.info "*** Bridging."
               FSR::Log.info "*** You have #{duration} minutes to talk."
               speak("You have #{duration} minutes to talk.")
@@ -55,7 +49,7 @@ class CallCard < FSR::Listener::Outbound
   end
   
   def duration
-    @duration = @card.balance.to_i / @destination.rate.to_i if @destination.respond_to?(:rate)
+    @duration = @card[:balance].to_i / @destination[:rate].to_i
     return @duration
   end
 end
