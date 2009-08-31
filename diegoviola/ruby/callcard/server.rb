@@ -7,7 +7,7 @@ require 'sequel'
 
 FSR.load_all_commands
 
-DB = Sequel.connect('mysql://root@localhost/callcard_development')
+DB = Sequel.connect('mysql://root@localhost/callcard')
 
 class Card < Sequel::Model
 end
