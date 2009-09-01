@@ -34,13 +34,13 @@
 /* 
  * Define Section
  */
-
 #define _GNU_SOURCE
+/* #undef _DEBUG_STDERR */
+#define _DEBUG_STDERR
 
 /* 
  * Inc Section
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <esl.h>
@@ -48,22 +48,19 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <pthread.h>
+
 /* 
  * Macros Section
  */
-
 #define PIPES_TO_VOID(v)	((void*)(v))
 #define VOID_TO_PIPES(p)	((esl2agi_pipes_t*)(p))
-
 #define ESL_A_TO_VOID(v)	((void*)(v))
 #define VOID_TO_ESL_A(p)	((esl_accept_t*)(p))
-
 #define MAX(x,y)		((x) > (y) ? (x) : (y))
 
 /* 
  * Struct Section
  */
-
 typedef struct {
 	esl_socket_t client_sock;
 	struct sockaddr_in *addr;
@@ -77,7 +74,6 @@ typedef struct {
 /* 
  * Func Section
  */
-
 static void esl2agi(esl_socket_t server_sock, esl_socket_t client_sock, struct sockaddr_in *addr);
 
 static void *esl2agi_thread(void *data);
@@ -96,9 +92,28 @@ static void *esl2agi_thread(void *data);
  * - wait for digit timeout
  */
 
-
 static int handle_setup_env(int fd,esl_handle_t *eslC);
 
 static int handle_hangup(esl_handle_t *eslC,int fd);
 
 static int handle_answer(esl_handle_t *eslC,int fd);
+
+static int handle_exec(esl_handle_t *eslC,int fd,char *buf);
+
+/*
+static int handle_getdata(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_getvar(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_record(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_say(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_setvar(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_set(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_streamfile(esl_handle_t *eslC,int fd,char *buf);
+
+static int handle_waitdigits(esl_handle_t *eslC,int fd,char *buf);
+*/

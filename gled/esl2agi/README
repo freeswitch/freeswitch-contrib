@@ -3,6 +3,6 @@ ESL2AGI:
 	- parse ESL received events, and traduce them to AGI events.
 
 Design:
-	- one thread calling esl_listen.
-	- one callback launching the translation thread.
-	- translation thread fork to execl the AGI script.
+	- main process calls esl_listen.
+	- one callback launching a translation thread.
+	- translation thread fork to execl the AGI script, and kill that script on exit with SIGHUP.
