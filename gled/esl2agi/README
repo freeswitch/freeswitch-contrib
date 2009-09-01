@@ -1,0 +1,8 @@
+ESL2AGI:
+	- listen for INCOMING socket connection.
+	- parse ESL received events, and traduce them to AGI events.
+
+Design:
+	- one thread calling esl_listen.
+	- one callback launching the translation thread.
+	- translation thread fork to execl the AGI script.
