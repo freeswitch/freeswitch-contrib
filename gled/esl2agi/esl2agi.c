@@ -146,22 +146,15 @@ static void *esl2agi_thread(void *data) {
 				}
 			}
 			if (FD_ISSET(pipes.script[0],&rd) ) { /* AGI has something to say */
+				bzero(&sbuf,2047);
 				r = read(pipes.script[0],&sbuf,2047);
 				if (r<0)
 					goto end;
 				else {
-					if ( !strncasecmp("ANSWER",sbuf,6) ) {
-						if ( handle_answer(&eslC,pipes.socket[1]) < 0)
-							goto end;
-					}
-					else if ( !strncasecmp("HANGUP",sbuf,6) ) {
-						if ( handle_hangup(&eslC,pipes.socket[1]) < 0)
-							goto end;
-					}
-					else if ( !strncasecmp("EXEC",sbuf,4) ) {
-						if ( handle_exec(&eslC,pipes.socket[1],(char *) &sbuf) < 0)
-							goto end;
-					}
+					/*TODO: correct ugly hack to remove final \n */
+					sbuf[r-1] = '\0';
+					if ( find_and_exec_command(&eslC,pipes.socket[1],(char *) &sbuf) < 0 )
+						goto end;
 				}
 			}
 		}
@@ -198,6 +191,7 @@ static void esl2agi(esl_socket_t server_sock, esl_socket_t client_sock, struct s
 /* Main entry
  * Esl listen and that's all.
  * Copyright (c) 2009, Anthony Minessale II
+ * TODO:	- add mod_dialplan_asterisk lookup and load if not present.
  */
 int main(int argc, char *argv[])
 {
@@ -243,9 +237,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 	}
 	else
 		return -1;
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on request");
-#endif
 
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "variable_channel_name")) ) {
 		sprintf(buf,"agi_channel: %s\n",sbuf);
@@ -254,9 +245,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 	}
 	else
 		return -1;
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on chan name");
-#endif
 
 	if ( write(fd, "agi_language: en\n",18) < 0 )
 		return -1;
@@ -268,9 +256,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 	}
 	else
 		return -1;
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on source");
-#endif
 
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Unique-ID")) ) {
 		sprintf(buf, "agi_uniqueid: %s\n", sbuf);
@@ -279,9 +264,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 	}
 	else
 		return -1;
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on uniqueid");
-#endif
 
 	/* ANI/DNIS */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Caller-ID-Number")) ) {
@@ -294,9 +276,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on callerid");
-#endif
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Caller-ID-Name")) ) {
 		sprintf(buf, "agi_calleridname: %s\n", sbuf);
 		if ( write(fd, buf,strlen(buf) ) < 0)
@@ -307,9 +286,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on calleridname");
-#endif
 
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Screen-Bit")) ) {
 		sprintf(buf, "agi_callingpres: %s\n", sbuf);
@@ -321,9 +297,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_callingpres");
-#endif
 	/* TODO */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Caller-ID-Number")) ) {
 		sprintf(buf, "agi_callingani2: %s\n", sbuf);
@@ -335,9 +308,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_callingani2");
-#endif
 	/* TODO */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Caller-ID-Number")) ) {
 		sprintf(buf, "agi_callington: %s\n", sbuf);
@@ -349,9 +319,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_callington");
-#endif
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
 		sprintf(buf, "agi_dnid: %s\n", sbuf);
 		if ( write(fd, buf,strlen(buf) ) < 0)
@@ -362,9 +329,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_dnid");
-#endif
 	/* TODO */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
 		sprintf(buf, "agi_callingtns: %s\n", sbuf);
@@ -376,9 +340,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_callingtns");
-#endif
 
 	/* TODO: correct info */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
@@ -391,9 +352,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_callingtns");
-#endif
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Context")) ) {
 		sprintf(buf, "agi_context: %s\n", sbuf);
 		if ( write(fd, buf,strlen(buf) ) < 0)
@@ -404,9 +362,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_context");
-#endif
 
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Destination-Number")) ) {
 		sprintf(buf, "agi_extension: %s\n", sbuf);
@@ -418,9 +373,7 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_extension");
-#endif
+
 	/* TODO: correct info */
 	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-State-Number")) ) {
 		sprintf(buf, "agi_priority: %s\n", sbuf);
@@ -432,9 +385,6 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 		if ( write(fd, buf,strlen(buf) ) < 0)
 			return -1;
 	}
-#ifdef _DEBUG_STDERR
-	perror("Setup ok on agi_priority");
-#endif
 
 	if ( write(fd, "agi_enhanced: 0.0\n", 19) < 0 )
 		return -1;
@@ -447,22 +397,19 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
  */
-static int handle_hangup(esl_handle_t *eslC,int fd) {
+static int handle_hangup(esl_handle_t *eslC,int fd, char *args) {
 	esl_status_t status;
-	int r;
 
 	status = esl_execute(eslC,"hangup",NULL,NULL);
 	if (status == ESL_FAIL) {
 #ifdef _DEBUG_STDERR
 		perror("ESL FAILED TO HANGUP");
 #endif
-		r = write(fd,"200 result=failure\n\n",128);
-		if (r<0)
+		if ( write(fd,"200 result=failure\n\n",128) < 0 )
 			return -1;
-		}
+	}
 	else if (status == ESL_SUCCESS) {
-		r = write(fd,"200 result=success\n\n",128);
-		if (r<0)
+		if ( write(fd,"200 result=success\n\n",128) < 0 )
 			return -1;
 	}
 	return 0;
@@ -471,48 +418,120 @@ static int handle_hangup(esl_handle_t *eslC,int fd) {
 /*
  * Answer AGI cmd
  */
-static int handle_answer(esl_handle_t *eslC,int fd) {
+static int handle_answer(esl_handle_t *eslC,int fd,char *args) {
 	esl_status_t status;
-	int r;
 
 	status = esl_execute(eslC,"answer",NULL,NULL);
 	if (status == ESL_FAIL) {
 #ifdef _DEBUG_STDERR
 		perror("ESL FAILED TO HANGUP");
 #endif
-		r = write(fd,"200 result=failure\n\n",128);
-		if (r<0)
+		if ( write(fd,"200 result=failure\n\n",128) < 0 )
 			return -1;
-		}
+	}
 	else if (status == ESL_SUCCESS) {
-		r = write(fd,"200 result=success\n\n",128);
-		if (r<0)
+		if ( write(fd,"200 result=success\n\n",128) < 0 )
 			return -1;
 	}
 	return 0;
 }
 
-/*
- * EXEC AGI cmd
- * TODO:	- parse arguments
- */
-static int handle_exec(esl_handle_t *eslC,int fd,char *buf) {
-	esl_status_t status;
-	int r;
+static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]) {
+	char *cur;
+	int x = 0;
+	int quote = 0;
+	int escaped = 0;
+	int space=1;
 
-	status = esl_execute(eslC,"answer",NULL,NULL);
-	if (status == ESL_FAIL) {
-#ifdef _DEBUG_STDERR
-		perror("ESL FAILED TO EXEC");
-#endif
-		r = write(fd,"200 result=failure\n\n",128);
-		if (r<0)
-			return -1;
+	cur = buf;
+	while (*buf) {
+		switch (*buf) {
+			case '"':
+				if (escaped)
+					goto ok;
+				else
+					quote = !quote;
+				if (quote && space) {
+					argv[x++] = cur;
+					space=0;
+				}
+				escaped = 0;
+			break;
+			case ' ':
+			case '\t':
+				if (!quote && !escaped) {
+					space = 1;
+					*(cur++) = '\0';
+				} else
+					goto ok;
+			break;
+			case '\\':
+				if (escaped)
+					goto ok;
+				else
+					escaped = 1;
+			break;
+			default:
+ok:
+				if (space) {
+					argv[x++] = cur;
+					space=0;
+				}
+				*(cur++) = *buf;
+				escaped=0;
 		}
-	else if (status == ESL_SUCCESS) {
-		r = write(fd,"200 result=success\n\n",128);
-		if (r<0)
-			return -1;
+		buf++;
 	}
-	return 0;
+	*(cur++) = '\0';
+	argv[x]= NULL;
+	*argc = x;
+	return;
 }
+
+static command_binding_t bindings[_MAX_CMD] = {
+	{ {"ANSWER" , NULL}, handle_answer },
+	{ {"HANGUP" , NULL}, handle_hangup },
+};
+
+
+static command_binding_t *find_binding(char *cmd[]) {
+	int x,y,match=0;
+
+	for (x=0; x < sizeof(bindings); x++) {
+		if ( ! bindings[x].cmd[0] ) {
+			break;
+		}
+		match = 1;
+
+		for (y=0; match && cmd[y]; y++) {
+			if (!bindings[x].cmd[y]) /* Is the next part existing ?*/
+				break;
+			if ( strncasecmp(bindings[x].cmd[y],cmd[y], MAX(strlen(bindings[x].cmd[y]),strlen(cmd[y]) ) ) )
+				match=0;
+		}
+		if (bindings[x].cmd[y]) /* There's a word missing in cmd */
+			match=0;
+		if (match)
+			return &bindings[x];
+	}
+	return NULL;
+}
+
+static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
+	char *argv[1024];
+	int argc = 0;
+	int r = -1;
+	command_binding_t *bind;
+
+	parse_args(buf,&argc,argv);
+
+	bind = find_binding(argv);
+	if (bind) {
+		r = bind->handler(eslC,fd,buf);
+	}
+	else {
+		fprintf(stderr,"Binding not found: '%s'",buf);
+	}
+	return r;
+}
+

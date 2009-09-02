@@ -38,6 +38,10 @@
 /* #undef _DEBUG_STDERR */
 #define _DEBUG_STDERR
 
+#define _MAX_CMD_LEN 128
+#define _MAX_CMD_ARGS 128
+#define _MAX_CMD 128
+
 /* 
  * Inc Section
  */
@@ -71,6 +75,12 @@ typedef struct {
 	int socket[2];
 } esl2agi_pipes_t;
 
+typedef struct command_binding_t {
+	char *cmd[_MAX_CMD_LEN];
+	int (*handler)(esl_handle_t *eslC,int fd,char *args);
+	struct command_binding *next;
+} command_binding_t;
+
 /* 
  * Func Section
  */
@@ -94,26 +104,33 @@ static void *esl2agi_thread(void *data);
 
 static int handle_setup_env(int fd,esl_handle_t *eslC);
 
-static int handle_hangup(esl_handle_t *eslC,int fd);
+static void parse_args(char *buf,int *argc,char *argv[1024]);
 
-static int handle_answer(esl_handle_t *eslC,int fd);
+static command_binding_t *find_binding(char *cmd[]);
 
-static int handle_exec(esl_handle_t *eslC,int fd,char *buf);
+static int handle_hangup(esl_handle_t *eslC,int fd,char *args);
+
+static int handle_answer(esl_handle_t *eslC,int fd, char *args);
+
+static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf);
 
 /*
-static int handle_getdata(esl_handle_t *eslC,int fd,char *buf);
 
-static int handle_getvar(esl_handle_t *eslC,int fd,char *buf);
+static int handle_exec(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_record(esl_handle_t *eslC,int fd,char *buf);
+static int handle_getdata(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_say(esl_handle_t *eslC,int fd,char *buf);
+static int handle_getvar(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_setvar(esl_handle_t *eslC,int fd,char *buf);
+static int handle_record(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_set(esl_handle_t *eslC,int fd,char *buf);
+static int handle_say(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_streamfile(esl_handle_t *eslC,int fd,char *buf);
+static int handle_setvar(esl_handle_t *eslC,int fd,char *args);
 
-static int handle_waitdigits(esl_handle_t *eslC,int fd,char *buf);
+static int handle_set(esl_handle_t *eslC,int fd,char *args);
+
+static int handle_streamfile(esl_handle_t *eslC,int fd,char *args);
+
+static int handle_waitdigits(esl_handle_t *eslC,int fd,char *args);
 */
