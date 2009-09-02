@@ -412,6 +412,7 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 		if ( write(fd,"200 result=success\n\n",128) < 0 )
 			return -1;
 	}
+	fprintf(stderr,"Call hungup\n");
 	return 0;
 }
 
@@ -433,8 +434,54 @@ static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 		if ( write(fd,"200 result=success\n\n",128) < 0 )
 			return -1;
 	}
+	fprintf(stderr,"Answered call\n");
 	return 0;
 }
+
+static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	esl_status_t status;
+	char buf[1024];
+
+	if (*argc < 3 || *argc > 5)
+		return -1;
+
+	if (argv[3]) {
+		/* We should set playback_terminators var there */
+		sprintf(buf,"playback_terminators=%s",argv[3]);
+		fprintf(stderr,"dtmf terminator i don't care at all '%s'",buf);
+/*
+		status = esl_execute(eslC,"set",buf,NULL);
+		if (status == ESL_FAIL)
+			fprintf(stderr,"unable to set playback terminators...\n");
+*/
+	}
+
+	if (argv[4]) {
+		fprintf(stderr,"We don't care about offset at the moment... sorry :)\n");
+	}
+
+	fprintf(stderr,"Executing playback of '%s'\n",argv[2]);
+
+	status = esl_execute(eslC,"playback",argv[2],NULL);
+
+	/* We should check  playback_samples var to return offset...*/
+
+	if (status == ESL_FAIL) {
+#ifdef _DEBUG_STDERR
+		perror("ESL FAILED TO HANGUP");
+#endif
+		if ( write(fd,"200 result=-1\n\n",128) < 0 )
+			return -1;
+	}
+	else if (status == ESL_SUCCESS) {
+		if ( write(fd,"200 result=1\n\n",128) < 0 )
+			return -1;
+	}
+	fprintf(stderr,"Playback ended\n");
+
+	return 0;
+}
+
 
 static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]) {
 	char *cur;
@@ -491,6 +538,7 @@ ok:
 static command_binding_t bindings[_MAX_CMD] = {
 	{ {"ANSWER" , NULL}, handle_answer },
 	{ {"HANGUP" , NULL}, handle_hangup },
+	{ {"STREAM", "FILE" , NULL}, handle_streamfile },
 };
 
 
