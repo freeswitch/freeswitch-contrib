@@ -77,7 +77,7 @@ typedef struct {
 
 typedef struct command_binding_t {
 	char *cmd[_MAX_CMD_LEN];
-	int (*handler)(esl_handle_t *eslC,int fd,char *args);
+	int (*handler)(esl_handle_t *eslC,int fd,int *argc, char *argv[]);
 	struct command_binding *next;
 } command_binding_t;
 
@@ -104,13 +104,13 @@ static void *esl2agi_thread(void *data);
 
 static int handle_setup_env(int fd,esl_handle_t *eslC);
 
-static void parse_args(char *buf,int *argc,char *argv[1024]);
+static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
 
 static command_binding_t *find_binding(char *cmd[]);
 
-static int handle_hangup(esl_handle_t *eslC,int fd,char *args);
+static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
-static int handle_answer(esl_handle_t *eslC,int fd, char *args);
+static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_CMD_ARGS]);
 
 static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf);
 

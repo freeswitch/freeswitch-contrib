@@ -397,7 +397,7 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
  */
-static int handle_hangup(esl_handle_t *eslC,int fd, char *args) {
+static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	esl_status_t status;
 
 	status = esl_execute(eslC,"hangup",NULL,NULL);
@@ -418,7 +418,7 @@ static int handle_hangup(esl_handle_t *eslC,int fd, char *args) {
 /*
  * Answer AGI cmd
  */
-static int handle_answer(esl_handle_t *eslC,int fd,char *args) {
+static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	esl_status_t status;
 
 	status = esl_execute(eslC,"answer",NULL,NULL);
@@ -527,7 +527,7 @@ static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
 
 	bind = find_binding(argv);
 	if (bind) {
-		r = bind->handler(eslC,fd,buf);
+		r = bind->handler(eslC,fd,&argc,argv);
 	}
 	else {
 		fprintf(stderr,"Binding not found: '%s'",buf);
