@@ -70,8 +70,7 @@ my $courtesy_tone = "tone_stream://%(150,150,500);%(150,0,400)"; # tone played b
 #my $courtesy_tone = undef; # disable courtesy tone
 my $confname = "radio";      # the name of the conference
 my $extension = "1337";      # this is the extension that portaudio will call to join
-my $callsign = "kc2dwq";     # callsign for morse autoID
-#my $callsign = undef;        # disable callsign autoID
+my $callsign = undef;        # disable callsign autoID - set to your callsign
 my $callsign_interval = 600; # 10 minute intervals
 
 
