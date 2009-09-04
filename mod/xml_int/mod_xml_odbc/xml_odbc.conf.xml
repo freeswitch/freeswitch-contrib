@@ -13,7 +13,7 @@
       <xml-odbc-do name="break-to" value="${section}"/>
     </template>
 
-    <template name="directory"> -->
+    <template name="directory">
       <xml-odbc-do name="check-event-header" if-name="purpose"> 
         <!-- catches purpose gateways and network-list (any more?) -->
         <xml-odbc-do name="break-to" value="directory-${purpose}"/> 
@@ -48,7 +48,7 @@
       </document>
     </template>
   
-    <template name="not_found">
+    <template name="not-found">
       <document type="freeswitch/xml">
         <section name="result">
           <result status="not found"/>
