@@ -1,0 +1,10 @@
+morse.js - lets you send audible morse code to a conference or uuid
+	 cp to /usr/local/freeswitch/scripts  (or wherever it was installed)
+	 see script for usage information.
+fs_rpt.pl - lets you bridge your ham radio (or other) into freeswitch. 
+	  requires morse.js for CWID identification if you are using it 
+	  like a repeater and your jurisdiction requires this.
+	  requires a hardware adapter to key the mic.
+	  I will be writing up exactly how to do this, somewhere under
+	  "radio" on http://www.0xdecafbad.com is the circuit for a
+	  Yaesu FT-897 radio (which works for many transceivers).
