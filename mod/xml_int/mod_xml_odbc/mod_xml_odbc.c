@@ -150,54 +150,57 @@ static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t xml_odbc_do_check_event_header(xml_odbc_session_helper_t *helper)
-{
-	char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
-	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
-	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
-	char *tmp_value;
-	switch_status_t status = SWITCH_STATUS_FALSE;
-
-	if (switch_strlen_zero(if_name)) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no if-name is given\n", name);
-		goto done;
-	}
-
-	if ((tmp_value = switch_event_get_header(helper->event, if_name))) {
-		if (!switch_strlen_zero(tmp_value)) {
-			if (switch_strlen_zero(if_value) || !strcasecmp(if_value, tmp_value)) {
-				status = xml_odbc_render_children(helper);
-			}
-		}
-	}
-
-  done:
-	return status;
-}
-
 static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
 {
-	char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
-	char *if_name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-name");
-	char *if_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "if-value");
+	char *name = (char *) switch_xml_attr(helper->xml_in_cur, "name"); // the xml-odbc-do name attr
+
+	char *if_name = (char *) switch_xml_attr(helper->xml_in_cur, "if-name");
+	if (if_name) { if_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_name); }
+
+	char *if_value = (char *) switch_xml_attr(helper->xml_in_cur, "if-value");
+	if (if_value) { if_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_value); }
+
+	char *to_name = (char *) switch_xml_attr(helper->xml_in_cur, "to-name");
+	if (to_name) { to_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_name); }
+
+	char *to_value = (char *) switch_xml_attr(helper->xml_in_cur, "to-value");
+	if (to_value) { to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value); }
+
 	char *old_value = NULL;
-	char *to_value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "to-value");
-	char *new_to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value);
+
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
-	if (switch_strlen_zero(to_value)) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do name=[%s] because no to-value is given\n", name);
+	if (if_value && !if_name) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "xml-odbc-do [%s] if_name is required when if_value given\n", name);
 		goto done;
 	}
 
-	if ((old_value = switch_event_get_header(helper->event, if_name))) {
-		if (switch_strlen_zero(if_value) || !strcasecmp(if_value, old_value)) {
-			switch_event_del_header(helper->event, if_name);
-			switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, if_name, new_to_value);
+	if (!if_name && !to_name) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "xml-odbc-do [%s] either if_name or to_name are required\n", name);
+		goto done;
+	}
+
+	if (if_name) {
+		if (!(old_value = switch_event_get_header(helper->event, if_name))) {
+			status = SWITCH_STATUS_SUCCESS;
+			goto done;
 		}
 	}
 
-	status = SWITCH_STATUS_SUCCESS;
+	if (if_value && old_value && strcasecmp(if_value, old_value)) {
+		status = SWITCH_STATUS_SUCCESS;
+		goto done;
+	}
+
+	if (to_name || to_value) {
+		switch_event_del_header(helper->event, if_name ? if_name : to_name);
+
+		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM,
+					to_name ? to_name : if_name,
+					to_value ? to_value : old_value);
+	}
+
+	status = xml_odbc_render_children(helper);
 
   done:
 	return status;
@@ -246,8 +249,8 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 		if (!strcasecmp(name, "break-to")) {
 			status = xml_odbc_do_break_to(helper);
-		} else if (!strcasecmp(name, "check-event-header")) {
-			status = xml_odbc_do_check_event_header(helper);
+		} else if (!strcasecmp(name, "check-event-header")) {  // check-event-header is the same as set-event-header
+			status = xml_odbc_do_set_event_header(helper); // except no to-name or to-value are given..
 		} else if (!strcasecmp(name, "set-event-header")) {
 			status = xml_odbc_do_set_event_header(helper);
 		} else if (!strcasecmp(name, "query")) {
