@@ -1,0 +1,194 @@
+libmsn overview
+---------------
+
+To better understand the libmsn architecture it is good to know the names and the jobs of some MSN service entities.
+
+1) Notification Server:
+    This server is the one you will keep connected until the session finishes.
+    Through this server you will:
+        - be able to change your nickname.
+        - receive notifications about the status of contacts present on your contact list.
+        - be notified about users that just added you to their lists
+        - receive the personal message and current song from other contacts and publish yours.
+        - be able to request a new switchboard session to a contact in your contact list.
+        - receive notifications about an user asking you to connect to an existent switchboard.
+        - receive notifications about new offline messages.
+        - receive notifications about emails in your hotmail account
+        - and more..
+
+        (check the doc/ directory for more info)
+
+2) Switchboard Server:
+    This server is a kind of bridge between two or more people.
+    Every time you want to talk to a contact you need to request a switchboard session and
+    then ask to invite the other contacts to the session.
+    Through a switchboard connection you can:
+        - send and receive text messages
+        - send and receive typing notification
+        - send and receive voice clips
+        - send and receive files
+        - send and receive draws (called inks)
+        - send and receive custom emoticons
+        - send and receive nudges
+        - send and receive actions
+        - send and receive winks
+        - send and receive custom backgrounds
+        
+        (check the doc/ directory for more info)
+
+3) Lists:
+    There are 5 lists in the server which may contain the passport of your contacts.
+    Each list has a special meaning:
+        - Address Book (Or forward List): Contains all the contacts that you have in your list.
+        - Allow List: Users that you allow to see your status and request switchboard sessions with you.
+        - Block List: Users that won't see you online and cannot request switchboard sessions with you.
+        - Reverse List: Users that currently have you in their Address Book.
+        - Pending List: List of users that have added you and you need to decide if you will add them or not.
+
+-----------------
+
+Libmsn is an asynchronous library, so it provides a set of callbacks that you must implement in your application.
+The list of callbacks can be found in externals.h, and the example how to implement them is in msntest.cpp.
+
+So the first step to connect to the MSN messenger is to implement the Callbacks class in your application and to create an instance of the class NotificationServerConnection, which abstracts the connection to the notification server.
+
+The NotificationServerConnection constructor requires 3 arguments:
+    - The username, the password and the reference to your Callbacks class reimplementation.
+
+"""
+        Callbacks cb;
+        MSN::Passport uname;
+        MSN::NotificationServerConnection mainConnection(uname, pass, cb);
+"""
+
+Now it is time to ask libmsn to connect the MSN messenger service:
+
+"""
+        mainConnection.connect("messenger.hotmail.com", 1863);
+"""
+
+If everything is ok you will receive a gotNewConnection() callback.
+Then you need to call synchronizeContactList().
+
+An example:
+"""
+void Callbacks::gotNewConnection(MSN::Connection * conn)
+{
+        if (dynamic_cast<MSN::NotificationServerConnection *>(conn))
+            dynamic_cast<MSN::NotificationServerConnection *>(conn)->synchronizeContactList();
+}
+"""
+
+This will make libmsn request the contact list to the server.
+Wait a bit and then you will receive the contents of the five lists shown above. This
+will happen through gotBuddyListInfo() callback.
+Next step is to send again the list to the server calling completeConnection().
+(Note: you need to add only members of Allow List, Block List and the Address Book
+to the list you will send through completeConnection().
+Take a look at msntest.cpp to understand how to do it) The reason why libmsn
+does not do that automatically is that in a near future libmsn will support partial
+list fetching, and even if you don't request the whole list in synchronizeContactList(),
+you will need to pass the whole list in completeConnection() anyway.
+
+"""
+    conn->completeConnection(allContacts,info);
+"""
+
+If everything is ok, you will receive a connectionReady(), and then you can
+finally change your status (Invisible, Online, Away, ..) using setState().
+
+Like this:
+
+"""
+    // set your display picture
+    mainConnection.change_DisplayPicture("/tmp/global-photo.png");
+
+    // configure the capabilities of this client
+    uint clientid=0;
+
+    clientid += MSN::MSNC7;
+    clientid += MSN::MSNC6;
+    clientid += MSN::MSNC5;
+    clientid += MSN::MSNC4;
+    clientid += MSN::MSNC3;
+    clientid += MSN::MSNC2;
+    clientid += MSN::MSNC1;
+    clientid += MSN::SupportWinks;
+    clientid += MSN::VoiceClips;
+    clientid += MSN::InkGifSupport;
+    clientid += MSN::SIPInvitations;
+    clientid += MSN::SupportMultiPacketMessaging;
+
+    // set a new state
+    mainConnection.setState(MSN::STATUS_INVISIBLE, clientid); 
+"""
+
+This is enough to get your application connected to the MSN messenger service.
+
+
+FAQ
+---
+
+--------------------------------------------------------
+1) How do I talk to a contact?
+
+    - you need to request a switchboard session with the other contact. Create a context
+        so then you can track this request later.
+"""
+        const std::string rcpt_ = "buddy@hisher.passport.net";
+        const std::string msg_ = "Hi! this is libmsn";
+        const std::pair<std::string,std::string> *ctx = new std::pair<std::string,std::string>(rcpt_, msg_);
+
+        // request a new switchboard connection
+        mainConnection->requestSwitchboardConnection (ctx);
+"""
+
+now wait until libmsn raises gotSwitchboard() and invite the other user to the session.
+
+"""
+void Callbacks::gotSwitchboard(MSN::SwitchboardServerConnection * conn, const void * tag)
+{
+    if (tag){
+        const std::pair<std::string, std::string> *ctx = static_cast<const std::pair<std::string, std::string> *>(tag);
+        conn->inviteUser(ctx->first);
+    }
+}
+"""
+
+when the other user joins the session you can finally send the message. 
+It is possible to track this action by the buddyJoinedConversation() callback.
+
+"""
+void Callbacks::buddyJoinedConversation(MSN::SwitchboardServerConnection * conn, MSN::Passport username, std::string friendlyname, int is_initial)
+{
+    if (conn->auth.tag){
+        const std::pair<std::string, std::string> *ctx = static_cast<const std::pair<std::string, std::string> *>(conn->auth.tag);
+        int trid = conn->sendMessage(ctx->second);
+        delete ctx;
+        conn->auth.tag = NULL;
+    }
+}
+"""
+--------------------------------------------------------
+
+2) How do I send a custom emoticon?
+
+"""
+    conn->sendEmoticon("(EMOTICON)", filename);
+"""
+
+where `conn' is an active switchboard connection, `(EMOTICON)' is the alias and `filename'
+is the path to the gif file.
+
+--------------------------------------------------------
+
+3) How do I send a nudge?
+
+"""
+    conn->sendNudge();
+"""
+where `conn' is an active switchboard connection.
+
+--------------------------------------------------------
+
+For more examples take a look at msntest.cpp
