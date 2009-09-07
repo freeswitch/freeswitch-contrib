@@ -266,10 +266,23 @@ void AppManager::about()
 #if defined(Q_OS_WIN)
     QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()->_loader->instance()),
                        tr("About FsGui"),
-                       tr("Compiled with FreeSWITCH version: %1").arg(SWITCH_VERSION_FULL));
+                       tr("<h2>FSGui</h2>"
+                          "<p>Author: Jo&atilde;o Mesquita &lt;jmesquita@freeswitch.com>"
+                          "<p>FsGui is a framework that helps you develop "
+                          "your own CTI applications compatible with your FreeSWITCH&trade; installation."
+                          "<p>The FreeSWITCH&trade; images and name are trademark of"
+                          " Anthony Minessale II, primary author of FreeSWITCH&trade;."
+                          "Compiled with FreeSWITCH version: %1").arg(SWITCH_VERSION_FULL));
 #else
     QMessageBox::about(qobject_cast<QMainWindow *>(list_available_monitor_plugins.first()->_loader->instance()),
-                       tr("About FsGui"),
-                       tr("Version: %1").arg(FSGUI_SVN_VERSION));
+                       tr("About FSGui"),
+                       tr("<h2>FsGui</h2>"
+                          "<p>Author: Jo&atilde;o Mesquita &lt;jmesquita@freeswitch.com>"
+                          "<p>FsGui is a framework that helps you develop "
+                          "your own CTI applications compatible with your FreeSWITCH&trade; installation."
+                          "<p>The FreeSWITCH&trade; images and name are trademark of"
+                          " Anthony Minessale II, primary author of FreeSWITCH&trade;."
+                          "<p>Version: %1").arg(FSGUI_SVN_VERSION));
+
 #endif
 }
