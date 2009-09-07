@@ -38,7 +38,7 @@
             <string>&amp;Add server</string>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resources.qrc">
              <normaloff>:/icons/new_server_icon.png</normaloff>:/icons/new_server_icon.png</iconset>
            </property>
           </widget>
@@ -49,7 +49,7 @@
             <string>&amp;Remove Server</string>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resources.qrc">
              <normaloff>:/icons/remove_server_icon.png</normaloff>:/icons/remove_server_icon.png</iconset>
            </property>
           </widget>
@@ -66,7 +66,7 @@
           <bool>true</bool>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabBasic">
           <attribute name="title">
@@ -144,7 +144,7 @@
             <string>&amp;Save</string>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resources.qrc">
              <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
            </property>
            <property name="iconSize">
@@ -164,7 +164,7 @@
             <string>&amp;Edit</string>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resources.qrc">
              <normaloff>:/icons/edit_icon.png</normaloff>:/icons/edit_icon.png</iconset>
            </property>
            <property name="iconSize">
@@ -224,7 +224,7 @@
         <string>&amp;Connect</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="../resources/resources.qrc">
          <normaloff>:/icons/connect_icon.png</normaloff>:/icons/connect_icon.png</iconset>
        </property>
        <property name="iconSize">
@@ -243,7 +243,11 @@
   </layout>
   <zorder></zorder>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>pushButton_5</sender>

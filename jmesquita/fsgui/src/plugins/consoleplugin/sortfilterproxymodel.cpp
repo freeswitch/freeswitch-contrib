@@ -2,7 +2,7 @@
 #include "sortfilterproxymodel.h"
 
 ConsoleModel::ConsoleModel (QObject *parent)
-        : QAbstractListModel(parent)
+        : QAbstractTableModel(parent)
 {
     QSettings settings;
     batchSize = settings.value("Console/batchSize", 200).toInt();
@@ -17,11 +17,15 @@ int ConsoleModel::rowCount ( const QModelIndex & parent ) const
     return _listDisplayModel.count();
 }
 
+int ConsoleModel::columnCount ( const QModelIndex & /*parent*/ ) const
+{
+    return 1;
+}
+
 QVariant ConsoleModel::data ( const QModelIndex & index, int role ) const
 {
     if (!index.isValid())
         return QVariant();
-
     return _listDisplayModel.at(index.row())->data(role);
 }
 

@@ -39,7 +39,7 @@
 #define SORTFILTERPROXYMODEL_H
 
 #include <QSortFilterProxyModel>
-#include <QAbstractListModel>
+#include <QAbstractTableModel>
 #include <QVector>
 #include <QList>
 
@@ -47,12 +47,13 @@ class QBasicTimer;
 class QStandardItem;
 class QScrollBar;
 
-class ConsoleModel : public QAbstractListModel
+class ConsoleModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
     ConsoleModel (QObject *parent = 0);
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
+    int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
     QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
     void appendRow ( QStandardItem* item );
     void clear();

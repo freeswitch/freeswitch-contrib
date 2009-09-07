@@ -137,7 +137,6 @@ void AppManager::readSettings()
     pluginsDir->setCurrent(dir);
 #else
     dir = settings.value("PluginDir", qApp->applicationDirPath()).toString();
-    qDebug() <<  qApp->applicationDirPath();
     pluginsDir->setCurrent(dir);
     pluginsDir->cd("plugins");
 #endif

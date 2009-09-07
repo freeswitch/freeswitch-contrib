@@ -133,6 +133,7 @@ void ServerManager::addServer()
         settings.endGroup();
         readSettings();
         m_ui->listServers->setCurrentItem(m_ui->listServers->findItems(text, Qt::MatchExactly, 0).first());
+        m_ui->btnEdit->click();
     }
 }
 
@@ -144,6 +145,7 @@ void ServerManager::editServer()
     m_ui->btnSave->setEnabled(true);
     m_ui->btnEdit->setEnabled(false);
     m_ui->lineHost->setFocus();
+    m_ui->btnConnect->setEnabled(false);
 }
 
 void ServerManager::saveServer()
@@ -167,6 +169,7 @@ void ServerManager::saveServer()
     m_ui->linePort->setEnabled(false);
     m_ui->btnSave->setEnabled(false);
     m_ui->btnEdit->setEnabled(true);
+    m_ui->btnConnect->setEnabled(true);
 }
 
 void ServerManager::deleteServer()
@@ -197,4 +200,3 @@ void ServerManager::readSettings()
     }
     settings.endGroup();
 }
-
