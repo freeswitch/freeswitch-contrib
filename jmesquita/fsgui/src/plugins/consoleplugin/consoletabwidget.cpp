@@ -55,6 +55,8 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
                      this, SLOT(filterStringChanged()));
     QObject::connect(m_ui->filterSyntaxComboBox, SIGNAL(currentIndexChanged(int)),
                      this, SLOT(filterStringChanged()));
+    QObject::connect(m_ui->filterReverseCheckBox, SIGNAL(toggled(bool)),
+                     this, SLOT(reverseFilterChecked()));
 
     QObject::connect(esl, SIGNAL(connected()),
                      this, SLOT(connected()));
@@ -371,4 +373,9 @@ void ConsoleTabWidget::pastebinLog()
     _pastebinDlg->show();
     _pastebinDlg->raise();
     _pastebinDlg->activateWindow();
+}
+
+void ConsoleTabWidget::reverseFilterChecked()
+{
+    model->toggleReverseFlag();
 }

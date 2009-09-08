@@ -83,6 +83,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="filterReverseCheckBox">
+          <property name="text">
+           <string>Reverse filter</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="lblWarningMsg">
           <property name="text">
            <string/>
@@ -96,8 +106,8 @@
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>627</width>
-            <height>13</height>
+            <width>358</width>
+            <height>20</height>
            </size>
           </property>
          </spacer>

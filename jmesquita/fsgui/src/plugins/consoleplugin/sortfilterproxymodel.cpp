@@ -71,8 +71,15 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
 SortFilterProxyModel::SortFilterProxyModel(QObject *parent)
         : QSortFilterProxyModel(parent)
 {
+    reverseFlag = false;
     for(int i = 0; i < 8; i++)
         loglevels.insert(i, true);
+}
+
+void SortFilterProxyModel::toggleReverseFlag()
+{
+    reverseFlag = !reverseFlag;
+    invalidateFilter();
 }
 
 void SortFilterProxyModel::setLogLevelFilter(int level, bool state)
@@ -96,7 +103,11 @@ bool SortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &s
     if (!_uuid.isEmpty())
         uuidMatch = (sourceModel()->data(index0, ConsoleModel::UUIDRole).toString() == _uuid);
 
-    return (loglevels.value(sourceModel()->data(index0, Qt::UserRole).toInt()) == true
+    bool res = (loglevels.value(sourceModel()->data(index0, Qt::UserRole).toInt()) == true
             && sourceModel()->data(index0).toString().contains(filterRegExp())
             && uuidMatch);
+    if (reverseFlag)
+        return !res;
+    else
+        return res;
 }

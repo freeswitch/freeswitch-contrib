@@ -81,6 +81,7 @@ private slots:
     void gotEvent(ESLevent);
     void addNewConsoleItem(QStandardItem *item);
     void cmdSendClicked();
+    void reverseFilterChecked();
     void lineCmdChanged(QString);
     void checkEmerg(bool);
     void checkAlert(bool);

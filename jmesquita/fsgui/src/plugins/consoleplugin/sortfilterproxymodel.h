@@ -83,6 +83,7 @@ public:
     SortFilterProxyModel(QObject *parent = 0);
     void setLogLevelFilter(int level, bool state);
     void setUUIDFilterLog(QString uuid);
+    void toggleReverseFlag();
 
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
@@ -90,6 +91,7 @@ protected:
 private:
     QVector<bool> loglevels;
     QString _uuid;
+    bool reverseFlag;
 };
 
 #endif // SORTFILTERPROXYMODEL_H
