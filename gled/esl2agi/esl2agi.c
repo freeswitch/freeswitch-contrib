@@ -106,7 +106,6 @@ static void *esl2agi_thread(void *data) {
 		exit(0);
 	}
 	else if (pid > 0 ) { 
-//		esl_event_t *event;
 		esl_status_t status;
 		char sbuf[2048];
 
@@ -125,29 +124,17 @@ static void *esl2agi_thread(void *data) {
 			int r , nfds = 0;
 			fd_set rd;
 
-			/* As we are in sync mode, we should NOT care about socket there, there is a binding of esl_execute to find results
-			 * in events
-			*/
+			/* As we are in sync mode, we should NOT care about socket there, 
+			 * there is a binding of esl_execute to find command results
+			 */
 			FD_ZERO(&rd);
-//			FD_SET(esl_req.client_sock, &rd);
-//			nfds = MAX(nfds,esl_req.client_sock);
 			FD_SET(pipes.script[0], &rd);
 			nfds = MAX(nfds,pipes.script[0]);
 
 			r = select(nfds + 1, &rd, NULL, NULL, NULL);
 			if (r == -1 )
 				break;
-/*
-			if (FD_ISSET(esl_req.client_sock, &rd)) { // Esl side
-				status = esl_recv_event(&eslC, 0, &event);
-				if (status == ESL_FAIL)
-					goto end;
-		                else if (status == ESL_SUCCESS) {
-					// Translation ESL TO AGI ? unneeded
-				}
-			}
-*/
-			if (FD_ISSET(pipes.script[0],&rd) ) { /* AGI has something to say */
+			else if (FD_ISSET(pipes.script[0],&rd) ) { /* AGI has something to say */
 				bzero(&sbuf,2047);
 				r = read(pipes.script[0],&sbuf,2047);
 				if (r<0)
@@ -396,7 +383,9 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 }
 
 /*
- * Execute an application and wait for CHANNEL_EXECUTE_COMPLETE to return, binds esl_execute in a nice way :)
+ * Execute an application and wait for CHANNEL_EXECUTE_COMPLETE to return
+ * binds esl_execute in a nice way :)
+ * Be carefull, we might be in async mode, so we should match application we called before.
  */
 static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_event_t **save_reply) {
 	int done=0;
@@ -406,8 +395,10 @@ static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_eve
 			if (esl_recv_event(eslC,1,NULL) == ESL_FAIL)
 				return -1;
 			else if (eslC->last_ievent) {
-				if (eslC->last_ievent->event_id == ESL_EVENT_CHANNEL_EXECUTE_COMPLETE )
-					done = 1;
+				if (eslC->last_ievent->event_id == ESL_EVENT_CHANNEL_EXECUTE_COMPLETE ) {
+					if (! strcasecmp(cmd,esl_event_get_header(eslC->last_ievent,"Application") ) )
+						done = 1;
+				}
 			}
 		}
 		if (save_reply)
@@ -428,10 +419,9 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 			return -1;
 	}
 	else {
-		if ( write(fd,"200 result=1\n\n",128) < 0 )
+		if ( write(fd,"200 result=0\n\n",128) < 0 )
 			return -1;
 	}
-	fprintf(stderr,"Call hungup\n");
 	return 0;
 }
 
@@ -440,19 +430,17 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
  */
 static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	if (do_execute(eslC,"answer",NULL,NULL,NULL) < 0 ) {
-		if ( write(fd,"200 result=failure\n\n",128) < 0 )
+		if ( write(fd,"200 result=-1\n\n",128) < 0 )
 			return -1;
 	}
 	else {
-		if ( write(fd,"200 result=success\n\n",128) < 0 )
+		if ( write(fd,"200 result=0\n\n",128) < 0 )
 			return -1;
 	}
-	fprintf(stderr,"Answered call\n");
 	return 0;
 }
 
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	esl_status_t status;
 	char buf[1024];
 	char *sbuf;
 	int offset=0;
@@ -465,10 +453,9 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 	if (argv[3]) {
 		/* We should set playback_terminators var there */
 		sprintf(buf,"playback_terminators=%s",argv[3]);
-		status = esl_execute(eslC,"set",buf,NULL);
-		if (status == ESL_FAIL)
-			fprintf(stderr,"unable to set playback terminators...\n");
+		do_execute(eslC,"set",buf,NULL,NULL);
 	}
+	bzero(&buf,1023);
 
 	if (argv[4]) {
 		offset = atoi(argv[4]);
@@ -478,12 +465,11 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 		sprintf(buf,"%s@@%d",argv[2],offset);
 	else
 		sprintf(buf,"%s",argv[2]);
-	fprintf(stderr,"Executing playback of '%s'\n",buf);
 	offset = 0;
 	if ( do_execute(eslC,"playback",buf,NULL,&reply) < 0 ) /* We should write about NON success there instead of returning stock */
 		return -1;
 	else {
-		fprintf(stderr,"Playback ended\n");
+		bzero(&buf,1023);
 		/* We should check playback_samples var to return offset, sent in the CHANNEL_EXECUTE_COMPLETE and 
 		variable_playback_terminator_used to get the DTMF we had */
 		if (reply) {
@@ -491,17 +477,12 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 					offset = -1;
 			else {
 				offset = atoi(sbuf);
-				fprintf(stderr,"Received %s\n", sbuf);
 			}
 			if (! (sbuf = esl_event_get_header(reply, "variable_playback_terminator_used")) )
 					dtmf = 0;
 			else {
 				dtmf = atoi(sbuf);
-				fprintf(stderr,"Received char:%s\n", sbuf);
 			}
-		}
-		else {
-			fprintf(stderr,"There was an error somewhere...\n");
 		}
 	}
 	if (offset < 0) {
@@ -610,9 +591,6 @@ static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
 	bind = find_binding(argv);
 	if (bind) {
 		r = bind->handler(eslC,fd,&argc,argv);
-	}
-	else {
-		fprintf(stderr,"Binding not found: '%s'",buf);
 	}
 	return r;
 }
