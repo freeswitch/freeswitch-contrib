@@ -126,7 +126,7 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	if (!switch_strlen_zero(helper->next_template_name)) goto done;
 
 	/* up the row counter */
-	helper->tmp_i++; // TODO: WILL THIS GO WRONG FOR NESTED QUERIES ?? THINK ABOUT IT !!!
+	helper->tmp_i++; /* TODO: WILL THIS GO WRONG FOR NESTED QUERIES ?? THINK ABOUT IT !!! */
 
 	/* loop through all columns and store them in helper->event->headers */
 	for (i = 0; i < argc; i++) {
@@ -152,7 +152,7 @@ static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 
 static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
 {
-	char *name = (char *) switch_xml_attr(helper->xml_in_cur, "name"); // the xml-odbc-do name attr
+	char *name = (char *) switch_xml_attr(helper->xml_in_cur, "name"); /* the xml-odbc-do name attr */
 
 	char *if_name = (char *) switch_xml_attr(helper->xml_in_cur, "if-name");
 	if (if_name) { if_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_name); }
@@ -249,8 +249,8 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 		if (!strcasecmp(name, "break-to")) {
 			status = xml_odbc_do_break_to(helper);
-		} else if (!strcasecmp(name, "check-event-header")) {  // check-event-header is the same as set-event-header
-			status = xml_odbc_do_set_event_header(helper); // except no to-name or to-value are given..
+		} else if (!strcasecmp(name, "check-event-header")) {  /* check-event-header is the same as set-event-header */
+			status = xml_odbc_do_set_event_header(helper); /* except no to-name or to-value are given.. */
 		} else if (!strcasecmp(name, "set-event-header")) {
 			status = xml_odbc_do_set_event_header(helper);
 		} else if (!strcasecmp(name, "query")) {
@@ -425,7 +425,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	switch_uuid_format(uuid_str, &uuid);
 
 	/* generate a temporary filename to store the generated xml in */
-	// use switch_core_sprintf here ?!?!
+	/* use switch_core_sprintf here ?!?! */
 	switch_snprintf(filename, sizeof(filename), "%s%s.tmp.xml", SWITCH_GLOBAL_dirs.temp_dir, uuid_str);
 
 	/* open (temporary) file */
@@ -467,10 +467,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
   cleanup:
 	switch_xml_free(helper.xml_out);
 	switch_core_destroy_memory_pool(&pool);
-	/* free helper ?? */
-	/* free filename */
 
-  //done:
 	return xml_out;
 }
 
@@ -530,9 +527,9 @@ static switch_status_t do_config()
 			binding_count++;
 			binding = NULL;
 
-		// change odbc-dsn to something like odbc-handle with name=default and dsn=a:b:c
-		// so a linked list or something is created with multiple handles that can be
-		// selected from xml-odbc-do name=query !!! that would be COOL !!!
+		/* change odbc-dsn to something like odbc-handle with name=default and dsn=a:b:c
+		 * so a linked list or something is created with multiple handles that can be
+		 * selected from xml-odbc-do name=query !!! that would be COOL !!! */
 		} else if (!strcasecmp(var, "odbc-dsn") && !switch_strlen_zero(val)) {
 			globals.odbc_dsn = switch_core_strdup(globals.pool, val);
 			if ((odbc_user = strchr(globals.odbc_dsn, ':'))) {
