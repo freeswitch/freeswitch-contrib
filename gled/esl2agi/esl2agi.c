@@ -106,7 +106,7 @@ static void *esl2agi_thread(void *data) {
 		exit(0);
 	}
 	else if (pid > 0 ) { 
-		esl_event_t *event;
+//		esl_event_t *event;
 		esl_status_t status;
 		char sbuf[2048];
 
@@ -120,31 +120,33 @@ static void *esl2agi_thread(void *data) {
 
 		/* TODO: check status */
 		status = esl_send(&eslC,"myevents");
-
+		eslC.async_execute = 0;
 		while ( eslC.connected && thread_running) {
 			int r , nfds = 0;
 			fd_set rd;
 
+			/* As we are in sync mode, we should NOT care about socket there, there is a binding of esl_execute to find results
+			 * in events
+			*/
 			FD_ZERO(&rd);
-			FD_SET(esl_req.client_sock, &rd);
-			nfds = MAX(nfds,esl_req.client_sock);
+//			FD_SET(esl_req.client_sock, &rd);
+//			nfds = MAX(nfds,esl_req.client_sock);
 			FD_SET(pipes.script[0], &rd);
 			nfds = MAX(nfds,pipes.script[0]);
 
 			r = select(nfds + 1, &rd, NULL, NULL, NULL);
 			if (r == -1 )
 				break;
-			if (FD_ISSET(esl_req.client_sock, &rd)) { /* ESL SIDE have something */
+/*
+			if (FD_ISSET(esl_req.client_sock, &rd)) { // Esl side
 				status = esl_recv_event(&eslC, 0, &event);
 				if (status == ESL_FAIL)
 					goto end;
 		                else if (status == ESL_SUCCESS) {
-					/* Translation ESL TO AGI
-					 * - DTMF events.
-					 * - what else ?
-					 */
+					// Translation ESL TO AGI ? unneeded
 				}
 			}
+*/
 			if (FD_ISSET(pipes.script[0],&rd) ) { /* AGI has something to say */
 				bzero(&sbuf,2047);
 				r = read(pipes.script[0],&sbuf,2047);
@@ -394,22 +396,39 @@ static int handle_setup_env(int fd,esl_handle_t *eslC) {
 }
 
 /*
+ * Execute an application and wait for CHANNEL_EXECUTE_COMPLETE to return, binds esl_execute in a nice way :)
+ */
+static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_event_t **save_reply) {
+	int done=0;
+
+	if ( esl_execute(eslC,cmd,args,uuid) != ESL_FAIL) {
+		while (!done && eslC->connected) {
+			if (esl_recv_event(eslC,1,NULL) == ESL_FAIL)
+				return -1;
+			else if (eslC->last_ievent) {
+				if (eslC->last_ievent->event_id == ESL_EVENT_CHANNEL_EXECUTE_COMPLETE )
+					done = 1;
+			}
+		}
+		if (save_reply)
+			*save_reply = eslC->last_ievent;
+		return done;
+	}
+	else
+		return -1;
+}
+
+/*
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
  */
 static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	esl_status_t status;
-
-	status = esl_execute(eslC,"hangup",NULL,NULL);
-	if (status == ESL_FAIL) {
-#ifdef _DEBUG_STDERR
-		perror("ESL FAILED TO HANGUP");
-#endif
-		if ( write(fd,"200 result=failure\n\n",128) < 0 )
+	if (do_execute(eslC,"hangup",NULL,NULL,NULL) < 0 ) {
+		if ( write(fd,"200 result=-1\n\n",128) < 0 )
 			return -1;
 	}
-	else if (status == ESL_SUCCESS) {
-		if ( write(fd,"200 result=success\n\n",128) < 0 )
+	else {
+		if ( write(fd,"200 result=1\n\n",128) < 0 )
 			return -1;
 	}
 	fprintf(stderr,"Call hungup\n");
@@ -420,17 +439,11 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
  * Answer AGI cmd
  */
 static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	esl_status_t status;
-
-	status = esl_execute(eslC,"answer",NULL,NULL);
-	if (status == ESL_FAIL) {
-#ifdef _DEBUG_STDERR
-		perror("ESL FAILED TO HANGUP");
-#endif
+	if (do_execute(eslC,"answer",NULL,NULL,NULL) < 0 ) {
 		if ( write(fd,"200 result=failure\n\n",128) < 0 )
 			return -1;
 	}
-	else if (status == ESL_SUCCESS) {
+	else {
 		if ( write(fd,"200 result=success\n\n",128) < 0 )
 			return -1;
 	}
@@ -441,6 +454,10 @@ static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	esl_status_t status;
 	char buf[1024];
+	char *sbuf;
+	int offset=0;
+	int dtmf=0;
+	esl_event_t *reply=NULL;
 
 	if (*argc < 3 || *argc > 5)
 		return -1;
@@ -448,40 +465,57 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 	if (argv[3]) {
 		/* We should set playback_terminators var there */
 		sprintf(buf,"playback_terminators=%s",argv[3]);
-		fprintf(stderr,"dtmf terminator i don't care at all '%s'",buf);
-/*
 		status = esl_execute(eslC,"set",buf,NULL);
 		if (status == ESL_FAIL)
 			fprintf(stderr,"unable to set playback terminators...\n");
-*/
 	}
 
 	if (argv[4]) {
-		fprintf(stderr,"We don't care about offset at the moment... sorry :)\n");
+		offset = atoi(argv[4]);
 	}
 
-	fprintf(stderr,"Executing playback of '%s'\n",argv[2]);
-
-	status = esl_execute(eslC,"playback",argv[2],NULL);
-
-	/* We should check  playback_samples var to return offset...*/
-
-	if (status == ESL_FAIL) {
-#ifdef _DEBUG_STDERR
-		perror("ESL FAILED TO HANGUP");
-#endif
-		if ( write(fd,"200 result=-1\n\n",128) < 0 )
+	if (offset > 0)
+		sprintf(buf,"%s@@%d",argv[2],offset);
+	else
+		sprintf(buf,"%s",argv[2]);
+	fprintf(stderr,"Executing playback of '%s'\n",buf);
+	offset = 0;
+	if ( do_execute(eslC,"playback",buf,NULL,&reply) < 0 ) /* We should write about NON success there instead of returning stock */
+		return -1;
+	else {
+		fprintf(stderr,"Playback ended\n");
+		/* We should check playback_samples var to return offset, sent in the CHANNEL_EXECUTE_COMPLETE and 
+		variable_playback_terminator_used to get the DTMF we had */
+		if (reply) {
+			if (! (sbuf = esl_event_get_header(reply, "variable_playback_samples")) )
+					offset = -1;
+			else {
+				offset = atoi(sbuf);
+				fprintf(stderr,"Received %s\n", sbuf);
+			}
+			if (! (sbuf = esl_event_get_header(reply, "variable_playback_terminator_used")) )
+					dtmf = 0;
+			else {
+				dtmf = atoi(sbuf);
+				fprintf(stderr,"Received char:%s\n", sbuf);
+			}
+		}
+		else {
+			fprintf(stderr,"There was an error somewhere...\n");
+		}
+	}
+	if (offset < 0) {
+		if ( write(fd,"200 result=-1 endpos=0\n\n",128) < 0 )
 			return -1;
 	}
-	else if (status == ESL_SUCCESS) {
-		if ( write(fd,"200 result=1\n\n",128) < 0 )
+	else {
+		sprintf(buf,"200 result=%d endpos=%d\n\n",dtmf,offset);
+		if ( write(fd,buf,128) < 0 )
 			return -1;
 	}
-	fprintf(stderr,"Playback ended\n");
 
 	return 0;
 }
-
 
 static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]) {
 	char *cur;
