@@ -25,6 +25,8 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(connect()));
     QObject::connect(consoleWindow->action_Disconnect, SIGNAL(triggered()),
                      this, SLOT(disconnect()));
+    QObject::connect(consoleWindow->action_Reconnect, SIGNAL(triggered()),
+                     this, SLOT(reconnect()));
     QObject::connect(consoleWindow->action_Clear, SIGNAL(triggered()),
                      this, SLOT(clearLogContents()));
     QObject::connect(consoleWindow->action_Save_log, SIGNAL(triggered()),
@@ -440,6 +442,7 @@ void ConsolePlugin::tabChanged(int index)
     {
         consoleWindow->action_Connect->setDisabled(esl->isConnected());
         consoleWindow->action_Disconnect->setEnabled(esl->isConnected());
+        consoleWindow->action_Reconnect->setEnabled(esl->isConnected());
     }
 }
 
@@ -450,6 +453,12 @@ void ConsolePlugin::connect()
     {
         esl->connect();
     }
+}
+
+void ConsolePlugin::reconnect()
+{
+    disconnect(); 
+    QTimer::singleShot(500, this, SLOT(connect()));
 }
 
 void ConsolePlugin::disconnect()

@@ -74,6 +74,7 @@ protected:
 private slots:
     void connectionStateChanged();
     void connect();
+    void reconnect();
     void disconnect();
     void newConnection();
     void clearLogContents();
