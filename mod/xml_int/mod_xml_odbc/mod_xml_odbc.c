@@ -518,7 +518,7 @@ static switch_status_t do_config()
 				goto done;
 			}
 			memset(binding, 0, sizeof(*binding));
-			binding->bindings = strdup(val); // use switch_core_strdup globals.pool for this ?
+			binding->bindings = strdup(val); /* use switch_core_strdup globals.pool for this ? */
 
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding XML Search Function [%s]\n", val);
 
