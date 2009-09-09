@@ -36,16 +36,21 @@
  */
 #include <switch.h>
 
+SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown);
+SWITCH_MODULE_RUNTIME_FUNCTION(mod_xml_odbc_runtime);
+SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load);
+
+/* SWITCH_MODULE_DEFINITION(name, load, shutdown, runtime)
+ * Defines a switch_loadable_module_function_table_t and a static const char[] modname
+ */
+SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown, NULL);
+
 typedef enum {
 	XML_ODBC_CONFIGURATION = 0,
 	XML_ODBC_DIRECTORY = 0,
 	XML_ODBC_DIALPLAN = 0,
 	XML_ODBC_PHRASES = 0
 } xml_odbc_query_type_t;
-
-SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load);
-SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown);
-SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown, NULL);
 
 static struct {
 	char *odbc_dsn;
@@ -58,6 +63,9 @@ static struct {
 	int max_render_template_count;
 } globals;
 
+static switch_event_node_t *NODE = NULL;
+
+/* this struct is created on calling of xml_odbc_search and passed on through all child functions */
 typedef struct xml_odbc_session_helper {
 	switch_memory_pool_t *pool; /* memory pool that is destroyed at the end of the session to ease free'ing */
 	char *next_template_name;   /* the name of the next template that has to be rendered */
@@ -73,8 +81,14 @@ typedef struct xml_odbc_session_helper {
 static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper);
 static switch_status_t xml_odbc_render_children(xml_odbc_session_helper_t *helper);
 static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helper);
+static switch_status_t do_config(switch_bool_t reload);
 
 #define XML_ODBC_SYNTAX "[debug_on|debug_off]"
+
+static void event_handler(switch_event_t *event)
+{
+	do_config(SWITCH_TRUE);
+}
 
 /* cli commands */
 SWITCH_STANDARD_API(xml_odbc_function)
@@ -478,8 +492,11 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 }
 
 
-static switch_status_t do_config()
+static switch_status_t do_config(switch_bool_t reload)
 {
+
+//	if (switch_xml_config_parse_module_se blah blah SWITCH_STATUS_GENERR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 	char *cf = "xml_odbc.conf";
 	switch_xml_t cfg, xml, settings_tag, templates_tag, param;
 	xml_binding_t *binding = NULL;
@@ -614,9 +631,14 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-	if (do_config() != SWITCH_STATUS_SUCCESS) {
+	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
 		return SWITCH_STATUS_FALSE;
+	}
+
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
+		return SWITCH_STATUS_TERM;
 	}
 
 	SWITCH_ADD_API(xml_odbc_api_interface, "xml_odbc", "XML ODBC", xml_odbc_function, XML_ODBC_SYNTAX);
