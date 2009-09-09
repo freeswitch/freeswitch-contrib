@@ -27,7 +27,7 @@
  * Leon de Rooij <leon@scarlet-internet.nl>
  *
  * Also thanks to:
- * Scarlet Nederland for donating time and money
+ * Scarlet Telecom Nederland for funding this work.
  *
  *
  * mod_xml_odbc.c -- Simple templating that can use ODBC to generate XML at search-time
@@ -59,15 +59,15 @@ static struct {
 } globals;
 
 typedef struct xml_odbc_session_helper {
-	switch_memory_pool_t *pool;	/* memory pool that is destroyed at the end of the session to ease free'ing */
-	char *next_template_name;	/* the name of the next template that has to be rendered */
-	switch_event_t *event;		/* contains headers which is a hash that can easily be expanded ${var} to *chars */
-	switch_xml_t xml_in_cur;	/* current tag in xml template that is rendered from */
-	switch_xml_t xml_out;		/* root tag of xml that is rendered to */
-	switch_xml_t xml_out_cur;	/* current tag in xml that is rendered to */
-	int xml_out_cur_off;		/* depth counter of xml_out_cur */
-	int render_template_count;	/* when this counter > globals.max_render_template_count then stop because there's probably a loop */
-	int tmp_i;					/* temporary counter, used for counting rows in the callback */
+	switch_memory_pool_t *pool; /* memory pool that is destroyed at the end of the session to ease free'ing */
+	char *next_template_name;   /* the name of the next template that has to be rendered */
+	switch_event_t *event;      /* contains headers which is a hash that can easily be expanded ${var} to *chars */
+	switch_xml_t xml_in_cur;    /* current tag in xml template that is rendered from */
+	switch_xml_t xml_out;       /* root tag of xml that is rendered to */
+	switch_xml_t xml_out_cur;   /* current tag in xml that is rendered to */
+	int xml_out_cur_off;        /* depth counter of xml_out_cur */
+	int render_template_count;  /* when this counter > globals.max_render_template_count then stop because there's probably a loop */
+	int rowcount;               /* temporary counter, used for counting rows in the callback */
 } xml_odbc_session_helper_t;
 
 static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper);
@@ -107,26 +107,23 @@ typedef struct xml_binding {
 	char *bindings;
 } xml_binding_t;
 
-static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, switch_event_t *event, const char *in) /* perhaps it's handy if this is moved to switch_event.c ? */
+static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, switch_event_t *event, const char *in)
 {
-    char *tmp, *out;
+	char *tmp, *out;
 
-    tmp = switch_event_expand_headers(event, in);
-    out = switch_core_strdup(pool, tmp);
-    if (tmp != in) switch_safe_free(tmp);
+	tmp = switch_event_expand_headers(event, in);
+	out = switch_core_strdup(pool, tmp);
+	if (tmp != in) switch_safe_free(tmp);
 
-    return out;
+	return out;
 }
 
 static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
 {
 	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
-	int i;
+	int i, tmp_rowcount;
 
 	if (!switch_strlen_zero(helper->next_template_name)) goto done;
-
-	/* up the row counter */
-	helper->tmp_i++; /* TODO: WILL THIS GO WRONG FOR NESTED QUERIES ?? THINK ABOUT IT !!! */
 
 	/* loop through all columns and store them in helper->event->headers */
 	for (i = 0; i < argc; i++) {
@@ -134,9 +131,18 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
+	/* up the rowcount, store it in a temporary variable and set rowcount to zero as children may use it */
+	helper->rowcount++;
+	tmp_rowcount = helper->rowcount;
+	helper->rowcount = 0;
+
+	/* render all children */
 	xml_odbc_render_children(helper);
 
-  done:
+	/* restore the rowcounter - it may have been changed by a child */
+	helper->rowcount = tmp_rowcount;
+
+ done:
 	return 0;
 }
 
@@ -202,7 +208,7 @@ static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *h
 
 	status = xml_odbc_render_children(helper);
 
-  done:
+ done:
 	return status;
 }
 
@@ -222,13 +228,13 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 		goto done;
 	} 
 
-	if (!switch_strlen_zero(empty_result_break_to) && helper->tmp_i == 0) {
+	if (!switch_strlen_zero(empty_result_break_to) && helper->rowcount == 0) {
 		helper->next_template_name = empty_result_break_to;
 	}
 	
 	status = SWITCH_STATUS_SUCCESS;
 
-  done:
+ done:
 	return status;
 }
 
@@ -278,7 +284,7 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 
 	status = xml_odbc_render_children(helper);
 
-  done:
+ done:
 	return status;
 }
 
@@ -306,7 +312,7 @@ static switch_status_t xml_odbc_render_children(xml_odbc_session_helper_t *helpe
 
 	status = SWITCH_STATUS_SUCCESS;
 
-  done:
+ done:
 	/* restore helper->xml_in_cur in case it was changed during render_tag */
 	helper->xml_in_cur = xml_in_cur_tmp;
 
@@ -358,7 +364,7 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
   reset:
 	status = xml_odbc_render_template(helper);
 
-  done:
+ done:
 	return status;
 }
 
@@ -585,7 +591,7 @@ static switch_status_t do_config()
 	/* all went fine */
 	status = SWITCH_STATUS_SUCCESS;
 
-  done:
+ done:
 	switch_xml_free(xml);
 	return status;
 }

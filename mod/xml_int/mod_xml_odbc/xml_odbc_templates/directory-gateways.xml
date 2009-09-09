@@ -5,7 +5,7 @@
     <document type="freeswitch/xml">
       <section name="directory">
         <xml-odbc-do name="set-event-header" to-name="where-clause" to-value="`${key_name}`='${key_value}'"/>
-	<xml-odbc-do name="set-event-header" if-name="where-clause" if-value="``=''" to-value="1"/>
+        <xml-odbc-do name="set-event-header" if-name="where-clause" if-value="``=''" to-value="1"/>
         <xml-odbc-do name="query" on-empty-result-break-to="not-found"
                      value="SELECT name AS domain_name FROM dir_domains WHERE ${where-clause};">
           <domain name="${domain_name}"/>
