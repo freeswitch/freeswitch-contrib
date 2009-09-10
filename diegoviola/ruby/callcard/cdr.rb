@@ -6,7 +6,6 @@ require 'fsr/listener/inbound'
 require 'database.rb'
 
 def custom_channel_hangup_handler(event)
-  event.content.each {|k,v| v.chomp!}
   DB[:cdr].insert(
     :caller_caller_id_name => event.content[:caller_caller_id_name],
     :caller_caller_id_number => event.content[:caller_caller_id_number],
