@@ -22,10 +22,8 @@ win32:INCLUDEPATH += ../../../../../src/include/
 QT += network
 TEMPLATE = lib
 TARGET = consoleplugin
-
 DESTDIR = ../../../bin/plugins/
 macx:DESTDIR = ../../../bin/fsgui.app/Contents/PlugIns/fsgui
-
 CONFIG += plugin
 INCLUDEPATH = ../../fsgui/ \
     ../../interfaces \
@@ -35,21 +33,23 @@ HEADERS = consoleplugin.h \
     consoletabwidget.h \
     realtimestatisticsdialog.h \
     realtimemodels.h \
-    pastebindialog.h
+    pastebindialog.h \
+    finddialog.h
 SOURCES = consoleplugin.cpp \
     sortfilterproxymodel.cpp \
     consoletabwidget.cpp \
     realtimestatisticsdialog.cpp \
     realtimemodels.cpp \
-    pastebindialog.cpp
+    pastebindialog.cpp \
+    finddialog.cpp
 FORMS += centralWidget.ui \
     console_settings.ui \
     consoletabwidget.ui \
     realtimestatisticsdialog.ui \
-    pastebindialog.ui
+    pastebindialog.ui \
+    finddialog.ui
 LIBS += -L../../interfaces \
     -linterfaces \
     -L../../../../../../libs/esl/ \
     -lesl
 RESOURCES += ../../resources/resources.qrc
-

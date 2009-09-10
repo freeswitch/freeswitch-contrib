@@ -74,6 +74,7 @@
     </property>
     <addaction name="action_Clear"/>
     <addaction name="separator"/>
+    <addaction name="action_Find"/>
    </widget>
    <widget class="QMenu" name="menu_Console">
     <property name="title">
@@ -161,6 +162,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="action_Find">
+   <property name="text">
+    <string>&amp;Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

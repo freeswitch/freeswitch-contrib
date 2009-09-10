@@ -4,6 +4,7 @@
 #include "monitorstatemachine.h"
 #include "realtimestatisticsdialog.h"
 #include "pastebindialog.h"
+#include "finddialog.h"
 
 ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection) :
     QWidget(parent),
@@ -11,6 +12,7 @@ ConsoleTabWidget::ConsoleTabWidget(QWidget *parent, ESLconnection *eslconnection
     esl(eslconnection),
     _rtStatsDlg(NULL),
     _pastebinDlg(NULL),
+    _findDialog(NULL),
     findNext(false)
 {
     m_ui->setupUi(this);
@@ -378,4 +380,14 @@ void ConsoleTabWidget::pastebinLog()
 void ConsoleTabWidget::reverseFilterChecked()
 {
     model->toggleReverseFlag();
+}
+
+void ConsoleTabWidget::findText()
+{
+    if(!_findDialog)
+        _findDialog = new FindDialog(this, model, m_ui->consoleListView);
+
+    _findDialog->show();
+    _findDialog->raise();
+    _findDialog->activateWindow();
 }

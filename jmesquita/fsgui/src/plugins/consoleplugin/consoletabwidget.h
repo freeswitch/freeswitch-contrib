@@ -53,6 +53,7 @@ class ESLconnection;
 class MonitorStateMachine;
 class RealtimeStatisticsDialog;
 class pastebinDialog;
+class FindDialog;
 
 class ConsoleTabWidget : public QWidget {
     Q_OBJECT
@@ -66,6 +67,7 @@ public slots:
     void saveLogToFile();
     void pastebinLog();
     void filterLogUUID(QString);
+    void findText();
 
 protected:
     void changeEvent(QEvent *e);
@@ -102,6 +104,7 @@ private:
     MonitorStateMachine *msm;
     RealtimeStatisticsDialog *_rtStatsDlg;
     pastebinDialog *_pastebinDlg;
+    FindDialog *_findDialog;
     bool findNext;
     bool autoScroll;
     int currentLogLevel;

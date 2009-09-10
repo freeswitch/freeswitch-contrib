@@ -80,6 +80,7 @@ private slots:
     void clearLogContents();
     void saveLogToFile();
     void pastebinLog();
+    void findText();
     void showRealtimeStats();
     void changeConsoleBackgroundColor();
     void changeAlertBackgroundColor();

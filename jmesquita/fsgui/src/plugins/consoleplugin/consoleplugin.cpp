@@ -35,6 +35,8 @@ ConsolePlugin::ConsolePlugin(QWidget *parent)
                      this, SLOT(showRealtimeStats()));
     QObject::connect(consoleWindow->action_Pastebin_Log, SIGNAL(triggered()),
                      this, SLOT(pastebinLog()));
+    QObject::connect(consoleWindow->action_Find, SIGNAL(triggered()),
+                     this, SLOT(findText()));
 }
 
 ConsolePlugin::~ConsolePlugin(){}
@@ -181,6 +183,13 @@ void ConsolePlugin::pastebinLog()
     ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
     if (tab)
         tab->pastebinLog();
+}
+
+void ConsolePlugin::findText()
+{
+    ConsoleTabWidget *tab = qobject_cast<ConsoleTabWidget*>(consoleWindow->tabConsole->currentWidget());
+    if (tab)
+        tab->findText();
 }
 
 void ConsolePlugin::showRealtimeStats()
