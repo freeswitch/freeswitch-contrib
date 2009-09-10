@@ -83,6 +83,7 @@ charCodes["7"]="__...";
 charCodes["8"]="___..";
 charCodes["9"]="____.";
 charCodes["0"]="_____";
+charCodes["/"]="_.._.";
 
 function usage()
 {
