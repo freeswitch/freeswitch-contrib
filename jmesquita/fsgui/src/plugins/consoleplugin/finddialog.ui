@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>485</width>
-    <height>114</height>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -103,6 +103,12 @@
        </property>
        <property name="text">
         <string>Find &amp;Next</string>
+       </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
