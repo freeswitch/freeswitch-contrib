@@ -29,7 +29,7 @@
       </xml-odbc-do>
     </template>
 
-    <template name="simple_configuration">
+    <template name="simple-configuration">
       <document type="freeswitch/xml">
         <configuration name="${key_value}">
           <settings>

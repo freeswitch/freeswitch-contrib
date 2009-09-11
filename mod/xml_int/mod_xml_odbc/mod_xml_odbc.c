@@ -37,20 +37,8 @@
 #include <switch.h>
 
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown);
-SWITCH_MODULE_RUNTIME_FUNCTION(mod_xml_odbc_runtime);
 SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load);
-
-/* SWITCH_MODULE_DEFINITION(name, load, shutdown, runtime)
- * Defines a switch_loadable_module_function_table_t and a static const char[] modname
- */
 SWITCH_MODULE_DEFINITION(mod_xml_odbc, mod_xml_odbc_load, mod_xml_odbc_shutdown, NULL);
-
-typedef enum {
-	XML_ODBC_CONFIGURATION = 0,
-	XML_ODBC_DIRECTORY = 0,
-	XML_ODBC_DIALPLAN = 0,
-	XML_ODBC_PHRASES = 0
-} xml_odbc_query_type_t;
 
 static struct {
 	char *odbc_dsn;
@@ -145,10 +133,9 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 		switch_event_add_header_string(helper->event, SWITCH_STACK_BOTTOM, columnName[i], argv[i]);
 	}
 
-	/* up the rowcount, store it in a temporary variable and set rowcount to zero as children may use it */
+	/* up the rowcount and store it in a temporary variable */
 	helper->rowcount++;
 	tmp_rowcount = helper->rowcount;
-	helper->rowcount = 0;
 
 	/* render all children */
 	xml_odbc_render_children(helper);
@@ -160,6 +147,10 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	return 0;
 }
 
+/* xml-odbc-do break-to
+ * set the next_template_name
+ * this will break the loop in xml_odbc_render_children, which resets xml_odbc_render_template
+ */
 static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 {
 	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
@@ -170,6 +161,11 @@ static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 	return SWITCH_STATUS_SUCCESS;
 }
 
+/* xml-odbc-do set-event-header (check-event-header goes here too)
+ * if if-name or (if-name and if-value) match then
+ * set to-name and / or to-value event headers
+ * after that, render all xml children (when available)
+ */
 static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
 {
 	char *name = (char *) switch_xml_attr(helper->xml_in_cur, "name"); /* the xml-odbc-do name attr */
@@ -226,6 +222,11 @@ static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *h
 	return status;
 }
 
+/* xml-odbc-do query
+ * performs sql query as defined in 'value'
+ * on each row returned, execute xml_odbc_query_callback
+ * if no rows are returned and on-empty-result-break-to is set, then set that as next_template_name
+ */
 static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 {
 	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
@@ -236,6 +237,8 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 	if (globals.debug == SWITCH_TRUE) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Performing Query:\n%s\n", new_value);
 	}
+
+	helper->rowcount = 0;
 
 	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper) != SWITCH_ODBC_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
@@ -270,7 +273,7 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 		if (!strcasecmp(name, "break-to")) {
 			status = xml_odbc_do_break_to(helper);
 		} else if (!strcasecmp(name, "check-event-header")) {  /* check-event-header is the same as set-event-header */
-			status = xml_odbc_do_set_event_header(helper); /* except no to-name or to-value are given.. */
+			status = xml_odbc_do_set_event_header(helper);       /* except no to-name or to-value are given.. */
 		} else if (!strcasecmp(name, "set-event-header")) {
 			status = xml_odbc_do_set_event_header(helper);
 		} else if (!strcasecmp(name, "query")) {
@@ -375,24 +378,25 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 
 	goto done;
 
-  reset:
+ reset:
 	status = xml_odbc_render_template(helper);
 
  done:
 	return status;
 }
 
+/* xml_odbc_search - the function that is called by fs_core */
 static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, const char *key_name, const char *key_value, switch_event_t *event, void *user_data)
 {
 	xml_binding_t *binding = (xml_binding_t *) user_data;
 	switch_event_header_t *hi;
 	switch_uuid_t uuid;
 	char uuid_str[SWITCH_UUID_FORMATTED_LENGTH + 1];
-	char *xml_char;						/* a char representation of the generated xml that will be written to temp file */
-	switch_memory_pool_t *pool;			/* for easy memory cleanup */
-	xml_odbc_session_helper_t helper;	/* this helper is sent through all other functions to generate the xml */
-	switch_xml_t xml_out = NULL;		/* the xml that will be returned by this function */
-	char filename[512] = "";			/* the temporary, uuid-based filename */
+	char *xml_char;                   /* a char representation of the generated xml that will be written to temp file */
+	switch_memory_pool_t *pool;       /* for easy memory cleanup */
+	xml_odbc_session_helper_t helper; /* this helper is sent through all other functions to generate the xml */
+	switch_xml_t xml_out = NULL;      /* the xml that will be returned by this function */
+	char filename[512] = "";          /* the temporary, uuid-based filename */
 	int fd;
 
 	if (!binding) {
@@ -484,7 +488,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 		}
 	}
 
-  cleanup:
+ cleanup:
 	switch_xml_free(helper.xml_out);
 	switch_core_destroy_memory_pool(&pool);
 
@@ -494,9 +498,6 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 
 static switch_status_t do_config(switch_bool_t reload)
 {
-
-//	if (switch_xml_config_parse_module_se blah blah SWITCH_STATUS_GENERR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 	char *cf = "xml_odbc.conf";
 	switch_xml_t cfg, xml, settings_tag, templates_tag, param;
 	xml_binding_t *binding = NULL;
