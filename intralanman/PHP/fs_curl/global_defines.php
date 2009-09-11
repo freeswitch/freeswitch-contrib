@@ -63,7 +63,7 @@ define('FS_CURL_DEBUG', 9);
  * 1 xml comment
  * 2 file (named in FS_DEBUG_FILE), take care when using this option as there's currently nothing to watch the file's size
  */
-define('FS_DEBUG_TYPE', 0);
+define('FS_DEBUG_TYPE', 1);
 
 /**
  * File to use for debugging to file
