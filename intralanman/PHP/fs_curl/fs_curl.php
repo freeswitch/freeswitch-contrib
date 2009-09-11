@@ -193,8 +193,8 @@ class fs_curl {
             sprintf('Total # of Queries Run: %d', $this->db->counter)
         );
         $this -> comment(sprintf("Estimated Execution Time Is: %s"
-                , (ereg_replace(
-                '^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()) - START_TIME)
+                , (preg_replace(
+                '/^0\.(\d+) (\d+)$/', '\2.\1', microtime()) - START_TIME)
             ));
 
         $this -> comments2xml($this -> xmlw, $this -> comments);
@@ -320,6 +320,7 @@ class fs_curl {
                                                 syslog(LOG_NOTICE, $debug_str);
                                                 break;
                                             case 1:
+                                                $debug_str = preg_replace('/-/', ' - ', $debug_str);
                                                 $this -> comment($debug_str);
                                                 break;
                                             case 2:
