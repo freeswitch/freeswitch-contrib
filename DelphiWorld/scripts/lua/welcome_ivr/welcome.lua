@@ -2,7 +2,7 @@ session:answer();
 while (session:ready() == true) do 
 session:setAutoHangup(false)
 session:set_tts_parms("flite", "kal");
-session:speak("Welcome. Welcome to the VoIp World!. this is a Blind Users Programing Community. powered by Freeswitch, the free / ultimate PBX. thank to anthm!");
+session:speak("Welcome. Welcome to the VoIp World!. this is a Blind Users Programing Community. powered by Freeswitch, the free / ultimate PBX. thank to toni!");
 session:sleep(100);
 session:speak("please select an Action.");
 session:sleep(100);
@@ -18,7 +18,7 @@ session:speak("to call me, press 0");
 session:sleep(3000);
 digits = session:getDigits(1, "", 3000);
 if (digits == "1")  then
-  session:execute("transfer","3001");
+  session:execute("transfer","9888");
 end
 if (digits == "2")  then
   session:execute("transfer","5000");
