@@ -107,8 +107,6 @@ static switch_status_t do_config(switch_bool_t reload)
   char *odbc_user = NULL;
   char *odbc_pass = NULL;
 
-	memset(&globals, 0, sizeof(globals));
-
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (!(xml = switch_xml_open_cfg(cf, &cfg, NULL))) {
@@ -168,32 +166,36 @@ static switch_status_t do_config(switch_bool_t reload)
 	return status;
 }
 
+/*
 SWITCH_STANDARD_API(odbc_query_function)
 {
 	do_config(SWITCH_TRUE);
 	
 	return SWITCH_STATUS_SUCCESS;
 }
+*/
 
 /* Macro expands to: switch_status_t mod_odbc_query_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 {
-	switch_api_interface_t *api_interface;
+	/* switch_api_interface_t *api_interface; */
 	switch_application_interface_t *app_interface;
+
+	memset(&globals, 0, sizeof(globals));
 
 	switch_core_new_memory_pool(&globals.pool);
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "ODBC Query module loading...\n");
-
-	/* connect my internal structure to the blank pointer passed to me */
-	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
 	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
 		return SWITCH_STATUS_FALSE;
 	}
 	
-	SWITCH_ADD_API(api_interface, "odbc_query", "ODBC Query API", odbc_query_function, "syntax");
+	/* connect my internal structure to the blank pointer passed to me */
+	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+
+	/* SWITCH_ADD_API(api_interface, "odbc_query", "ODBC Query API", odbc_query_function, "syntax"); */
 	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query>", SAF_SUPPORT_NOMEDIA);
 
 	/* indicate that the module should continue to be loaded */
