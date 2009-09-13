@@ -181,12 +181,17 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 	switch_api_interface_t *api_interface;
 	switch_application_interface_t *app_interface;
 
+	switch_core_new_memory_pool(&globals.pool);
+
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "ODBC Query module loading...\n");
+
 	/* connect my internal structure to the blank pointer passed to me */
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Hello World!\n");
-	
-	do_config(SWITCH_FALSE);
+	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
+		return SWITCH_STATUS_FALSE;
+	}
 	
 	SWITCH_ADD_API(api_interface, "odbc_query", "ODBC Query API", odbc_query_function, "syntax");
 	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query>", SAF_SUPPORT_NOMEDIA);

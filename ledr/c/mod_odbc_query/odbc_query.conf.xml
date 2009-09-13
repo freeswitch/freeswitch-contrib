@@ -6,7 +6,7 @@
 
   <queries>
     <!-- the ${foo} variable will be expanded from channel variables at query time -->
-    <query name="map-did-users" data="
+    <query name="map-did-users" value="
       SELECT
         dir_users.username AS dest_user,
         dir_domains.name AS dest_domain
