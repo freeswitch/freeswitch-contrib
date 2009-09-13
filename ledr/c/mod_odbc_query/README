@@ -1,0 +1,66 @@
+mod_odbc_query readme
+
+by: Leon de Rooij <leon@toyos.nl>
+
+This module can be used for doing odbc queries from the dialplan.
+
+Usage:
+
+<application name="odbc_query" value="SELECT some_column_name AS target_channel_variable_name FROM some_table_name WHERE 1;"/>
+
+or:
+
+<application name="odbc_query" value="my-query"/>
+
+The module simply checks whether the value contains a space. If it does, then the value will be seen as an SQL query, otherwise it will be seen as a query 'name' that then has to be defined in the modules configuration in the <queries> section like this:
+
+<queries>
+  <query name="my-query" value="SELECT some_column_name AS target_channel_variable_name FROM some_table_name WHERE 1;"/>
+</queries>
+
+The module will do the query and store each returned column name as channel variable name together with its corresponding value.
+
+Another feature is, that if only two columns are returned, which have the column names "name" and "value", then the channel variables will be set according to them. This way you can have the query return multiple rows with different channel variables. If the query returns something else than column-names "name" and "value" and it returns multiple rows, then the channel variables will be overwritten with each iteration of the rows - which is probably useless.
+
+The query may contain ${blah} variables that will be expanded from channel variables before the query is performed.
+
+
+For example:
+
+query: "SELECT foo, bar FROM huk WHERE tilde='kek';"
+
+returns:
+
+foo    bar
+----------
+a      b
+c      d
+
+then the channel variables that will be set are:
+
+foo=c
+bar=d
+
+---
+
+
+query: "SELECT foo AS name, bar AS value FROM huk WHERE tilde='kek';"
+
+returns:
+
+name   value
+------------
+a      b
+c      d
+
+then the channel variables that will be set are:
+
+a=b
+c=d
+
+---
+
+
+So, the first example should only be used when you know that only zero or one row will be returned, and second one if you know zero or more rows will be returned.
+
+If zero rows are returned (in either foo/bar or name/value case) then no channel variables will be set, overwritten or deleted.
