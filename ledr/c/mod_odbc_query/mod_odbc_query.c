@@ -95,6 +95,8 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 
 	expanded_query = switch_channel_expand_variables_by_pool(pool, channel, query);
 
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Performing query: [%s]\n", expanded_query);
+
 	if (switch_odbc_handle_callback_exec(globals.master_odbc, expanded_query, odbc_query_callback, channel) != SWITCH_ODBC_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", expanded_query);
 	}
