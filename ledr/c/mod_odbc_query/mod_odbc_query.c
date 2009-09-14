@@ -135,22 +135,22 @@ static switch_status_t do_config(switch_bool_t reload)
 	}
 
 	/* make odbc connection */
-if (!reload) {
-	if (switch_odbc_available() && globals.odbc_dsn) {
+	if (!reload) {
+		if (switch_odbc_available() && globals.odbc_dsn) {
 
-		if (!(globals.odbc_handle = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
-			goto done;
+			if (!(globals.odbc_handle = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
+				goto done;
+			}
+
+			if (switch_odbc_handle_connect(globals.odbc_handle) != SWITCH_ODBC_SUCCESS) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
+				goto done;
+			}
+
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: [%s]\n", globals.odbc_dsn);
 		}
-
-		if (switch_odbc_handle_connect(globals.odbc_handle) != SWITCH_ODBC_SUCCESS) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
-			goto done;
-		}
-
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: [%s]\n", globals.odbc_dsn);
 	}
-}
 
 	status = SWITCH_STATUS_SUCCESS;
 
