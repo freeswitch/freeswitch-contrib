@@ -37,10 +37,12 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown);
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load);
 SWITCH_MODULE_DEFINITION(mod_odbc_query, mod_odbc_query_load, mod_odbc_query_shutdown, NULL);
 
+static switch_event_node_t *NODE = NULL;
+
 static struct {
 	char *odbc_dsn;
 	switch_memory_pool_t *pool;
-	switch_odbc_handle_t *master_odbc;
+	switch_odbc_handle_t *odbc_handle;
 	switch_xml_t queries;
 } globals;
 
@@ -59,7 +61,7 @@ static int odbc_query_callback(void *pArg, int argc, char **argv, char **columnN
 {
 	switch_channel_t *channel = (switch_channel_t *) pArg;
 
-  if ((argc == 2) && (!strcmp(columnName[0], "name")) && (!strcmp(columnName[1], "value"))) {
+	if ((argc == 2) && (!strcmp(columnName[0], "name")) && (!strcmp(columnName[1], "value"))) {
 		switch_channel_set_variable(channel, argv[0], argv[1]);
 	} else {
 		for (int i = 0; i < argc; i++) {
@@ -70,44 +72,12 @@ static int odbc_query_callback(void *pArg, int argc, char **argv, char **columnN
 	return 0;
 }
 
-SWITCH_STANDARD_APP(odbc_query_app_function)
-{
-	char *query = NULL;
-	char *expanded_query = NULL;
-	switch_channel_t *channel = switch_core_session_get_channel(session);
-	switch_memory_pool_t *pool = switch_core_session_get_pool(session);
-	switch_xml_t stored_query;
-
-	if (!channel) {
-		return;
-	}
-
-	/* get query from data if it contains space, otherwise get it from <queries> section in configuration */
-	if (strchr(data, ' ')) {
-		query = switch_core_session_strdup(session, data);
-	} else {
-		for (stored_query = switch_xml_child(globals.queries, "query"); stored_query; stored_query = stored_query->next) {
-			if (!strcmp(switch_xml_attr_soft(stored_query, "name"), data)) {
-				query = switch_core_session_strdup(session, switch_xml_attr_soft(stored_query, "value"));
-			}
-		}
-	}
-
-	expanded_query = switch_channel_expand_variables_by_pool(pool, channel, query);
-
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Performing query: [%s]\n", expanded_query);
-
-	if (switch_odbc_handle_callback_exec(globals.master_odbc, expanded_query, odbc_query_callback, channel) != SWITCH_ODBC_SUCCESS) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", expanded_query);
-	}
-}
-
 static switch_status_t do_config(switch_bool_t reload)
 {
 	char *cf = "odbc_query.conf";
 	switch_xml_t cfg, xml = NULL, param, settings, queries;
-  char *odbc_user = NULL;
-  char *odbc_pass = NULL;
+	char *odbc_user = NULL;
+	char *odbc_pass = NULL;
 
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
@@ -122,7 +92,7 @@ static switch_status_t do_config(switch_bool_t reload)
 		for (param = switch_xml_child(settings, "param"); param; param = param->next) {
 			char *var = (char *) switch_xml_attr_soft(param, "name");
 			char *val = (char *) switch_xml_attr_soft(param, "value");
-			if (!strcasecmp(var, "odbc-dsn")) {
+			if (!strcasecmp(var, "odbc-dsn") && (!switch_strlen_zero(val))) {
 				globals.odbc_dsn = switch_core_strdup(globals.pool, val);
 				if ((odbc_user = strchr(globals.odbc_dsn, ':'))) {
 					*odbc_user++ = '\0';
@@ -143,17 +113,17 @@ static switch_status_t do_config(switch_bool_t reload)
 	/* make odbc connection */
 	if (switch_odbc_available() && globals.odbc_dsn) {
 
-		if (!(globals.master_odbc = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
+		if (!(globals.odbc_handle = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
 			goto done;
 		}
 
-		if (switch_odbc_handle_connect(globals.master_odbc) != SWITCH_ODBC_SUCCESS) {
+		if (switch_odbc_handle_connect(globals.odbc_handle) != SWITCH_ODBC_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
 			goto done;
 		}
 
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: %s\n", globals.odbc_dsn);
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Connected ODBC DSN: [%s]\n", globals.odbc_dsn);
 	}
 
 	/* copy entire queries xml section to globals */
@@ -168,19 +138,65 @@ static switch_status_t do_config(switch_bool_t reload)
 	return status;
 }
 
-/*
+static void event_handler(switch_event_t *event)
+{
+	do_config(SWITCH_TRUE);
+}
+
 SWITCH_STANDARD_API(odbc_query_function)
 {
 	do_config(SWITCH_TRUE);
-	
+
 	return SWITCH_STATUS_SUCCESS;
 }
-*/
+
+SWITCH_STANDARD_APP(odbc_query_app_function)
+{
+	char *query = NULL;
+	char *expanded_query = NULL;
+	switch_channel_t *channel = switch_core_session_get_channel(session);
+	switch_memory_pool_t *pool = switch_core_session_get_pool(session);
+	switch_xml_t stored_query;
+
+	if (!channel) {
+		return;
+	}
+
+	/* get query from data if it contains space, otherwise get it from <queries> section in configuration */
+	if (strchr(data, ' ')) {
+		query = switch_core_session_strdup(session, data);
+	} else {
+		if (globals.queries) {
+			for (stored_query = switch_xml_child(globals.queries, "query"); stored_query; stored_query = stored_query->next) {
+				if (!strcmp(switch_xml_attr_soft(stored_query, "name"), data)) {
+					query = switch_core_session_strdup(session, switch_xml_attr_soft(stored_query, "value"));
+				}
+			}
+		}
+		if (!query) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not find a query named: [%s]\n", data);
+			return;
+		}
+	}
+
+	if (!query) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No query defined!\n");
+		return;
+	}
+
+	expanded_query = switch_channel_expand_variables_by_pool(pool, channel, query);
+
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Performing query: [%s]\n", expanded_query);
+
+	if (switch_odbc_handle_callback_exec(globals.odbc_handle, expanded_query, odbc_query_callback, channel) != SWITCH_ODBC_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", expanded_query);
+	}
+}
 
 /* Macro expands to: switch_status_t mod_odbc_query_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 {
-	/* switch_api_interface_t *api_interface; */
+	switch_api_interface_t *api_interface;
 	switch_application_interface_t *app_interface;
 
 	memset(&globals, 0, sizeof(globals));
@@ -197,8 +213,14 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 	/* connect my internal structure to the blank pointer passed to me */
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-	/* SWITCH_ADD_API(api_interface, "odbc_query", "ODBC Query API", odbc_query_function, "syntax"); */
-	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query>", SAF_SUPPORT_NOMEDIA);
+	/* subscribe to reloadxml event, and hook it to event_handler */
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
+		return SWITCH_STATUS_TERM;
+	}
+
+	SWITCH_ADD_API(api_interface, "odbc_query", "ODBC Query API", odbc_query_function, "");
+	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query|query-name>", SAF_SUPPORT_NOMEDIA);
 
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
@@ -209,8 +231,10 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   Macro expands to: switch_status_t mod_odbc_query_shutdown() */
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
 {
-	switch_odbc_handle_disconnect(globals.master_odbc);
-	switch_odbc_handle_destroy(&globals.master_odbc);
+	switch_odbc_handle_disconnect(globals.odbc_handle);
+	switch_odbc_handle_destroy(&globals.odbc_handle);
+
+	switch_xml_free(globals.queries);
 
 	return SWITCH_STATUS_SUCCESS;
 }
