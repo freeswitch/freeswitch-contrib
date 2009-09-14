@@ -110,8 +110,8 @@ static switch_status_t do_config(switch_bool_t reload)
 	/* get queries and put them in globals.queries_hash */
 	if ((queries = switch_xml_child(cfg, "queries"))) {
 		for (query = switch_xml_child(queries, "query"); query; query = query->next) {
-			char *var = (char *) switch_xml_attr_soft(param, "name");
-			char *val = (char *) switch_xml_attr_soft(param, "value");
+			char *var = (char *) switch_xml_attr_soft(query, "name");
+			char *val = (char *) switch_xml_attr_soft(query, "value");
 			if (!switch_strlen_zero(var) && !switch_strlen_zero(val)) {
 				switch_core_hash_insert(globals.queries_hash, var, val);
 			}
