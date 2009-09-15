@@ -208,16 +208,16 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "ODBC Query module loading...\n");
 
 	/* check if core odbc is available */
-  if (!switch_odbc_available()) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No core ODBC available!\n");
-    return SWITCH_STATUS_FALSE;
-  }
+	if (!switch_odbc_available()) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No core ODBC available!\n");
+		return SWITCH_STATUS_FALSE;
+	}
 
-  /* allocate the queries hash */
-  if (switch_core_hash_init(&globals.queries_hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
-    return SWITCH_STATUS_GENERR;
-  }
+	/* allocate the queries hash */
+	if (switch_core_hash_init(&globals.queries_hash, globals.pool) != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
+		return SWITCH_STATUS_GENERR;
+	}
 
 	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
