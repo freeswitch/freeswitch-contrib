@@ -1,10 +1,8 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'rubygems'
 require 'csv'
-require 'sequel'
-
-DB = Sequel.connect('mysql://root@localhost/callcard')
+require 'database.rb'
 
 CSV.foreach('outbound_rates.csv') do |row|
   DB[:rates].insert(:destination => row[0], :prefix => row[1], :first_increment => row[2], :second_increment => row[3], :rate => row[4])
