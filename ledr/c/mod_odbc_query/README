@@ -6,16 +6,16 @@ This module can be used for doing odbc queries from the dialplan.
 
 Usage:
 
-<application name="odbc_query" value="SELECT some_column_name AS
+<application name="odbc_query" data="SELECT some_column_name AS
     target_channel_variable_name FROM some_table_name WHERE 1;"/>
 
 or:
 
-<application name="odbc_query" value="my-query"/>
+<application name="odbc_query" data="my-query"/>
 
-The module simply checks whether the value contains a space. If it
-does, then the value will be seen as an SQL query, otherwise it will be
-seen as a query 'name' that then has to be defined in the modules
+The module simply checks whether the data attr contains a space. If it
+does, then that field will be seen as an SQL query, otherwise it will be
+seen as a query 'name' which then has to be defined in the modules
 configuration in the <queries> section like this:
 
 <queries>
