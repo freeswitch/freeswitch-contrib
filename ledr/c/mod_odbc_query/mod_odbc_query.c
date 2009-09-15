@@ -136,7 +136,6 @@ static switch_status_t do_config(switch_bool_t reload)
 
 	/* make odbc connection */
 	if (!reload) {
-
 		if (!(globals.odbc_handle = switch_odbc_handle_new(globals.odbc_dsn, odbc_user, odbc_pass))) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
 			goto done;
@@ -221,7 +220,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 
 	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
-		/* TODO what about freeing queries_hash here ? */
 		return SWITCH_STATUS_FALSE;
 	}
 	
@@ -231,7 +229,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 	/* subscribe to reloadxml event, and hook it to reload_event_handler */
 	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, reload_event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
-		/* TODO what about freeing queries_hash here ? */
 		return SWITCH_STATUS_TERM;
 	}
 
