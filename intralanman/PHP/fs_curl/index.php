@@ -18,32 +18,22 @@ define('START_TIME', ereg_replace('^0\.([0-9]+) ([0-9]+)$', '\2.\1', microtime()
  * critical error condition before the fs_curl
  * class is successfully instantiated.
  * @return void
-*/
+ */
 
 function file_not_found($no=false, $str=false, $file=false, $line=false) {
     if ($no == E_STRICT) {
         return;
     }
     header('Content-Type: text/xml');
-    $xmlw = new XMLWriter();
-    $xmlw -> openMemory();
-    $xmlw -> setIndent(true);
-    $xmlw -> setIndentString('  ');
-    $xmlw -> startDocument('1.0', 'UTF-8', 'no');
-    //set the freeswitch document type
-    $xmlw -> startElement('document');
-    $xmlw -> writeAttribute('type', 'freeswitch/xml');
-    $xmlw -> startElement('section');
-    $xmlw -> writeAttribute('name', 'result');
-    $xmlw -> startElement('result');
-    $xmlw -> writeAttribute('status', 'not found');
-    $xmlw -> endElement();
-    $xmlw -> endElement();
-    $xmlw -> endElement();
+    printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+    printf("<document type=\"freeswitch/xml\">\n");
+    printf("  <section name=\"result\">\n");
+    printf("    <result status=\"not found\"/>\n");
+    printf("  </section>\n");
     if (!empty($no) && !empty($str) && !empty($file) &&!empty($line)) {
-        $xmlw -> writeComment("ERROR: $no - ($str) on line $line of $file");
+        printf("  <!-- ERROR: $no - ($str) on line $line of $file -->\n");
     }
-    echo $xmlw -> outputMemory();
+    printf("</document>\n");
     exit();
 }
 error_reporting(E_ALL);
@@ -51,14 +41,14 @@ set_error_handler('file_not_found');
 
 if (!class_exists('XMLWriter')) {
     trigger_error(
-    "XMLWriter Class NOT Found... You Must install it before using this package"
+        "XMLWriter Class NOT Found... You Must install it before using this package"
         , E_USER_ERROR
     );
 }
 if (!(@include_once('fs_curl.php'))
     || !(@include_once('global_defines.php'))) {
     trigger_error(
-    'could not include fs_curl.php or global_defines.php', E_USER_ERROR
+        'could not include fs_curl.php or global_defines.php', E_USER_ERROR
     );
 }
 if (!is_array($_REQUEST)) {
