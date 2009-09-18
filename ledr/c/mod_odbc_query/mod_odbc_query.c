@@ -232,7 +232,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 		return SWITCH_STATUS_TERM;
 	}
 
-	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query|query-name>", SAF_SUPPORT_NOMEDIA);
+	SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query|query-name>", SAF_SUPPORT_NOMEDIA | SAF_ROUTING_EXEC);
 
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
