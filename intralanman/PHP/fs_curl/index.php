@@ -54,7 +54,12 @@ if (!(@include_once('fs_curl.php'))
 if (!is_array($_REQUEST)) {
     trigger_error('$_REQUEST is not an array');
 }
-$section = $_REQUEST['section'];
+
+if (array_key_exists('cdr', $_REQUEST)) {
+    $section = 'cdr';
+} else {
+    $section = $_REQUEST['section'];
+}
 $section_file = sprintf('fs_%s.php', $section);
 /**
  * this include will differ based on the section that's passed
@@ -81,6 +86,9 @@ switch ($section) {
         break;
     case 'directory':
         $conf = new fs_directory();
+        break;
+    case 'cdr':
+        $conf = new fs_cdr();
         break;
 }
 

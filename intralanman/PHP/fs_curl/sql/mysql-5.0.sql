@@ -59,6 +59,39 @@ CREATE TABLE IF NOT EXISTS `acl_nodes` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cdr`
+--
+
+DROP TABLE IF EXISTS `cdr`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cdr` (
+  `id` int(11) NOT NULL auto_increment,
+  `caller_id_name` varchar(255) NOT NULL default '',
+  `caller_id_number` varchar(255) NOT NULL default '',
+  `destination_number` varchar(255) NOT NULL default '',
+  `context` varchar(255) NOT NULL default '',
+  `start_stamp` varchar(255) NOT NULL default '',
+  `answer_stamp` varchar(255) NOT NULL default '',
+  `end_stamp` varchar(255) NOT NULL default '',
+  `duration` varchar(255) NOT NULL default '',
+  `billsec` varchar(255) NOT NULL default '',
+  `hangup_cause` varchar(255) NOT NULL default '',
+  `uuid` varchar(255) NOT NULL default '',
+  `bleg_uuid` varchar(255) NOT NULL default '',
+  `accountcode` varchar(255) NOT NULL default '',
+  `read_codec` varchar(255) NOT NULL default '',
+  `write_codec` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+-- --------------------------------------------------------
+
+
+--
 -- Table structure for table `conference_advertise`
 --
 

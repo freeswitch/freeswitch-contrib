@@ -166,7 +166,7 @@ class fs_curl {
         for ($i = 0; $i < $comment_count; $i++) {
             if (array_key_exists($i, $comments)) {
                 if (!is_array($comments[$i])) {
-                    $xml_obj -> writeComment($comments[$i]);
+                    $xml_obj -> writeComment(" " . $comments[$i] . " ");
                 } else {
                     $this -> comments2xml($xml_obj, $comments[$i], $space_pad + 2);
                 }
@@ -269,7 +269,7 @@ class fs_curl {
         if ($no == E_STRICT) {
             return true;
         }
-        $file = ereg_replace('\.(inc|php)$', '', $file);
+        $file = preg_replace('/\.(inc|php)$/', '', $file);
         $this -> comment(basename($file) . ":$line - $no:$str");
 
         switch ($no) {
@@ -320,7 +320,7 @@ class fs_curl {
                                                 syslog(LOG_NOTICE, $debug_str);
                                                 break;
                                             case 1:
-                                                $debug_str = preg_replace('/-/', ' - ', $debug_str);
+                                                $debug_str = preg_replace('/--/', '- - ', $debug_str);
                                                 $this -> comment($debug_str);
                                                 break;
                                             case 2:

@@ -66,7 +66,7 @@ class fs_dialplan extends fs_curl {
         }
         if ($res -> numRows() == 1) {
             $row = $res -> fetchRow();
-            $this -> special_class_file = $row['class_file'];
+            $this -> special_class_file = sprintf('dialplans/%s', $row['class_file']);
             return true;
         } else {
             return false;
