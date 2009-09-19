@@ -73,7 +73,7 @@ static switch_status_t do_config(switch_bool_t reload);
 
 #define XML_ODBC_SYNTAX "[debug_on|debug_off]"
 
-static void event_handler(switch_event_t *event)
+static void reload_event_handler(switch_event_t *event)
 {
 	do_config(SWITCH_TRUE);
 }
@@ -619,25 +619,27 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_load)
 {
 	switch_api_interface_t *xml_odbc_api_interface;
 
-	switch_core_new_memory_pool(&globals.pool);
-	switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
+	memset(&globals, 0, sizeof(globals));
+
+	globals.pool = pool;
 
 	if (!switch_odbc_available()) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "You must have ODBC support in FreeSWITCH to use this module\n");
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "\t./configure --enable-core-odbc-support\n");
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No core ODBC available!\n");
 		return SWITCH_STATUS_FALSE;
 	}
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC module loading...\n");
-
-	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
 	if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to load xml_odbc config file\n");
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
+	/* connect my internal structure to the blank pointer passed to me */
+	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+
+	/* subscribe to reloadxml event, and hook it to reload_event_handler */
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, reload_event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
 		return SWITCH_STATUS_TERM;
 	}
@@ -671,5 +673,5 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_shutdown)
  * c-basic-offset:4
  * End:
  * For VIM:
-* vim:set softtabstop=4 shiftwidth=4 tabstop=4:
+ * vim:set softtabstop=4 shiftwidth=4 tabstop=4:
  */
