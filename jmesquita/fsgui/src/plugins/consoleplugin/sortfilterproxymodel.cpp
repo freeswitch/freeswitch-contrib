@@ -38,6 +38,7 @@ void ConsoleModel::clear()
 void ConsoleModel::appendRow ( QStandardItem* item )
 {
     _listInsertModel.append(item);
+    insertionTimer->start(0, this);
 }
 
 void ConsoleModel::timerEvent(QTimerEvent *e)
@@ -47,6 +48,7 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
     {
         if (!_listInsertModel.isEmpty())
         {
+            qDebug() << "Are we being called like crazy?";
             int inserted_items = 0;
             int toBeInserted = 0;
             if (_listInsertModel.size() < batchSize)
@@ -64,6 +66,8 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
             }
             endInsertRows();
             emit afterInserting();
+        } else {
+            insertionTimer->stop();
         }
     }
 }
