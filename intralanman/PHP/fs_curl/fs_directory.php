@@ -3,7 +3,7 @@
  * @package FS_CURL
  * @subpackage FS_CURL_Directory
  * fs_directory.php
-*/
+ */
 if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     header('Location: index.php');
 }
@@ -15,7 +15,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * @license BSD
  * @version 0.1
  * Class for XML directory
-*/
+ */
 class fs_directory extends fs_curl {
     private $user;
     private $userid;
@@ -34,9 +34,27 @@ class fs_directory extends fs_curl {
 
     public function main() {
         $this -> comment($this -> request);
-        $directory_array = $this -> get_directory();
-        $this -> writedirectory($directory_array);
-        $this -> output_xml();
+        if(array_key_exists('VM-Action', $this->request) && $this->request['VM-Action'] == 'change-password') {
+            $this->update_pin($this->request['VM-User'], $this->request['VM-User-Password']);
+        } else {
+            $directory_array = $this -> get_directory();
+            $this -> writedirectory($directory_array);
+            $this -> output_xml();
+        }
+    }
+
+    private function update_pin($username, $new_pin) {
+        $this->debug("update pin for $username to $new_pin");
+        $query = sprintf('UPDATE %1$sdirectory_params%1$s
+                            SET %1$sparam_value%1$s = \'%2$s\'
+                            WHERE %1$sparam_name%1$s = \'vm-password\'
+                                AND %1$sdirectory_id%1$s =
+                                (SELECT %1$sid%1$s FROM %1$sdirectory%1$s WHERE %1$susername%1$s = \'%3$s\' AND %1$sdomain%1$s = \'%4$s\')'
+            , DB_FIELD_QUOTE, $new_pin, $username, $this->request['domain']
+        );
+        $this->debug($query);
+        $this->db->exec($query);
+        $this->debug($this->db->errorInfo());
     }
 
     /**
@@ -84,9 +102,9 @@ class fs_directory extends fs_curl {
     }
 
     /**
-    * This method will pull the params for every user in a domain
-    * @return array of users' params
-    */
+     * This method will pull the params for every user in a domain
+     * @return array of users' params
+     */
     private function get_users_params() {
         $where = '';
         if(!empty($this -> userid)) {
@@ -208,7 +226,7 @@ class fs_directory extends fs_curl {
             for ($i=0; $i<$gateway_count; $i++) {
                 $this -> xmlw -> startElement('gateway');
                 $this -> xmlw -> writeAttribute(
-                'name', $this -> users_gateways[$user_id][$i]['gateway_name']
+                    'name', $this -> users_gateways[$user_id][$i]['gateway_name']
                 );
 
                 $this -> write_user_gateway_params(
@@ -263,9 +281,9 @@ class fs_directory extends fs_curl {
      */
     function write_global_params() {
         $query = sprintf('%s %s %s;',
-        'SELECT * FROM directory_global_params dgp',
-        'JOIN directory_domains dd ON dd.id=dgp.domain_id',
-        "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
+            'SELECT * FROM directory_global_params dgp',
+            'JOIN directory_domains dd ON dd.id=dgp.domain_id',
+            "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
         );
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
@@ -292,9 +310,9 @@ class fs_directory extends fs_curl {
      */
     function write_global_vars() {
         $query = sprintf('%s %s %s;',
-        'SELECT * FROM directory_global_vars dgv',
-        'JOIN directory_domains dd ON dd.id=dgv.domain_id',
-        "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
+            'SELECT * FROM directory_global_vars dgv',
+            'JOIN directory_domains dd ON dd.id=dgv.domain_id',
+            "WHERE dd.domain_name='" . $this -> request['domain'] . "'"
         );
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
