@@ -54,7 +54,7 @@ class voicemail_conf extends fs_configuration {
         if ($settings_count < 1) {
             return ;
         }
-        $this -> xmlw -> startElement('settings');
+        //$this -> xmlw -> startElement('settings');
 
         for ($i=0; $i<$settings_count; $i++) {
             //$this -> comment_array($settings_array[$i]);
@@ -64,7 +64,7 @@ class voicemail_conf extends fs_configuration {
             $this -> xmlw -> endElement();//</param>
         }
         $this -> write_email($profile_id);
-        $this -> xmlw -> endElement();
+        //$this -> xmlw -> endElement();
     }
 
     /**
