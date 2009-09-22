@@ -14,7 +14,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * @author Raymond Chandler (intralanman) <intralanman@gmail.com>
  * @version 0.1
  * Class for XML dialplan
-*/
+ */
 class fs_dialplan extends fs_curl {
     private $special_class_file;
 
@@ -56,7 +56,7 @@ class fs_dialplan extends fs_curl {
 
     public function is_specialized_dialplan($context) {
         $query = sprintf(
-        "SELECT * FROM dialplan_special WHERE context='%s'", $context
+            "SELECT * FROM dialplan_special WHERE context='%s'", $context
         );
         $res = $this -> db -> query($query);
         if (FS_PDO::isError($res)) {
@@ -81,23 +81,28 @@ class fs_dialplan extends fs_curl {
      */
     private function get_dialplan($context) {
         $dp_array = array();
-		$dpQuery = sprintf("SELECT
-			`context`,
-			`name` as extension,
-			`application` as application_name,
-			`data` as application_data,
-			`field` as condition_field,
-			`expression` as condition_expression,
-			`continue` as ext_continue,
-			`type`
+        $dpQuery = sprintf('SELECT
+			%1$scontext%1$s,
+			%1$sname%1$s as extension,
+			%1$sapplication%1$s as application_name,
+			%1$sdata%1$s as application_data,
+			%1$sfield%1$s as condition_field,
+			%1$sexpression%1$s as condition_expression,
+			%1$scontinue%1$s as ext_continue,
+			%1$stype%1$s
 		FROM dialplan
 			INNER JOIN dialplan_context USING(dialplan_id)
 			INNER JOIN dialplan_extension USING(context_id)
 			INNER JOIN dialplan_condition USING(extension_id)
 			INNER JOIN dialplan_actions USING(condition_id)
-		WHERE context = '%s'
-		ORDER BY dialplan_context.weight, dialplan_extension.weight, dialplan_condition.weight, dialplan_actions.weight", $context);
-
+		WHERE context = \'%2$s\'
+		ORDER BY dialplan_context.weight,
+                 dialplan_extension.weight,
+                 dialplan_condition.weight,
+                 dialplan_actions.weight'
+            , DB_FIELD_QUOTE, $context
+        );
+        $this->debug($dpQuery);
         $res = $this -> db -> query($dpQuery);
         if (FS_PDO::isError($res)) {
             $this -> comment($this -> db -> getMessage());
@@ -117,10 +122,10 @@ class fs_dialplan extends fs_curl {
             //$rcd = $row['re_cdata'];
             $cc = empty($row['cond_break']) ? '0' : $row['cond_break'];
             $dp_array[$ct]["$et;$ec"]["$cf;$ce;$cc"][] = array(
-            'type'=>$type,
-            'application'=>$app,
-            'data'=>$data,
-            'is_cdata'=>(empty($app_cdata) ? '' : $app_cdata)
+                'type'=>$type,
+                'application'=>$app,
+                'data'=>$data,
+                'is_cdata'=>(empty($app_cdata) ? '' : $app_cdata)
             );
         }
         return $dp_array;
@@ -134,21 +139,21 @@ class fs_dialplan extends fs_curl {
      *
      */
     private function writeDialplan($dpArray) {
-        //print_r($dpArray);
+    //print_r($dpArray);
         if (is_array($dpArray)) {
             $this -> xmlw -> startElement('section');
             $this -> xmlw -> writeAttribute('name', 'dialplan');
             $this -> xmlw -> writeAttribute('description', 'FreeSWITCH Dialplan');
             //$this -> comment('dpArray is an array');
             foreach ($dpArray as $context => $extensions_array) {
-                //$this -> comment($context);
-                //start the context
+            //$this -> comment($context);
+            //start the context
                 $this -> xmlw -> startElement('context');
                 $this -> xmlw -> writeAttribute('name', $context);
                 if (is_array($extensions_array)) {
                     foreach ($extensions_array as $extension => $conditions) {
-                        //start an extension
-                        $ex_split = split(';', $extension);
+                    //start an extension
+                        $ex_split = preg_split('/;/', $extension);
                         $this -> xmlw -> startElement('extension');
                         $this -> xmlw -> writeAttribute('name', $ex_split[0]);
                         if (strlen($ex_split[1]) > 0) {
@@ -156,49 +161,50 @@ class fs_dialplan extends fs_curl {
                         }
                         $this -> debug($conditions);
                         foreach ($conditions as $condition => $app_array) {
-                            $c_split = split(';', $condition);
+                            $c_split = preg_split('/;/', $condition);
                             $this -> xmlw -> startElement('condition');
                             if (!empty($c_split[0])) {
                                 $this -> xmlw -> writeAttribute('field', $c_split[0]);
                             }
                             if (!empty($c_split[1])) {
                                 if (array_key_exists(3, $c_split)
-                                && $c_split[3] == true) {
+                                    && $c_split[3] == true) {
                                     $this -> xmlw -> startElement('expression');
                                     $this -> xmlw -> writeCdata($c_split[1]);
                                     $this -> xmlw -> endElement();
                                 } else {
                                     $this -> xmlw -> writeAttribute(
-                                    'expression', $c_split[1]
+                                        'expression', $c_split[1]
                                     );
                                 }
                             }
                             //$this -> debug($c_split[2]);
                             if ($c_split[2] != '0') {
                                 $this -> xmlw -> writeAttribute(
-                                'break', $c_split[2]
+                                    'break', $c_split[2]
                                 );
                             }
                             //$this -> debug($app_array);
                             foreach ($app_array as $app) {
                                 if (empty($app['application'])) {
-                                	continue;
+                                    continue;
                                 }
                                 $this -> xmlw -> startElement($app['type']);
                                 $this -> xmlw -> writeAttribute(
-                                'application', $app['application']
+                                    'application', $app['application']
                                 );
                                 if (!empty($app['data'])) {
                                     if (array_key_exists('is_cdata', $app)
-                                    && $app['is_cdata'] == true) {
-                                        //$this -> xmlw -> startElement('data');
+                                        && $app['is_cdata'] == true) {
                                         $this -> xmlw -> writeCdata($app['data']);
-                                        //$this -> xmlw -> endElement();
                                     } else {
                                         $this -> xmlw -> writeAttribute(
-                                        'data', $app['data']
+                                            'data', $app['data']
                                         );
                                     }
+                                }
+                                if ($app['application'] == 'set') {
+                                    $this->xmlw->writeAttribute('inline', 'true');
                                 }
                                 $this -> xmlw -> endElement();
                             }

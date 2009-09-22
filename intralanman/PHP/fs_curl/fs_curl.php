@@ -17,13 +17,13 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
  * Base class for all curl XML output, contains methods for XML output and
  * connecting to a database
  * @return void
-*/
+ */
 class fs_curl {
-    /**
-     * FS_PDO Object
-     * @link http://www.php.net/pdo
-     * @var $db FS_PDO
-     */
+/**
+ * FS_PDO Object
+ * @link http://www.php.net/pdo
+ * @var $db FS_PDO
+ */
     public $db;
     /**
      * Array of _REQUEST parameters passed
@@ -49,7 +49,7 @@ class fs_curl {
      * This method will instantiate the FS_PDO and XMLWriter classes for use
      * in child classes
      * @return void
-    */
+     */
     public function fs_curl() {
         openlog('fs_curl', LOG_NDELAY | LOG_PID, LOG_USER);
         header('Content-Type: text/xml');
@@ -59,14 +59,14 @@ class fs_curl {
         $this -> include_files($inc);
         $this -> connect_db(DEFAULT_DSN, DEFAULT_DSN_LOGIN, DEFAULT_DSN_PASSWORD );
         set_error_handler(array($this, 'error_handler'));
-        //trigger_error('blah', E_USER_ERROR);
+    //trigger_error('blah', E_USER_ERROR);
     }
 
     /**
      * Connect to a database via FS_PDO
      * @param mixed $dsn data source for database connection (array or string)
      * @return void
-    */
+     */
     public function connect_db($dsn, $login, $password) {
         try {
             $this -> db = new FS_PDO($dsn, $login, $password);
@@ -74,6 +74,20 @@ class fs_curl {
             $this -> comment($e->getMessage());
             $this -> file_not_found(); //program terminates in function file_not_found()
         }
+        $driver = $this->db->getAttribute(constant("PDO::ATTR_DRIVER_NAME"));
+        $this->debug("our driver is $driver");
+        switch ($driver) {
+            case 'mysql':
+                $quoter = '`';
+                break;
+            case 'postgres':
+                $quoter = '"';
+                break;
+            default:
+                $quoter = '';
+                break;
+        }
+        define('DB_FIELD_QUOTE', $quoter);
     }
 
     /**
@@ -81,7 +95,7 @@ class fs_curl {
      * Adds a comment to be displayed in the final XML
      * @param string $comment comment string to be output in XML
      * @return void
-    */
+     */
     public function comment($comment) {
         $this -> comments[] = $comment;
     }
@@ -91,10 +105,10 @@ class fs_curl {
      * Generates an array from the _REQUEST parameters that were passed, keeping
      * all key => value combinations intact
      * @return void
-    */
+     */
     private function generate_request_array() {
         while (list($req_key, $req_val) = each($_REQUEST)) {
-            //$this -> comment("$req_key => $req_val");
+        //$this -> comment("$req_key => $req_val");
             $this -> request[$req_key] = $req_val;
         }
     }
@@ -103,7 +117,7 @@ class fs_curl {
      * Actual Instantiation of XMLWriter Object
      * This method creates an XMLWriter Object and sets some needed options
      * @return void
-    */
+     */
     private function open_xml() {
         $this -> xmlw = new XMLWriter();
         $this -> xmlw -> openMemory();
@@ -127,7 +141,7 @@ class fs_curl {
      * in the event that we are unable to generate a valid configuration file
      * from the passed information
      * @return void
-    */
+     */
     public function file_not_found() {
         $this -> comment('Include Path = ' . ini_get('include_path'));
         $not_found = new XMLWriter();
@@ -160,7 +174,7 @@ class fs_curl {
      * @param array $comments [Multi-dementional] Array of comments to be added
      * @param integer $space_pad Number of spaces to indent the comments
      * @return void
-    */
+     */
     private function comments2xml($xml_obj, $comments, $space_pad=0) {
         $comment_count = count($comments);
         for ($i = 0; $i < $comment_count; $i++) {
@@ -177,7 +191,7 @@ class fs_curl {
     /**
      * End open XML elments in XMLWriter object
      * @return void
-    */
+     */
     private function close_xml() {
         $this -> xmlw -> endElement();
         $this -> xmlw -> endElement();
@@ -187,15 +201,15 @@ class fs_curl {
     /**
      * Close and Output XML and stop script execution
      * @return void
-    */
+     */
     public function output_xml() {
         $this->comment(
             sprintf('Total # of Queries Run: %d', $this->db->counter)
         );
         $this -> comment(sprintf("Estimated Execution Time Is: %s"
-                , (preg_replace(
-                '/^0\.(\d+) (\d+)$/', '\2.\1', microtime()) - START_TIME)
-            ));
+            , (preg_replace(
+            '/^0\.(\d+) (\d+)$/', '\2.\1', microtime()) - START_TIME)
+        ));
 
         $this -> comments2xml($this -> xmlw, $this -> comments);
         $this -> close_xml();
@@ -210,7 +224,7 @@ class fs_curl {
     /**
      * Recursive method to add an array of comments
      * @return void
-    */
+     */
     public function comment_array($array, $spacepad=0) {
         $spaces = str_repeat(' ', $spacepad);
         foreach ($array as $key => $val) {
@@ -231,14 +245,14 @@ class fs_curl {
      * @param array $file_array associative array of files to include
      * @return void
      * @todo add other types for different levels of errors
-    */
+     */
     public function include_files($file_array) {
         $return = FS_CURL_SUCCESS;
         while (list($type, $file) = each($file_array)) {
             $inc = @include_once($file);
             if (!$inc) {
                 $comment = sprintf(
-                'Unable To Include %s File %s', $type, $file
+                    'Unable To Include %s File %s', $type, $file
                 );
                 $this -> comment($comment);
                 if ($type == 'required') {
@@ -264,7 +278,7 @@ class fs_curl {
      * @see RETURN_ON_WARN
      * @return void
      * @todo add other defines that control what, if any, comments gets output
-    */
+     */
     public function error_handler($no, $str, $file, $line) {
         if ($no == E_STRICT) {
             return true;
@@ -274,20 +288,20 @@ class fs_curl {
 
         switch ($no) {
             case E_USER_NOTICE:
-                case E_NOTICE:
+            case E_NOTICE:
+                break;
+            case E_USER_WARNING:
+            case E_WARNING:
+                if (defined('RETURN_ON_WARN') && RETURN_ON_WARN == true) {
                     break;
-                case E_USER_WARNING:
-                    case E_WARNING:
-                        if (defined('RETURN_ON_WARN') && RETURN_ON_WARN == true) {
-                            break;
-                        }
-                        case E_ERROR:
-                            case E_USER_ERROR:
-                                default:
-                                    $this -> file_not_found();
-                                }
-                                return true;
-                            }
+                }
+            case E_ERROR:
+            case E_USER_ERROR:
+            default:
+                $this -> file_not_found();
+        }
+        return true;
+    }
 
     /**
      * Function to print out debugging info
@@ -297,42 +311,42 @@ class fs_curl {
      * @param integer $debug_level debug if $debug_level <= FS_CURL_DEBUG
      * @param integer $spaces
      */
-                            public function debug($input, $debug_level=0, $spaces=0) {
-                                if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
-                                    if (is_array($input)) {
-                                        $this -> debug('Array (', $debug_level, $spaces);
-                                        foreach ($input as $key=>$val) {
-                                            if (is_array($val) || is_object($val)) {
-                                                $this -> debug("[$key] => $val", $debug_level, $spaces+4);
-                                                $this -> debug('(', $debug_level, $spaces + 8);
-                                                $this -> debug($val, $debug_level, $spaces + 8);
-                                            } else {
-                                                $this -> debug("[$key] => '$val'", $debug_level, $spaces + 4);
-                                            }
-                                        }
-                                        $this -> debug(")", $debug_level, $spaces);
-                                    } else {
-                                        $debug_str = sprintf("%s%s"
-                                            , str_repeat(' ', $spaces), $input
-                                        );
-                                        switch (FS_DEBUG_TYPE) {
-                                            case 0:
-                                                syslog(LOG_NOTICE, $debug_str);
-                                                break;
-                                            case 1:
-                                                $debug_str = preg_replace('/--/', '- - ', $debug_str);
-                                                $this -> comment($debug_str);
-                                                break;
-                                            case 2:
-                                                $ptr = fopen(FS_DEBUG_FILE, 'a');
-                                                fputs($ptr, "$debug_str\r\n");
-                                                fclose($ptr);
-                                                break;
-                                            default:
-                                                return;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+    public function debug($input, $debug_level=0, $spaces=0) {
+        if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
+            if (is_array($input)) {
+                $this -> debug('Array (', $debug_level, $spaces);
+                foreach ($input as $key=>$val) {
+                    if (is_array($val) || is_object($val)) {
+                        $this -> debug("[$key] => $val", $debug_level, $spaces+4);
+                        $this -> debug('(', $debug_level, $spaces + 8);
+                        $this -> debug($val, $debug_level, $spaces + 8);
+                    } else {
+                        $this -> debug("[$key] => '$val'", $debug_level, $spaces + 4);
+                    }
+                }
+                $this -> debug(")", $debug_level, $spaces);
+            } else {
+                $debug_str = sprintf("%s%s"
+                    , str_repeat(' ', $spaces), $input
+                );
+                switch (FS_DEBUG_TYPE) {
+                    case 0:
+                        syslog(LOG_NOTICE, $debug_str);
+                        break;
+                    case 1:
+                        $debug_str = preg_replace('/--/', '- - ', $debug_str);
+                        $this -> comment($debug_str);
+                        break;
+                    case 2:
+                        $ptr = fopen(FS_DEBUG_FILE, 'a');
+                        fputs($ptr, "$debug_str\r\n");
+                        fclose($ptr);
+                        break;
+                    default:
+                        return;
+                }
+            }
+        }
+    }
+}
 
