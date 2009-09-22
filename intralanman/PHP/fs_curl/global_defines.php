@@ -50,7 +50,7 @@ define('RETURN_ON_WARN', true);
  * domain is passed.....
  * NOTE: using a1 hashes will NOT work with this setting
  */
-define('GLOBAL_USERS', true);
+define('GLOBAL_USERS', false);
 
 /**
  * Define debug level... should not be used in production for performance reasons
