@@ -398,6 +398,7 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	switch_xml_t xml_out = NULL;      /* the xml that will be returned by this function */
 	char filename[512] = "";          /* the temporary, uuid-based filename */
 	int fd;
+	switch_event_t *params = NULL;      /* 2009.09.02 tony add */
 
 	if (!binding) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No bindings... sorry bud returning now\n");
@@ -414,13 +415,23 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	/* set the default template to render */
 	helper.next_template_name = "default";
 
+	/* 2009.09.02 tony add for carsh when event null (Begin) */
+	if(event == NULL){
+		switch_event_create(&params, SWITCH_EVENT_COMMAND);
+		switch_assert(params);
+		event = params;
+	}
+
+	if(!event) goto cleanup;
+	/* (End) */
+
 	/* add some headers to event and put it in the helper */
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "section", switch_str_nil(section));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "tag_name", switch_str_nil(tag_name));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "key_name", switch_str_nil(key_name));
 	switch_event_add_header_string(event, SWITCH_STACK_TOP, "key_value", switch_str_nil(key_value));
 	helper.event = event;
-
+	
 	/* debug print all switch_event_t event headers */
 	if (globals.debug == SWITCH_TRUE) {
 		if ((hi = event->headers)) {
@@ -489,6 +500,11 @@ static switch_xml_t xml_odbc_search(const char *section, const char *tag_name, c
 	}
 
  cleanup:
+	/* 2009.09.02 tony add for crash when enent null(Begin) */
+	if (params) {
+		switch_event_destroy(&params);
+	}/* (End) */
+
 	switch_xml_free(helper.xml_out);
 	switch_core_destroy_memory_pool(&pool);
 
