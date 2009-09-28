@@ -1,7 +1,7 @@
 <?php
 /**
  * @package FS_CURL
- * @subpackage FS_CURL_Directory
+ * @subpackage FS_CURL_Configuration
  * voicemail.conf.php
  */
 /**
@@ -12,10 +12,10 @@
  * @version 0.1
  * Writes out voicemail.conf XML
  * @see fs_configuration
-*/
+ */
 class voicemail_conf extends fs_configuration {
 
-       public function voicemail_conf() {
+    public function voicemail_conf() {
         $this -> fs_configuration();
     }
 
@@ -27,7 +27,7 @@ class voicemail_conf extends fs_configuration {
     /**
      * Get voicemail profiles from db
      * @return array
-    */
+     */
     private function get_profiles() {
         $query = "SELECT * FROM voicemail_conf ORDER BY id";
         $profiles = $this -> db -> queryAll($query);
@@ -37,12 +37,12 @@ class voicemail_conf extends fs_configuration {
     /**
      * Write XML for voicemail <settings>
      * @return void
-    */
+     */
     private function write_settings($profile_id) {
         $query = sprintf('%s %s %s;'
-        , "SELECT * FROM voicemail_settings "
-        , "WHERE voicemail_id=$profile_id "
-        , "ORDER BY voicemail_id, param_name"
+            , "SELECT * FROM voicemail_settings "
+            , "WHERE voicemail_id=$profile_id "
+            , "ORDER BY voicemail_id, param_name"
         );
         $settings_array = $this -> db -> queryAll($query);
         $settings_count = count($settings_array);
@@ -54,28 +54,26 @@ class voicemail_conf extends fs_configuration {
         if ($settings_count < 1) {
             return ;
         }
-        //$this -> xmlw -> startElement('settings');
 
         for ($i=0; $i<$settings_count; $i++) {
-            //$this -> comment_array($settings_array[$i]);
+        //$this -> comment_array($settings_array[$i]);
             $this -> xmlw -> startElement('param');
             $this -> xmlw -> writeAttribute('name', $settings_array[$i]['param_name']);
             $this -> xmlw -> writeAttribute('value', $settings_array[$i]['param_value']);
             $this -> xmlw -> endElement();//</param>
         }
         $this -> write_email($profile_id);
-        //$this -> xmlw -> endElement();
     }
 
     /**
      * Write XML for voicemail email settings
      * @return void
-    */
+     */
     private function write_email($profile_id) {
         $query = sprintf('%s %s %s;'
-        , "SELECT * FROM voicemail_email "
-        , "WHERE voicemail_id=$profile_id "
-        , "ORDER BY voicemail_id, param_name"
+            , "SELECT * FROM voicemail_email "
+            , "WHERE voicemail_id=$profile_id "
+            , "ORDER BY voicemail_id, param_name"
         );
         $settings_array = $this -> db -> queryAll($query);
         $settings_count = count($settings_array);
@@ -90,7 +88,7 @@ class voicemail_conf extends fs_configuration {
         $this -> xmlw -> startElement('email');
 
         for ($i=0; $i<$settings_count; $i++) {
-            //$this -> comment_array($settings_array[$i]);
+        //$this -> comment_array($settings_array[$i]);
             $this -> xmlw -> startElement('param');
             $this -> xmlw -> writeAttribute('name', $settings_array[$i]['param_name']);
             $this -> xmlw -> writeAttribute('value', $settings_array[$i]['param_value']);
@@ -102,7 +100,7 @@ class voicemail_conf extends fs_configuration {
     /**
      * Write the XML for the current profile in write_profiles
      * @return void
-    */
+     */
     private function write_single_profile($profile) {
         $this -> xmlw -> startElement('profile');
         $this -> xmlw -> writeAttribute('name', $profile['vm_profile']);
@@ -114,7 +112,7 @@ class voicemail_conf extends fs_configuration {
      * Write the entire XML config for the voicemail module
      * Write XML by calling other methods to do specific areas of config
      * @return void
-    */
+     */
     private function write_config($profiles) {
         $profile_count = count($profiles);
         $this -> xmlw -> startElement('configuration');

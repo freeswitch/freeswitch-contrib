@@ -13,7 +13,7 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
 /**
  * Defines the default dsn for the FS_PDO class
  */
-define('DEFAULT_DSN', 'mysql:dbname=freeswitch;host=127.0.0.1');
+define('DEFAULT_DSN', 'pgsql:dbname=freeswitch;host=127.0.0.1');
 /**
  * Defines the default dsn login for the PDO class
  */
@@ -63,7 +63,7 @@ define('FS_CURL_DEBUG', 9);
  * 1 xml comment
  * 2 file (named in FS_DEBUG_FILE), take care when using this option as there's currently nothing to watch the file's size
  */
-define('FS_DEBUG_TYPE', 1);
+define('FS_DEBUG_TYPE', 0);
 
 /**
  * File to use for debugging to file

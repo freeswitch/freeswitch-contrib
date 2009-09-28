@@ -23,7 +23,9 @@ class fs_configuration extends fs_curl {
     */
     function fs_configuration() {
         $this -> fs_curl();
-        $mod_name = sprintf('mod_%s', str_replace('.conf', '', $this -> request['key_value']));
+        $conf_file = $this->request['key_value'];
+        $this->debug("RECEIVED REQUEST FOR $conf_file");
+        $mod_name = sprintf('mod_%s', str_replace('.conf', '', $conf_file));
         $this -> comment("module name is $mod_name");
         if (!($this -> is_mod_enabled($mod_name))
         && !($this -> is_modless_conf($this -> request['key_value']))) {

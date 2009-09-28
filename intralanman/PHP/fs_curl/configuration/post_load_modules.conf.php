@@ -32,7 +32,7 @@ class post_load_modules_conf extends fs_configuration {
      */
     function get_modules_array() {
         $query = sprintf(
-        'SELECT * FROM post_load_modules_conf WHERE load_module=1 ORDER BY priority;'
+        "SELECT * FROM post_load_modules_conf WHERE load_module='1' ORDER BY priority;"
         );
         $res = $this -> db -> query($query);
         if (FS_PDO::isError($res)) {
@@ -40,7 +40,7 @@ class post_load_modules_conf extends fs_configuration {
             $this -> comment($res -> getMessage());
             return array();
         }
-        $this -> comment($res -> numRows() . 'rows');
+        $this -> comment($res -> numRows() . ' rows');
         if ($res -> numRows() == 0) {
             return array();
         }

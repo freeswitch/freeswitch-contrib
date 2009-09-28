@@ -80,7 +80,7 @@ class fs_curl {
             case 'mysql':
                 $quoter = '`';
                 break;
-            case 'postgres':
+            case 'pgsql':
                 $quoter = '"';
                 break;
             default:
