@@ -1,0 +1,18 @@
+<!-- recording / playback extension -->
+<!-- thank to rupa for the help -->
+<include>
+<extension name="recording">
+  <condition field="destination_number" expression="^(2020)$">
+<action application="answer"/>
+<action application="set" data="playback_terminators=#"/>
+<action application="record" data="/tmp/recorded.wav 20 200"/>
+  </condition>
+</extension>
+<extension name="playback">
+  <condition field="destination_number" expression="^(2021)$">
+<action application="answer"/>
+<action application="set" data="playback_terminators=#"/>
+<action application="playback" data="/tmp/recorded.wav"/>
+  </condition>
+</extension>
+</include>
