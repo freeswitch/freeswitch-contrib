@@ -9,11 +9,11 @@
  *
  */
 class fs_sock {
-    /**
-     * file handler for FreeSWITCH socket connection
-     *
-     * @var file pointer
-     */
+/**
+ * file handler for FreeSWITCH socket connection
+ *
+ * @var file pointer
+ */
     public $sock;
 
     /**
@@ -43,10 +43,10 @@ class fs_sock {
      */
     function fs_sock($vars=null) {
         if (!defined('BUFFER_SIZE')) {
-            /**
-             * This is the buffer size for fread/fgets operations (default 4096)
-             * Define BUFFER_SIZE before instantiation to use a different size
-             */
+        /**
+         * This is the buffer size for fread/fgets operations (default 4096)
+         * Define BUFFER_SIZE before instantiation to use a different size
+         */
             define('BUFFER_SIZE', 4096);
         }
         $vars_array = is_array($vars) ? $vars : array();
@@ -77,23 +77,23 @@ class fs_sock {
      */
     function set_initial_vars($var_array) {
         $defaults = array(
-        'host' => '127.0.0.1',
-        'port' => '8021',
-        'pass' => 'ClueCon',
-        'timeout' => 30,
-        'stream_timeout' => 5
+            'host' => '127.0.0.1',
+            'port' => '8021',
+            'pass' => 'ClueCon',
+            'timeout' => 30,
+            'stream_timeout' => 5
         );
         if (array_key_exists('host', $var_array)
-        && $var_array['host'] == 'localhost') {
-            //$this -> debug('Replacing localhost with 127.0.0.1');
+            && $var_array['host'] == 'localhost') {
+        //$this -> debug('Replacing localhost with 127.0.0.1');
             $var_array['host'] = '127.0.0.1';
         }
         foreach ($defaults as $key => $val) {
             if (array_key_exists($key, $var_array)) {
-                //$this -> debug("$key found in vars");
+            //$this -> debug("$key found in vars");
                 $connection_settings[$key] = $var_array[$key];
             } else {
-                //$this -> debug("$key not found in vars");
+            //$this -> debug("$key not found in vars");
                 $connection_settings[$key] = $val;
             }
         }
@@ -108,19 +108,19 @@ class fs_sock {
      * @return boolean
      */
     function sock_connect($sock_array) {
-        //$this -> debug($sock_array);
+    //$this -> debug($sock_array);
         $host = $sock_array['host'];
         $port = $sock_array['port'];
         $timeout = $sock_array['timeout'];
         $this -> sock = fsockopen($host, $port, $errno, $errstr, $timeout);
         if (!$this -> sock) {
             $error = sprintf('Unable to connect to %s:%s Error #%s: %s'
-            , $host, $port, $errno, $errstr
+                , $host, $port, $errno, $errstr
             );
             trigger_error($error, E_USER_ERROR);
             return false;
         } else {
-            //$this -> debug(stream_get_meta_data($this -> sock));
+        //$this -> debug(stream_get_meta_data($this -> sock));
             $this -> set_stream_opts($sock_array);
             return true;
         }
@@ -133,9 +133,9 @@ class fs_sock {
      * @return void
      */
     function set_stream_opts($opts) {
-        //$this -> debug($opts);
+    //$this -> debug($opts);
         if (ereg('^[0-9]*\.[0-9]+$', $opts['stream_timeout'])) {
-            //$this -> debug($opts['stream_timeout'] . ' seems to be a float');
+        //$this -> debug($opts['stream_timeout'] . ' seems to be a float');
             $time_opts = split('\.', $opts['stream_timeout']);
             //$this -> debug($time_opts);
             $secs = sprintf('%d', $time_opts[0]);
@@ -146,7 +146,7 @@ class fs_sock {
         }
         if (!stream_set_timeout($this -> sock, $secs, $ms)) {
             $this -> debug(
-            "Failed to set timeout to $secs seconds and $ms microseconds"
+                "Failed to set timeout to $secs seconds and $ms microseconds"
             );
         }
     }
@@ -160,7 +160,7 @@ class fs_sock {
     function sock_auth($pass) {
         $reply = $this -> send_command("auth $pass");
         if (is_array($reply) && array_key_exists('Reply-Text', $reply)
-        && ereg('^\+?OK', $reply['Reply-Text'])) {
+            && ereg('^\+?OK', $reply['Reply-Text'])) {
             $this -> debug('Successfully authenticated');
             $this -> debug($reply);
             $this -> auth = true;
@@ -200,7 +200,7 @@ class fs_sock {
                     $event[$header] = $value;
                 }
             } elseif (is_array($event)
-            && array_key_exists('Content-Length', $event)) {
+                && array_key_exists('Content-Length', $event)) {
                 $this -> debug("line is empty: " . (empty($trim_line) ? 'true' : 'false'));
                 $event['Body'] = $this -> sock_get_length($event['Content-Length']);
                 break;
@@ -214,7 +214,7 @@ class fs_sock {
     }
 
     /**
-     * Read $content_len bytes from the socket
+     * Read $content_len bytes from the socket splitting by :
      *
      * @param integer $content_len
      * @return array
@@ -234,8 +234,8 @@ class fs_sock {
                 $value = trim($split[1]);
                 $content[$attribute] = urldecode($value);
             } elseif (empty($trim_line) && is_array($content)
-            && array_key_exists('Content-Length', $content)) {
-                $content['Body'] = $this -> sock_get_length($content['Content-Length']);
+                && array_key_exists('Content-Length', $content)) {
+                $content['Body'] = $this -> sock_get_body($content['Content-Length']);
                 $len += $content['Content-Length'];
                 break;
             } elseif (!empty($trim_line)) {
@@ -247,6 +247,32 @@ class fs_sock {
         }
         $this -> debug("leaving after $len bytes");
         //$this -> debug($content);
+        return $content;
+    }
+
+    /**
+     * Read $content_len bytes from the socket
+     *
+     * @param integer $content_len
+     * @return array
+     */
+    private function sock_get_body($content_len) {
+        $len = 0;
+        $content = null;
+
+        while ($orig_line = fgets($this -> sock, BUFFER_SIZE)) {
+
+            $len += strlen($orig_line);
+            $trim_line = trim($orig_line);
+
+            $content .= $trim_line;
+
+            if ($len >= $content_len) {
+                break;
+            }
+
+        }
+
         return $content;
     }
 
@@ -271,7 +297,7 @@ class fs_sock {
         $this -> sock_put("$cmd\r\n\r\n", $sock);
         if ($this -> command != 'exit') {
             $reply = $this -> sock_get($sock);
-            //$this -> debug($reply);
+        //$this -> debug($reply);
         } else {
             unset($this -> command);
             return;
@@ -298,8 +324,8 @@ class fs_sock {
         while ($reply['Content-Type'] != 'api/response') {
             if (count($reply) > 0) {
                 $debug_text = sprintf(
-                "%s - (%s) != (api/response) adding an event to the output buffer"
-                , count($reply), $reply['Content-Type']
+                    "%s - (%s) != (api/response) adding an event to the output buffer"
+                    , count($reply), $reply['Content-Type']
                 );
                 $this -> debug($debug_text);
                 $this -> output_buffer[] = $reply;
@@ -320,8 +346,8 @@ class fs_sock {
         while ($reply['Content-Type'] != 'command/reply') {
             if (count($reply) > 0) {
                 $debug_text = sprintf(
-                "%s - (%s) != (command/reply) adding an event to the output buffer"
-                , count($reply), $reply['Content-Type']
+                    "%s - (%s) != (command/reply) adding an event to the output buffer"
+                    , count($reply), $reply['Content-Type']
                 );
                 $this -> debug($debug_text);
                 $this -> output_buffer[] = $reply;
@@ -410,10 +436,10 @@ class fs_sock {
                 $this -> debug(")", $spaces);
             } else {
                 if (is_array($_SERVER)
-                && array_key_exists('HTTP_HOST', $_SERVER)) {
+                    && array_key_exists('HTTP_HOST', $_SERVER)) {
                     printf("<!--%s%s-->\r\n"
-                    , str_repeat(' ', $spaces)
-                    , htmlentities($input)
+                        , str_repeat(' ', $spaces)
+                        , htmlentities($input)
                     );
                 } else {
                     $input = trim($input);
