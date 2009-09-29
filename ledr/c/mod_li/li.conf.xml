@@ -1,0 +1,10 @@
+<configuration name="li.conf" description="Legal Intercept Configuration">
+
+  <settings>
+    <param name="local_addr" value="172.31.1.5"/>
+    <param name="local_port" value="8000"/>
+    <param name="target_addr" value="172.31.1.4"/>
+    <param name="target_port" value="8000"/>
+  </settings>
+
+</configuration>
