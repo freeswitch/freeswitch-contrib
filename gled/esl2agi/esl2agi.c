@@ -461,7 +461,7 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 			res = fill_buffer_from_header(reply,&buf,"variable_playback_terminator_used","%s");
 			// sbuf = esl_event_get_header(reply, "variable_playback_terminator_used");
 			if (res > 0)
-				snprintf((char *)&dtmf,1,"%s",buf);
+				snprintf((char *)&dtmf,2,"%s",buf);
 		}
 		else {
 			fprintf(stderr,"No event reply in stream file\n");
