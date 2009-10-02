@@ -42,6 +42,7 @@ static command_binding_t bindings[_MAX_CMD] = {
 	{ {"HANGUP" , NULL}, handle_hangup },
 	{ {"STREAM", "FILE" , NULL}, handle_streamfile },
 	{ {"SET", "CALLERID" , NULL}, handle_set_caller_id },
+	{ {"SET", "VARIABLE" , NULL}, handle_set_variable },
 };
 
 /* 
@@ -434,6 +435,35 @@ static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[
 	free(buf);
 	return res;
 }
+
+/*
+ * SET VARIABLE 
+ */
+static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	int res;
+	int size;
+	char *buf=NULL;
+
+	if (*argc != 4)
+		return -1;
+
+	if (argv[2] && argv[3]) {
+		size = strlen(argv[2]) + strlen(argv[3]) + 1;
+		buf = malloc(size + 1);
+		snprintf(buf,size +1 ,"%s=%s",argv[2],argv[3]);
+	}
+	else
+		return -1;
+
+	res = do_execute(eslC,"set",buf,NULL,NULL);
+
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
+}
+
 
 /*
  * STREAM FILE agi cmd

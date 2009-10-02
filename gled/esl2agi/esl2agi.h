@@ -111,16 +111,20 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[_MA
 
 static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
+static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
 /* TODO
+ * - ANSWER : OK
  * - EXEC application OPTIONS
  * - GET DATA filetoplay timeout maxdigits
  * - GET VARIABLE variablename
- * - HANGUP 'channelname'
+ * - HANGUP 'channelname' : TODO channel name to hangup
  * - RECORD FILE filename format escapedigits timeout offsetsamples BEEP s=silence
  * - SAY DIGITS
  * - set autohangup time
  * - set music  on|off class
- * - set variable
- * - stream file filename <escape digits> [sample offset]
+ * - set variable: should be OK ( untested )
+ * - set callerid: should be OK ( untested )
+ * - stream file filename <escape digits> [sample offset] : TODO: check result offset and terminator var used ( FSCORE-455 )
  * - wait for digit timeout
  */
