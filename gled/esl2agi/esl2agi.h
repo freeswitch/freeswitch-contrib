@@ -61,6 +61,7 @@
 #define ESL_A_TO_VOID(v)	((void*)(v))
 #define VOID_TO_ESL_A(p)	((esl_accept_t*)(p))
 #define MAX(x,y)		((x) > (y) ? (x) : (y))
+#define MIN(x,y)		((x) < (y) ? (x) : (y))
 
 /* 
  * Struct Section
@@ -88,7 +89,28 @@ static void esl2agi(esl_socket_t server_sock, esl_socket_t client_sock, struct s
 
 static void *esl2agi_thread(void *data);
 
+static int handle_setup_env(int fd,esl_handle_t *eslC);
+
+static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
+
+static command_binding_t *find_binding(char *cmd[]);
+
+static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf);
+
+static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_event_t **save_reply);
+
 /*
+ * ported agi commands
+ */
+
+static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
+static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_CMD_ARGS]);
+
+static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
+
+/* TODO
  * - EXEC application OPTIONS
  * - GET DATA filetoplay timeout maxdigits
  * - GET VARIABLE variablename
@@ -101,36 +123,3 @@ static void *esl2agi_thread(void *data);
  * - stream file filename <escape digits> [sample offset]
  * - wait for digit timeout
  */
-
-static int handle_setup_env(int fd,esl_handle_t *eslC);
-
-static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
-
-static command_binding_t *find_binding(char *cmd[]);
-
-static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
-
-static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_CMD_ARGS]);
-
-static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf);
-
-/*
-
-static int handle_exec(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_getdata(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_getvar(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_record(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_say(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_setvar(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_set(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_streamfile(esl_handle_t *eslC,int fd,char *args);
-
-static int handle_waitdigits(esl_handle_t *eslC,int fd,char *args);
-*/

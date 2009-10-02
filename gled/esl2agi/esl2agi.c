@@ -47,7 +47,7 @@ static void *esl2agi_thread(void *data) {
         esl_handle_t eslC = {{0}};
 
         char script_path[1024] = "\0";
-        const char *buf;
+        char *buf;
 	int pid;
 	int thread_running;
 
@@ -94,6 +94,7 @@ static void *esl2agi_thread(void *data) {
 		close(pipes.socket[1]);
 		close(pipes.script[0]);
 		close(esl_req.client_sock);
+		close(STDERR_FILENO);
 
 	        dup2(pipes.socket[0], STDIN_FILENO);
         	dup2(pipes.script[1], STDOUT_FILENO);
@@ -114,19 +115,16 @@ static void *esl2agi_thread(void *data) {
 
 		signal(SIGCHLD, SIG_IGN);
 		signal(SIGPIPE, SIG_IGN);
-
+		// fprintf(stderr,"New call, handling setup...\n");
 		handle_setup_env(pipes.socket[1],&eslC);
 
 		/* TODO: check status */
 		status = esl_send(&eslC,"myevents");
-		eslC.async_execute = 0;
+		eslC.async_execute = 1;
 		while ( eslC.connected && thread_running) {
 			int r , nfds = 0;
 			fd_set rd;
 
-			/* As we are in sync mode, we should NOT care about socket there, 
-			 * there is a binding of esl_execute to find command results
-			 */
 			FD_ZERO(&rd);
 			FD_SET(pipes.script[0], &rd);
 			nfds = MAX(nfds,pipes.script[0]);
@@ -135,13 +133,13 @@ static void *esl2agi_thread(void *data) {
 			if (r == -1 )
 				break;
 			else if (FD_ISSET(pipes.script[0],&rd) ) { /* AGI has something to say */
-				bzero(&sbuf,2047);
 				r = read(pipes.script[0],&sbuf,2047);
 				if (r<0)
 					goto end;
 				else {
 					/*TODO: correct ugly hack to remove final \n */
 					sbuf[r-1] = '\0';
+					// fprintf(stderr,"Treating: '%s'\n",sbuf);
 					if ( find_and_exec_command(&eslC,pipes.socket[1],(char *) &sbuf) < 0 )
 						goto end;
 				}
@@ -199,7 +197,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!(ip && port)) {
-		fprintf(stderr, "Usage %s -h <host> -p <port>\n", argv[0]);
+		// fprintf(stderr, "Usage %s -h <host> -p <port>\n", argv[0]);
 		return -1;
 	}
 
@@ -210,175 +208,134 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+static int safe_int_snprintf_buffer(char **buf,const char *format, int ret) {
+	int size;
+	size = 2 + strlen(format); // Max 2 digits in int
+	if (*buf != NULL)
+		*buf = realloc(*buf,size+1);
+	else
+		*buf = malloc(size +1);
+	memset(*buf,0,size+1);
+	size = snprintf(*buf,size+1,format,ret);
+	return size;
+}
+
+/*
+ * Return malloc'd buf containing header value specified with %format
+ */
+static int fill_buffer_from_header(esl_event_t *event,char **buf,char *header,const char *format) {
+	int size=0;
+	char *sbuf;
+	sbuf = esl_event_get_header(event, header);
+	if (sbuf) {
+		size = strlen(sbuf) + strlen(format);
+		if (*buf == NULL)
+			*buf = malloc(size+1);
+		else
+			*buf = realloc(*buf,size+1);
+		memset(*buf,0,size+1);
+		size = snprintf(*buf,size,format,sbuf);
+	}
+	return size;
+}
+
 /* Setup env 
- * TODO:	- correct parameters
- *		- add a generic routine instead of blindly repeating code
+ * TODO:	- check size, if no header found we should not block
  */
 static int handle_setup_env(int fd,esl_handle_t *eslC) {
-	char buf[1024];
-	char *sbuf;
+	char *sbuf=NULL;
+	int size;
 
 	/* Setup Env for AGI scripts */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "variable_ivr_path")) ) {
-		sprintf(buf,"agi_request: %s\n",sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"variable_ivr_path","agi_request: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
 			return -1;
 	}
 	else
-		return -1;
+			return -1;
 
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "variable_channel_name")) ) {
-		sprintf(buf,"agi_channel: %s\n",sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"variable_channel_name","agi_channel: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
 			return -1;
 	}
 	else
+			return -1;
+
+	if ( write(fd, "agi_language: en\n",strlen("agi_language: en\n") ) < 0 )
 		return -1;
 
-	if ( write(fd, "agi_language: en\n",18) < 0 )
-		return -1;
-
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Source")) ) {
-		sprintf(buf, "agi_type: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Source","agi_type: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
 			return -1;
 	}
 	else
-		return -1;
+			return -1;
 
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Unique-ID")) ) {
-		sprintf(buf, "agi_uniqueid: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Unique-ID","agi_uniqueid: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
 			return -1;
 	}
 	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Caller-ID-Number","agi_callerid: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Caller-ID-Name","agi_calleridname: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Screen-Bit","agi_callingpres: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Caller-Destination-Number","agi_dnid: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Context","agi_context: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	if ( (size = fill_buffer_from_header(eslC->info_event,&sbuf,"Channel-Destination-Number","agi_extension: %s\n") ) > 0) {
+		if ( write(fd,sbuf,size) < 0)
+			return -1;
+	}
+	else
+			return -1;
+
+	/* TODO 
+	 * agi_callingani2
+         * agi_callington
+	 * agi_callingtns
+         * agi_rdnis
+	 * agi_priority
+         */
+
+	if ( write(fd, "agi_enhanced: 0.0\n", strlen("agi_enhanced: 0.0\n") ) < 0 )
+		return -1;
+	if ( write(fd, "agi_accountcode: \n", strlen("agi_accountcode: \n") ) < 0 )
 		return -1;
 
-	/* ANI/DNIS */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Caller-ID-Number")) ) {
-		sprintf(buf, "agi_callerid: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_callerid: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Caller-ID-Name")) ) {
-		sprintf(buf, "agi_calleridname: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_calleridname: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Screen-Bit")) ) {
-		sprintf(buf, "agi_callingpres: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_callingpres: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	/* TODO */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Caller-ID-Number")) ) {
-		sprintf(buf, "agi_callingani2: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_callingani2: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	/* TODO */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Caller-ID-Number")) ) {
-		sprintf(buf, "agi_callington: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_callington: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
-		sprintf(buf, "agi_dnid: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_dnid: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	/* TODO */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
-		sprintf(buf, "agi_callingtns: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_callingtns: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-
-	/* TODO: correct info */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Caller-Destination-Number")) ) {
-		sprintf(buf, "agi_rdnis: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_rdnis: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Context")) ) {
-		sprintf(buf, "agi_context: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_context: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-Destination-Number")) ) {
-		sprintf(buf, "agi_extension: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_extension: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-
-	/* TODO: correct info */
-	if ( (sbuf = esl_event_get_header(eslC->info_event, "Channel-State-Number")) ) {
-		sprintf(buf, "agi_priority: %s\n", sbuf);
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-	else {
-		sprintf(buf, "agi_priority: %s\n", "unknown");
-		if ( write(fd, buf,strlen(buf) ) < 0)
-			return -1;
-	}
-
-	if ( write(fd, "agi_enhanced: 0.0\n", 19) < 0 )
+	if ( write(fd, "\n\n", 2 ) < 0 )
 		return -1;
-	if ( write(fd, "agi_accountcode: \n\n", 21) < 0 )
-		return -1;
+
 	return 0;
 }
 
@@ -393,7 +350,7 @@ static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_eve
 	if ( esl_execute(eslC,cmd,args,uuid) != ESL_FAIL) {
 		while (!done && eslC->connected) {
 			if (esl_recv_event(eslC,1,NULL) == ESL_FAIL)
-				return -1;
+				return -1; // Maybe point of failure
 			else if (eslC->last_ievent) {
 				if (eslC->last_ievent->event_id == ESL_EVENT_CHANNEL_EXECUTE_COMPLETE ) {
 					if (! strcasecmp(cmd,esl_event_get_header(eslC->last_ievent,"Application") ) )
@@ -410,41 +367,51 @@ static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_eve
 }
 
 /*
+ * Answer AGI cmd
+ * TODO: Why is there an A on the AGI side ?
+ */
+static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	int res;
+	int size;
+	char *buf=NULL;
+	res = do_execute(eslC,"answer",NULL,NULL,NULL);
+
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
+}
+
+
+/*
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
  */
 static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	if (do_execute(eslC,"hangup",NULL,NULL,NULL) < 0 ) {
-		if ( write(fd,"200 result=-1\n\n",128) < 0 )
-			return -1;
-	}
-	else {
-		if ( write(fd,"200 result=0\n\n",128) < 0 )
-			return -1;
-	}
-	return 0;
+	int res;
+	int size;
+	char *buf=NULL;
+
+	res = do_execute(eslC,"hangup",NULL,NULL,NULL);
+
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
 }
 
 /*
- * Answer AGI cmd
- */
-static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	if (do_execute(eslC,"answer",NULL,NULL,NULL) < 0 ) {
-		if ( write(fd,"200 result=-1\n\n",128) < 0 )
-			return -1;
-	}
-	else {
-		if ( write(fd,"200 result=0\n\n",128) < 0 )
-			return -1;
-	}
-	return 0;
-}
-
+ * STREAM FILE agi cmd
+ * TODO: rewrites with good string handling :)
+ */ 
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
-	char buf[1024];
-	char *sbuf;
+	char *buf;
 	int offset=0;
-	int dtmf=0;
+	char dtmf[2]={"0"};
+	int res;
+
 	esl_event_t *reply=NULL;
 
 	if (*argc < 3 || *argc > 5)
@@ -452,49 +419,75 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 
 	if (argv[3]) {
 		/* We should set playback_terminators var there */
-		sprintf(buf,"playback_terminators=%s",argv[3]);
+		buf = malloc(strlen(argv[3])+22);
+		memset(buf,0,strlen(argv[3])+22);
+		snprintf(buf,22,"playback_terminators=%s",argv[3]);
 		do_execute(eslC,"set",buf,NULL,NULL);
+		free(buf);
 	}
-	bzero(&buf,1023);
 
 	if (argv[4]) {
 		offset = atoi(argv[4]);
 	}
 
-	if (offset > 0)
-		sprintf(buf,"%s@@%d",argv[2],offset);
+	buf = malloc(strlen(argv[2]) + 1);
+	memset(buf,0,strlen(argv[2])+1);
+
+	if (offset > 0) {
+		buf = realloc(buf,strlen(argv[2]) + strlen(argv[4]) + 3);
+		snprintf(buf,strlen(argv[2]) + strlen(argv[4]) + 3,"%s@@%d",argv[2],offset);
+
+	}
 	else
-		sprintf(buf,"%s",argv[2]);
+		snprintf(buf,strlen(argv[2]) + 1,"%s",argv[2]);
+
 	offset = 0;
-	if ( do_execute(eslC,"playback",buf,NULL,&reply) < 0 ) /* We should write about NON success there instead of returning stock */
-		return -1;
+	if ( do_execute(eslC,"playback",buf,NULL,&reply) < 0 ) { /* We should write about NON success there instead of returning stock */
+		offset = -1;
+		fprintf(stderr,"do_execute stream file failed\n");
+	}
 	else {
-		bzero(&buf,1023);
-		/* We should check playback_samples var to return offset, sent in the CHANNEL_EXECUTE_COMPLETE and 
-		variable_playback_terminator_used to get the DTMF we had */
+		free(buf);
+		buf=NULL;
 		if (reply) {
-			if (! (sbuf = esl_event_get_header(reply, "variable_playback_samples")) )
-					offset = -1;
-			else {
-				offset = atoi(sbuf);
-			}
-			if (! (sbuf = esl_event_get_header(reply, "variable_playback_terminator_used")) )
-					dtmf = 0;
-			else {
-				dtmf = atoi(sbuf);
-			}
+			res = fill_buffer_from_header(eslC->info_event,&buf,"variable_playback_samples","%d");
+			if ( res <= 0 )
+				offset = 0;
+			else 
+				offset = atoi(buf);
+
+			fprintf(stderr,"Offset is %d, res is %d, buf is %s\n",offset,res,buf);
+
+			res = fill_buffer_from_header(reply,&buf,"variable_playback_terminator_used","%s");
+			// sbuf = esl_event_get_header(reply, "variable_playback_terminator_used");
+			if (res > 0)
+				snprintf((char *)&dtmf,1,"%s",buf);
+		}
+		else {
+			fprintf(stderr,"No event reply in stream file\n");
+			offset=-1;
 		}
 	}
+	if (buf != NULL)
+		free(buf);
+	fprintf(stderr,"End stream file %d %s\n",offset,dtmf);
 	if (offset < 0) {
-		if ( write(fd,"200 result=-1 endpos=0\n\n",128) < 0 )
+		if ( write(fd,"200 result=-1 endpos=0\n\n",128) < 0 ) {
+			fprintf(stderr,"Write failed\n");
 			return -1;
+		}
 	}
 	else {
-		sprintf(buf,"200 result=%d endpos=%d\n\n",dtmf,offset);
-		if ( write(fd,buf,128) < 0 )
+		buf=malloc(65);
+		memset(buf,0,65);
+		snprintf(buf,64,"200 result=%s endpos=%d\n\n",dtmf,offset);
+		if ( write(fd,buf,64) < 0 ) {
+			free(buf);
+			fprintf(stderr,"Write failed\n");
 			return -1;
+		}
+		free(buf);
 	}
-
 	return 0;
 }
 
@@ -594,4 +587,3 @@ static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
 	}
 	return r;
 }
-
