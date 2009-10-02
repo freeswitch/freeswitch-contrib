@@ -37,6 +37,13 @@
 
 #include "esl2agi.h"
 
+static command_binding_t bindings[_MAX_CMD] = {
+	{ {"ANSWER" , NULL}, handle_answer },
+	{ {"HANGUP" , NULL}, handle_hangup },
+	{ {"STREAM", "FILE" , NULL}, handle_streamfile },
+	{ {"SET", "CALLERID" , NULL}, handle_set_caller_id },
+};
+
 /* 
  * Translator thread entry point
  */
@@ -139,7 +146,6 @@ static void *esl2agi_thread(void *data) {
 				else {
 					/*TODO: correct ugly hack to remove final \n */
 					sbuf[r-1] = '\0';
-					// fprintf(stderr,"Treating: '%s'\n",sbuf);
 					if ( find_and_exec_command(&eslC,pipes.socket[1],(char *) &sbuf) < 0 )
 						goto end;
 				}
@@ -383,7 +389,6 @@ static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	return res;
 }
 
-
 /*
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
@@ -394,6 +399,34 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	char *buf=NULL;
 
 	res = do_execute(eslC,"hangup",NULL,NULL,NULL);
+
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
+}
+
+/*
+ * SET CALLERID 
+ */
+static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	int res;
+	int size;
+	char *buf=NULL;
+
+	if (*argc < 3 && *argc > 4)
+		return -1;
+
+	if (argv[2]) {
+		size = strlen(argv[2]) + 30;
+		buf = malloc(size + 1);
+		snprintf(buf,size +1 ,"origination_caller_id_number=%s",argv[2]);
+	}
+	else
+		return -1;
+
+	res = do_execute(eslC,"set",buf,NULL,NULL);
 
 	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
 
@@ -444,7 +477,6 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 	offset = 0;
 	if ( do_execute(eslC,"playback",buf,NULL,&reply) < 0 ) { /* We should write about NON success there instead of returning stock */
 		offset = -1;
-		fprintf(stderr,"do_execute stream file failed\n");
 	}
 	else {
 		free(buf);
@@ -456,24 +488,19 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 			else 
 				offset = atoi(buf);
 
-			fprintf(stderr,"Offset is %d, res is %d, buf is %s\n",offset,res,buf);
-
 			res = fill_buffer_from_header(reply,&buf,"variable_playback_terminator_used","%s");
 			// sbuf = esl_event_get_header(reply, "variable_playback_terminator_used");
 			if (res > 0)
 				snprintf((char *)&dtmf,2,"%s",buf);
 		}
 		else {
-			fprintf(stderr,"No event reply in stream file\n");
 			offset=-1;
 		}
 	}
 	if (buf != NULL)
 		free(buf);
-	fprintf(stderr,"End stream file %d %s\n",offset,dtmf);
 	if (offset < 0) {
 		if ( write(fd,"200 result=-1 endpos=0\n\n",128) < 0 ) {
-			fprintf(stderr,"Write failed\n");
 			return -1;
 		}
 	}
@@ -483,7 +510,6 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 		snprintf(buf,64,"200 result=%s endpos=%d\n\n",dtmf,offset);
 		if ( write(fd,buf,64) < 0 ) {
 			free(buf);
-			fprintf(stderr,"Write failed\n");
 			return -1;
 		}
 		free(buf);
@@ -542,13 +568,6 @@ ok:
 	*argc = x;
 	return;
 }
-
-static command_binding_t bindings[_MAX_CMD] = {
-	{ {"ANSWER" , NULL}, handle_answer },
-	{ {"HANGUP" , NULL}, handle_hangup },
-	{ {"STREAM", "FILE" , NULL}, handle_streamfile },
-};
-
 
 static command_binding_t *find_binding(char *cmd[]) {
 	int x,y,match=0;

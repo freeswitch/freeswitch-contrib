@@ -109,6 +109,7 @@ static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_C
 
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
+static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
 /* TODO
  * - EXEC application OPTIONS
