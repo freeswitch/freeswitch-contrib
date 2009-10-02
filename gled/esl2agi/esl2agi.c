@@ -43,6 +43,11 @@ static command_binding_t bindings[_MAX_CMD] = {
 	{ {"STREAM", "FILE" , NULL}, handle_streamfile },
 	{ {"SET", "CALLERID" , NULL}, handle_set_caller_id },
 	{ {"SET", "VARIABLE" , NULL}, handle_set_variable },
+	{ {"EXEC", NULL}, handle_exec },
+};
+
+static command_binding_t exec_bindings[_MAX_CMD] = {
+	{ {"DIAL" , NULL}, handle_dial },
 };
 
 /* 
@@ -187,8 +192,7 @@ static void esl2agi(esl_socket_t server_sock, esl_socket_t client_sock, struct s
  * Copyright (c) 2009, Anthony Minessale II
  * TODO:	- add mod_dialplan_asterisk lookup and load if not present.
  */
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	int i;
 	char *ip = NULL;
 	int port = 0;
@@ -409,6 +413,28 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 }
 
 /*
+ * EXEC command, will search exec_bindings for an entry.
+ */
+static int handle_exec(esl_handle_t *eslC,int fd,int *argc, char *args[]) {
+	int res;
+	int size;
+	int i;
+	char *argv[_MAX_CMD_ARGS];
+	char *buf=NULL;
+
+	for (i = 1;i<=*argc;i++)
+		argv[i-1] = args[i];
+
+	res = find_and_exec_app(eslC,fd,*argc, argv);
+
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
+}
+
+/*
  * SET CALLERID 
  */
 static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
@@ -434,6 +460,14 @@ static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[
 	res = write(fd,buf,size);
 	free(buf);
 	return res;
+}
+
+/*
+ * DIAL command
+ * TODO: implement heh
+ */
+static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	return 0;
 }
 
 /*
@@ -622,6 +656,29 @@ static command_binding_t *find_binding(char *cmd[]) {
 	return NULL;
 }
 
+static command_binding_t *find_app_binding(char *cmd[]) {
+	int x,y,match=0;
+
+	for (x=0; x < sizeof(exec_bindings); x++) {
+		if ( ! exec_bindings[x].cmd[0] ) {
+			break;
+		}
+		match = 1;
+
+		for (y=0; match && cmd[y]; y++) {
+			if (!exec_bindings[x].cmd[y]) /* Is the next part existing ?*/
+				break;
+			if ( strncasecmp(exec_bindings[x].cmd[y],cmd[y], MAX(strlen(exec_bindings[x].cmd[y]),strlen(cmd[y]) ) ) )
+				match=0;
+		}
+		if (exec_bindings[x].cmd[y]) /* There's a word missing in cmd */
+			match=0;
+		if (match)
+			return &exec_bindings[x];
+	}
+	return NULL;
+}
+
 static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
 	char *argv[1024];
 	int argc = 0;
@@ -631,6 +688,17 @@ static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf) {
 	parse_args(buf,&argc,argv);
 
 	bind = find_binding(argv);
+	if (bind) {
+		r = bind->handler(eslC,fd,&argc,argv);
+	}
+	return r;
+}
+
+static int find_and_exec_app(esl_handle_t *eslC,int fd,int argc,char *argv[]) {
+	int r = -1;
+	command_binding_t *bind;
+
+	bind = find_app_binding(argv);
 	if (bind) {
 		r = bind->handler(eslC,fd,&argc,argv);
 	}

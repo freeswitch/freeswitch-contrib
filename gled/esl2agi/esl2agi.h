@@ -95,14 +95,17 @@ static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
 
 static command_binding_t *find_binding(char *cmd[]);
 
+static command_binding_t *find_app_binding(char *cmd[]);
+
 static int find_and_exec_command(esl_handle_t *eslC,int fd,char *buf);
+
+static int find_and_exec_app(esl_handle_t *eslC,int fd,int argc,char *argv[]);
 
 static int do_execute(esl_handle_t *eslC,char *cmd,char *args,char *uuid,esl_event_t **save_reply);
 
 /*
  * ported agi commands
  */
-
 static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
 static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_CMD_ARGS]);
@@ -112,6 +115,10 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[_MA
 static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
 static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
+static int handle_exec(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
+static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]);
 
 /* TODO
  * - ANSWER : OK
