@@ -492,7 +492,6 @@ static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]
 	return res;
 }
 
-
 /*
  * STREAM FILE agi cmd
  * TODO: rewrites with good string handling :)
@@ -508,7 +507,7 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 	if (*argc < 3 || *argc > 5)
 		return -1;
 
-	if (argv[3]) {
+	if (argv[3] && strncasecmp("\"\"",argv[3],2) ) {
 		/* We should set playback_terminators var there */
 		buf = malloc(strlen(argv[3])+22);
 		memset(buf,0,strlen(argv[3])+22);
@@ -540,7 +539,7 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 		free(buf);
 		buf=NULL;
 		if (reply) {
-			res = fill_buffer_from_header(eslC->info_event,&buf,"variable_playback_samples","%d");
+			res = fill_buffer_from_header(reply,&buf,"variable_playback_samples","%s");
 			if ( res <= 0 )
 				offset = 0;
 			else 
