@@ -417,20 +417,14 @@ static int handle_hangup(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
  */
 static int handle_exec(esl_handle_t *eslC,int fd,int *argc, char *args[]) {
 	int res;
-	int size;
 	int i;
 	char *argv[_MAX_CMD_ARGS];
-	char *buf=NULL;
 
 	for (i = 1;i<=*argc;i++)
 		argv[i-1] = args[i];
 
 	res = find_and_exec_app(eslC,fd,*argc, argv);
 
-	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
-
-	res = write(fd,buf,size);
-	free(buf);
 	return res;
 }
 
