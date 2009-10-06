@@ -112,6 +112,8 @@ static int handle_answer(esl_handle_t *eslC,int fd, int *argc, char *argv[_MAX_C
 
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
+static int handle_getdata(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
+
 static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
 
 static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_ARGS]);
@@ -124,7 +126,7 @@ static int handle_sipaddheader(esl_handle_t *eslC,int fd,int *argc, char *argv[]
 
 /* TODO
  * - ANSWER : OK
- * - EXEC application OPTIONS
+ * - EXEC application OPTIONS: OK, now will need to add more bindings
  * - GET DATA filetoplay timeout maxdigits
  * - GET VARIABLE variablename
  * - HANGUP 'channelname' : TODO channel name to hangup
@@ -134,6 +136,6 @@ static int handle_sipaddheader(esl_handle_t *eslC,int fd,int *argc, char *argv[]
  * - set music  on|off class
  * - set variable: should be OK ( untested )
  * - set callerid: should be OK ( untested )
- * - stream file filename <escape digits> [sample offset] : TODO: check result offset and terminator var used ( FSCORE-455 )
+ * - stream file filename <escape digits> [sample offset] : OK ( check when using offset todo )
  * - wait for digit timeout
  */

@@ -44,6 +44,7 @@ static command_binding_t bindings[_MAX_CMD] = {
 	{ {"SET", "CALLERID" , NULL}, handle_set_caller_id },
 	{ {"SET", "VARIABLE" , NULL}, handle_set_variable },
 	{ {"EXEC", NULL}, handle_exec },
+	{ {"GET", "DATA", NULL}, handle_getdata },
 };
 
 static command_binding_t exec_bindings[_MAX_CMD] = {
@@ -507,7 +508,7 @@ static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]
 
 	if ( (strstr("=",argv[1])) != NULL ) { /* Support for exec set var=value*/
 		if (strstr("(",argv[1]) != NULL && strstr(")",argv[1]) != NULL ) {
-			/* TODO implement * func */
+			/* TODO implement * func(param)=value */
 			res = -1;
 			goto end;
 		}
@@ -533,6 +534,59 @@ end:
 
 	res = write(fd,buf,size);
 	free(buf);
+	return res;
+}
+
+/*
+ * GET DATA filetoplay timeout maxdigits
+ * will execute the play_and_get_digits app ( <min> <max> <tries> <timeout> <terminators> <file> <invalid_file> <var_name> <regexp> )
+ */
+
+static int handle_getdata(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	char *buf;
+	char *args;
+	int res=0;
+	int size;
+	esl_event_t *reply=NULL;
+
+	if (*argc > 5 && *argc < 3 ) {
+		res = -1;
+		goto end;
+	}
+
+	args = malloc(1024);
+	snprintf(args,1024,"1 %s 1 %s # %s invalid.wav play_get_digits_values \\d+",argv[4] ? argv[4] : "9999", argv[3] ? argv[3] : "2000", argv[2]);
+
+	if (do_execute(eslC,"play_and_get_digits",args,NULL,&reply) < 0 ) {
+		res = -1;
+		goto end;
+	}
+	else {
+		if (reply) {
+			res = fill_buffer_from_header(reply,&args,"variable_play_get_digits_values","%s");
+		}
+		else {
+			res = -1;
+			goto end;
+		}
+
+	}
+
+end:
+	if (args)
+		free(args);
+	if (res < 0) {
+		size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+	}
+	else {
+		size = strlen(args) + 10;
+		buf = malloc(size + 1);
+		snprintf(buf,size + 1,"200 result=%s",args);
+	}
+
+	res = write(fd,buf,size);
+	free(buf);
+
 	return res;
 }
 
