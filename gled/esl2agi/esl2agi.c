@@ -483,6 +483,8 @@ end:
 /*
  * DIAL command
  * TODO: implement heh
+ * DIAL string is SIP/endpoint/user|timeout|options|url
+ * we should write our own binding as mod_dialplan_asterisk does not seem to support options
  */
 static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	return 0;
@@ -536,7 +538,6 @@ end:
 
 /*
  * STREAM FILE agi cmd
- * TODO: rewrites with good string handling :)
  */ 
 static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	char *buf;
