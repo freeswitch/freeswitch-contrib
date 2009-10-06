@@ -49,6 +49,7 @@ static command_binding_t bindings[_MAX_CMD] = {
 static command_binding_t exec_bindings[_MAX_CMD] = {
 	{ {"DIAL" , NULL}, handle_dial },
 	{ {"SET" , NULL}, handle_set_variable },
+	{ {"SIPADDHEADER",NULL}, handle_sipaddheader },
 };
 
 /* 
@@ -396,6 +397,23 @@ static int handle_answer(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 }
 
 /*
+ * SIPADDHEADER(header=value)
+ * TODO: split on = and set the sip_h_header var
+ */
+static int handle_sipaddheader(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
+	int res;
+	int size;
+	char *buf=NULL;
+
+	res = -1;
+	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
+
+	res = write(fd,buf,size);
+	free(buf);
+	return res;
+}
+
+/*
  * Hangup AGI cmd
  * TODO:	- Add arg support to know which channel we want to hangup.
  */
@@ -437,19 +455,24 @@ static int handle_set_caller_id(esl_handle_t *eslC,int fd,int *argc, char *argv[
 	int size;
 	char *buf=NULL;
 
-	if (*argc < 3 && *argc > 4)
-		return -1;
+	if (*argc < 3 && *argc > 4) {
+		res = -1;
+		goto end;
+	}
 
 	if (argv[2]) {
 		size = strlen(argv[2]) + 30;
 		buf = malloc(size + 1);
 		snprintf(buf,size +1 ,"origination_caller_id_number=%s",argv[2]);
 	}
-	else
-		return -1;
+	else {
+		res = -1;
+		goto end;
+	}
 
 	res = do_execute(eslC,"set",buf,NULL,NULL);
 
+end:
 	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
 
 	res = write(fd,buf,size);
@@ -467,7 +490,7 @@ static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 
 /*
  * SET VARIABLE
- * TODO: - add support for exec('SET','var=value').
+ * TODO: - verify support for exec('SET','var=value').
 	 - add support for exec('SET','FUNC(param)=value')
  */
 static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
@@ -475,13 +498,16 @@ static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]
 	int size;
 	char *buf=NULL;
 
-	if (*argc < 2 && *argc > 3) /* SET VARIABLE var value or SET var=value */
-		return -1;
+	if (*argc < 2 && *argc > 3) { /* SET VARIABLE var value or SET var=value */
+		res = -1;
+		goto end;
+	}
 
 	if ( (strstr("=",argv[1])) != NULL ) { /* Support for exec set var=value*/
 		if (strstr("(",argv[1]) != NULL && strstr(")",argv[1]) != NULL ) {
-			/* We should implement * func */
-			return -1;
+			/* TODO implement * func */
+			res = -1;
+			goto end;
 		}
 		else {
 			size = strlen(argv[1]);
@@ -494,11 +520,13 @@ static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]
 		buf = malloc(size + 1);
 		snprintf(buf,size +1 ,"%s=%s",argv[2],argv[3]);
 	}
-	else
-		return -1;
+	else {
+		res = -1;
+		goto end;
+	}
 
 	res = do_execute(eslC,"set",buf,NULL,NULL);
-
+end:
 	size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
 
 	res = write(fd,buf,size);
@@ -518,9 +546,11 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 
 	esl_event_t *reply=NULL;
 
-	if (*argc < 3 || *argc > 5)
-		return -1;
-
+	if (*argc < 3 || *argc > 5) {
+		offset=-1;
+		goto end;
+	}
+	
 	if (argv[3] && strncasecmp("\"\"",argv[3],2) ) {
 		/* We should set playback_terminators var there */
 		buf = malloc(strlen(argv[3])+22);
@@ -570,6 +600,8 @@ static int handle_streamfile(esl_handle_t *eslC,int fd,int *argc, char *argv[]) 
 	}
 	if (buf != NULL)
 		free(buf);
+
+end:
 	if (offset < 0) {
 		if ( write(fd,"200 result=-1 endpos=0\n\n",128) < 0 ) {
 			return -1;

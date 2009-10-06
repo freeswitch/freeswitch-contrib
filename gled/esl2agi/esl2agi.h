@@ -120,6 +120,8 @@ static int handle_exec(esl_handle_t *eslC,int fd,int *argc, char *argv[_MAX_CMD_
 
 static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]);
 
+static int handle_sipaddheader(esl_handle_t *eslC,int fd,int *argc, char *argv[]);
+
 /* TODO
  * - ANSWER : OK
  * - EXEC application OPTIONS
