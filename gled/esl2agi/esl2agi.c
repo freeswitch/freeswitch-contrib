@@ -48,6 +48,7 @@ static command_binding_t bindings[_MAX_CMD] = {
 
 static command_binding_t exec_bindings[_MAX_CMD] = {
 	{ {"DIAL" , NULL}, handle_dial },
+	{ {"SET" , NULL}, handle_set_variable },
 };
 
 /* 
@@ -465,17 +466,30 @@ static int handle_dial(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 }
 
 /*
- * SET VARIABLE 
+ * SET VARIABLE
+ * TODO: - add support for exec('SET','var=value').
+	 - add support for exec('SET','FUNC(param)=value')
  */
 static int handle_set_variable(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 	int res;
 	int size;
 	char *buf=NULL;
 
-	if (*argc != 4)
+	if (*argc < 2 && *argc > 3) /* SET VARIABLE var value or SET var=value */
 		return -1;
 
-	if (argv[2] && argv[3]) {
+	if ( (strstr("=",argv[1])) != NULL ) { /* Support for exec set var=value*/
+		if (strstr("(",argv[1]) != NULL && strstr(")",argv[1]) != NULL ) {
+			/* We should implement * func */
+			return -1;
+		}
+		else {
+			size = strlen(argv[1]);
+			buf = malloc(size + 1);
+			snprintf(buf,size+1,"%s",argv[1]);
+		}
+	}
+	else if (argv[2] && argv[3]) {
 		size = strlen(argv[2]) + strlen(argv[3]) + 1;
 		buf = malloc(size + 1);
 		snprintf(buf,size +1 ,"%s=%s",argv[2],argv[3]);
