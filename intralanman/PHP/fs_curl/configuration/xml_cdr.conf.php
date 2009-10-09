@@ -14,35 +14,34 @@
 */
 class xml_cdr_conf extends fs_configuration {
 	function xml_cdr_conf() {
-		$this -> fs_configuration();
+		$this->fs_configuration();
 	}
 
 	function main() {
-		$params = $this -> get_settings();
-		$this -> write_settings($params);
+		$params = $this->get_settings();
+		$this->write_settings($params);
 	}
 
 	function get_settings() {
-	    return array('url'=>'http://$${curl_host}/fs_curl/cdr.php', 'encode'=>'true');
 		return array(
-		'url'=>'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']
+		'url'=>'http://' . $_SERVER['HTTP_HOST'] . '/' . $_SERVER['PHP_SELF']
 		, 'encode'=>'true'
 		);
 	}
 
 	function write_settings($params) {
-		$this -> xmlw -> startElement('configuration');
-		$this -> xmlw -> writeAttribute('name', basename(__FILE__, '.php'));
-		$this -> xmlw -> writeAttribute('description', 'CDRs via XML Post');
-		$this -> xmlw -> startElement('settings');
+		$this->xmlw->startElement('configuration');
+		$this->xmlw->writeAttribute('name', basename(__FILE__, '.php'));
+		$this->xmlw->writeAttribute('description', 'CDRs via XML Post');
+		$this->xmlw->startElement('settings');
 		while (list($name, $value) = each($params)) {
-			$this -> xmlw -> startElement('param');
-			$this -> xmlw -> writeAttribute('name', $name);
-			$this -> xmlw -> writeAttribute('value', $value);
-			$this -> xmlw -> endElement();
+			$this->xmlw->startElement('param');
+			$this->xmlw->writeAttribute('name', $name);
+			$this->xmlw->writeAttribute('value', $value);
+			$this->xmlw->endElement();
 		}
-		$this -> xmlw -> endElement();
-		$this -> xmlw -> endElement();
+		$this->xmlw->endElement();
+		$this->xmlw->endElement();
 	}
 }
 
