@@ -64,6 +64,7 @@ class fs_directory extends fs_curl {
      */
     private function get_directory() {
         $directory_array = array();
+        $join_clause = '';
         if (!array_key_exists('domain', $this -> request)) {
             $this -> comment('domain not passed');
             $this -> file_not_found();
@@ -73,6 +74,11 @@ class fs_directory extends fs_curl {
         }
         if (array_key_exists('user', $this -> request)) {
             $where_array[] = sprintf("username='%s'", $this -> user);
+        }
+        if (array_key_exists('group', $this->request)) {
+            $where_array[] = sprintf("group_name='%s'", $this->request['group']);
+            $join_clause = "JOIN directory_group_user_map dgum ON d.id=dgum.user_id ";
+            $join_clause .= "JOIN directory_groups dg ON dgum.group_id=dg.group_id ";
         }
         if (!empty($where_array)) {
             $this -> comment('where array has contents');
@@ -84,8 +90,8 @@ class fs_directory extends fs_curl {
         } else {
             $where_clause = '';
         }
-        $query = sprintf("SELECT * FROM directory %s ORDER BY username"
-            , $where_clause
+        $query = sprintf("SELECT * FROM directory d %s ORDER BY username"
+            , $join_clause, $where_clause
         );
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
@@ -219,7 +225,8 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_gateways($user_id) {
-        if (array_key_exists($user_id, $this->users_gateways)
+        if (is_array($this->users_gateways)
+            && array_key_exists($user_id, $this->users_gateways)
             && is_array($this -> users_gateways[$user_id])) {
             $this -> xmlw -> startElement('gateways');
             $gateway_count = count($this -> users_gateways[$user_id]);
@@ -296,6 +303,9 @@ class fs_directory extends fs_curl {
         $param_count = count($res);
         $this -> xmlw -> startElement('params');
         for ($i=0; $i<$param_count; $i++) {
+            if (empty($res[$i['var_name']])) {
+                continue;
+            }
             $this -> xmlw -> startElement('param');
             $this -> xmlw -> writeAttribute('name', $res[$i]['param_name']);
             $this -> xmlw -> writeAttribute('value', $res[$i]['param_value']);
@@ -325,6 +335,9 @@ class fs_directory extends fs_curl {
         $param_count = count($res);
         $this -> xmlw -> startElement('variables');
         for ($i=0; $i<$param_count; $i++) {
+            if (empty($res[$i['var_name']])) {
+                continue;
+            }
             $this -> xmlw -> startElement('variable');
             $this -> xmlw -> writeAttribute('name', $res[$i]['var_name']);
             $this -> xmlw -> writeAttribute('value', $res[$i]['var_value']);
@@ -359,17 +372,30 @@ class fs_directory extends fs_curl {
         $this -> write_global_params();
         $this -> write_global_vars();
 
+        $this->xmlw->startElement('groups');
+        $this->xmlw->startElement('group');
+        if (array_key_exists('group', $this->request)) {
+            $this->xmlw->writeAttribute('name', $this->request['group']);
+        } else {
+            $this->xmlw->writeAttribute('name', 'default');
+        }
+        $this->xmlw->startElement('users');
         for ($i=0; $i<$directory_count; $i++) {
             $username = $directory[$i]['username'];
             $mailbox = empty($directory[$i]['mailbox']) ? $username : $directory[$i]['mailbox'];
             $this -> xmlw -> startElement('user');
             $this -> xmlw -> writeAttribute('id', $username);
-            $this -> xmlw -> writeAttribute('mailbox', $mailbox);
-            $this -> write_params($directory[$i]['id']);
-            $this -> write_variables($directory[$i]['id']);
-            $this -> write_gateways($directory[$i]['id']);
+            if (empty($directory[$i]['group_name'])) {
+                $this -> write_params($directory[$i]['id']);
+                $this -> write_variables($directory[$i]['id']);
+                $this -> write_gateways($directory[$i]['id']);
+            } else {
+                $this->xmlw->writeAttribute('type', 'pointer');
+            }
             $this -> xmlw -> endElement();
         }
+        $this->xmlw->endElement();
+        $this->xmlw->endElement();
         $this -> xmlw -> endElement();
         $this -> xmlw -> endElement();
     }
