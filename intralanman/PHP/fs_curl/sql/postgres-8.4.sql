@@ -740,7 +740,7 @@ CREATE TABLE directory_global_params (
     id integer NOT NULL,
     param_name character varying(64) NOT NULL,
     param_value character varying(128) NOT NULL,
-    directory_id integer NOT NULL
+    domain_id integer NOT NULL
 );
 
 
@@ -775,7 +775,7 @@ CREATE TABLE directory_global_vars (
     id integer NOT NULL,
     var_name character varying(64) NOT NULL,
     var_value character varying(128) NOT NULL,
-    directory_id integer NOT NULL
+    domain_id integer NOT NULL
 );
 
 
@@ -2565,7 +2565,7 @@ ALTER TABLE ONLY directory_gateways
 --
 
 ALTER TABLE ONLY directory_global_params
-    ADD CONSTRAINT directory_global_params_directory_id_key UNIQUE (directory_id, param_name);
+    ADD CONSTRAINT directory_global_params_directory_id_key UNIQUE (domain_id, param_name);
 
 
 --
@@ -2581,7 +2581,7 @@ ALTER TABLE ONLY directory_global_params
 --
 
 ALTER TABLE ONLY directory_global_vars
-    ADD CONSTRAINT directory_global_vars_directory_id_key UNIQUE (directory_id, var_name);
+    ADD CONSTRAINT directory_global_vars_directory_id_key UNIQUE (domain_id, var_name);
 
 
 --
@@ -3427,7 +3427,7 @@ ALTER TABLE ONLY directory_gateways
 --
 
 ALTER TABLE ONLY directory_global_params
-    ADD CONSTRAINT directory_global_params_directory_id_fkey1 FOREIGN KEY (directory_id) REFERENCES directory_domains(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT directory_global_params_directory_id_fkey1 FOREIGN KEY (domain_id) REFERENCES directory_domains(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -3435,7 +3435,7 @@ ALTER TABLE ONLY directory_global_params
 --
 
 ALTER TABLE ONLY directory_global_vars
-    ADD CONSTRAINT directory_global_vars_directory_id_fkey1 FOREIGN KEY (directory_id) REFERENCES directory_domains(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT directory_global_vars_directory_id_fkey1 FOREIGN KEY (domain_id) REFERENCES directory_domains(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

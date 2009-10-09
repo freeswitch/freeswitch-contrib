@@ -49,7 +49,10 @@ class fs_directory extends fs_curl {
                             SET %1$sparam_value%1$s = \'%2$s\'
                             WHERE %1$sparam_name%1$s = \'vm-password\'
                                 AND %1$sdirectory_id%1$s =
-                                (SELECT %1$sid%1$s FROM %1$sdirectory%1$s WHERE %1$susername%1$s = \'%3$s\' AND %1$sdomain%1$s = \'%4$s\')'
+                                (SELECT %1$sid%1$s
+                                    FROM %1$sdirectory%1$s
+                                    WHERE %1$susername%1$s = \'%3$s\'
+                                    AND %1$sdomain%1$s = \'%4$s\')'
             , DB_FIELD_QUOTE, $new_pin, $username, $this->request['domain']
         );
         $this->debug($query);
@@ -90,9 +93,10 @@ class fs_directory extends fs_curl {
         } else {
             $where_clause = '';
         }
-        $query = sprintf("SELECT * FROM directory d %s ORDER BY username"
+        $query = sprintf("SELECT * FROM directory d %s %s ORDER BY username"
             , $join_clause, $where_clause
         );
+        $this->debug($query);
         $res = $this -> db -> queryAll($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
@@ -139,7 +143,8 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_params($user_id) {
-        if (is_array($this->users_params[$user_id])
+        if (array_key_exists($user_id, $this->users_params)
+            && is_array($this->users_params[$user_id])
             && count($this->users_params[$user_id]) > 0) {
             $this -> xmlw -> startElement('params');
             foreach($this->users_params[$user_id] as $pname => $pvalue) {
