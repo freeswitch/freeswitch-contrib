@@ -308,7 +308,7 @@ class fs_directory extends fs_curl {
         $param_count = count($res);
         $this -> xmlw -> startElement('params');
         for ($i=0; $i<$param_count; $i++) {
-            if (empty($res[$i['var_name']])) {
+            if (empty($res[$i]['param_name'])) {
                 continue;
             }
             $this -> xmlw -> startElement('param');
@@ -340,7 +340,7 @@ class fs_directory extends fs_curl {
         $param_count = count($res);
         $this -> xmlw -> startElement('variables');
         for ($i=0; $i<$param_count; $i++) {
-            if (empty($res[$i['var_name']])) {
+            if (empty($res[$i]['var_name'])) {
                 continue;
             }
             $this -> xmlw -> startElement('variable');
