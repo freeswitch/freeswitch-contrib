@@ -47,6 +47,7 @@
 --    acctid int(11) NOT NULL auto_increment,
 --    action varchar(1024) NOT NULL,
 --    timestamp timestamp NOT NULL,
+--    server varchar(64) NOT NULL DEFAULT '*',
 --    primary key (acctid)
 -- );
 --
@@ -62,6 +63,8 @@
 -- events than time allows for in a given heartbeat interval, some backlog may exist which
 -- may cause this script to totally freak
 
+
+-- currently this script requires http://jira.freeswitch.org/browse/MODAPP-357
 
    require "luasql.mysql"
    
@@ -137,10 +140,11 @@
    env = assert (luasql.mysql())
    dbcon = assert (env:connect(DATABASE,USERNAME,PASSWORD,DBHOST))
    blah = assert(dbcon:execute("CREATE TABLE if not exists "..TABLENAME.." ("..
-			"acctid int(11) NOT NULL auto_increment,"..
-			"action varchar(1024) NOT NULL,"..
-			"timestamp timestamp NOT NULL,"..
-			"primary key (acctid)"..
+			       "acctid int(11) NOT NULL auto_increment,"..
+			       "action varchar(1024) NOT NULL,"..
+			       "timestamp timestamp NOT NULL,"..
+			       "server varchar(64) NOT NULL DEFAULT '*',"..
+			       "primary key (acctid)"..
 			       ")"))
    dbcon:close()
    env:close()
@@ -152,6 +156,7 @@
                                          -- does not work properly, that is really all we need
    api = freeswitch.API()
 
+   hostname = api:execute("hostname")
 
    if blah ~= 0 then
       logger("Unable to connect to DB or create the table, something is broken.")
@@ -165,7 +170,7 @@
 	    dbcon = assert (env:connect(DATABASE,USERNAME,PASSWORD,DBHOST))
 	    while true do
 	       assert (dbcon:execute("LOCK TABLE "..TABLENAME.." WRITE"))
-	       cur = assert (dbcon:execute("select * from "..TABLENAME.." where timestamp < NOW() order by timestamp desc limit 1"))
+	       cur = assert (dbcon:execute("select * from "..TABLENAME.." where timestamp < NOW() and (server = '"..hostname.."' or server = '*') order by timestamp limit 1"))
 	       row = cur:fetch({},"a")
 	       if not row then
 		  break
