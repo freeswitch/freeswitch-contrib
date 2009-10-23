@@ -23,6 +23,13 @@ with the programs whether commercial or FOSS.
 
 == FILE LIST ==
 
+scheduled_event.lua
+	LUA script that adds scheduler ability via a MySQL store.
+	Allows for many systems to process events to scale to enterprise capability
+	Events survive switch shutdown, restart, reboot, crash, etc
+	Simple DB schema which allows you to easily integrate into webapps
+
+
 apiexec.pl
 	Execute api commands from the console/cron/windows scheduler/etc
 
