@@ -166,29 +166,34 @@
 	 event_subclass = e:getHeader("Event-Subclass") or ""
 	 
 	 if(event_name == "HEARTBEAT") then
-	    env = assert (luasql.mysql())
-	    dbcon = assert (env:connect(DATABASE,USERNAME,PASSWORD,DBHOST))
-	    while true do
-	       assert (dbcon:execute("LOCK TABLE "..TABLENAME.." WRITE"))
-	       cur = assert (dbcon:execute("select * from "..TABLENAME.." where timestamp < NOW() and (server = '"..hostname.."' or server = '*') order by timestamp limit 1"))
-	       row = cur:fetch({},"a")
-	       if not row then
-		  break
-	       end
-	       assert(dbcon:execute("delete from "..TABLENAME.." where acctid = "..row.acctid));
-	       assert (dbcon:execute("UNLOCK TABLES"))
-	       apicmd,apiarg = string.match(row.action,"(%w+) (.*)")
-	       api:execute(apicmd,apiarg)
-	    end
-	    dbcon:close()
-	    env:close()
+	    -- check the system load
+	    load = api:execute("status")
+	    cur_sessions,rate_sessions,max_rate,max_sessions = string.match(load,"(%d+) session.s. (%d+)/(%d+)\n(%d+) session.s. max")
+	    if ((tonumber(cur_sessions) < tonumber(max_sessions)) and (tonumber(rate_sessions) < tonumber(max_rate))) then
+	       env = assert (luasql.mysql())
+	       dbcon = assert (env:connect(DATABASE,USERNAME,PASSWORD,DBHOST))
+	       while true do
+		  assert (dbcon:execute("LOCK TABLE "..TABLENAME.." WRITE"))
+		  cur = assert (dbcon:execute("select * from "..TABLENAME.." where timestamp < NOW() and (server = '"..hostname.."' or server = '*') order by timestamp limit 1"))
+		  row = cur:fetch({},"a")
+		  if not row then
+		     break
+		  end
+		  assert(dbcon:execute("delete from "..TABLENAME.." where acctid = "..row.acctid));
+		  assert (dbcon:execute("UNLOCK TABLES"))
+		  apicmd,apiarg = string.match(row.action,"(%w+) (.*)")
+		  api:execute(apicmd,apiarg)
+	       end -- while
+	       dbcon:close()
+	       env:close()
+	    end -- rate limiting
 	 else if (event_name == "CUSTOM" and event_subclass == "lua::scheduled_event") then
 	       action = e:getHeader("Action") or ""
 	       if (action == "stop") then
 		  logger("got stop message, Exiting")
 		  break
 	       end
-	    end
-	 end
-      end
-   end
+	    end -- not a custom message
+	 end -- not a processable event
+      end -- foreach event
+   end -- main loop, DB connection established
