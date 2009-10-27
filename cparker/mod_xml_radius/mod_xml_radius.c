@@ -157,7 +157,7 @@ SWITCH_STANDARD_API(xml_radius_function)
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if (switch_strlen_zero(cmd)) {
+	if (zstr(cmd)) {
 		goto usage;
 	}
 
@@ -188,7 +188,7 @@ static switch_status_t xml_radius_expand_tag(switch_xml_t xml_in, switch_event_t
     switch_xml_t xml_in_tmp = NULL;
     int i;
 
-	if (switch_strlen_zero(xml_out->name)) {
+	if (zstr(xml_out->name)) {
 		xml_out->name = strdup(xml_in->name);
 	} else if (!(xml_out = switch_xml_add_child_d(xml_out, xml_in->name, *off++))) {
         return SWITCH_STATUS_FALSE;
@@ -540,7 +540,7 @@ static switch_status_t load_config(void)
 		binding->bindings = strdup(bname);
 
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding [%s] XML RADIUS Fetch Function [%s]\n",
-			switch_strlen_zero(bname) ? "N/A" : bname, binding->bindings ? binding->bindings : "all");
+			zstr(bname) ? "N/A" : bname, binding->bindings ? binding->bindings : "all");
 		switch_xml_bind_search_function(xml_radius_search, switch_xml_parse_section_string(bname), binding);
 		binding = NULL;
 	}

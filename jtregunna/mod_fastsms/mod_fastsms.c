@@ -88,7 +88,7 @@ SWITCH_STANDARD_APP(fastsms_function)
 	char* text = NULL;
 	const char* originator = switch_channel_get_variable(channel, "fastsms_originator");
 
-	if (!switch_strlen_zero(data)) {
+	if (!zstr(data)) {
 		msisdn = switch_core_session_strdup(session, data);
 		text = strchr(msisdn, ' ');
 		if (text)
