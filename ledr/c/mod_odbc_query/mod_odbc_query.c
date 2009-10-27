@@ -95,7 +95,7 @@ static switch_status_t do_config(switch_bool_t reload)
 		for (param = switch_xml_child(settings, "param"); param; param = param->next) {
 			char *var = (char *) switch_xml_attr_soft(param, "name");
 			char *val = (char *) switch_xml_attr_soft(param, "value");
-			if (!strcasecmp(var, "odbc-dsn") && (!switch_strlen_zero(val))) {
+			if (!strcasecmp(var, "odbc-dsn") && (!zstr(val))) {
 				globals.odbc_dsn = switch_core_strdup(globals.pool, val);
 				if ((odbc_user = strchr(globals.odbc_dsn, ':'))) {
 					*odbc_user++ = '\0';
@@ -112,7 +112,7 @@ static switch_status_t do_config(switch_bool_t reload)
 		for (query = switch_xml_child(queries, "query"); query; query = query->next) {
 			char *var = (char *) switch_xml_attr_soft(query, "name");
 			char *val = (char *) switch_xml_attr_soft(query, "value");
-			if (!switch_strlen_zero(var) && !switch_strlen_zero(val)) {
+			if (!zstr(var) && !zstr(val)) {
 				switch_core_hash_insert(globals.queries_hash, var, val);
 			}
 		}
@@ -172,7 +172,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 		return;
 	}
 
-	if (!data || switch_strlen_zero(data)) {
+	if (!data || zstr(data)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No query provided!\n");
 	}
 
