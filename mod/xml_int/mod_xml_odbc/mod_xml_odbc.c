@@ -85,7 +85,7 @@ SWITCH_STANDARD_API(xml_odbc_function)
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if (switch_strlen_zero(cmd)) {
+	if (zstr(cmd)) {
 		goto usage;
 	}
 
@@ -125,7 +125,7 @@ static int xml_odbc_query_callback(void *pArg, int argc, char **argv, char **col
 	xml_odbc_session_helper_t *helper = (xml_odbc_session_helper_t *) pArg;
 	int i, tmp_rowcount;
 
-	if (!switch_strlen_zero(helper->next_template_name)) goto done;
+	if (!zstr(helper->next_template_name)) goto done;
 
 	/* loop through all columns and store them in helper->event->headers */
 	for (i = 0; i < argc; i++) {
@@ -245,7 +245,7 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 		goto done;
 	} 
 
-	if (!switch_strlen_zero(empty_result_break_to) && helper->rowcount == 0) {
+	if (!zstr(empty_result_break_to) && helper->rowcount == 0) {
 		helper->next_template_name = empty_result_break_to;
 	}
 	
@@ -265,7 +265,7 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 	if (!strcasecmp(helper->xml_in_cur->name, "xml-odbc-do")) {
 		char *name = (char *) switch_xml_attr_soft(helper->xml_in_cur, "name");
 
-		if (switch_strlen_zero(name)) {
+		if (zstr(name)) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Ignoring xml-odbc-do because no name is given\n");
 			goto done;
 		}
@@ -286,7 +286,7 @@ static switch_status_t xml_odbc_render_tag(xml_odbc_session_helper_t *helper)
 	}
 
 	/* just copy xml_in_cur to xml_out */
-	if (switch_strlen_zero(helper->xml_out_cur->name)) {
+	if (zstr(helper->xml_out_cur->name)) {
 		helper->xml_out_cur->name = switch_core_strdup(helper->pool, helper->xml_in_cur->name);
 
 	} else if (!(helper->xml_out_cur = switch_xml_add_child_d(helper->xml_out_cur, helper->xml_in_cur->name, helper->xml_out_cur_off++))) {
@@ -324,7 +324,7 @@ static switch_status_t xml_odbc_render_children(xml_odbc_session_helper_t *helpe
 		/* restore helper->xml_out_cur in case it was changed during render_tag */
 		helper->xml_out_cur = xml_out_cur_tmp;
 
-		if (!switch_strlen_zero(helper->next_template_name)) goto done;
+		if (!zstr(helper->next_template_name)) goto done;
 	}
 
 	status = SWITCH_STATUS_SUCCESS;
@@ -370,7 +370,7 @@ static switch_status_t xml_odbc_render_template(xml_odbc_session_helper_t *helpe
 	if ((helper->xml_in_cur = switch_xml_find_child(globals.templates_tag, "template", "name", helper->next_template_name))) {
 		helper->next_template_name = "";
 		status = xml_odbc_render_children(helper);
-		if (!switch_strlen_zero(helper->next_template_name)) goto reset;
+		if (!zstr(helper->next_template_name)) goto reset;
 	} else {
 		helper->next_template_name = "not-found";
 		goto reset;
@@ -553,7 +553,7 @@ static switch_status_t do_config(switch_bool_t reload)
 		var = (char *) switch_xml_attr_soft(param, "name");
 		val = (char *) switch_xml_attr_soft(param, "value");
 
-		if (!strcasecmp(var, "binding") && !switch_strlen_zero(val)) {
+		if (!strcasecmp(var, "binding") && !zstr(val)) {
 			if (!(binding = malloc(sizeof(*binding)))) {
 				goto done;
 			}
@@ -570,7 +570,7 @@ static switch_status_t do_config(switch_bool_t reload)
 		/* change odbc-dsn to something like odbc-handle with name=default and dsn=a:b:c
 		 * so a linked list or something is created with multiple handles that can be
 		 * selected from xml-odbc-do name=query !!! that would be COOL !!! */
-		} else if (!strcasecmp(var, "odbc-dsn") && !switch_strlen_zero(val)) {
+		} else if (!strcasecmp(var, "odbc-dsn") && !zstr(val)) {
 			globals.odbc_dsn = switch_core_strdup(globals.pool, val);
 			if ((odbc_user = strchr(globals.odbc_dsn, ':'))) {
 				*odbc_user++ = '\0';
@@ -578,13 +578,13 @@ static switch_status_t do_config(switch_bool_t reload)
 					*odbc_pass++ = '\0';
 				}
 			}
-		} else if (!strcasecmp(var, "debug") && !switch_strlen_zero(val)) {
+		} else if (!strcasecmp(var, "debug") && !zstr(val)) {
 			if (!strcasecmp(val, "true") || !strcasecmp(val, "on")) {
 				globals.debug = SWITCH_TRUE;
 			} else {
 				globals.debug = SWITCH_FALSE;
 			}
-		} else if (!strcasecmp(var, "keep-files-around") && !switch_strlen_zero(val)) {
+		} else if (!strcasecmp(var, "keep-files-around") && !zstr(val)) {
 			if (!strcasecmp(val, "true") || !strcasecmp(val, "on")) {
 				globals.keep_files_around = SWITCH_TRUE;
 			} else {
