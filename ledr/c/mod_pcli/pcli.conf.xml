@@ -1,4 +1,4 @@
-<configuration name="li.conf" description="Lawful Intercept Configuration">
+<configuration name="pcli.conf" description="PacketCable Lawful Intercept Configuration">
 
   <settings>
     <param name="switch_id" value="0"/>
