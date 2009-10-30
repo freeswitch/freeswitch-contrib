@@ -135,14 +135,17 @@ static switch_status_t do_config(switch_bool_t reload)
 		uint16_t ini_id = 10741;
 		gen_pcli_header(&pcli_header, media_direction, call_id, switch_id, ini_id);
 
+		uint32_t network_byte_order_pcli_header;
+		network_byte_order_pcli_header = htonl(pcli_header);
+
 		/* create a pcli body */
 		char *pcli_body = "ABCD";
 
 		/* create a full packet */
 		char *packet;
-		packet = malloc(sizeof(pcli_header) + sizeof(pcli_body));
-		memcpy(packet, &pcli_header, sizeof(pcli_header));
-		memcpy(packet + sizeof(pcli_header), pcli_body, sizeof(pcli_body));
+		packet = malloc(sizeof(network_byte_order_pcli_header) + sizeof(pcli_body));
+		memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
+		memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
 
 		size_t packetsize;
 		packetsize = sizeof(packet);
