@@ -26,17 +26,26 @@
  * Leon de Rooij <leon@toyos.nl>
  *
  *
- * mod_li.c -- Legal Intercept
- *
- * THIS MODULE IS STILL UNDER CONSTRUCTION !!!!!!!!!!!!!!!!!!!
- *
- * Enable Legal Intercept, copy all frame data, prepend it with
- * LI_ID, SEQ, TIMESTAMP, DIRECTION, CIN (can I use call-uuid for this?) - perhaps ETSI232 compliant would be nice ?
- * and send it over UDP to remote_addr:remote_port
+ * mod_pcli.c -- Packet Cable Lawful Intercept
  *
  */
 #include <switch.h>
-#include <netdb.h>
+
+#define PCLI_HEADER_LEN 32
+#define PCLI_HEADER_LEN_DIRECTION 2
+#define PCLI_HEADER_LEN_CALL_ID 10
+#define PCLI_HEADER_LEN_SWITCH_ID 4
+#define PCLI_HEADER_LEN_INI_ID 16
+
+
+/*
+typedef enum {
+	MEDIA_DIRECTION_UNKNOWN,
+	MEDIA_DIRECTION_FROM_TARGET,
+	MEDIA_DIRECTION_TO_TARGET,
+	MEDIA_DIRECTION_MONO_MODE
+} pcli_media_direction_t;
+*/
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_li_load);
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_li_shutdown);
@@ -46,6 +55,7 @@ SWITCH_STANDARD_APP(li_start_function);
 
 static struct {
 	switch_memory_pool_t *pool;
+	int switch_id;
 	char *local_addr;
 	int local_port;
 	char *remote_addr;
@@ -54,17 +64,19 @@ static struct {
 } li_globals;
 
 typedef struct {
-	/*! Internal FreeSWITCH session. */
 	switch_core_session_t *session;
-	char *li_id; /* legal intercept id */
+	char *ini_id;
 } li_session_helper_t;
 
 /* config item validations */
+static switch_xml_config_int_options_t config_opt_valid_switch_id = { SWITCH_TRUE, 0, SWITCH_TRUE, 15 };
 static switch_xml_config_string_options_t config_opt_valid_addr = { NULL, 0, ".+" };
 static switch_xml_config_int_options_t config_opt_valid_port = { SWITCH_TRUE, 0, SWITCH_TRUE, 65535 };
 
 /* config items */
 static switch_xml_config_item_t instructions[] = {
+	SWITCH_CONFIG_ITEM("switch_id", SWITCH_CONFIG_INT, CONFIG_RELOADABLE, &li_globals.switch_id,
+		(void*)0, &config_opt_valid_switch_id, NULL, NULL),
 	SWITCH_CONFIG_ITEM("local_addr", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE, &li_globals.local_addr,
 		"localhost", &config_opt_valid_addr, NULL, NULL),
 	SWITCH_CONFIG_ITEM("local_port", SWITCH_CONFIG_INT, CONFIG_RELOADABLE, &li_globals.local_port,
@@ -112,8 +124,6 @@ static switch_status_t do_config(switch_bool_t reload)
 			return SWITCH_STATUS_FALSE;
 		}
 
-		/* HAVE A LOOK AT switch_rtp.c LINE 746 and 796 FOR WIN32 COMPATIBILITY ! */
-
 		li_globals.socket = socket;
 
 		/* TEST SENDING A PACKET */
@@ -136,22 +146,44 @@ static void reload_event_handler(switch_event_t *event)
   do_config(SWITCH_TRUE);
 }
 
+//static switch_status_t gen_pcli_header(uint32_t *pcli_heqader, pcli_media_direction_t media_direction, int call_id, int switch_id, int ini_id)
+static switch_status_t gen_pcli_header(uint32_t *pcli_header, uint8_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id)
+{
+	*pcli_header = 0;
+
+	/* some sanity checks */
+
+  if (media_direction > 3) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid media direction, may only be 0-3\n");
+		return SWITCH_STATUS_FALSE;
+	}
+
+	if (call_id > 1023) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid call_id, may only be 0-1023\n");
+		return SWITCH_STATUS_FALSE;
+	}
+
+	if (switch_id > 15) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid switch_id, may only be 0-15\n");
+		return SWITCH_STATUS_FALSE;
+	}
+
+	/* ini_id needs no check as it may use the full uint16_t */
+
+	*pcli_header |= (media_direction);
+	*pcli_header |= (call_id << 2);
+	*pcli_header |= (switch_id << 12);
+  *pcli_header |= (ini_id << 16);
+
+	return SWITCH_STATUS_SUCCESS;
+}
+
 /* necessary for hooking to SWITCH_EVENT_RELOADXML */
 static switch_event_node_t *NODE = NULL;
 
 static switch_bool_t li_callback(switch_media_bug_t *bug, void *user_data, switch_abc_type_t type)
 {
 //	li_session_helper_t *li_session_helper = (li_session_helper_t *) user_data;
-	switch_size_t len;
-
-	switch_sockaddr_t *remote_sockaddr;
-
-//	switch_buffer_t *buffer = (switch_buffer_t *) user_data;
-	uint8_t data[SWITCH_RECOMMENDED_BUFFER_SIZE];
-	switch_frame_t frame = { 0 };
-
-	frame.data = data;
-	frame.buflen = SWITCH_RECOMMENDED_BUFFER_SIZE;
 
 	switch (type) {
 	case SWITCH_ABC_TYPE_INIT:
@@ -168,19 +200,6 @@ static switch_bool_t li_callback(switch_media_bug_t *bug, void *user_data, switc
 
 	case SWITCH_ABC_TYPE_READ:
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> READ\n");
-
-		if (switch_sockaddr_info_get(&remote_sockaddr, li_globals.remote_addr, SWITCH_UNSPEC, li_globals.remote_port, 0, li_globals.pool) != SWITCH_STATUS_SUCCESS || !remote_sockaddr) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Remote Address Error!\n");
-			return SWITCH_STATUS_FALSE;
-		}
-
-		while (switch_core_media_bug_read(bug, &frame, SWITCH_TRUE) == SWITCH_STATUS_SUCCESS) {
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HUK SEQ[%u]!\n", (unsigned)frame.seq);
-			len = (switch_size_t) frame.datalen / 2;
-			if (len) switch_socket_sendto(li_globals.socket, remote_sockaddr, 0, frame.data, &len);
-		}
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "TILDE!\n");
-
 		break;
 
 	case SWITCH_ABC_TYPE_WRITE:
@@ -188,11 +207,25 @@ switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "TILDE!\n");
 		break;
 
 	case SWITCH_ABC_TYPE_READ_REPLACE:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> READ_REPLACE\n");
+		{
+			switch_frame_t *rframe = switch_core_media_bug_get_read_replace_frame(bug);
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> READ_REPLACE seq[%u] ssrc[%lu] packetlen[%lu] rate [%lu] samples [%lu]\n",
+				(unsigned)rframe->seq, (unsigned long)rframe->ssrc, (unsigned long)rframe->packetlen, (unsigned long)rframe->rate, (unsigned long)rframe->samples);
+switch_size_t packetlength = sizeof(rframe->packet);
+switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, ">>> [%lu]\n", (unsigned long)packetlength);
+
+		}
 		break;
 
 	case SWITCH_ABC_TYPE_WRITE_REPLACE:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> WRITE_REPLACE\n");
+		{
+			switch_frame_t *rframe = switch_core_media_bug_get_write_replace_frame(bug);
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> WRITE_REPLACE seq[%u] ssrc[%lu] packetlen[%lu] rate [%lu] samples[%lu]\n",
+				(unsigned)rframe->seq, (unsigned long)rframe->ssrc, (unsigned long)rframe->packetlen, (unsigned long)rframe->rate, (unsigned long)rframe->samples);
+switch_size_t packetlength = sizeof(rframe->packet);
+switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, ">>> [%lu]\n", (unsigned long)packetlength);
+
+		}
 		break;
 	}
 
@@ -237,14 +270,17 @@ SWITCH_STANDARD_APP(li_start_function)
 
 		/* get LI_ID and store in li_session_helper */
 		if ((p = switch_channel_get_variable(channel, "LI_ID")) && switch_true(p)) {
-			li_session_helper->li_id = switch_core_session_strdup(session, p);
+			li_session_helper->ini_id = switch_core_session_strdup(session, p);
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No LI_ID was set!\n");
 			return;
 		}
 
 		/* add the bug */
-    status = switch_core_media_bug_add(session, li_callback, li_session_helper, 0, SMBF_BOTH, &bug);
+    //status = switch_core_media_bug_add(session, li_callback, li_session_helper, 0, SMBF_BOTH, &bug);
+    //status = switch_core_media_bug_add(session, li_callback, li_session_helper, 0, SMBF_READ_STREAM | SMBF_WRITE_STREAM, &bug);
+    status = switch_core_media_bug_add(session, li_callback, li_session_helper, 0, SMBF_READ_REPLACE | SMBF_WRITE_REPLACE, &bug);
+    //status = switch_core_media_bug_add(session, li_callback, li_session_helper, 0, SMBF_READ_REPLACE, &bug);
 
     if (status != SWITCH_STATUS_SUCCESS) {
         switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Failure hooking to stream\n");
@@ -271,7 +307,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_li_load)
     *module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
 		/* make the li application available to the system */
-    SWITCH_ADD_APP(app_interface, "li", "Legal Intercept", "Legal Intercept", li_start_function, "<start>", SAF_NONE);
+    SWITCH_ADD_APP(app_interface, "li", "Lawful Intercept", "Lawful Intercept", li_start_function, "<start>", SAF_NONE);
 
 		/* subscribe to reloadxml event, and hook it to reload_event_handler */
 		if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, reload_event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
@@ -280,7 +316,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_li_load)
 		}
 
 		/* say it */
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Legal Intercept enabled\n");
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Lawful Intercept enabled\n");
 
     /* indicate that the module should continue to be loaded */
     return SWITCH_STATUS_SUCCESS;
@@ -289,7 +325,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_li_load)
 
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_li_shutdown)
 {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Legal Intercept disabled\n");
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Lawful Intercept disabled\n");
 
 /* TODO DESTROY THE SOCKET HERE ! */
 
