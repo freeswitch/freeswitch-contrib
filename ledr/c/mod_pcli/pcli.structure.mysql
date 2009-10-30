@@ -1,0 +1,52 @@
+CREATE TABLE IF NOT EXISTS `pcli` (
+  `ini_id` varchar(255) NOT NULL,
+  `count` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+#### FUNCTIONS CAN'T SUPPORT TRANSACTIONS ?!
+DROP FUNCTION IF EXISTS test;
+delimiter $$
+CREATE FUNCTION test(i VARCHAR(255)) RETURNS INT
+BEGIN
+	declare c int;
+	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i;
+	IF (c >= 0) THEN
+		SET c = c + 1;
+		UPDATE `pcli` SET `count` = c WHERE `ini_id` = i;
+	ELSE
+		SET c = 0;
+		INSERT INTO `pcli` (`ini_id`, `count`) VALUES (i, c);
+	END IF;
+	return c;
+END $$
+delimiter ;
+
+
+
+DROP PROCEDURE IF EXISTS test;
+delimiter $$
+CREATE PROCEDURE test(i VARCHAR(255), OUT c INT)
+BEGIN
+	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i;
+	IF (c >= 0) THEN
+		SET c = c + 1;
+		UPDATE `pcli` SET `count` = c WHERE `ini_id` = i;
+	ELSE
+		SET c = 0;
+		INSERT INTO `pcli` (`ini_id`, `count`) VALUES (i, c);
+	END IF;
+END $$
+delimiter ;
+
+
+DROP FUNCTION IF EXISTS test;
+delimiter $$
+CREATE FUNCTION test(i VARCHAR(255)) RETURNS INT
+BEGIN
+	declare c int;
+	CALL test(i, @c);
+	SELECT (@c) into c;
+	return c;
+END $$
+delimiter $$

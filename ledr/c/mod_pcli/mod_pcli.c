@@ -79,7 +79,7 @@ static switch_xml_config_item_t instructions[] = {
 		"localhost", &config_opt_valid_addr, NULL, NULL),
 	SWITCH_CONFIG_ITEM("remote_port", SWITCH_CONFIG_INT, CONFIG_RELOADABLE, &pcli_globals.remote_port,
 		(void*)10741, &config_opt_valid_port, NULL, NULL),
-  SWITCH_CONFIG_ITEM_END()
+	SWITCH_CONFIG_ITEM_END()
 };
 
 /* called at startup and reload of the module */
@@ -160,7 +160,7 @@ static switch_status_t do_config(switch_bool_t reload)
 /* called when SWITCH_EVENT_RELOADXML is sent to this module */
 static void reload_event_handler(switch_event_t *event)
 {
-  do_config(SWITCH_TRUE);
+	do_config(SWITCH_TRUE);
 }
 
 /* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
@@ -170,7 +170,7 @@ static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_directi
 
 	/* some sanity checks */
 
-  if (media_direction > 3) {
+	if (media_direction > 3) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid media direction, may only be 0-3\n");
 		return SWITCH_STATUS_FALSE;
 	}
@@ -190,7 +190,7 @@ static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_directi
 	*pcli_header |= (media_direction);
 	*pcli_header |= (call_id << 2);
 	*pcli_header |= (switch_id << 12);
-  *pcli_header |= (ini_id << 16);
+	*pcli_header |= (ini_id << 16);
 
 	return SWITCH_STATUS_SUCCESS;
 }
@@ -251,102 +251,102 @@ static switch_event_node_t *NODE = NULL;
 
 SWITCH_STANDARD_APP(pcli_start_function)
 {
-    switch_media_bug_t *bug;
-    switch_status_t status;
-    switch_channel_t *channel;
-    pcli_session_helper_t *pcli_session_helper;
-		const char *p;
+	switch_media_bug_t *bug;
+	switch_status_t status;
+	switch_channel_t *channel;
+	pcli_session_helper_t *pcli_session_helper;
+	const char *p;
 
-    if (session == NULL)
-        return;
+	if (session == NULL)
+		return;
 
-    channel = switch_core_session_get_channel(session);
+	channel = switch_core_session_get_channel(session);
 
-    /* Is this channel already set? */
-    bug = (switch_media_bug_t *) switch_channel_get_private(channel, "_pcli_");
-    /* If yes */
-    if (bug != NULL) {
-        /* If we have a stop remove audio bug */
-        if (strcasecmp(data, "stop") == 0) {
-            switch_channel_set_private(channel, "_pcli_", NULL);
-            switch_core_media_bug_remove(session, &bug);
-            return;
-        }
-
-        /* We have already started */
-        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING, "Cannot run 2 at once on the same channel!\n");
-
-        return;
-    }
-
-		/* create a new pcli_session_helper */
-    pcli_session_helper = (pcli_session_helper_t *) switch_core_session_alloc(session, sizeof(pcli_session_helper_t));
-
-		/* make session available from pcli_session_helper */
-    pcli_session_helper->session = session;
-
-		/* get LI_ID and store in pcli_session_helper */
-		if ((p = switch_channel_get_variable(channel, "LI_ID")) && switch_true(p)) {
-			pcli_session_helper->ini_id = switch_core_session_strdup(session, p);
-		} else {
-			switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No LI_ID was set!\n");
+	/* Is this channel already set? */
+	bug = (switch_media_bug_t *) switch_channel_get_private(channel, "_pcli_");
+	/* If yes */
+	if (bug != NULL) {
+		/* If we have a stop remove audio bug */
+		if (strcasecmp(data, "stop") == 0) {
+			switch_channel_set_private(channel, "_pcli_", NULL);
+			switch_core_media_bug_remove(session, &bug);
 			return;
 		}
 
-		/* add the bug */
-    //status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_BOTH, &bug);
-    //status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_STREAM | SMBF_WRITE_STREAM, &bug);
-    status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE | SMBF_WRITE_REPLACE, &bug);
-    //status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE, &bug);
+		/* We have already started */
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING, "Cannot run 2 at once on the same channel!\n");
 
-    if (status != SWITCH_STATUS_SUCCESS) {
-        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Failure hooking to stream\n");
-        return;
-    }
+		return;
+	}
 
-    switch_channel_set_private(channel, "_pcli_", bug);
+	/* create a new pcli_session_helper */
+	pcli_session_helper = (pcli_session_helper_t *) switch_core_session_alloc(session, sizeof(pcli_session_helper_t));
+
+	/* make session available from pcli_session_helper */
+	pcli_session_helper->session = session;
+
+	/* get LI_ID and store in pcli_session_helper */
+	if ((p = switch_channel_get_variable(channel, "LI_ID")) && switch_true(p)) {
+		pcli_session_helper->ini_id = switch_core_session_strdup(session, p);
+	} else {
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No LI_ID was set!\n");
+		return;
+	}
+
+	/* add the bug */
+	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_BOTH, &bug);
+	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_STREAM | SMBF_WRITE_STREAM, &bug);
+	status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE | SMBF_WRITE_REPLACE, &bug);
+	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE, &bug);
+
+	if (status != SWITCH_STATUS_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Failure hooking to stream\n");
+		return;
+	}
+
+	switch_channel_set_private(channel, "_pcli_", bug);
 }
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_pcli_load)
 {
-    switch_application_interface_t *app_interface;
+	switch_application_interface_t *app_interface;
 
-		/* initialize pcli_globals struct */
-		memset(&pcli_globals, 0, sizeof(pcli_globals));
+	/* initialize pcli_globals struct */
+	memset(&pcli_globals, 0, sizeof(pcli_globals));
 
-		/* make the pool available from pcli_globals */
-		pcli_globals.pool = pool;
+	/* make the pool available from pcli_globals */
+	pcli_globals.pool = pool;
 
-		/* do config */
-		do_config(SWITCH_FALSE);
+	/* do config */
+	do_config(SWITCH_FALSE);
 
-    /* connect my internal structure to the blank pointer passed to me */
-    *module_interface = switch_loadable_module_create_module_interface(pool, modname);
+	/* connect my internal structure to the blank pointer passed to me */
+	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-		/* make the pcli application available to the system */
-    SWITCH_ADD_APP(app_interface, "pcli", "PacketCable Lawful Intercept", "PacketCable Lawful Intercept", pcli_start_function, "<start>", SAF_NONE);
+	/* make the pcli application available to the system */
+	SWITCH_ADD_APP(app_interface, "pcli", "PacketCable Lawful Intercept", "PacketCable Lawful Intercept", pcli_start_function, "<start>", SAF_NONE);
 
-		/* subscribe to reloadxml event, and hook it to reload_event_handler */
-		if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, reload_event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
-			return SWITCH_STATUS_TERM;
-		}
+	/* subscribe to reloadxml event, and hook it to reload_event_handler */
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_RELOADXML, NULL, reload_event_handler, NULL, &NODE) != SWITCH_STATUS_SUCCESS)) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
+		return SWITCH_STATUS_TERM;
+	}
 
-		/* say it */
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Lawful Intercept enabled\n");
+	/* say it */
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Lawful Intercept enabled\n");
 
-    /* indicate that the module should continue to be loaded */
-    return SWITCH_STATUS_SUCCESS;
+	/* indicate that the module should continue to be loaded */
+	return SWITCH_STATUS_SUCCESS;
 }
 
 
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_pcli_shutdown)
 {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "PacketCable Lawful Intercept disabled\n");
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "PacketCable Lawful Intercept disabled\n");
 
 /* TODO DESTROY THE SOCKET HERE ! */
 
-    return SWITCH_STATUS_SUCCESS;
+	return SWITCH_STATUS_SUCCESS;
 }
 
 
