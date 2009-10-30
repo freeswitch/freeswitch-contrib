@@ -1,16 +1,19 @@
+-- TODO: SEEMS TO WORK, BUT VERIFY STILL !
+
 CREATE TABLE IF NOT EXISTS `pcli` (
-  `ini_id` varchar(255) NOT NULL,
-  `count` int(11) NOT NULL
+	`ini_id` varchar(255) NOT NULL,
+	`count` int(11) NOT NULL,
+UNIQUE KEY `ini_id` (`ini_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
-#### FUNCTIONS CAN'T SUPPORT TRANSACTIONS ?!
-DROP FUNCTION IF EXISTS test;
+DROP PROCEDURE IF EXISTS get_and_incr_pcli_count;
 delimiter $$
-CREATE FUNCTION test(i VARCHAR(255)) RETURNS INT
+CREATE PROCEDURE get_and_incr_pcli_count(i VARCHAR(255), OUT c INT)
 BEGIN
-	declare c int;
-	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i;
+	SET AUTOCOMMIT = 0;
+	START TRANSACTION;
+	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i FOR UPDATE;
 	IF (c >= 0) THEN
 		SET c = c + 1;
 		UPDATE `pcli` SET `count` = c WHERE `ini_id` = i;
@@ -18,35 +21,10 @@ BEGIN
 		SET c = 0;
 		INSERT INTO `pcli` (`ini_id`, `count`) VALUES (i, c);
 	END IF;
-	return c;
+	COMMIT;
 END $$
 delimiter ;
 
-
-
-DROP PROCEDURE IF EXISTS test;
-delimiter $$
-CREATE PROCEDURE test(i VARCHAR(255), OUT c INT)
-BEGIN
-	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i;
-	IF (c >= 0) THEN
-		SET c = c + 1;
-		UPDATE `pcli` SET `count` = c WHERE `ini_id` = i;
-	ELSE
-		SET c = 0;
-		INSERT INTO `pcli` (`ini_id`, `count`) VALUES (i, c);
-	END IF;
-END $$
-delimiter ;
-
-
-DROP FUNCTION IF EXISTS test;
-delimiter $$
-CREATE FUNCTION test(i VARCHAR(255)) RETURNS INT
-BEGIN
-	declare c int;
-	CALL test(i, @c);
-	SELECT (@c) into c;
-	return c;
-END $$
-delimiter $$
+-- test with:
+CALL get_and_incr_pcli_count('test', @c);
+SELECT @c AS `count`;
