@@ -6,25 +6,6 @@ CREATE TABLE IF NOT EXISTS `pcli` (
 UNIQUE KEY `ini_id` (`ini_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-
-DROP PROCEDURE IF EXISTS get_and_incr_pcli_count;
-delimiter $$
-CREATE PROCEDURE get_and_incr_pcli_count(i VARCHAR(255), OUT c INT)
-BEGIN
-	SET AUTOCOMMIT = 0;
-	START TRANSACTION;
-	SELECT `count` INTO c FROM `pcli` WHERE `ini_id` = i FOR UPDATE;
-	IF (c >= 0) THEN
-		SET c = c + 1;
-		UPDATE `pcli` SET `count` = c WHERE `ini_id` = i;
-	ELSE
-		SET c = 0;
-		INSERT INTO `pcli` (`ini_id`, `count`) VALUES (i, c);
-	END IF;
-	COMMIT;
-END $$
-delimiter ;
-
--- test with:
-CALL get_and_incr_pcli_count('test', @c);
-SELECT @c AS `count`;
+-- test with: (Thanks Niels Draaisma)
+INSERT INTO pcli (ini_id, count) VALUES ("test", @count := 0) ON DUPLICATE KEY UPDATE count = @count := count + 1;
+SELECT @count AS count;
