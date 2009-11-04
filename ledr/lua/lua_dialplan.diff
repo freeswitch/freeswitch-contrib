@@ -2,14 +2,10 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
 ===================================================================
 --- src/mod/languages/mod_lua/mod_lua.cpp	(revision 15341)
 +++ src/mod/languages/mod_lua/mod_lua.cpp	(working copy)
-@@ -461,10 +461,126 @@
+@@ -461,10 +461,122 @@
  	return SWITCH_STATUS_SUCCESS;
  }
  
-+void logger(int i, char *s) {
-+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, ">>>>> %i L=[%s]\n", i, s);
-+}
-+
 +SWITCH_STANDARD_DIALPLAN(lua_dialplan_hunt)
 +{
 +	lua_State *L = lua_init();
@@ -129,7 +125,7 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
  
  	/* connect my internal structure to the blank pointer passed to me */
  	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
-@@ -472,6 +588,7 @@
+@@ -472,6 +584,7 @@
  	SWITCH_ADD_API(api_interface, "luarun", "run a script", luarun_api_function, "<script>");
  	SWITCH_ADD_API(api_interface, "lua", "run a script as an api function", lua_api_function, "<script>");
  	SWITCH_ADD_APP(app_interface, "lua", "Launch LUA ivr", "Run a lua ivr on a channel", lua_function, "<script>", SAF_SUPPORT_NOMEDIA);
