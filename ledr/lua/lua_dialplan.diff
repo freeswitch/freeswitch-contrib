@@ -1,18 +1,21 @@
 Index: src/mod/languages/mod_lua/mod_lua.cpp
 ===================================================================
---- src/mod/languages/mod_lua/mod_lua.cpp	(revision 15327)
+--- src/mod/languages/mod_lua/mod_lua.cpp	(revision 15341)
 +++ src/mod/languages/mod_lua/mod_lua.cpp	(working copy)
-@@ -461,10 +461,80 @@
+@@ -461,10 +461,126 @@
  	return SWITCH_STATUS_SUCCESS;
  }
  
++void logger(int i, char *s) {
++	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, ">>>>> %i L=[%s]\n", i, s);
++}
++
 +SWITCH_STANDARD_DIALPLAN(lua_dialplan_hunt)
 +{
 +	lua_State *L = lua_init();
 +	switch_caller_extension_t *extension = NULL;
 +	switch_channel_t *channel = switch_core_session_get_channel(session);
 +	char *cmd;
-+	char *str;
 +
 +	if (!caller_profile) {
 +		if (!(caller_profile = switch_channel_get_caller_profile(channel))) {
@@ -39,34 +42,77 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
 +	mod_lua_conjure_session(L, session, "session", 1);
 +	lua_parse_and_execute(L, cmd);
 +
-+	/* expecting APPS = { "application1", "app_data1", "application2", "app_data2", "application3" } */
-+	lua_getfield(L, LUA_GLOBALSINDEX, "APPS");
-+	if (lua_istable(L, 1)) {
-+		lua_pushnil(L);  /* first key */
-+		while (lua_next(L, 1) != 0) {
-+			/* uses 'key' (at index -2) and 'value' (at index -1) */
-+			if (lua_isstring(L, -1)) {
-+				char *application;
-+				char *app_data;
-+		 		application = strdup(lua_tostring(L, -1));
-+				lua_pop(L, 1);
-+				if (lua_next(L, 1) != 0) {
-+					if (lua_isstring(L, -1)) {
-+						app_data = strdup(lua_tostring(L, -1));
-+					} else {
-+						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Each app_data must be returned as a string!\n");
-+					}
++	/* expecting ACTIONS = { {"app1", "app_data1"}, { "app2" }, "app3" } -- each of three is valid */
++	lua_getfield(L, LUA_GLOBALSINDEX, "ACTIONS");
++	if (!lua_istable(L, 1)) {
++		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR,
++			"Global variable ACTIONS may only be a table\n");
++		goto done;
++	}
++
++	lua_pushnil(L); /* STACK = tab | nil */
++
++	while (lua_next(L, 1) != 0) { /* STACK = tab | k1 .. kn | vn */
++		char *application, *app_data;
++
++		if (lua_isstring(L, -1)) {
++			application = strdup(lua_tostring(L, -1));
++			app_data = strdup("");
++
++		} else if (lua_istable(L, -1)) {
++			int i = lua_gettop(L);
++
++			lua_pushnil(L); /* STACK = tab1 | k1 .. kn | tab2 | nil */
++
++			if (lua_next(L, i) != 0) { /* STACK = tab1 | k1 .. kn | tab2 | k | v */
++
++				if (!lua_isstring(L, -1)) {
++					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR,
++						"First element in each table in the ACTIONS table may only be a string - application name\n");
++					goto rollback;
 +				}
-+				switch_caller_extension_add_application(session, extension, application, app_data);
-+				switch_safe_free(app_data);
-+				switch_safe_free(application);
-+			} else {
-+				switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Each application must be returned as a string!\n");
++
++				application = strdup(lua_tostring(L, -1));
++
++				lua_pop(L, 1);
++
++				if (lua_next(L, i) == 0) { /* STACK = tab1 | k1 .. kn | tab2 | k | k | v */
++					app_data = strdup("");
++
++				} else {
++					if (!lua_isstring(L, -1)) {
++						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR,
++							"Second (optional) element in each table in the ACTIONS table may only be a string - app_data\n");
++						free(application);
++						goto rollback;
++					}
++					app_data = strdup(lua_tostring(L, -1));
++				}
++
 +			}
-+			/* removes 'value'; keeps 'key' for next iteration */
-+			lua_pop(L, 1);
++
++			lua_settop(L, i); /* STACK = tab1 | k1 .. kn | tab2 */
++
++		} else {
++			switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR,
++				"ACTIONS table may only contain strings or tables\n");
++			goto rollback;
 +		}
 +
++		switch_caller_extension_add_application(session, extension, application, app_data);
++		free(app_data);
++		free(application);
++
++		lua_pop(L, 1);
++	}
++
++	/* all went fine */
++	goto done;
++
++ rollback:
++	/* extension was created on session's memory pool, so make a new, empty one here */
++	if ((extension = switch_caller_extension_new(session, "_anon_", caller_profile->destination_number)) == 0) {
++		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_CRIT, "Memory Error!\n");
 +	}
 +
 + done:
@@ -83,7 +129,7 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
  
  	/* connect my internal structure to the blank pointer passed to me */
  	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
-@@ -472,6 +542,7 @@
+@@ -472,6 +588,7 @@
  	SWITCH_ADD_API(api_interface, "luarun", "run a script", luarun_api_function, "<script>");
  	SWITCH_ADD_API(api_interface, "lua", "run a script as an api function", lua_api_function, "<script>");
  	SWITCH_ADD_APP(app_interface, "lua", "Launch LUA ivr", "Run a lua ivr on a channel", lua_function, "<script>", SAF_SUPPORT_NOMEDIA);
