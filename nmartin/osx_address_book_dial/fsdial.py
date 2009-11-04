@@ -38,45 +38,44 @@ from ESL import *
 
 
 def main(argv):
-	# change these to match your configuration
-	my_number = "1000" #@mydomain.com
-	server_addr = "fs.ip.add.ress"
-	server_port = "8021"
-	server_auth = "ClueCon"
-	
-		
-	try:
-		
-		parser = OptionParser()
-		parser.add_option("-n", "--number", dest="number",
-								help="number to dial")
+ # change these to match your configuration
+ my_number = "1000" #@mydomain.com
+ server_addr = "my.ip.addr.ess"
+ server_port = "8021"
+ server_auth = "ClueCon"
+ 
+  
+ try:
+  
+  parser = OptionParser()
+  parser.add_option("-n", "--number", dest="number",
+        help="number to dial")
 
-		(options, args) = parser.parse_args()
+  (options, args) = parser.parse_args()
+  
+  if not options.number:
+    print "ERROR: destination number required"
+    sys.exit(2)
+    
+  cmd = "api originate {ignore_early_media=true,origination_caller_id_number=" + options.number + ",effective_caller_id_number=" + my_number + "}user/" + my_number + " &transfer(" + options.number + " XML default)"
+  print cmd
+   
+  con = ESLconnection(server_addr, server_port, server_auth)
+ #are we connected?
 
-		
-		if not options.number:
-				print "ERROR: destination number required"
-				sys.exit(2)
-				
-		cmd = "api originate {ignore_early_media=true,origination_caller_id_number=" + options.number + ",effective_caller_id_number=" + my_number + "}user/" + my_number + " &transfer(" + options.number + " XML default)"
-		print cmd
-			
-		con = ESLconnection(server_addr, server_port, server_auth)
-	#are we connected?
+  if con.connected:
+   
+   e=con.sendRecv(cmd)
+   print e.getBody()
 
-		if con.connected:
-			
-			e=con.sendRecv(cmd)
-			print e.getBody()
+  else:
 
-		else:
+   print "Not Connected"
+   sys.exit(2)
 
-			print "Not Connected"
-			sys.exit(2)
-
-	except:
-		print "Unexpected error:", sys.exc_info()[0]
-		raise
-	
+ except:
+  print "Unexpected error:", sys.exc_info()[0]
+  raise
+ 
 if __name__ == "__main__":
     main(sys.argv[1:])
