@@ -2,7 +2,7 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
 ===================================================================
 --- src/mod/languages/mod_lua/mod_lua.cpp	(revision 15341)
 +++ src/mod/languages/mod_lua/mod_lua.cpp	(working copy)
-@@ -461,10 +461,122 @@
+@@ -461,10 +461,129 @@
  	return SWITCH_STATUS_SUCCESS;
  }
  
@@ -95,6 +95,10 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
 +			goto rollback;
 +		}
 +
++		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG_CLEAN(session), SWITCH_LOG_DEBUG,
++			"Dialplan: %s Action %s(%s)\n",
++			switch_channel_get_name(channel), application, app_data);
++
 +		switch_caller_extension_add_application(session, extension, application, app_data);
 +		free(app_data);
 +		free(application);
@@ -106,7 +110,10 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
 +	goto done;
 +
 + rollback:
-+	/* extension was created on session's memory pool, so make a new, empty one here */
++	switch_log_printf(SWITCH_CHANNEL_SESSION_LOG_CLEAN(session), SWITCH_LOG_DEBUG,
++		"Rollback, all applications previously added to this extension in current context/script are discarded\n");
++
++	/* extension was created on session's memory pool, so just make a new, empty one here */
 +	if ((extension = switch_caller_extension_new(session, "_anon_", caller_profile->destination_number)) == 0) {
 +		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_CRIT, "Memory Error!\n");
 +	}
@@ -125,7 +132,7 @@ Index: src/mod/languages/mod_lua/mod_lua.cpp
  
  	/* connect my internal structure to the blank pointer passed to me */
  	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
-@@ -472,6 +584,7 @@
+@@ -472,6 +591,7 @@
  	SWITCH_ADD_API(api_interface, "luarun", "run a script", luarun_api_function, "<script>");
  	SWITCH_ADD_API(api_interface, "lua", "run a script as an api function", lua_api_function, "<script>");
  	SWITCH_ADD_APP(app_interface, "lua", "Launch LUA ivr", "Run a lua ivr on a channel", lua_function, "<script>", SAF_SUPPORT_NOMEDIA);
