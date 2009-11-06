@@ -198,6 +198,32 @@ ALTER TABLE public.carriers_id_seq OWNER TO freeswitch;
 ALTER SEQUENCE carriers_id_seq OWNED BY carriers.id;
 
 
+-- Table: cdr
+
+-- DROP TABLE cdr;
+
+CREATE TABLE cdr (
+   id serial NOT NULL,
+  caller_id_name character varying NOT NULL,
+  caller_id_number character varying NOT NULL,
+  destination_number character varying NOT NULL,
+  context character varying NOT NULL,
+  start_stamp character varying NOT NULL,
+  answer_stamp character varying NOT NULL,
+  end_stamp character varying NOT NULL,
+  duration character varying NOT NULL,
+  billsec character varying NOT NULL,
+  hangup_cause character(1) NOT NULL,
+  uuid character varying NOT NULL,
+  bleg_uuid character varying NOT NULL,
+  accountcode character(1) NOT NULL,
+  read_codec character varying NOT NULL,
+  write_codec character varying NOT NULL,
+  CONSTRAINT cdr_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE cdr OWNER TO freeswitch;
+
 --
 -- Name: conference_advertise; Type: TABLE; Schema: public; Owner: freeswitch; Tablespace: 
 --
