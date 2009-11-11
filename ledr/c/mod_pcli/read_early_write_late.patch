@@ -1,0 +1,162 @@
+Index: src/switch_core_io.c
+===================================================================
+--- src/switch_core_io.c	(revision 15426)
++++ src/switch_core_io.c	(working copy)
+@@ -188,6 +188,109 @@
+ 
+ 	switch_assert(*frame != NULL);
+ 
++///////////////////////////////////////////////////////////////////////////
++
++/*
++		if (session->bugs && !switch_channel_test_flag(session->channel, CF_PAUSE_BUGS)) {
++			switch_media_bug_t *bp, *dp, *last = NULL;
++			switch_bool_t ok = SWITCH_TRUE;
++			switch_thread_rwlock_rdlock(session->bug_rwlock);
++			for (bp = session->bugs; bp; bp = bp->next) {
++				if (!switch_channel_test_flag(session->channel, CF_ANSWERED) && switch_core_media_bug_test_flag(bp, SMBF_ANSWER_REQ)) {
++					continue;
++				}
++
++				if (bp->ready && switch_test_flag(bp, SMBF_READ_STREAM)) {
++					switch_mutex_lock(bp->read_mutex);
++					switch_buffer_write(bp->raw_read_buffer, read_frame->data, read_frame->datalen);
++					if (bp->callback) {
++						ok = bp->callback(bp, bp->user_data, SWITCH_ABC_TYPE_READ);
++					}
++					switch_mutex_unlock(bp->read_mutex);
++				}
++				
++				if (ok && switch_test_flag(bp, SMBF_READ_REPLACE)) {
++					do_bugs = 0;
++					if (bp->callback) {
++						bp->read_replace_frame_in = read_frame;
++						bp->read_replace_frame_out = read_frame;
++						if ((ok = bp->callback(bp, bp->user_data, SWITCH_ABC_TYPE_READ_REPLACE)) == SWITCH_TRUE) {
++							read_frame = bp->read_replace_frame_out;
++						}
++					}
++				}
++				
++				if (bp->stop_time && bp->stop_time <= switch_epoch_time_now(NULL)) {
++					ok = SWITCH_FALSE;
++				}
++
++				if (ok == SWITCH_FALSE) {
++					bp->ready = 0;
++					if (last) {
++						last->next = bp->next;
++					} else {
++						session->bugs = bp->next;
++					}
++					dp = bp;
++					bp = last;
++					switch_core_media_bug_close(&dp);
++					if (!bp) {
++						break;
++					}
++					continue;
++				}
++				last = bp;
++			}
++			switch_thread_rwlock_unlock(session->bug_rwlock);
++		}
++*/
++
++	if (session->bugs && !switch_channel_test_flag(session->channel, CF_PAUSE_BUGS)) { /* is it necessary to be able to pause this bug ? */
++		switch_media_bug_t *bp, *dp, *last = NULL;
++		switch_bool_t ok = SWITCH_TRUE;
++		switch_thread_rwlock_rdlock(session->bug_rwlock);
++		switch_frame_t *read_frame = *frame;
++
++		for (bp = session->bugs; bp; bp = bp->next) {
++//			if (!switch_channel_test_flag(session->channel, CF_ANSWERED) && switch_core_media_bug_test_flag(bp, SMBF_ANSWER_REQ)) {
++//				continue;
++//			}
++
++			if (ok && switch_test_flag(bp, SMBF_READ_EARLY)) {
++				do_bugs = 0;
++				if (bp->callback) {
++					bp->read_replace_frame_in = read_frame;
++					bp->read_replace_frame_out = read_frame;
++					ok = bp->callback(bp, bp->user_data, SWITCH_ABC_TYPE_READ_EARLY);
++				}
++			}
++			
++			if (bp->stop_time && bp->stop_time <= switch_epoch_time_now(NULL)) {
++				ok = SWITCH_FALSE;
++			}
++
++			if (ok == SWITCH_FALSE) {
++				bp->ready = 0;
++				if (last) {
++					last->next = bp->next;
++				} else {
++					session->bugs = bp->next;
++				}
++				dp = bp;
++				bp = last;
++				switch_core_media_bug_close(&dp);
++				if (!bp) {
++					break;
++				}
++				continue;
++			}
++			last = bp;
++		}
++		switch_thread_rwlock_unlock(session->bug_rwlock);
++	}
++
++///////////////////////////////////////////////////////////////////////////
++
+ 	if (switch_test_flag(*frame, SFF_PROXY_PACKET)) {
+ 		/* Fast PASS! */
+ 		status = SWITCH_STATUS_SUCCESS;
+Index: src/mod/applications/mod_vmd/mod_vmd.c
+===================================================================
+--- src/mod/applications/mod_vmd/mod_vmd.c	(revision 15426)
++++ src/mod/applications/mod_vmd/mod_vmd.c	(working copy)
+@@ -215,6 +215,8 @@
+         return process_data(vmd_info, frame);
+ 
+     case SWITCH_ABC_TYPE_WRITE_REPLACE:
++		case SWITCH_ABC_TYPE_READ_EARLY:
++		case SWITCH_ABC_TYPE_WRITE_LATE:
+         break;
+     }
+ 
+Index: src/include/switch_types.h
+===================================================================
+--- src/include/switch_types.h	(revision 15426)
++++ src/include/switch_types.h	(working copy)
+@@ -341,7 +341,9 @@
+ 	SWITCH_ABC_TYPE_WRITE_REPLACE,
+ 	SWITCH_ABC_TYPE_READ_REPLACE,
+ 	SWITCH_ABC_TYPE_READ_PING,
+-	SWITCH_ABC_TYPE_CLOSE
++	SWITCH_ABC_TYPE_CLOSE,
++	SWITCH_ABC_TYPE_READ_EARLY,
++	SWITCH_ABC_TYPE_WRITE_LATE
+ } switch_abc_type_t;
+ 
+ typedef struct {
+@@ -1118,6 +1120,8 @@
+ SMBF_STEREO - Record in stereo
+ SMBF_ANSWER_RECORD_REQ - Don't record until the channel is answered
+ SMBF_THREAD_LOCK - Only let the same thread who created the bug remove it.
++SMBF_READ_EARLY - Include the Read Stream right after reading (before transcoding - received packet is intact)
++SMBF_WRITE_LATE - Include the Write Stream just before writing (after transcoding - to be written packet is created)
+ </pre>
+ */
+ typedef enum {
+@@ -1129,7 +1133,9 @@
+ 	SMBF_READ_PING = (1 << 4),
+ 	SMBF_STEREO = (1 << 5),
+ 	SMBF_ANSWER_REQ = (1 << 6),
+-	SMBF_THREAD_LOCK = (1 << 7)
++	SMBF_THREAD_LOCK = (1 << 7),
++	SMBF_READ_EARLY = (1 << 8),
++	SMBF_WRITE_LATE = (1 << 9)
+ } switch_media_bug_flag_enum_t;
+ typedef uint32_t switch_media_bug_flag_t;
+ 

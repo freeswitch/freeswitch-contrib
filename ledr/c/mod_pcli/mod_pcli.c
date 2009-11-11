@@ -48,18 +48,22 @@ static struct {
 	switch_memory_pool_t *pool;
 	int switch_id;
 	char *local_addr;
-	int local_port;
 	char *remote_addr;
+	int local_port;
 	int remote_port;
 	switch_socket_t *socket;
+	switch_sockaddr_t *local_sockaddr;
+	switch_sockaddr_t *remote_sockaddr;
 } pcli_globals;
 
 // temporary declaration here.. remove after testing is done !!!!
 static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_direction_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id);
+static switch_status_t send_packet();
 
 typedef struct {
 	switch_core_session_t *session;
-	char *ini_id;
+	uint16_t ini_id;
+	uint16_t instance_id;
 } pcli_session_helper_t;
 
 /* config item validations */
@@ -94,17 +98,22 @@ static switch_status_t do_config(switch_bool_t reload)
 		return SWITCH_STATUS_FALSE;
 	}
 
-	/* for now, only init port on startup, fix reload later !! */
 	if (!reload) {
 
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Trying to create a udp socket !!\n");
-
-		if (switch_sockaddr_info_get(&local_sockaddr, pcli_globals.local_addr, SWITCH_UNSPEC, pcli_globals.local_port, 0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS || !local_sockaddr) {
+		if (switch_sockaddr_info_get(&local_sockaddr, pcli_globals.local_addr, SWITCH_UNSPEC,
+				pcli_globals.local_port, 0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS || !local_sockaddr) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Local Address Error!\n");
 			return SWITCH_STATUS_FALSE;
 		}
 
-		if (switch_socket_create(&socket, switch_sockaddr_get_family(local_sockaddr), SOCK_DGRAM, 0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS) {
+		if (switch_sockaddr_info_get(&remote_sockaddr, pcli_globals.remote_addr, SWITCH_UNSPEC,
+				pcli_globals.remote_port, 0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS || !remote_sockaddr) {
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Remote Address Error!\n");
+			return SWITCH_STATUS_FALSE;
+		}
+
+		if (switch_socket_create(&socket, switch_sockaddr_get_family(local_sockaddr), SOCK_DGRAM,
+				0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Socket Error!\n");
 			return SWITCH_STATUS_FALSE;
 		}
@@ -120,42 +129,47 @@ static switch_status_t do_config(switch_bool_t reload)
 		}
 
 		pcli_globals.socket = socket;
-
-		/* TEST SENDING A PACKET */
-		if (switch_sockaddr_info_get(&remote_sockaddr, pcli_globals.remote_addr, SWITCH_UNSPEC, pcli_globals.remote_port, 0, pcli_globals.pool) != SWITCH_STATUS_SUCCESS || !remote_sockaddr) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Remote Address Error!\n");
-			return SWITCH_STATUS_FALSE;
-		}
-
-		/* create a pcli header */
-		uint32_t pcli_header;
-		pcli_media_direction_t media_direction = PCLI_MEDIA_DIRECTION_FROM_TARGET;
-		uint16_t call_id = 123;
-		uint8_t switch_id = 12;
-		uint16_t ini_id = 10741;
-		gen_pcli_header(&pcli_header, media_direction, call_id, switch_id, ini_id);
-
-		uint32_t network_byte_order_pcli_header;
-		network_byte_order_pcli_header = htonl(pcli_header);
-
-		/* create a pcli body */
-		char *pcli_body = "ABCD";
-
-		/* create a full packet */
-		char *packet;
-		packet = malloc(sizeof(network_byte_order_pcli_header) + sizeof(pcli_body));
-		memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
-		memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
-
-		size_t packetsize;
-		packetsize = sizeof(packet);
-
-		switch_socket_sendto(pcli_globals.socket, remote_sockaddr, 0, packet, &packetsize);
+		pcli_globals.local_sockaddr = local_sockaddr;
+		pcli_globals.remote_sockaddr = remote_sockaddr;
 
 	}
 
 	return SWITCH_STATUS_SUCCESS;
 }
+
+
+static switch_status_t send_packet() {
+	/* create a pcli header */
+	uint32_t pcli_header;
+	pcli_media_direction_t media_direction = PCLI_MEDIA_DIRECTION_FROM_TARGET;
+	uint16_t call_id = 123;
+	uint8_t switch_id = 12;
+	uint16_t ini_id = 10741;
+	gen_pcli_header(&pcli_header, media_direction, call_id, switch_id, ini_id);
+
+	uint32_t network_byte_order_pcli_header;
+	network_byte_order_pcli_header = htonl(pcli_header);
+
+	/* create a pcli body */
+	char *pcli_body = "ABCD";
+
+	/* create a full packet */
+	char *packet; // TODO shouldn't this be unsigned ?
+	packet = malloc(sizeof(network_byte_order_pcli_header) + sizeof(pcli_body));
+	memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
+	memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
+
+	size_t packetsize;
+	packetsize = sizeof(packet);
+
+	//switch_socket_sendto(pcli_globals.socket, remote_sockaddr, 0, packet, &packetsize);
+	switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, packet, &packetsize);
+
+	return SWITCH_STATUS_SUCCESS;
+}
+
+
+
 
 /* called when SWITCH_EVENT_RELOADXML is sent to this module */
 static void reload_event_handler(switch_event_t *event)
@@ -163,11 +177,23 @@ static void reload_event_handler(switch_event_t *event)
 	do_config(SWITCH_TRUE);
 }
 
-/* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
-static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_direction_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id)
+/*
+static switch_status_t gen_fake_ipv4_header()
 {
-	*pcli_header = 0;
+}
 
+static switch_status_t gen_fake_udp_header()
+{
+}
+
+static switch_status_t gen_fake_rtp_body()
+{
+}
+*/
+
+/* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
+static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
+{
 	/* some sanity checks */
 
 	if (media_direction > 3) {
@@ -175,8 +201,8 @@ static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_directi
 		return SWITCH_STATUS_FALSE;
 	}
 
-	if (call_id > 1023) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid call_id, may only be 0-1023\n");
+	if (instance_id > 1023) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Invalid instance_id, may only be 0-1023\n");
 		return SWITCH_STATUS_FALSE;
 	}
 
@@ -187,61 +213,54 @@ static switch_status_t gen_pcli_header(uint32_t *pcli_header, pcli_media_directi
 
 	/* ini_id needs no check as it may use the full uint16_t */
 
+	*pcli_header = 0;
 	*pcli_header |= (media_direction);
-	*pcli_header |= (call_id << 2);
+	*pcli_header |= (instance_id << 2); // this seems to work, but:
 	*pcli_header |= (switch_id << 12);
-	*pcli_header |= (ini_id << 16);
+	*pcli_header |= (ini_id << 16);     // how can i shift left 16 on a uint16_t ???! is shifting not done inside the memory space of the ini_id ?? FIND OUT !!
 
 	return SWITCH_STATUS_SUCCESS;
 }
 
 static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, switch_abc_type_t type)
 {
-//	pcli_session_helper_t *pcli_session_helper = (pcli_session_helper_t *) user_data;
+	//pcli_session_helper_t *helper = (pcli_session_helper_t *) user_data;
 
 	switch (type) {
-	case SWITCH_ABC_TYPE_INIT:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> INIT\n");
-		break;
+		case SWITCH_ABC_TYPE_INIT:
+		case SWITCH_ABC_TYPE_READ_PING:
+		case SWITCH_ABC_TYPE_CLOSE:
+		case SWITCH_ABC_TYPE_READ:
+		case SWITCH_ABC_TYPE_WRITE:
+		case SWITCH_ABC_TYPE_READ_REPLACE:
+		case SWITCH_ABC_TYPE_WRITE_REPLACE:
+			break;
 
-	case SWITCH_ABC_TYPE_READ_PING:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> PING\n");
-		break;
-
-	case SWITCH_ABC_TYPE_CLOSE:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> CLOSE\n");
-		break;
-
-	case SWITCH_ABC_TYPE_READ:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> READ\n");
-		break;
-
-	case SWITCH_ABC_TYPE_WRITE:
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> WRITE\n");
-		break;
-
-	case SWITCH_ABC_TYPE_READ_REPLACE:
-		{
+		case SWITCH_ABC_TYPE_READ_EARLY:
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> SWITCH_ABC_TYPE_READ_EARLY\n");
+			
+/*
+			{
 			switch_frame_t *rframe = switch_core_media_bug_get_read_replace_frame(bug);
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> READ_REPLACE seq[%u] ssrc[%lu] packetlen[%lu] rate [%lu] samples [%lu]\n",
 				(unsigned)rframe->seq, (unsigned long)rframe->ssrc, (unsigned long)rframe->packetlen, (unsigned long)rframe->rate, (unsigned long)rframe->samples);
 switch_size_t packetlength = sizeof(rframe->packet);
 switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, ">>> [%lu]\n", (unsigned long)packetlength);
 
-		}
-		break;
+			//switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "HELPER.SESSION->RAW_READ_FRAME.DATALEN [%lu]\n", helper->session->raw_read_frame.datalen);
 
-	case SWITCH_ABC_TYPE_WRITE_REPLACE:
-		{
-			switch_frame_t *rframe = switch_core_media_bug_get_write_replace_frame(bug);
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> WRITE_REPLACE seq[%u] ssrc[%lu] packetlen[%lu] rate [%lu] samples[%lu]\n",
-				(unsigned)rframe->seq, (unsigned long)rframe->ssrc, (unsigned long)rframe->packetlen, (unsigned long)rframe->rate, (unsigned long)rframe->samples);
-switch_size_t packetlength = sizeof(rframe->packet);
-switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, ">>> [%lu]\n", (unsigned long)packetlength);
 
-		}
-		break;
+			}
+*/
+			break;
+
+		case SWITCH_ABC_TYPE_WRITE_LATE:
+			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "--> SWITCH_ABC_TYPE_WRITE_LATE\n");
+			break;
 	}
+
+
+	send_packet();
 
 	return SWITCH_TRUE;
 }
@@ -285,19 +304,25 @@ SWITCH_STANDARD_APP(pcli_start_function)
 	/* make session available from pcli_session_helper */
 	pcli_session_helper->session = session;
 
-	/* get LI_ID and store in pcli_session_helper */
-	if ((p = switch_channel_get_variable(channel, "LI_ID")) && switch_true(p)) {
-		pcli_session_helper->ini_id = switch_core_session_strdup(session, p);
+	/* get pcli_ini_id and store in pcli_session_helper */
+	if ((p = switch_channel_get_variable(channel, "pcli_ini_id")) && switch_true(p)) {
+		pcli_session_helper->ini_id = (uint16_t)atoi(p);
 	} else {
-		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No LI_ID was set!\n");
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No pcli_ini_id channel variable was set!\n");
+		return;
+	}
+
+	/* get pcli_instance_id and store in pcli_session_helper */
+	if ((p = switch_channel_get_variable(channel, "pcli_instance_id")) && switch_true(p)) {
+		pcli_session_helper->instance_id = (uint16_t)atoi(p);
+	} else {
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No pcli_instance_id channel variable was set!\n");
 		return;
 	}
 
 	/* add the bug */
-	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_BOTH, &bug);
-	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_STREAM | SMBF_WRITE_STREAM, &bug);
-	status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE | SMBF_WRITE_REPLACE, &bug);
-	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE, &bug);
+	//status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_REPLACE | SMBF_WRITE_REPLACE, &bug);
+	status = switch_core_media_bug_add(session, pcli_callback, pcli_session_helper, 0, SMBF_READ_STREAM, &bug);
 
 	if (status != SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "Failure hooking to stream\n");
