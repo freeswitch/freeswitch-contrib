@@ -233,7 +233,7 @@ static void print_frame_stats(switch_frame_t *frame)
 
 static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, switch_abc_type_t type)
 {
-	//pcli_session_helper_t *helper = (pcli_session_helper_t *) user_data;
+	pcli_session_helper_t *helper = (pcli_session_helper_t *) user_data;
 
 	switch (type) {
 		case SWITCH_ABC_TYPE_INIT:
@@ -260,7 +260,7 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
 				gen_udp_header(udp_header, RTP_HEADER_LEN + frame->datalen);
 				gen_ip_header(ip_header, UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen);
-				gen_pcli_header(pcli_header, PCLI_MEDIA_DIRECTION_FROM_TARGET, 1, 1, 1); // 1,1,1 = instance_id, switch_id, ini_id
+				gen_pcli_header(pcli_header, PCLI_MEDIA_DIRECTION_FROM_TARGET, helper->instance_id, pcli_globals.switch_id, helper->ini_id);
 
 				memcpy(in_packet_pointer, pcli_header, sizeof(pcli_header));				
 				in_packet_pointer += PCLI_HEADER_LEN;
