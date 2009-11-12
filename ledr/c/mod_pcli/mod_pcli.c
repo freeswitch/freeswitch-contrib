@@ -62,7 +62,7 @@ static struct {
 } pcli_globals;
 
 // temporary declaration here.. remove after testing is done !!!!
-static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id);
+//static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id);
 //static switch_status_t send_packet();
 
 typedef struct {
@@ -213,16 +213,20 @@ static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t
 
 static switch_status_t gen_ip_header(char *ip_header, uint16_t payload_size)
 {
+	memset(ip_header, 0, sizeof(ip_header));
+	*ip_header |= (4); /* Version 4 bits */
 	return SWITCH_STATUS_SUCCESS;
 }
 
 static switch_status_t gen_udp_header(char *udp_header, uint16_t payload_size)
 {
+	memset(udp_header, 0, sizeof(udp_header));
 	return SWITCH_STATUS_SUCCESS;
 }
 
 static switch_status_t gen_rtp_header(char *rtp_header, switch_payload_t payload, uint16_t seq, uint32_t timestamp, uint32_t ssrc)
 {
+	memset(rtp_header, 0, sizeof(rtp_header));
 	return SWITCH_STATUS_SUCCESS;
 }
 
@@ -246,20 +250,21 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 		case SWITCH_ABC_TYPE_READ_REPLACE:
 			{
-				switch_frame_t *rframe = switch_core_media_bug_get_read_replace_frame(bug);
-				print_frame_stats(rframe);
+				switch_frame_t *frame = switch_core_media_bug_get_read_replace_frame(bug);
+				print_frame_stats(frame);
 
 				char pcli_header[PCLI_HEADER_LEN];
 				char ip_header[IP_HEADER_LEN];
 				char udp_header[UDP_HEADER_LEN];
 				char rtp_header[RTP_HEADER_LEN];
 
-				char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + rframe->datalen];
-				char *in_packet_pointer = packet;
+				char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
+				char *in_packet_pointer; // = packet; // or next line:
+				in_packet_pointer = packet;
 
-				gen_rtp_header(rtp_header, rframe->payload, rframe->seq, rframe->timestamp, rframe->ssrc);
-				gen_udp_header(udp_header, RTP_HEADER_LEN + rframe->datalen);
-				gen_ip_header(ip_header, UDP_HEADER_LEN + RTP_HEADER_LEN + rframe->datalen);
+				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
+				gen_udp_header(udp_header, RTP_HEADER_LEN + frame->datalen);
+				gen_ip_header(ip_header, UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen);
 				gen_pcli_header(pcli_header, PCLI_MEDIA_DIRECTION_FROM_TARGET, 1, 1, 1); // 1,1,1 = instance_id, switch_id, ini_id
 
 				memcpy(in_packet_pointer, pcli_header, sizeof(pcli_header));				
@@ -274,13 +279,20 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				memcpy(in_packet_pointer, rtp_header, sizeof(rtp_header));
 				in_packet_pointer += RTP_HEADER_LEN;
 
-				memcpy(in_packet_pointer, rframe->data, rframe->datalen);
+				memcpy(in_packet_pointer, frame->data, frame->datalen);
+
+
+				size_t packetsize;
+				packetsize = sizeof(packet);
+				
+				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, packet, &packetsize);
+
 
 				/* since the (fake) rtp header is almost static, we know the size in advance */
 				//packet = malloc(packet_len);
 
-//				memcpy(packet, rframe->data, rframe->datalen);
-//				packet_len += rframe->datalen;
+//				memcpy(packet, frame->data, frame->datalen);
+//				packet_len += frame->datalen;
 				
 	//memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
 	//memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
