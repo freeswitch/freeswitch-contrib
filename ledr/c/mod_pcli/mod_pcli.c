@@ -202,31 +202,59 @@ static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t
 
 	/* ini_id needs no check as it may use the full uint16_t */
 
-	*pcli_header = 0;
-	*pcli_header |= (media_direction);
-	*pcli_header |= (instance_id << 2); // this seems to work, but:
-	*pcli_header |= (switch_id << 12);
-	*pcli_header |= (ini_id << 16);     // how can i shift left 16 on a uint16_t ???! is shifting not done inside the memory space of the ini_id ?? FIND OUT !!
+	uint32_t pcli_header_i = 0;
+	pcli_header_i |= (media_direction);
+	pcli_header_i |= (instance_id << 2); // this seems to work, but:
+	pcli_header_i |= (switch_id << 12);
+	pcli_header_i |= (ini_id << 16);     // how can i shift left 16 on a uint16_t ???! is shifting not done inside the memory space of the ini_id ?? FIND OUT !!
+
+	uint32_t pcli_header_i_n = htonl(pcli_header_i);
+
+	memcpy(pcli_header, &pcli_header_i_n, sizeof(pcli_header_i_n));
 
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_ip_header(char *ip_header, uint16_t payload_size)
+static switch_status_t gen_ip_header(char *ip_header, uint16_t payload_size_i)
 {
-	memset(ip_header, 0, sizeof(ip_header));
-	*ip_header |= (4); /* Version 4 bits */
+	memset(ip_header, 0, sizeof(ip_header)); /* zero */
+
+	ip_header[0] |= (4 << 4); /* set version 4 */
+	ip_header[0] |= 5; /* set header length 5 */
+	ip_header[9] |= 17; /* set protocol to UDP */
+
+	uint16_t payload_size_i_n = htons(payload_size_i);
+	memcpy(&ip_header[2], &payload_size_i_n, sizeof(payload_size_i_n));
+
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_udp_header(char *udp_header, uint16_t payload_size)
+static switch_status_t gen_udp_header(char *udp_header, uint16_t payload_size_i)
 {
-	memset(udp_header, 0, sizeof(udp_header));
+	memset(udp_header, 0, sizeof(udp_header)); /* zero */
+
+	uint16_t payload_size_i_n = htons(payload_size_i); /* set payload size */
+	memcpy(&udp_header[4], &payload_size_i_n, sizeof(payload_size_i_n));
+
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_rtp_header(char *rtp_header, switch_payload_t payload, uint16_t seq, uint32_t timestamp, uint32_t ssrc)
+static switch_status_t gen_rtp_header(char *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
 {
-	memset(rtp_header, 0, sizeof(rtp_header));
+	memset(rtp_header, 0, sizeof(rtp_header)); /* zero */
+
+	rtp_header[0] |= (2 << 6); /* set version 2 */
+	rtp_header[1] |= payload_type; /* set payload type */
+	
+	uint16_t seq_i_n = htons(seq_i); /* set seq */
+	memcpy(&rtp_header[2], &seq_i_n, sizeof(seq_i_n));
+
+	uint32_t timestamp_i_n = htonl(timestamp_i); /* set timestamp */
+	memcpy(&rtp_header[4], &timestamp_i_n, sizeof(timestamp_i_n));
+
+	uint32_t ssrc_i_n = htonl(ssrc_i); /* set ssrc */
+	memcpy(&rtp_header[8], &ssrc_i_n, sizeof(ssrc_i_n));
+
 	return SWITCH_STATUS_SUCCESS;
 }
 
