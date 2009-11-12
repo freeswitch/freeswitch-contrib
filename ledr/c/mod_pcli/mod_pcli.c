@@ -147,6 +147,9 @@ static void reload_event_handler(switch_event_t *event)
 /* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
 static switch_status_t gen_pcli_header(unsigned char *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
 {
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_pcli_header - media_direction[%u] instance_id[%u] switch_id[%u] ini_id[%u]\n",
+		media_direction, instance_id, switch_id, ini_id);
+
 	/* some sanity checks */
 
 	if (media_direction > 3) {
@@ -182,6 +185,8 @@ static switch_status_t gen_pcli_header(unsigned char *pcli_header, pcli_media_di
 /* generate an ip header */
 static switch_status_t gen_ip_header(unsigned char *ip_header, uint16_t payload_size_i)
 {
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_ip_header - payload_size_i[%i]\n", payload_size_i);
+
 	memset(ip_header, 0, sizeof(ip_header)); /* zero */
 
 	ip_header[0] |= (4 << 4); /* set version 4 */
@@ -254,8 +259,9 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				unsigned char rtp_header[RTP_HEADER_LEN];
 
 				unsigned char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
-				unsigned char *in_packet_pointer; // = packet; // or next line:
-				in_packet_pointer = packet;
+				unsigned char *in_packet_pointer = packet; // = packet; // or next line:
+				//in_packet_pointer = packet;
+				memset(packet, 0, sizeof(packet)); /* zero - this shouldn't be necessary !!! TODO */
 
 				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
 				gen_udp_header(udp_header, RTP_HEADER_LEN + frame->datalen);
@@ -267,15 +273,14 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 				memcpy(in_packet_pointer, ip_header, sizeof(ip_header));		
 				in_packet_pointer += IP_HEADER_LEN;
-
-				memcpy(in_packet_pointer, udp_header, sizeof(udp_header));
-				in_packet_pointer += UDP_HEADER_LEN;
-
-				memcpy(in_packet_pointer, rtp_header, sizeof(rtp_header));
-				in_packet_pointer += RTP_HEADER_LEN;
-
-				memcpy(in_packet_pointer, frame->data, frame->datalen);
-
+//
+//				memcpy(in_packet_pointer, udp_header, sizeof(udp_header));
+//				in_packet_pointer += UDP_HEADER_LEN;
+//
+//				memcpy(in_packet_pointer, rtp_header, sizeof(rtp_header));
+//				in_packet_pointer += RTP_HEADER_LEN;
+//
+//				memcpy(in_packet_pointer, frame->data, frame->datalen);
 
 				size_t packetsize;
 				packetsize = sizeof(packet);
@@ -286,7 +291,6 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 		case SWITCH_ABC_TYPE_WRITE_REPLACE:
 			break;
-
 	}
 
 	return SWITCH_TRUE;
