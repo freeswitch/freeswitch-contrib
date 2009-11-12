@@ -145,7 +145,7 @@ static void reload_event_handler(switch_event_t *event)
 }
 
 /* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
-static switch_status_t gen_pcli_header(unsigned char *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
+static switch_status_t gen_pcli_header(uint8_t *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
 {
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_pcli_header - media_direction[%u] instance_id[%u] switch_id[%u] ini_id[%u]\n",
 		media_direction, instance_id, switch_id, ini_id);
@@ -183,7 +183,7 @@ static switch_status_t gen_pcli_header(unsigned char *pcli_header, pcli_media_di
 }
 
 /* generate an ip header */
-static switch_status_t gen_ip_header(unsigned char *ip_header, uint16_t payload_size_i)
+static switch_status_t gen_ip_header(uint8_t *ip_header, uint16_t payload_size_i)
 {
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_ip_header - payload_size_i[%i]\n", payload_size_i);
 
@@ -200,7 +200,7 @@ static switch_status_t gen_ip_header(unsigned char *ip_header, uint16_t payload_
 }
 
 /* generate a udp header */
-static switch_status_t gen_udp_header(unsigned char *udp_header, uint16_t payload_size_i)
+static switch_status_t gen_udp_header(uint8_t *udp_header, uint16_t payload_size_i)
 {
 	memset(udp_header, 0, sizeof(udp_header)); /* zero */
 
@@ -211,7 +211,7 @@ static switch_status_t gen_udp_header(unsigned char *udp_header, uint16_t payloa
 }
 
 /* generate an rtp header */
-static switch_status_t gen_rtp_header(unsigned char *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
+static switch_status_t gen_rtp_header(uint8_t *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
 {
 	memset(rtp_header, 0, sizeof(rtp_header)); /* zero */
 
@@ -253,14 +253,14 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				switch_frame_t *frame = switch_core_media_bug_get_read_replace_frame(bug);
 				print_frame_stats(frame);
 
-				unsigned char pcli_header[PCLI_HEADER_LEN];
-				unsigned char ip_header[IP_HEADER_LEN];
-				unsigned char udp_header[UDP_HEADER_LEN];
-				unsigned char rtp_header[RTP_HEADER_LEN];
+				uint8_t pcli_header[PCLI_HEADER_LEN];
+				uint8_t ip_header[IP_HEADER_LEN];
+				uint8_t udp_header[UDP_HEADER_LEN];
+				uint8_t rtp_header[RTP_HEADER_LEN];
 
-				unsigned char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
-				unsigned char *in_packet_pointer = packet; // = packet; // or next line:
-				//in_packet_pointer = packet;
+				uint8_t packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
+				uint8_t *in_packet_pointer = packet;
+
 				memset(packet, 0, sizeof(packet)); /* zero - this shouldn't be necessary !!! TODO */
 
 				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
