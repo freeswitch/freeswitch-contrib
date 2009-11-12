@@ -61,10 +61,6 @@ static struct {
 	switch_sockaddr_t *remote_sockaddr;
 } pcli_globals;
 
-// temporary declaration here.. remove after testing is done !!!!
-//static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t media_direction, uint16_t call_id, uint8_t switch_id, uint16_t ini_id);
-//static switch_status_t send_packet();
-
 typedef struct {
 	switch_core_session_t *session;
 	uint16_t ini_id;
@@ -142,38 +138,6 @@ static switch_status_t do_config(switch_bool_t reload)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-
-//static switch_status_t send_packet() {
-//	/* create a pcli header */
-//	uint32_t pcli_header;
-//	pcli_media_direction_t media_direction = PCLI_MEDIA_DIRECTION_FROM_TARGET;
-//	uint16_t call_id = 123;
-//	uint8_t switch_id = 12;
-//	uint16_t ini_id = 10741;
-//	gen_pcli_header(&pcli_header, media_direction, call_id, switch_id, ini_id);
-//
-//	uint32_t network_byte_order_pcli_header;
-//	network_byte_order_pcli_header = htonl(pcli_header);
-//
-//	/* create a pcli body */
-//	char *pcli_body = "ABCD";
-//
-//	/* create a full packet */
-//	char *packet; // TODO shouldn't this be unsigned ?
-//	packet = malloc(sizeof(network_byte_order_pcli_header) + sizeof(pcli_body));
-//	memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
-//	memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
-//
-//	size_t packetsize;
-//	packetsize = sizeof(packet);
-//
-//	//switch_socket_sendto(pcli_globals.socket, remote_sockaddr, 0, packet, &packetsize);
-//	switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, packet, &packetsize);
-//
-//	return SWITCH_STATUS_SUCCESS;
-//}
-
-
 /* called when SWITCH_EVENT_RELOADXML is sent to this module */
 static void reload_event_handler(switch_event_t *event)
 {
@@ -181,7 +145,7 @@ static void reload_event_handler(switch_event_t *event)
 }
 
 /* generate a PacketCable Lawful Intercept header, that can be prepended to an RTP packet */
-static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
+static switch_status_t gen_pcli_header(unsigned char *pcli_header, pcli_media_direction_t media_direction, uint16_t instance_id, uint8_t switch_id, uint16_t ini_id)
 {
 	/* some sanity checks */
 
@@ -215,7 +179,8 @@ static switch_status_t gen_pcli_header(char *pcli_header, pcli_media_direction_t
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_ip_header(char *ip_header, uint16_t payload_size_i)
+/* generate an ip header */
+static switch_status_t gen_ip_header(unsigned char *ip_header, uint16_t payload_size_i)
 {
 	memset(ip_header, 0, sizeof(ip_header)); /* zero */
 
@@ -229,7 +194,8 @@ static switch_status_t gen_ip_header(char *ip_header, uint16_t payload_size_i)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_udp_header(char *udp_header, uint16_t payload_size_i)
+/* generate a udp header */
+static switch_status_t gen_udp_header(unsigned char *udp_header, uint16_t payload_size_i)
 {
 	memset(udp_header, 0, sizeof(udp_header)); /* zero */
 
@@ -239,7 +205,8 @@ static switch_status_t gen_udp_header(char *udp_header, uint16_t payload_size_i)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t gen_rtp_header(char *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
+/* generate an rtp header */
+static switch_status_t gen_rtp_header(unsigned char *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
 {
 	memset(rtp_header, 0, sizeof(rtp_header)); /* zero */
 
@@ -281,13 +248,13 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				switch_frame_t *frame = switch_core_media_bug_get_read_replace_frame(bug);
 				print_frame_stats(frame);
 
-				char pcli_header[PCLI_HEADER_LEN];
-				char ip_header[IP_HEADER_LEN];
-				char udp_header[UDP_HEADER_LEN];
-				char rtp_header[RTP_HEADER_LEN];
+				unsigned char pcli_header[PCLI_HEADER_LEN];
+				unsigned char ip_header[IP_HEADER_LEN];
+				unsigned char udp_header[UDP_HEADER_LEN];
+				unsigned char rtp_header[RTP_HEADER_LEN];
 
-				char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
-				char *in_packet_pointer; // = packet; // or next line:
+				unsigned char packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
+				unsigned char *in_packet_pointer; // = packet; // or next line:
 				in_packet_pointer = packet;
 
 				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
@@ -313,20 +280,7 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				size_t packetsize;
 				packetsize = sizeof(packet);
 				
-				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, packet, &packetsize);
-
-
-				/* since the (fake) rtp header is almost static, we know the size in advance */
-				//packet = malloc(packet_len);
-
-//				memcpy(packet, frame->data, frame->datalen);
-//				packet_len += frame->datalen;
-				
-	//memcpy(packet, &network_byte_order_pcli_header, sizeof(network_byte_order_pcli_header));
-	//memcpy(packet + sizeof(network_byte_order_pcli_header), pcli_body, sizeof(pcli_body));
-
-//				free(packet);
-
+				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, (void *) packet, &packetsize);
 			}
 			break;
 
@@ -334,9 +288,6 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 			break;
 
 	}
-
-
-	//send_packet();
 
 	return SWITCH_TRUE;
 }
