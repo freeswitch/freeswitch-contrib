@@ -290,7 +290,7 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				memcpy(in_packet_pointer, frame->data, frame->datalen);
 
 				size_t packetsize = sizeof(packet);
-				
+
 				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, (void *) packet, &packetsize);
 			}
 			break;

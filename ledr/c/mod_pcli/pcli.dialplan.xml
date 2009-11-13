@@ -1,0 +1,30 @@
+<include>
+
+	<!-- static example of a dialplan extension -->
+	<extension name="static_pcli">
+		<condition field="destination_number" expression="^.+$">
+			<action application="set" data="ini_id=4"/> <!-- identifies the warrant [0-65535] -->
+			<action application="set" data="instance_id=7"/> <!-- a counter incremented per ini_id per softswitch [0-1023] -->
+			<action application="pcli"/>
+		</condition>
+	</extension>
+
+	<!-- the following doesn't work yet, fix it -->
+	<extension name="pcli_originating_leg">
+		<condition field="ini_id" expression="^.+$">
+			<action application="odbc_query" data="
+				CALL get_and_incr_pcli_count('${ini_id}', @c);
+				SELECT @c AS `pcli_count`;"/>
+			<action application="pcli" data="originating"/>
+		</condition>
+	</extension>
+
+	<extension name="pcli_terminating_leg">
+		<condition field="dest_ini_id" expression="^.+$">
+			<action application="odbc_query" data="
+				CALL get_and_incr_pcli_count('${dest_ini_id}', @c);
+				SELECT @c AS `pcli_count`;"/>
+		</condition>
+	</extension>
+
+</include>
