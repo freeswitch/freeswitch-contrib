@@ -171,9 +171,9 @@ static switch_status_t gen_pcli_header(uint8_t *pcli_header, pcli_media_directio
 
 	uint32_t pcli_header_i = 0;
 	pcli_header_i |= (media_direction);
-	pcli_header_i |= (instance_id << 2); // this seems to work, but:
+	pcli_header_i |= (instance_id << 2);
 	pcli_header_i |= (switch_id << 12);
-	pcli_header_i |= (ini_id << 16);     // how can i shift left 16 on a uint16_t ???! is shifting not done inside the memory space of the ini_id ?? FIND OUT !!
+	pcli_header_i |= (ini_id << 16);
 
 	uint32_t pcli_header_i_n = htonl(pcli_header_i);
 
@@ -185,16 +185,17 @@ static switch_status_t gen_pcli_header(uint8_t *pcli_header, pcli_media_directio
 /* generate an ip header */
 static switch_status_t gen_ip_header(uint8_t *ip_header, uint16_t payload_size_i)
 {
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_ip_header - payload_size_i[%i]\n", payload_size_i);
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_ip_header - payload_size_i[%u]\n", payload_size_i);
 
-	memset(ip_header, 0, sizeof(ip_header)); /* zero */
+	memset(ip_header, 0, (size_t)IP_HEADER_LEN); /* zero */
 
 	ip_header[0] |= (4 << 4); /* set version 4 */
 	ip_header[0] |= 5; /* set header length 5 */
-	ip_header[9] |= 17; /* set protocol to UDP */
 
 	uint16_t payload_size_i_n = htons(payload_size_i);
 	memcpy(&ip_header[2], &payload_size_i_n, sizeof(payload_size_i_n));
+
+	ip_header[9] |= 17; /* set protocol to UDP */
 
 	return SWITCH_STATUS_SUCCESS;
 }
@@ -202,7 +203,9 @@ static switch_status_t gen_ip_header(uint8_t *ip_header, uint16_t payload_size_i
 /* generate a udp header */
 static switch_status_t gen_udp_header(uint8_t *udp_header, uint16_t payload_size_i)
 {
-	memset(udp_header, 0, sizeof(udp_header)); /* zero */
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_udp_header - payload_size_i[%u]\n", payload_size_i);
+
+	memset(udp_header, 0, (size_t)UDP_HEADER_LEN); /* zero */
 
 	uint16_t payload_size_i_n = htons(payload_size_i); /* set payload size */
 	memcpy(&udp_header[4], &payload_size_i_n, sizeof(payload_size_i_n));
@@ -213,7 +216,10 @@ static switch_status_t gen_udp_header(uint8_t *udp_header, uint16_t payload_size
 /* generate an rtp header */
 static switch_status_t gen_rtp_header(uint8_t *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
 {
-	memset(rtp_header, 0, sizeof(rtp_header)); /* zero */
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_rtp_header - payload_type[%u] seq_i[%u] timestamp_i[%lu] ssrc_i[%lu]\n",
+		payload_type, seq_i, (unsigned long)timestamp_i, (unsigned long)ssrc_i);
+
+	memset(rtp_header, 0, (size_t)RTP_HEADER_LEN); /* zero */
 
 	rtp_header[0] |= (2 << 6); /* set version 2 */
 	rtp_header[1] |= payload_type; /* set payload type */
@@ -232,7 +238,7 @@ static switch_status_t gen_rtp_header(uint8_t *rtp_header, switch_payload_t payl
 
 static void print_frame_stats(switch_frame_t *frame)
 {
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "FRAME STATISTICS: seq[%u] ssrc[%lu] datalen[%lu] rate [%lu] samples [%lu]\n",
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "FRAME STATISTICS: seq[%u] ssrc[%lu] datalen[%lu] rate[%lu] samples[%lu]\n",
 		(unsigned)frame->seq, (unsigned long)frame->ssrc, (unsigned long)frame->datalen, (unsigned long)frame->rate, (unsigned long)frame->samples);
 }
 
@@ -259,9 +265,10 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 				uint8_t rtp_header[RTP_HEADER_LEN];
 
 				uint8_t packet[PCLI_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen];
+
 				uint8_t *in_packet_pointer = packet;
 
-				memset(packet, 0, sizeof(packet)); /* zero - this shouldn't be necessary !!! TODO */
+				memset(packet, 0, sizeof(packet)); /* zero - TODO test if this is still necessary - don't think so! */
 
 				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
 				gen_udp_header(udp_header, RTP_HEADER_LEN + frame->datalen);
@@ -273,17 +280,16 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 				memcpy(in_packet_pointer, ip_header, sizeof(ip_header));		
 				in_packet_pointer += IP_HEADER_LEN;
-//
-//				memcpy(in_packet_pointer, udp_header, sizeof(udp_header));
-//				in_packet_pointer += UDP_HEADER_LEN;
-//
-//				memcpy(in_packet_pointer, rtp_header, sizeof(rtp_header));
-//				in_packet_pointer += RTP_HEADER_LEN;
-//
-//				memcpy(in_packet_pointer, frame->data, frame->datalen);
 
-				size_t packetsize;
-				packetsize = sizeof(packet);
+				memcpy(in_packet_pointer, udp_header, sizeof(udp_header));
+				in_packet_pointer += UDP_HEADER_LEN;
+
+				memcpy(in_packet_pointer, rtp_header, sizeof(rtp_header));
+				in_packet_pointer += RTP_HEADER_LEN;
+
+				memcpy(in_packet_pointer, frame->data, frame->datalen);
+
+				size_t packetsize = sizeof(packet);
 				
 				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, (void *) packet, &packetsize);
 			}
