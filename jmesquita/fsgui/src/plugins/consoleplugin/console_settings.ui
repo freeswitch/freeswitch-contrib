@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>438</width>
+    <width>483</width>
     <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_9">
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="minimumSize">
@@ -24,18 +24,12 @@
          <height>318</height>
         </size>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>372</width>
-         <height>318</height>
-        </size>
-       </property>
        <property name="title">
         <string>Colors</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
            <widget class="QLineEdit" name="lineConsole">
             <property name="minimumSize">
@@ -102,6 +96,13 @@
             </property>
             <property name="text">
              <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnConsoleFont">
+            <property name="text">
+             <string>Font</string>
             </property>
            </widget>
           </item>
@@ -178,6 +179,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="btnAlertFont">
+            <property name="text">
+             <string>Font</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -248,6 +256,13 @@
             </property>
             <property name="text">
              <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnCritFont">
+            <property name="text">
+             <string>Font</string>
             </property>
            </widget>
           </item>
@@ -324,6 +339,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="btnErrorFont">
+            <property name="text">
+             <string>Font</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -394,6 +416,13 @@
             </property>
             <property name="text">
              <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnWarningFont">
+            <property name="text">
+             <string>Font</string>
             </property>
            </widget>
           </item>
@@ -470,6 +499,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="btnNoticeFont">
+            <property name="text">
+             <string>Font</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -540,6 +576,13 @@
             </property>
             <property name="text">
              <string>Foreground</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnInfoFont">
+            <property name="text">
+             <string>Font</string>
             </property>
            </widget>
           </item>
@@ -616,23 +659,17 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="btnDebugFont">
+            <property name="text">
+             <string>Font</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
       </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>

@@ -48,7 +48,6 @@ void ConsoleModel::timerEvent(QTimerEvent *e)
     {
         if (!_listInsertModel.isEmpty())
         {
-            qDebug() << "Are we being called like crazy?";
             int inserted_items = 0;
             int toBeInserted = 0;
             if (_listInsertModel.size() < batchSize)

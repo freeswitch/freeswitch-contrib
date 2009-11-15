@@ -82,6 +82,14 @@ private slots:
     void pastebinLog();
     void findText();
     void showRealtimeStats();
+    void changeConsoleFont();
+    void changeAlertFont();
+    void changeCriticalFont();
+    void changeErrorFont();
+    void changeWarningFont();
+    void changeNoticeFont();
+    void changeInfoFont();
+    void changeDebugFont();
     void changeConsoleBackgroundColor();
     void changeAlertBackgroundColor();
     void changeCriticalBackgroundColor();

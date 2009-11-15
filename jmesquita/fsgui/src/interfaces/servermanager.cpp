@@ -45,7 +45,7 @@ ESLconnection *ServerManager::getESLconnection(QString pluginName, QString name)
                                                 item->data(0, ServerManager::Name).toByteArray()));
         if ( _ESLpoolCount.contains(name) )
             qDebug() << "Something really bad happened here.";
-
+        
         QList<QString> pluginRefs;
         pluginRefs.append(pluginName);
         _ESLpoolCount.insert(name, pluginRefs);

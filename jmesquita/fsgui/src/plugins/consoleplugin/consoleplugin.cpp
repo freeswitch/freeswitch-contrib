@@ -83,6 +83,22 @@ void ConsolePlugin::addConfigItems(SettingsDialog *settings, QMap<QListWidgetIte
 
     consoleConfigPage->setupUi(base);
 
+    QObject::connect(consoleConfigPage->btnConsoleFont, SIGNAL(clicked()),
+                     this, SLOT(changeConsoleFont()));
+    QObject::connect(consoleConfigPage->btnAlertFont, SIGNAL(clicked()),
+                     this, SLOT(changeAlertFont()));
+    QObject::connect(consoleConfigPage->btnCritFont, SIGNAL(clicked()),
+                     this, SLOT(changeCriticalFont()));
+    QObject::connect(consoleConfigPage->btnErrorFont, SIGNAL(clicked()),
+                     this, SLOT(changeErrorFont()));
+    QObject::connect(consoleConfigPage->btnWarningFont, SIGNAL(clicked()),
+                     this, SLOT(changeWarningFont()));
+    QObject::connect(consoleConfigPage->btnNoticeFont, SIGNAL(clicked()),
+                     this, SLOT(changeNoticeFont()));
+    QObject::connect(consoleConfigPage->btnInfoFont, SIGNAL(clicked()),
+                     this, SLOT(changeInfoFont()));
+    QObject::connect(consoleConfigPage->btnDebugFont, SIGNAL(clicked()),
+                     this, SLOT(changeDebugFont()));
     QObject::connect(consoleConfigPage->btnBackgroundConsole, SIGNAL(clicked()),
                      this, SLOT(changeConsoleBackgroundColor()));
     QObject::connect(consoleConfigPage->btnBackgroundAlert, SIGNAL(clicked()),
@@ -218,13 +234,21 @@ void ConsolePlugin::readSettings()
     settings.beginGroup("Console");
 
     consoleConfigPage->lineConsole->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_EMERG)).value<QPalette>());
+    consoleConfigPage->lineConsole->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_EMERG)).value<QFont>());
     consoleConfigPage->lineAlert->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ALERT)).value<QPalette>());
+    consoleConfigPage->lineAlert->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_ALERT)).value<QFont>());
     consoleConfigPage->lineCritical->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_CRIT)).value<QPalette>());
+    consoleConfigPage->lineCritical->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_CRIT)).value<QFont>());
     consoleConfigPage->lineError->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ERROR)).value<QPalette>());
+    consoleConfigPage->lineError->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_ERROR)).value<QFont>());
     consoleConfigPage->lineWarning->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_WARNING)).value<QPalette>());
+    consoleConfigPage->lineWarning->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_WARNING)).value<QFont>());
     consoleConfigPage->lineNotice->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_NOTICE)).value<QPalette>());
+    consoleConfigPage->lineNotice->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_NOTICE)).value<QFont>());
     consoleConfigPage->lineInfo->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_INFO)).value<QPalette>());
+    consoleConfigPage->lineInfo->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_INFO)).value<QFont>());
     consoleConfigPage->lineDebug->setPalette(settings.value(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_DEBUG)).value<QPalette>());;
+    consoleConfigPage->lineDebug->setFont(settings.value(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_DEBUG)).value<QFont>());
 
     settings.endGroup();
 }
@@ -234,14 +258,102 @@ void ConsolePlugin::writeSettings()
     QSettings settings;
     settings.beginGroup("Console");
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_EMERG), consoleConfigPage->lineConsole->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_EMERG), consoleConfigPage->lineConsole->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ALERT), consoleConfigPage->lineAlert->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_ALERT), consoleConfigPage->lineAlert->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_CRIT), consoleConfigPage->lineCritical->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_CRIT), consoleConfigPage->lineCritical->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_ERROR), consoleConfigPage->lineError->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_ERROR), consoleConfigPage->lineError->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_WARNING), consoleConfigPage->lineWarning->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_WARNING), consoleConfigPage->lineWarning->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_NOTICE), consoleConfigPage->lineNotice->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_NOTICE), consoleConfigPage->lineNotice->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_INFO), consoleConfigPage->lineInfo->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_INFO), consoleConfigPage->lineInfo->font());
     settings.setValue(QString("log-level-%1-palette").arg(ESL_LOG_LEVEL_DEBUG), consoleConfigPage->lineDebug->palette());
+    settings.setValue(QString("log-level-%1-font").arg(ESL_LOG_LEVEL_DEBUG), consoleConfigPage->lineDebug->font());
     settings.endGroup();
+}
+
+void ConsolePlugin::changeConsoleFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineConsole->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineConsole->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeAlertFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineAlert->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineAlert->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeWarningFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineWarning->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineWarning->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeCriticalFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineCritical->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineCritical->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeErrorFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineError->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineError->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeNoticeFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineNotice->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineNotice->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeInfoFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineInfo->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineInfo->setFont(font);
+    }
+}
+
+void ConsolePlugin::changeDebugFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, consoleConfigPage->lineDebug->font(), this);
+    if (ok)
+    {
+        consoleConfigPage->lineDebug->setFont(font);
+    }
 }
 
 void ConsolePlugin::changeConsoleBackgroundColor()

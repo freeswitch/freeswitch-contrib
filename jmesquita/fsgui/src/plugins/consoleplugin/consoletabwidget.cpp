@@ -215,8 +215,10 @@ void ConsoleTabWidget::addNewConsoleItem(QStandardItem *item)
     QSettings settings;
     settings.beginGroup("Console");
     QPalette palette = settings.value(QString("log-level-%1-palette").arg(item->data(Qt::UserRole).toInt())).value<QPalette>();
+    QFont font = settings.value(QString("log-level-%1-font").arg(item->data(Qt::UserRole).toInt())).value<QFont>();
     item->setBackground(palette.base());
     item->setForeground(palette.text());
+    item->setFont(font);
     sourceModel->appendRow(item);
 }
 
