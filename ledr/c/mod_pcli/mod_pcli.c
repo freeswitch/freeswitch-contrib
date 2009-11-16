@@ -214,15 +214,15 @@ static switch_status_t gen_udp_header(uint8_t *udp_header, uint16_t payload_size
 }
 
 /* generate an rtp header */
-static switch_status_t gen_rtp_header(uint8_t *rtp_header, switch_payload_t payload_type, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
+static switch_status_t gen_rtp_header(uint8_t *rtp_header, uint16_t seq_i, uint32_t timestamp_i, uint32_t ssrc_i)
 {
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_rtp_header - payload_type[%u] seq_i[%u] timestamp_i[%lu] ssrc_i[%lu]\n",
-		payload_type, seq_i, (unsigned long)timestamp_i, (unsigned long)ssrc_i);
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "In gen_rtp_header - seq_i[%u] timestamp_i[%lu] ssrc_i[%lu]\n",
+		seq_i, (unsigned long)timestamp_i, (unsigned long)ssrc_i);
 
 	memset(rtp_header, 0, (size_t)RTP_HEADER_LEN); /* zero */
 
-	rtp_header[0] |= (2 << 6); /* set version 2 */
-	rtp_header[1] |= payload_type; /* set payload type */
+	rtp_header[0] |= 2; /* set version 2 */
+	rtp_header[1] |= (10 << 1); /* set payload type L16 (10) */
 	
 	uint16_t seq_i_n = htons(seq_i); /* set seq */
 	memcpy(&rtp_header[2], &seq_i_n, sizeof(seq_i_n));
@@ -270,9 +270,9 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 				memset(packet, 0, sizeof(packet)); /* zero - TODO test if this is still necessary - don't think so! */
 
-				gen_rtp_header(rtp_header, frame->payload, frame->seq, frame->timestamp, frame->ssrc);
-				gen_udp_header(udp_header, RTP_HEADER_LEN + frame->datalen);
-				gen_ip_header(ip_header, UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen);
+				gen_rtp_header(rtp_header, frame->seq, frame->timestamp, frame->ssrc);
+				gen_udp_header(udp_header, UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen);
+				gen_ip_header(ip_header, IP_HEADER_LEN + UDP_HEADER_LEN + RTP_HEADER_LEN + frame->datalen);
 				gen_pcli_header(pcli_header, PCLI_MEDIA_DIRECTION_FROM_TARGET, helper->instance_id, pcli_globals.switch_id, helper->ini_id);
 
 				memcpy(in_packet_pointer, pcli_header, sizeof(pcli_header));				
@@ -289,7 +289,7 @@ static switch_bool_t pcli_callback(switch_media_bug_t *bug, void *user_data, swi
 
 				memcpy(in_packet_pointer, frame->data, frame->datalen);
 
-				size_t packetsize = sizeof(packet);
+				switch_size_t packetsize = sizeof(packet);
 
 				switch_socket_sendto(pcli_globals.socket, pcli_globals.remote_sockaddr, 0, (void *) packet, &packetsize);
 			}
