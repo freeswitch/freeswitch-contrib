@@ -190,7 +190,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Performing query: [%s]\n", expanded_query);
 
-	if (switch_odbc_handle_callback_exec(globals.odbc_handle, expanded_query, odbc_query_callback, channel) != SWITCH_ODBC_SUCCESS) {
+	if (switch_odbc_handle_callback_exec(globals.odbc_handle, expanded_query, odbc_query_callback, channel, NULL) != SWITCH_ODBC_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", expanded_query);
 	}
 }

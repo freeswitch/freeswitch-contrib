@@ -240,7 +240,7 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 
 	helper->rowcount = 0;
 
-	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper) != SWITCH_ODBC_SUCCESS) {
+	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper, NULL) != SWITCH_ODBC_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
 		goto done;
 	} 
