@@ -232,6 +232,7 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 	char *value = (char *) switch_xml_attr_soft(helper->xml_in_cur, "value");
 	char *empty_result_break_to = (char *) switch_xml_attr_soft(helper->xml_in_cur, "on-empty-result-break-to");
 	char *new_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, value);
+	char *errmsg;
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (globals.debug == SWITCH_TRUE) {
@@ -240,8 +241,10 @@ static switch_status_t xml_odbc_do_query(xml_odbc_session_helper_t *helper)
 
 	helper->rowcount = 0;
 
-	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper, NULL) != SWITCH_ODBC_SUCCESS) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error running this query: [%s]\n", new_value);
+	if (switch_odbc_handle_callback_exec(globals.master_odbc, new_value, xml_odbc_query_callback, helper, &errmsg) != SWITCH_ODBC_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "SQL error [%s] while doing query [%s]\n", switch_str_nil(errmsg), new_value);
+		switch_core_db_free(errmsg);
+		errmsg = NULL;
 		goto done;
 	} 
 
