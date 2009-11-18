@@ -167,7 +167,6 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 	char *expanded_query = NULL;
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	switch_memory_pool_t *pool = switch_core_session_get_pool(session);
-	char *errmsg;
 
 	if (!channel) {
 		return;
@@ -191,10 +190,8 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Performing query: [%s]\n", expanded_query);
 
-	if (switch_odbc_handle_callback_exec(globals.odbc_handle, expanded_query, odbc_query_callback, channel, &errmsg) != SWITCH_ODBC_SUCCESS) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "SQL error [%s] while doing query: [%s]\n", switch_str_nil(errmsg), expanded_query);
-		switch_core_db_free(errmsg);
-		errmsg = NULL;
+	if (switch_odbc_handle_callback_exec(globals.odbc_handle, expanded_query, odbc_query_callback, channel, NULL) != SWITCH_ODBC_SUCCESS) {
+		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "SQL error while doing query: [%s]\n", expanded_query);
 	}
 }
 
