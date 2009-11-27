@@ -109,10 +109,10 @@ my $mime_drivers = {
 	'html' => ['.html', 'html2ps FILE | ps2pdf - -'],
 	
 	#images
-	'gif' => ['.gif', 'convert FILE -'],
-	'jpeg' => ['.jpeg', 'convert FILE -'],
-	'png' => ['.png', 'convert FILE -'],
-	'tiff' => ['.tiff', 'convert FILE -'],
+	'gif' => ['.gif', 'convert FILE pdf:-'],
+	'jpeg' => ['.jpeg', 'convert FILE pdf:-'],
+	'png' => ['.png', 'convert FILE pdf:-'],
+	'tiff' => ['.tiff', 'convert FILE pdf:-'],
 	
 	#OpenDocument
 	'opendoctext' => ['.odt', 'python /root/ooextract.py --pdf --stdout FILE'],
