@@ -19,9 +19,11 @@ QUICK START GUIDE:
 
     email2pdf uses the following tools to convert parts:
 
-	html2ps                          - for html
-	openoffice.org thru ooextract.py - for MS Word, Excel (to be expanded)
+	html2ps                          - for html and plain
+	openoffice.org thru ooextract.py - for OpenDocument (Text, Spreadsheet, Presentation, Graphics)
+	                                   for MS Word, Excel, PowerPoint
 	                                   See <http://blogs.igalia.com/berto/2007/09/15/converting-office-documents-into-pdf-from-the-command-line/>
+	imagemagick's convert            - for gif, jpeg, png and tiff
 
 Share and Enjoy!
 

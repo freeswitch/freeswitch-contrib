@@ -76,18 +76,55 @@ use Template;
 # CONFIG
 
 my $mime_types = {
-	'application/vnd.ms-word' => 'msword',
+	#plain and html
+	'text/plain' => 'plain',
+	'text/html' => 'html',
 	
+	#images
+	'image/gif' => 'gif',
+	'image/jpeg' => 'jpeg',
+	'image/png' => 'png',
+	'image/tiff' => 'tiff',
+
+	#OpenDocument
+	'application/vnd.oasis.opendocument.text' => 'opendoctext',
+	'application/vnd.oasis.opendocument.spreadsheet' => 'opendocspreadsheet',
+	'application/vnd.oasis.opendocument.presentation' => 'opendocpresentation',
+	'application/vnd.oasis.opendocument.graphics' => 'opendocgraphics',
+	                                                        
+	#MS office
 	'application/vnd.ms-excel' => 'msexcel',
 	'application/msexcel' => 'msexcel',
 	'application/x-msexcel' => 'msexcel',
+	'application/vnd.ms-powerpoint' => 'mspowerpoint',
+	'application/vnd.ms-word' => 'msword',
+	'application/msword' => 'msword',
 	
-	'text/html' => 'html',
+	'application/pdf' => 'pdf',
+	
 };
 my $mime_drivers = {
-	'msword' => ['.doc', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'msexcel' => ['.xls', 'python /root/ooextract.py --pdf --stdout FILE'],
+	#plain and html
+	'plain' => ['.txt', 'html2ps FILE | ps2pdf - -'],
 	'html' => ['.html', 'html2ps FILE | ps2pdf - -'],
+	
+	#images
+	'gif' => ['.gif', 'convert FILE -'],
+	'jpeg' => ['.jpeg', 'convert FILE -'],
+	'png' => ['.png', 'convert FILE -'],
+	'tiff' => ['.tiff', 'convert FILE -'],
+	
+	#OpenDocument
+	'opendoctext' => ['.odt', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'opendocspreadsheet' => ['.ods', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'opendocpresentation' => ['.odp', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'opendocgraphics' => ['.odg', 'python /root/ooextract.py --pdf --stdout FILE'],
+
+	#MS office
+	'msexcel' => ['.xls', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'mspowerpoint' => ['.ppt', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'msword' => ['.doc', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'pdf' => ['.pdf', 'cat FILE'],
 };
 # Template config
 my $tt_config = {
@@ -120,10 +157,15 @@ sub process_raw
 			system("chmod +r $filename_in");
 			print { $fh_in } $raw;
 			$command =~ s/FILE/$filename_in/;
-			print STDERR "Processing $filename_in\n";
+			print STDERR "Processing $filename_in ($content_type). ";
 			my $out = `$command`;
 			close $fh_in or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
+			if(!$out) {
+				print STDERR "Empty generated PDF.\n";
+				return;
+			}
 			my ($fh_out, $filename_out) = tempfile( DIR => $output_dir, SUFFIX => '.pdf' );
+			print STDERR "To $filename_out. ";
 			print { $fh_out } $out;
 			close $fh_out or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
 			if($is_header) {
@@ -132,6 +174,7 @@ sub process_raw
 			} else {
 				push @files, ($filename_out);
 			}
+			print STDERR "\n";
 		} else {
 			print STDERR "Undefined mime driver: $mime_types->{$content_type}\n";
 		}
