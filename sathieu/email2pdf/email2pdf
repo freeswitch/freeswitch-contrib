@@ -1,0 +1,223 @@
+#!/usr/bin/perl
+=head1 NAME
+
+email2pdf - Render email as pdf
+
+=head1 SYNOPSIS
+
+B<email2pdf> [options] filein fileout
+
+=head1 ARGUMENTS
+
+=over 8
+
+=item I<filein>
+
+RFC2822 email. Use - for stdin.
+
+=item I<fileout>
+
+PDF file. Use - for stdout.
+
+=back
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--help>
+
+Print a brief help message and exits.
+
+=item B<--man>
+
+Prints the manual page and exits.
+
+=back
+
+=head1 COPYRIGHT AND AUTHORS
+
+Copyright (c) 2009 Mathieu Parent <math.parent@gmail.com>
+
+=head1 LICENSE
+
+This  program is free  software; you can redistribute  it and/or
+modify it  under the terms of the GNU  General Public License as
+published by the  Free Software Foundation; either version 2, or
+(at your option) any later version.
+
+This program is  distributed in the hope that it will be useful,
+but WITHOUT  ANY WARRANTY; without even the  implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You can view the  GNU General Public License, online, at the GNU
+Project's homepage; see <http://www.gnu.org/licenses/gpl.html>.
+
+=cut
+
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+
+use File::Temp qw/tempdir tempfile/;
+use Email::MIME;
+use Email::MIME::ContentType;
+use Template;
+
+# =========================================================================== #
+# CONFIG
+
+my $mime_types = {
+	'application/vnd.ms-word' => 'msword',
+	
+	'application/vnd.ms-excel' => 'msexcel',
+	'application/msexcel' => 'msexcel',
+	'application/x-msexcel' => 'msexcel',
+	
+	'text/html' => 'html',
+};
+my $mime_drivers = {
+	'msword' => ['.doc', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'msexcel' => ['.xls', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'html' => ['.html', 'html2ps FILE | ps2pdf - -'],
+};
+# Template config
+my $tt_config = {
+};
+
+# =========================================================================== #
+# vars
+my @files;
+push @files, (0);
+
+my $email;
+my $output_dir;
+# =========================================================================== #
+sub process_raw
+{
+	my $content_type = shift;
+	my $raw = shift;
+	my $is_header = shift || 0;
+	if(defined($mime_types->{$content_type})) {
+		if(defined($mime_drivers->{$mime_types->{$content_type}})) {
+			my @mime_driver = $mime_drivers->{$mime_types->{$content_type}};
+			my $suffix = $mime_driver[0][0];
+			my $command = $mime_driver[0][1];
+			my ($fh_in, $filename_in) = tempfile( DIR => $output_dir, SUFFIX => $suffix );
+			system("chmod +r $filename_in");
+			print { $fh_in } $raw;
+			$command =~ s/FILE/$filename_in/;
+			print STDERR "Processing $filename_in\n";
+			my $out = `$command`;
+			close $fh_in or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
+			my ($fh_out, $filename_out) = tempfile( DIR => $output_dir, SUFFIX => '.pdf' );
+			print { $fh_out } $out;
+			close $fh_out or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
+			if($is_header) {
+				shift @files;
+				unshift @files, ($filename_out);
+			} else {
+				push @files, ($filename_out);
+			}
+		} else {
+			print STDERR "Undefined mime driver: $mime_types->{$content_type}\n";
+		}
+	} else {
+		print STDERR "Undefined mime type: $content_type\n";
+	}
+}
+
+sub process_header
+{
+	my $parsed = shift;
+	unshift @files, (0);
+	# define template variables for replacement
+	my $vars = {
+		body => '', #$parsed->body,
+		body_raw => $parsed->body_raw,
+		content_type => $parsed->content_type,
+		mail => $parsed,
+	};
+
+	# specify input filename, or file handle, text reference, etc.
+	my $header_file = 'header.html';
+	my $content_type = `file --mime-type --brief header.html`;
+	$content_type =~ s/\s+$//; # trim end whitespace
+	my $header = '';
+
+	# create Template object
+	my $template = Template->new($tt_config);
+
+	# process input template, substituting variables
+	$template->process($header_file, $vars, \$header)
+		|| die $template->error();
+	process_raw $content_type, $header, 1;
+}
+
+sub process_part
+{
+	my $part = shift;
+	my $parsed_content_type = parse_content_type($part->content_type);
+	my $content_type = $parsed_content_type->{'discrete'}.'/'.$parsed_content_type->{'composite'};
+	if($content_type eq 'multipart/alternative') {
+		my @subparts = $part->subparts;
+		foreach my $subpart (@subparts) {
+			return if $subpart->parts > 1; # multipart
+			my $parsed_subcontent_type = parse_content_type($subpart->content_type);
+			my $subcontent_type = $parsed_subcontent_type->{'discrete'}.'/'.$parsed_subcontent_type->{'composite'};
+			process_raw $subcontent_type, $subpart->body, 1;
+		}
+	} else {
+		process_raw $content_type, $part->body;
+	}
+}
+
+# =========================================================================== #
+my $o_help = 0;
+my $o_man = 0;
+my $result = GetOptions(
+    'help|?' => \$o_help,
+    'man' => \$o_man,
+    );
+
+pod2usage(-exitstatus => 0, -verbose => 2) if $o_man;
+pod2usage(-exitstatus => 0, -verbose => 1) if $o_help;
+
+my $file_in = shift @ARGV;
+if(!defined($file_in)) {
+	print "Missing argument: filein\n";
+	pod2usage(-exitstatus => 0, -verbose => 1);
+	exit 1;
+}
+my $file_out = shift @ARGV;
+if(!defined($file_out)) {
+	print "Missing argument: fileout\n";
+	pod2usage(-exitstatus => 0, -verbose => 1);
+	exit 1;
+}
+
+# =========================================================================== #
+# setup temp dir
+$output_dir = tempdir( CLEANUP => 1 );
+system("chmod +rwx $output_dir");
+
+# load mail
+if($file_in eq "-") {
+	$email = Email::MIME->new(join('',<>));
+} else {
+	open(FILEIN, '<', $file_in);
+	$email = Email::MIME->new(join('',<FILEIN>));
+	close(FILEIN);
+}
+
+my @parts = $email->subparts;
+foreach my $part (@parts) {
+	process_part $part;
+}
+process_header($email);
+print "Merging files: ".join(' ', @files)."\n";
+system('pdftk '.join(' ', @files)." cat output $file_out");
