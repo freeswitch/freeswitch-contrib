@@ -187,7 +187,7 @@ sub process_raw
 sub process_header
 {
 	my $parsed = shift;
-	unshift @files, (0);
+	unshift @files, (0) if $files[0] != 0;
 	# define template variables for replacement
 	my $vars = {
 		body => '', #$parsed->body,
