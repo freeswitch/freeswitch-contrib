@@ -145,6 +145,7 @@ my $o_header = 'header.html';
 # =========================================================================== #
 sub process_raw
 {
+	my $filename = shift || 'noname';
 	my $content_type = shift;
 	my $raw = shift;
 	my $is_header = shift || 0;
@@ -157,7 +158,7 @@ sub process_raw
 			system("chmod +r $filename_in");
 			print { $fh_in } $raw;
 			$command =~ s/FILE/$filename_in/;
-			print STDERR "Processing $filename_in ($content_type). ";
+			print STDERR "Processing '$filename' ($content_type). From '$filename_in'. ";
 			my $out = `$command`;
 			close $fh_in or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
 			if(!$out) {
@@ -165,7 +166,7 @@ sub process_raw
 				return;
 			}
 			my ($fh_out, $filename_out) = tempfile( DIR => $output_dir, SUFFIX => '.pdf' );
-			print STDERR "To $filename_out. ";
+			print STDERR "To '$filename_out'. ";
 			print { $fh_out } $out;
 			close $fh_out or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
 			if($is_header) {
@@ -206,7 +207,7 @@ sub process_header
 	# process input template, substituting variables
 	$template->process($o_header, $vars, \$header)
 		|| die $template->error();
-	process_raw $content_type, $header, 1;
+	process_raw $parsed->filename, $content_type, $header, 1;
 }
 
 sub process_part
@@ -220,10 +221,10 @@ sub process_part
 			return if $subpart->parts > 1; # multipart
 			my $parsed_subcontent_type = parse_content_type($subpart->content_type);
 			my $subcontent_type = $parsed_subcontent_type->{'discrete'}.'/'.$parsed_subcontent_type->{'composite'};
-			process_raw $subcontent_type, $subpart->body, 1;
+			process_raw $subpart->filename, $subcontent_type, $subpart->body, 1;
 		}
 	} else {
-		process_raw $content_type, $part->body;
+		process_raw $part->filename, $content_type, $part->body;
 	}
 }
 
