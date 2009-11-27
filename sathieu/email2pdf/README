@@ -1,0 +1,27 @@
+email2pdf - Render email as pdf
+
+Copyright (c) 2009 Mathieu Parent <math.parent@gmail.com>
+This  program is free  software; you can redistribute  it and/or
+modify it  under the terms of the GNU  General Public License as
+published by the  Free Software Foundation; either version 2, or
+(at your option) any later version.
+
+QUICK START GUIDE:
+
+    email2pdf uses the following modules:
+
+	Getopt::Long                - required
+	Pod::Usage                  - required
+	File::Temp                  - required
+	Email::MIME                 - required
+	Email::MIME::ContentType    - required
+	Template                    - required
+
+    email2pdf uses the following tools to convert parts:
+
+	html2ps                          - for html
+	openoffice.org thru ooextract.py - for MS Word, Excel (to be expanded)
+	                                   See <http://blogs.igalia.com/berto/2007/09/15/converting-office-documents-into-pdf-from-the-command-line/>
+
+Share and Enjoy!
+
