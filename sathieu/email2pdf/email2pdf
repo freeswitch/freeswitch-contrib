@@ -33,6 +33,10 @@ Print a brief help message and exits.
 
 Prints the manual page and exits.
 
+=item B<--header>=header.html
+
+Set header file. This file will be processed using Template-Toolkit.
+
 =back
 
 =head1 COPYRIGHT AND AUTHORS
@@ -96,6 +100,11 @@ push @files, (0);
 
 my $email;
 my $output_dir;
+
+# options
+my $o_help = 0;
+my $o_man = 0;
+my $o_header = 'header.html';
 # =========================================================================== #
 sub process_raw
 {
@@ -144,7 +153,6 @@ sub process_header
 	};
 
 	# specify input filename, or file handle, text reference, etc.
-	my $header_file = 'header.html';
 	my $content_type = `file --mime-type --brief header.html`;
 	$content_type =~ s/\s+$//; # trim end whitespace
 	my $header = '';
@@ -153,7 +161,7 @@ sub process_header
 	my $template = Template->new($tt_config);
 
 	# process input template, substituting variables
-	$template->process($header_file, $vars, \$header)
+	$template->process($o_header, $vars, \$header)
 		|| die $template->error();
 	process_raw $content_type, $header, 1;
 }
@@ -177,11 +185,10 @@ sub process_part
 }
 
 # =========================================================================== #
-my $o_help = 0;
-my $o_man = 0;
 my $result = GetOptions(
     'help|?' => \$o_help,
     'man' => \$o_man,
+    'header=s' => \$o_header,
     );
 
 pod2usage(-exitstatus => 0, -verbose => 2) if $o_man;
