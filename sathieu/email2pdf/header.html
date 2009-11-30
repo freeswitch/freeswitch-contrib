@@ -5,8 +5,9 @@
  </head>
  <body>
  <h3>Fax</h3>
-From : [% mail.header('From') %]<br>
-Subject : [% mail.header('Subject') %]<br>
+<h4>[% FILTER html %]From: [% mail.header('From') %][% END %]</h4>
+<h4>[% FILTER html %]To: [% mail.header('To') %][% END %]</h4>
+<h4>[% FILTER html %]Objet : [% mail.header('Subject') %][% END %]</h4>
 [% body %]
 </body>
 </html>
