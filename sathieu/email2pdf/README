@@ -9,7 +9,7 @@ published by the  Free Software Foundation; either version 2, or
 QUICK START GUIDE:
 
     email2pdf uses the following modules:
-
+	-------------------------------------
 	Getopt::Long                - required
 	Pod::Usage                  - required
 	File::Temp                  - required
@@ -18,12 +18,19 @@ QUICK START GUIDE:
 	Template                    - required
 
     email2pdf uses the following tools to convert parts:
-
+	----------------------------------------------------
 	html2ps                          - for html and plain
 	openoffice.org thru ooextract.py - for OpenDocument (Text, Spreadsheet, Presentation, Graphics)
 	                                   for MS Word, Excel, PowerPoint
 	                                   See <http://blogs.igalia.com/berto/2007/09/15/converting-office-documents-into-pdf-from-the-command-line/>
 	imagemagick's convert            - for gif, jpeg, png and tiff
+
+	email2pdf includes help:
+	------------------------
+	email2pdf --help
+	email2pdf --man
+
+	Latest version can be grabbed from: http://svn.freeswitch.org/svn/freeswitch/trunk/contrib/sathieu/email2pdf/
 
 Share and Enjoy!
 

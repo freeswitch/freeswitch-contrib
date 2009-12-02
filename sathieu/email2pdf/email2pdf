@@ -43,6 +43,9 @@ Set header file. This file will be processed using Template-Toolkit.
 
 Copyright (c) 2009 Mathieu Parent <math.parent@gmail.com>
 
+Latest version can be grabbed from:
+http://svn.freeswitch.org/svn/freeswitch/trunk/contrib/sathieu/email2pdf/
+
 =head1 LICENSE
 
 This  program is free  software; you can redistribute  it and/or
