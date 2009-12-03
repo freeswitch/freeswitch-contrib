@@ -118,15 +118,15 @@ my $mime_drivers = {
 	'tiff' => ['.tiff', 'convert FILE pdf:-'],
 	
 	#OpenDocument
-	'opendoctext' => ['.odt', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'opendocspreadsheet' => ['.ods', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'opendocpresentation' => ['.odp', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'opendocgraphics' => ['.odg', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'opendoctext' => ['.odt', 'ooextract --pdf --stdout FILE'],
+	'opendocspreadsheet' => ['.ods', 'ooextract --pdf --stdout FILE'],
+	'opendocpresentation' => ['.odp', 'ooextract --pdf --stdout FILE'],
+	'opendocgraphics' => ['.odg', 'ooextract --pdf --stdout FILE'],
 
 	#MS office
-	'msexcel' => ['.xls', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'mspowerpoint' => ['.ppt', 'python /root/ooextract.py --pdf --stdout FILE'],
-	'msword' => ['.doc', 'python /root/ooextract.py --pdf --stdout FILE'],
+	'msexcel' => ['.xls', 'ooextract --pdf --stdout FILE'],
+	'mspowerpoint' => ['.ppt', 'ooextract --pdf --stdout FILE'],
+	'msword' => ['.doc', 'ooextract --pdf --stdout FILE'],
 	'pdf' => ['.pdf', 'cat FILE'],
 };
 # Template config
