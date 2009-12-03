@@ -201,7 +201,7 @@ sub process_header
 	};
 
 	# specify input filename, or file handle, text reference, etc.
-	my $content_type = `file --mime-type --brief header.html`;
+	my $content_type = `file --mime-type --brief $o_header`;
 	$content_type =~ s/\s+$//; # trim end whitespace
 	my $header = '';
 
