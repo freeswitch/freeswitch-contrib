@@ -163,7 +163,9 @@ sub process_raw
 			print { $fh_in } $raw;
 			close $fh_in or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
 			$command =~ s/FILE/$filename_in/;
-			print STDERR "Processing '$filename' ($content_type). From '$filename_in'. ";
+			print STDERR "Processing ";
+			print STDERR "header " if $is_header;
+			print STDERR "'$filename' ($content_type). From '$filename_in'. ";
 			my $out = `$command`;
 			if(!$out) {
 				print STDERR "Empty generated PDF.\n";
@@ -191,7 +193,7 @@ sub process_raw
 sub process_header
 {
 	my $parsed = shift;
-	unshift @files, (0) if $files[0] != 0;
+	unshift @files, (0) if $files[0];
 	# define template variables for replacement
 	my $vars = {
 		body => '', #$parsed->body,
@@ -269,9 +271,15 @@ if($file_in eq "-") {
 	close(FILEIN);
 }
 
-my @parts = $email->subparts;
-foreach my $part (@parts) {
-	process_part $part;
+my $email_parsed_content_type = parse_content_type($email->content_type);
+my $email_content_type = $email_parsed_content_type->{'discrete'}.'/'.$email_parsed_content_type->{'composite'};
+if($email_content_type eq 'multipart/alternative') {
+	process_part $email;
+} else {
+	my @parts = $email->subparts;
+	foreach my $part (@parts) {
+		process_part $part;
+	}
 }
 process_header($email);
 print "Merging files: ".join(' ', @files)."\n";
