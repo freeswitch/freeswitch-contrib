@@ -159,7 +159,7 @@ sub process_raw
 			my $suffix = $mime_driver[0][0];
 			my $command = $mime_driver[0][1];
 			my ($fh_in, $filename_in) = tempfile( DIR => $output_dir, SUFFIX => $suffix );
-			system("chmod +r $filename_in");
+			system("chmod ugo+r $filename_in");
 			print { $fh_in } $raw;
 			close $fh_in or warn $! ? "Error closing sort pipe: $!" : "Exit status $? from sort";
 			$command =~ s/FILE/$filename_in/;
@@ -260,7 +260,7 @@ if(!defined($file_out)) {
 # =========================================================================== #
 # setup temp dir
 $output_dir = tempdir( CLEANUP => 1 );
-system("chmod +rwx $output_dir");
+system("chmod ugo+rwx $output_dir");
 
 # load mail
 if($file_in eq "-") {
