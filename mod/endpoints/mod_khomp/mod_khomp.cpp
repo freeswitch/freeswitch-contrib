@@ -108,7 +108,8 @@ switch_call_cause_t channel_outgoing_channel(
         switch_caller_profile_t *outbound_profile,
         switch_core_session_t **new_session, 
         switch_memory_pool_t **pool, 
-        switch_originate_flag_t flags);
+        switch_originate_flag_t flags,
+		switch_call_cause_t * cancel_cause);
 switch_status_t channel_read_frame(switch_core_session_t *session, 
         switch_frame_t **frame, 
         switch_io_flag_t flags, 
@@ -506,7 +507,7 @@ switch_status_t channel_receive_message(switch_core_session_t *session, switch_c
 */
 switch_call_cause_t channel_outgoing_channel(switch_core_session_t *session, switch_event_t *var_event,
                                                     switch_caller_profile_t *outbound_profile,
-                                                    switch_core_session_t **new_session, switch_memory_pool_t **pool, switch_originate_flag_t flags)
+                                                    switch_core_session_t **new_session, switch_memory_pool_t **pool, switch_originate_flag_t flags, switch_call_cause_t * cancel_cause)
 {
 
     char *argv[3] = { 0 };
