@@ -40,7 +40,8 @@ public:
 	
 	void unlock()
 	{
-		switch_mutex_unlock(m_mutex);	}
+		switch_mutex_unlock(m_mutex);
+	}
 	
 	class scoped_lock 
 	{
@@ -153,6 +154,17 @@ public:
 		}
 	}
 	
+	MemoryPool(switch_core_session_t *session)
+	{
+		if (session) {
+			m_owned = false;
+			m_pool = switch_core_session_get_pool(session);
+		} else {
+			m_owned = true;
+			switch_core_new_memory_pool(&m_pool);
+		}
+	}
+	
 	MemoryPool()
 	{
 		switch_core_new_memory_pool(&m_pool);
@@ -180,6 +192,19 @@ public:
 	{
 		return switch_core_strdup(m_pool, s);
 	}
+	
+	char *sprintf(const char *fmt, ...)
+	{
+		va_list ap;
+		char *result = NULL;
+
+		va_start(ap, fmt);
+		result = switch_core_vsprintf(m_pool, fmt, ap);
+		va_end(ap);
+		
+		return result;
+	}
 };
+
 
 #endif /* OBJECT_SUPPORT_H */
