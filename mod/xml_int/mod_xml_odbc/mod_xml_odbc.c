@@ -169,20 +169,16 @@ static switch_status_t xml_odbc_do_break_to(xml_odbc_session_helper_t *helper)
 static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *helper)
 {
 	char *name = (char *) switch_xml_attr(helper->xml_in_cur, "name"); /* the xml-odbc-do name attr */
-
 	char *if_name = (char *) switch_xml_attr(helper->xml_in_cur, "if-name");
-	if (if_name) { if_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_name); }
-
 	char *if_value = (char *) switch_xml_attr(helper->xml_in_cur, "if-value");
-	if (if_value) { if_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_value); }
-
 	char *to_name = (char *) switch_xml_attr(helper->xml_in_cur, "to-name");
-	if (to_name) { to_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_name); }
-
 	char *to_value = (char *) switch_xml_attr(helper->xml_in_cur, "to-value");
-	if (to_value) { to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value); }
-
 	char *old_value = NULL;
+
+	if (if_name) { if_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_name); }
+	if (if_value) { if_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_value); }
+	if (to_name) { to_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_name); }
+	if (to_value) { to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value); }
 
 	switch_status_t status = SWITCH_STATUS_FALSE;
 
