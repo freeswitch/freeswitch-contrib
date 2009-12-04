@@ -175,12 +175,12 @@ static switch_status_t xml_odbc_do_set_event_header(xml_odbc_session_helper_t *h
 	char *to_value = (char *) switch_xml_attr(helper->xml_in_cur, "to-value");
 	char *old_value = NULL;
 
+	switch_status_t status = SWITCH_STATUS_FALSE;
+
 	if (if_name) { if_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_name); }
 	if (if_value) { if_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, if_value); }
 	if (to_name) { to_name = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_name); }
 	if (to_value) { to_value = switch_event_expand_headers_by_pool(helper->pool, helper->event, to_value); }
-
-	switch_status_t status = SWITCH_STATUS_FALSE;
 
 	if (if_value && !if_name) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "xml-odbc-do [%s] if_name is required when if_value given\n", name);
