@@ -14,7 +14,7 @@ class Main < Ramaze::Controller
 
   def originate
     sock = FSR::CommandSocket.new
-    sock.originate(:target => "sofia/gateway/flowroute/#{params[:phone_number]}", :endpoint => FSR::App::Conference.new("3030", "default")).run
+    sock.originate(:target => "sofia/gateway/flowroute/#{request[:phone_number]}", :endpoint => FSR::App::Conference.new("3030", "default")).run
     redirect '/'
   end
 end
