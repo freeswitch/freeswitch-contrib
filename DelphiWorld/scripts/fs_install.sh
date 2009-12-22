@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/sh
 #updating to the latest repository package List...
 echo "updating ubuntu package list from repository..."
 cd /usr/src
