@@ -1,7 +1,7 @@
 CC=gcc
-FS_PATH=../../../
+FS_PATH=../../..
 FS_INCLUDES=-I$(FS_PATH)/src/include -I$(FS_PATH)/libs/apr/include -I$(FS_PATH)/libs/libteletone/src
-FS_LDFLAGS = -L$(FS_PATH)/.libs -lfreeswitch
+FS_LDFLAGS = -L$(FS_PATH)/.libs -lfreeswitch -lm -luuid -lcrypt -lrt
 CFLAGS=-ggdb3 $(FS_INCLUDES) -Wall -Werror
 LIBS=$(FS_LDFLAGS)
 
