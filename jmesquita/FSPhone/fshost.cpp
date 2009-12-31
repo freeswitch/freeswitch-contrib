@@ -14,7 +14,7 @@ FSHost::FSHost(QObject *parent) :
 
 void FSHost::run(void)
 {
-    switch_core_flag_t flags = SCF_USE_SQL;
+    switch_core_flag_t flags = SCF_USE_SQL | SCF_USE_AUTO_NAT;
     const char *err = NULL;
     switch_bool_t console = SWITCH_FALSE;
     switch_status_t destroy_status;
