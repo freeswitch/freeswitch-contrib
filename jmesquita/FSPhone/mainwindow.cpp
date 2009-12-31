@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&g_FSHost, SIGNAL(ready()),this, SLOT(fshostReady()));
     connect(&g_FSHost, SIGNAL(ringing(QString,QString,QString)), this, SLOT(ringing(QString,QString,QString)));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
+    connect(ui->callBtn, SIGNAL(clicked()), this, SLOT(paCall()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
     connect(ui->paDevlistBtn, SIGNAL(clicked()), this, SLOT(paDevlist()));
 
@@ -26,9 +27,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::fshostReady()
 {
-    ui->statusBar->showMessage("FreeSWITCH is ready!", 0);
+    ui->statusBar->showMessage("Ready", 0);
     ui->paDevlistBtn->setEnabled(true);
     ui->textEdit->setEnabled(true);
+    ui->callBtn->setEnabled(true);
+    ui->textEdit->setText("Click to dial number...");
 }
 
 void MainWindow::paDevlist()
@@ -48,9 +51,24 @@ void MainWindow::paAnswer()
         ui->textEdit->setText("Error sending that command");
     }
 
+    ui->textEdit->setReadOnly(true);
     ui->textEdit->setText("Talking...");
     ui->hangupBtn->setEnabled(true);
     ui->answerBtn->setEnabled(false);
+    ui->callBtn->setEnabled(false);
+}
+
+void MainWindow::paCall()
+{
+    QString result;
+
+    QString callstring = QString("call %1").arg(ui->textEdit->toPlainText());
+
+    if (g_FSHost.sendCmd("pa", callstring.toAscii(), &result) == SWITCH_STATUS_FALSE) {
+        ui->textEdit->setText("Error sending that command");
+    }
+
+    ui->hangupBtn->setEnabled(true);
 }
 
 void MainWindow::paHangup()
@@ -60,8 +78,11 @@ void MainWindow::paHangup()
         ui->textEdit->setText("Error sending that command");
     }
 
-    ui->textEdit->setText("Hungup ...");
+    ui->textEdit->setText("Click to dial number...");
+    ui->statusBar->showMessage("Call hungup", 10);
     ui->hangupBtn->setEnabled(false);
+    ui->textEdit->setReadOnly(false);
+    ui->callBtn->setEnabled(true);
 }
 
 void MainWindow::ringing(QString uuid, QString caller_id_number, QString caller_id_name)

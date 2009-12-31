@@ -54,6 +54,7 @@ private slots:
     void fshostReady();
     void paDevlist();
     void paAnswer();
+    void paCall();
     void paHangup();
     void ringing(QString, QString, QString);
 
