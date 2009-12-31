@@ -9,19 +9,12 @@ FSHost::FSHost(QObject *parent) :
     switch_core_set_globals();
 }
 
-FSHost::~FSHost()
-{
-    switch_status_t destroy_status;
-    /* When the runtime loop exits, its time to shutdown */
-    destroy_status = switch_core_destroy();
-    wait();
-}
-
 void FSHost::run(void)
 {
     switch_core_flag_t flags = SCF_USE_SQL;
     const char *err = NULL;
     switch_bool_t console = SWITCH_FALSE;
+    switch_status_t destroy_status;
 
     /* If you need to override configuration directories, you need to change them in the SWITCH_GLOBAL_dirs global structure */
     printf("Initializing core...\n");
@@ -38,6 +31,9 @@ void FSHost::run(void)
      */
     switch_core_runtime_loop(!console);
     fflush(stdout);
+
+    /* When the runtime loop exits, its time to shutdown */
+    destroy_status = switch_core_destroy();
 }
 
 switch_status_t FSHost::sendCmd(const char *cmd, const char *args, QString *res)

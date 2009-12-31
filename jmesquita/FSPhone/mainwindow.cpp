@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    QString res;
+    this->fshost->sendCmd("fsctl", "shutdown", &res);
+    this->fshost->wait();
 }
 
 void MainWindow::fshostReady()
