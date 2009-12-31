@@ -6,31 +6,51 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>691</width>
-    <height>334</height>
+    <width>287</width>
+    <height>304</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTextEdit" name="textEdit"/>
+     <widget class="QTextEdit" name="textEdit">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="answerBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Answer</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QPushButton" name="paDevlistBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>pa devlist</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="showCodecsBtn">
+       <widget class="QPushButton" name="hangupBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
-         <string>show codecs</string>
+         <string>Hangup</string>
         </property>
        </widget>
       </item>
@@ -43,7 +63,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>691</width>
+     <width>287</width>
      <height>24</height>
     </rect>
    </property>

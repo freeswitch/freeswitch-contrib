@@ -53,7 +53,8 @@ protected:
 private slots:
     void fshostReady();
     void paDevlist();
-    void showCodecs();
+    void paAnswer();
+    void paHangup();
     void ringing(QString, QString, QString);
 
 private:
