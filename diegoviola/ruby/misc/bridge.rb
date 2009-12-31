@@ -1,13 +1,12 @@
 #!/usr/bin/env ruby
 
 require 'sinatra'
-require 'erb'
 require 'fsr'
 
 FSR.load_all_commands
 
 get '/' do
-  erb "Phone number: <form action=\"/originate\" method=\"post\"><input type=\"text\" name=\"phone_number\"><input type=\"submit\"></form>"
+  "Phone number: <form action=\"/originate\" method=\"post\"><input type=\"text\" name=\"phone_number\"><input type=\"submit\"></form>"
 end
 
 post '/originate' do
