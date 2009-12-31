@@ -10,13 +10,13 @@ Q_OBJECT
 public:
     explicit FSHost(QObject *parent = 0);
     ~FSHost(void);
+    switch_status_t sendCmd(const char *cmd, const char *args, QString *res);
 
 protected:
     void run(void);
 
 signals:
-
-public slots:
+    void ready(void);
 
 };
 

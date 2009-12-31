@@ -35,6 +35,7 @@
 
 #include <QMainWindow>
 #include <fshost.h>
+#include <switch.h>
 
 namespace Ui {
     class MainWindow;
@@ -48,6 +49,11 @@ public:
 
 protected:
     void changeEvent(QEvent *e);
+
+private slots:
+    void fshostReady();
+    void paDevlist();
+    void showCodecs();
 
 private:
     Ui::MainWindow *ui;

@@ -32,11 +32,21 @@ void FSHost::run(void)
     }
 
     printf("Everything OK, Entering runtime loop.\n");
-
+    emit ready();
     /* Go into the runtime loop. If the argument is true, this basically sets runtime.running = 1 and loops while that is set
      * If its false, it initializes the libedit for the console, then does the same thing
      */
     switch_core_runtime_loop(!console);
-
     fflush(stdout);
+}
+
+switch_status_t FSHost::sendCmd(const char *cmd, const char *args, QString *res)
+{
+    switch_status_t status = SWITCH_STATUS_FALSE;
+    switch_stream_handle_t stream = { 0 };
+    SWITCH_STANDARD_STREAM(stream);
+    status = switch_api_execute(cmd, args, NULL, &stream);
+    *res = switch_str_nil((char *) stream.data);
+
+    return status;
 }
