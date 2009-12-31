@@ -1,5 +1,8 @@
 #include "fshost.h"
 
+/* Declare it globally */
+FSHost g_FSHost;
+
 FSHost::FSHost(QObject *parent) :
     QThread(parent)
 {
@@ -25,6 +28,12 @@ void FSHost::run(void)
     }
 
     printf("Everything OK, Entering runtime loop.\n");
+
+    if (switch_event_bind("FSHost", SWITCH_EVENT_ALL, SWITCH_EVENT_SUBCLASS_ANY, eventHandlerCallback, NULL) != SWITCH_STATUS_SUCCESS) {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind!\n");
+            printf("Something went really wrong while binding to events...");
+    }
+
     emit ready();
     /* Go into the runtime loop. If the argument is true, this basically sets runtime.running = 1 and loops while that is set
      * If its false, it initializes the libedit for the console, then does the same thing
@@ -32,8 +41,36 @@ void FSHost::run(void)
     switch_core_runtime_loop(!console);
     fflush(stdout);
 
+
+    switch_event_unbind_callback(eventHandlerCallback);
     /* When the runtime loop exits, its time to shutdown */
     destroy_status = switch_core_destroy();
+    if (destroy_status == SWITCH_STATUS_SUCCESS)
+    {
+        printf("We have properly shutdown the core.\n");
+    }
+}
+
+void FSHost::generalEventHandler(switch_event_t *event)
+{
+    switch(event->event_id) {
+    case SWITCH_EVENT_CUSTOM:
+        {
+            if (strcmp(event->subclass_name, "portaudio::ringing") == 0)
+            {
+                emit ringing(switch_event_get_header_nil(event, "call_id"), switch_event_get_header_nil(event, "Caller-Caller-ID-Number"), switch_event_get_header_nil(event, "Caller-Caller-ID-Name"));
+            }
+            else
+            {
+                printf("We got a not treated custom event: %s\n", (!zstr(event->subclass_name) ? event->subclass_name : "NULL"));
+            }
+            break;
+        }
+    default:
+        {
+            printf("Untreated event: %s -> %s\n", switch_event_name(event->event_id), (!zstr(event->subclass_name) ? event->subclass_name : "NULL"));
+        }
+    }
 }
 
 switch_status_t FSHost::sendCmd(const char *cmd, const char *args, QString *res)

@@ -34,8 +34,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <fshost.h>
 #include <switch.h>
+#include <fshost.h>
 
 namespace Ui {
     class MainWindow;
@@ -54,10 +54,10 @@ private slots:
     void fshostReady();
     void paDevlist();
     void showCodecs();
+    void ringing(QString, QString, QString);
 
 private:
     Ui::MainWindow *ui;
-    FSHost *fshost;
 };
 
 #endif // MAINWINDOW_H
