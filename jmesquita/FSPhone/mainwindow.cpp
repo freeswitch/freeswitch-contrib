@@ -8,11 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(&g_FSHost, SIGNAL(ready()),this, SLOT(fshostReady()));
-    connect(&g_FSHost, SIGNAL(ringing(QString,QString,QString)), this, SLOT(ringing(QString,QString,QString)));
+    connect(&g_FSHost, SIGNAL(ringing(Call *)), this, SLOT(ringing(Call *)));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
-    connect(ui->callBtn, SIGNAL(clicked()), this, SLOT(paCall()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
-    connect(ui->paDevlistBtn, SIGNAL(clicked()), this, SLOT(paDevlist()));
 
     g_FSHost.start();
 }
@@ -28,20 +26,8 @@ MainWindow::~MainWindow()
 void MainWindow::fshostReady()
 {
     ui->statusBar->showMessage("Ready", 0);
-    ui->paDevlistBtn->setEnabled(true);
     ui->textEdit->setEnabled(true);
-    ui->callBtn->setEnabled(true);
-    ui->textEdit->setText("Click to dial number...");
-}
-
-void MainWindow::paDevlist()
-{
-    QString result;
-    if (g_FSHost.sendCmd("pa", "devlist as xml", &result) == SWITCH_STATUS_FALSE) {
-        ui->textEdit->setText("Error sending that command");
-    }
-
-    ui->textEdit->setText(result);
+    ui->textEdit->setText("Click on line to dial number...");
 }
 
 void MainWindow::paAnswer()
@@ -51,11 +37,9 @@ void MainWindow::paAnswer()
         ui->textEdit->setText("Error sending that command");
     }
 
-    ui->textEdit->setReadOnly(true);
     ui->textEdit->setText("Talking...");
     ui->hangupBtn->setEnabled(true);
     ui->answerBtn->setEnabled(false);
-    ui->callBtn->setEnabled(false);
 }
 
 void MainWindow::paCall()
@@ -81,13 +65,18 @@ void MainWindow::paHangup()
     ui->textEdit->setText("Click to dial number...");
     ui->statusBar->showMessage("Call hungup", 10);
     ui->hangupBtn->setEnabled(false);
-    ui->textEdit->setReadOnly(false);
-    ui->callBtn->setEnabled(true);
 }
 
-void MainWindow::ringing(QString uuid, QString caller_id_number, QString caller_id_name)
+void MainWindow::ringing(Call *call)
 {
-    ui->textEdit->setText(QString("Number: %1\nName: %3").arg(caller_id_number, caller_id_name));
+    if (_lines.contains(call->getUUID()))
+    {
+        delete call;
+    }
+    else
+    {
+        ui->textEdit->setText(QString("Number: %1\nName: %3").arg(call->getCidNumber(), call->getCidName()));
+    }
     ui->answerBtn->setEnabled(true);
 }
 

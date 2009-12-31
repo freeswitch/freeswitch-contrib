@@ -4,6 +4,8 @@
 #include <QThread>
 #include <switch.h>
 
+class Call;
+
 class FSHost : public QThread
 {
 Q_OBJECT
@@ -17,7 +19,7 @@ protected:
 
 signals:
     void ready(void);
-    void ringing(QString uuid, QString caller_id_name, QString caller_id_name);
+    void ringing(Call *call);
 
 };
 

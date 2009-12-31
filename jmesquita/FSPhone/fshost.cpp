@@ -1,4 +1,6 @@
+#include <QtGui>
 #include "fshost.h"
+#include "call.h"
 
 /* Declare it globally */
 FSHost g_FSHost;
@@ -10,6 +12,9 @@ FSHost::FSHost(QObject *parent) :
     printf("Initializing globals...\n");
     switch_core_setrlimits();
     switch_core_set_globals();
+
+    qRegisterMetaType<Call>("Call");
+
 }
 
 void FSHost::run(void)
@@ -58,7 +63,12 @@ void FSHost::generalEventHandler(switch_event_t *event)
         {
             if (strcmp(event->subclass_name, "portaudio::ringing") == 0)
             {
-                emit ringing(switch_event_get_header_nil(event, "call_id"), switch_event_get_header_nil(event, "Caller-Caller-ID-Number"), switch_event_get_header_nil(event, "Caller-Caller-ID-Name"));
+                Call *call = new Call(atoi(switch_event_get_header_nil(event, "call_id")),
+                                      switch_event_get_header_nil(event, "Caller-Caller-ID-Name"),
+                                      switch_event_get_header_nil(event, "Caller-Caller-ID-Number"),
+                                      FSPHONE_CALL_DIRECTION_INBOUND,
+                                      switch_event_get_header_nil(event, "Unique-ID"));
+                emit ringing(call);
             }
             else
             {

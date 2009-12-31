@@ -34,8 +34,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPushButton>
 #include <switch.h>
 #include <fshost.h>
+#include <call.h>
 
 namespace Ui {
     class MainWindow;
@@ -52,14 +54,14 @@ protected:
 
 private slots:
     void fshostReady();
-    void paDevlist();
     void paAnswer();
     void paCall();
     void paHangup();
-    void ringing(QString, QString, QString);
+    void ringing(Call *);
 
 private:
     Ui::MainWindow *ui;
+    QHash<QString, Call *> _lines;
 };
 
 #endif // MAINWINDOW_H

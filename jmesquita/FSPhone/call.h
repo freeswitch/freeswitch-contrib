@@ -1,6 +1,7 @@
 #ifndef CALL_H
 #define CALL_H
 
+#include <QtCore>
 #include <QString>
 #include <fshost.h>
 
@@ -12,13 +13,21 @@ typedef enum {
 class Call
 {
 public:
-    Call(int call_id, QString cid_name, QString cid_number);
+    Call(void);
+    Call(int call_id, QString cid_name, QString cid_number, fsphone_call_direction_t direction, QString uuid);
+    QString getCidName(void) { return _cid_name; }
+    QString getCidNumber(void) { return _cid_number; }
+    int getCallID(void) { return _call_id; }
+    QString getUUID(void) { return _uuid; }
 
 private:
     int _call_id;
     QString _cid_name;
     QString _cid_number;
     fsphone_call_direction_t _direction;
+    QString _uuid;
 };
+
+Q_DECLARE_METATYPE(Call)
 
 #endif // CALL_H

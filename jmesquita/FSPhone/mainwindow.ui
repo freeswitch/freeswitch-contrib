@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>287</width>
-    <height>471</height>
+    <height>438</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,23 +21,13 @@
        <bool>false</bool>
       </property>
       <property name="readOnly">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="callBtn">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Call</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
        <widget class="QPushButton" name="answerBtn">
         <property name="enabled">
          <bool>false</bool>
@@ -47,17 +37,7 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="paDevlistBtn">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>pa devlist</string>
-        </property>
-       </widget>
-      </item>
-      <item>
+      <item row="0" column="1">
        <widget class="QPushButton" name="hangupBtn">
         <property name="enabled">
          <bool>false</bool>

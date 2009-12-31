@@ -25,9 +25,9 @@ LIBS = -L../../../.libs \
 
 SOURCES += main.cpp \
     mainwindow.cpp \
-    fshost.cpp
-    #call.cpp
+    fshost.cpp \
+    call.cpp
 HEADERS += mainwindow.h \
-    fshost.h
-    #call.h
+    fshost.h \
+    call.h
 FORMS += mainwindow.ui
