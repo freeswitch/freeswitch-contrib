@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&g_FSHost, SIGNAL(ringing(Call *)), this, SLOT(ringing(Call *)));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
+    connect(ui->listCalls, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(callListDoubleClick(QListWidgetItem*)));
 
     g_FSHost.start();
 }
@@ -21,6 +22,18 @@ MainWindow::~MainWindow()
     QString res;
     g_FSHost.sendCmd("fsctl", "shutdown", &res);
     g_FSHost.wait();
+}
+
+void MainWindow::callListDoubleClick(QListWidgetItem *item)
+{
+    Call *call = _lines.value(item->data(Qt::UserRole).toString());
+    QString switch_str = QString("switch %1").arg(call->getCallID());
+    QString result;
+    if (g_FSHost.sendCmd("pa", switch_str.toAscii(), &result) == SWITCH_STATUS_FALSE) {
+        ui->textEdit->setText(QString("Error switching to call %1").arg(call->getCallID()));
+        return;
+    }
+    ui->hangupBtn->setEnabled(true);
 }
 
 void MainWindow::fshostReady()
@@ -75,7 +88,10 @@ void MainWindow::ringing(Call *call)
     }
     else
     {
+        _lines.insert(call->getUUID(), call);
         ui->textEdit->setText(QString("Number: %1\nName: %3").arg(call->getCidNumber(), call->getCidName()));
+        QListWidgetItem *item = new QListWidgetItem(tr("%1 - %2 (Ringing)").arg(call->getCidName(), call->getCidNumber()), ui->listCalls);
+        item->setData(Qt::UserRole, call->getUUID());
     }
     ui->answerBtn->setEnabled(true);
 }

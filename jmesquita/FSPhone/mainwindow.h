@@ -34,7 +34,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPushButton>
+#include <QListWidgetItem>
 #include <switch.h>
 #include <fshost.h>
 #include <call.h>
@@ -53,6 +53,7 @@ protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void callListDoubleClick(QListWidgetItem *);
     void fshostReady();
     void paAnswer();
     void paCall();
