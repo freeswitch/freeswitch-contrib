@@ -35,6 +35,7 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
+#include <QSignalMapper>
 #include <switch.h>
 #include <fshost.h>
 #include <call.h>
@@ -52,7 +53,11 @@ public:
 protected:
     void changeEvent(QEvent *e);
 
+signals:
+    void dtmfDialed(QString);
+
 private slots:
+    void dialDTMF(QString);
     void callListDoubleClick(QListWidgetItem *);
     void makeCall();
     void fshostReady();
@@ -66,6 +71,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QSignalMapper *dialpadMapper;
 };
 
 #endif // MAINWINDOW_H

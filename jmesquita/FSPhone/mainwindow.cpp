@@ -8,6 +8,33 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    dialpadMapper = new QSignalMapper(this);
+    connect(ui->dtmf0Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf1Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf2Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf3Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf4Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf5Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf6Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf7Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf8Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmf9Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfAstBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfPoundBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    dialpadMapper->setMapping(ui->dtmf0Btn, QString("0"));
+    dialpadMapper->setMapping(ui->dtmf1Btn, QString("1"));
+    dialpadMapper->setMapping(ui->dtmf2Btn, QString("2"));
+    dialpadMapper->setMapping(ui->dtmf3Btn, QString("3"));
+    dialpadMapper->setMapping(ui->dtmf4Btn, QString("4"));
+    dialpadMapper->setMapping(ui->dtmf5Btn, QString("5"));
+    dialpadMapper->setMapping(ui->dtmf6Btn, QString("6"));
+    dialpadMapper->setMapping(ui->dtmf7Btn, QString("7"));
+    dialpadMapper->setMapping(ui->dtmf8Btn, QString("8"));
+    dialpadMapper->setMapping(ui->dtmf9Btn, QString("9"));
+    dialpadMapper->setMapping(ui->dtmfAstBtn, QString("*"));
+    dialpadMapper->setMapping(ui->dtmfPoundBtn, QString("#"));
+    connect(dialpadMapper, SIGNAL(mapped(QString)), this, SLOT(dialDTMF(QString)));
+
     connect(&g_FSHost, SIGNAL(ready()),this, SLOT(fshostReady()));
     connect(&g_FSHost, SIGNAL(ringing(QString)), this, SLOT(ringing(QString)));
     connect(&g_FSHost, SIGNAL(answered(QString)), this, SLOT(answered(QString)));
@@ -28,6 +55,15 @@ MainWindow::~MainWindow()
     QString res;
     g_FSHost.sendCmd("fsctl", "shutdown", &res);
     g_FSHost.wait();
+}
+
+void MainWindow::dialDTMF(QString dtmf)
+{
+    QString result;
+    QString dtmf_string = QString("dtmf %1").arg(dtmf);
+    if (g_FSHost.sendCmd("pa", dtmf_string.toAscii(), &result) == SWITCH_STATUS_FALSE) {
+        ui->textEdit->setText("Error sending that command");
+    }
 }
 
 void MainWindow::callListDoubleClick(QListWidgetItem *item)
@@ -59,7 +95,7 @@ void MainWindow::fshostReady()
     ui->statusBar->showMessage("Ready", 0);
     ui->newCallBtn->setEnabled(true);
     ui->textEdit->setEnabled(true);
-    ui->textEdit->setText("Click on line to dial number...");
+    ui->textEdit->setText("Ready to dial and receive calls!");
 }
 
 void MainWindow::paAnswer()
@@ -132,6 +168,18 @@ void MainWindow::answered(QString uuid)
             break;
         }
     }
+    ui->dtmf0Btn->setEnabled(true);
+    ui->dtmf1Btn->setEnabled(true);
+    ui->dtmf2Btn->setEnabled(true);
+    ui->dtmf3Btn->setEnabled(true);
+    ui->dtmf4Btn->setEnabled(true);
+    ui->dtmf5Btn->setEnabled(true);
+    ui->dtmf6Btn->setEnabled(true);
+    ui->dtmf7Btn->setEnabled(true);
+    ui->dtmf8Btn->setEnabled(true);
+    ui->dtmf9Btn->setEnabled(true);
+    ui->dtmfAstBtn->setEnabled(true);
+    ui->dtmfPoundBtn->setEnabled(true);
 }
 
 void MainWindow::hungup(QString uuid)
@@ -150,6 +198,18 @@ void MainWindow::hungup(QString uuid)
     /* TODO: Will cause problems if 2 calls are received at the same time */
     ui->answerBtn->setEnabled(false);
     ui->hangupBtn->setEnabled(false);
+    ui->dtmf0Btn->setEnabled(false);
+    ui->dtmf1Btn->setEnabled(false);
+    ui->dtmf2Btn->setEnabled(false);
+    ui->dtmf3Btn->setEnabled(false);
+    ui->dtmf4Btn->setEnabled(false);
+    ui->dtmf5Btn->setEnabled(false);
+    ui->dtmf6Btn->setEnabled(false);
+    ui->dtmf7Btn->setEnabled(false);
+    ui->dtmf8Btn->setEnabled(false);
+    ui->dtmf9Btn->setEnabled(false);
+    ui->dtmfAstBtn->setEnabled(false);
+    ui->dtmfPoundBtn->setEnabled(false);
 }
 
 void MainWindow::changeEvent(QEvent *e)

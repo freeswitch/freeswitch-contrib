@@ -14,15 +14,12 @@ INCLUDEPATH = ../../../src/include \
 LIBS = -L../../../.libs \
     -lfreeswitch \
     -lm
-
-!win32 {
-    !macx {
-        # This is here to comply with the default freeswitch installation
-        QMAKE_LFLAGS += -Wl,-rpath,/usr/local/freeswitch/lib
-        LIBS+= -lcrypt -lrt
-    }
+!win32:!macx { 
+    # This is here to comply with the default freeswitch installation
+    QMAKE_LFLAGS += -Wl,-rpath,/usr/local/freeswitch/lib
+    LIBS += -lcrypt \
+        -lrt
 }
-
 SOURCES += main.cpp \
     mainwindow.cpp \
     fshost.cpp \
