@@ -1,3 +1,4 @@
+#include <QInputDialog>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -8,7 +9,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(&g_FSHost, SIGNAL(ready()),this, SLOT(fshostReady()));
-    connect(&g_FSHost, SIGNAL(ringing(Call *)), this, SLOT(ringing(Call *)));
+    connect(&g_FSHost, SIGNAL(ringing(QString)), this, SLOT(ringing(QString)));
+    connect(&g_FSHost, SIGNAL(answered(QString)), this, SLOT(answered(QString)));
+    connect(&g_FSHost, SIGNAL(hungup(QString)), this, SLOT(hungup(QString)));
+    connect(&g_FSHost, SIGNAL(newOutgoingCall(QString)), this, SLOT(newOutgoingCall(QString)));
+
+    connect(ui->newCallBtn, SIGNAL(clicked()), this, SLOT(makeCall()));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
     connect(ui->listCalls, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(callListDoubleClick(QListWidgetItem*)));
@@ -26,7 +32,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::callListDoubleClick(QListWidgetItem *item)
 {
-    Call *call = _lines.value(item->data(Qt::UserRole).toString());
+    Call *call = g_FSHost.getCallByUUID(item->data(Qt::UserRole).toString());
     QString switch_str = QString("switch %1").arg(call->getCallID());
     QString result;
     if (g_FSHost.sendCmd("pa", switch_str.toAscii(), &result) == SWITCH_STATUS_FALSE) {
@@ -36,9 +42,22 @@ void MainWindow::callListDoubleClick(QListWidgetItem *item)
     ui->hangupBtn->setEnabled(true);
 }
 
+void MainWindow::makeCall()
+{
+    bool ok;
+    QString dialstring = QInputDialog::getText(this, tr("Make new call"),
+                                         tr("Number to dial:"), QLineEdit::Normal, NULL,&ok);
+
+    if (ok && !dialstring.isEmpty())
+    {
+        paCall(dialstring);
+    }
+}
+
 void MainWindow::fshostReady()
 {
     ui->statusBar->showMessage("Ready", 0);
+    ui->newCallBtn->setEnabled(true);
     ui->textEdit->setEnabled(true);
     ui->textEdit->setText("Click on line to dial number...");
 }
@@ -55,11 +74,11 @@ void MainWindow::paAnswer()
     ui->answerBtn->setEnabled(false);
 }
 
-void MainWindow::paCall()
+void MainWindow::paCall(QString dialstring)
 {
     QString result;
 
-    QString callstring = QString("call %1").arg(ui->textEdit->toPlainText());
+    QString callstring = QString("call %1").arg(dialstring);
 
     if (g_FSHost.sendCmd("pa", callstring.toAscii(), &result) == SWITCH_STATUS_FALSE) {
         ui->textEdit->setText("Error sending that command");
@@ -80,20 +99,57 @@ void MainWindow::paHangup()
     ui->hangupBtn->setEnabled(false);
 }
 
-void MainWindow::ringing(Call *call)
+void MainWindow::newOutgoingCall(QString uuid)
 {
-    if (_lines.contains(call->getUUID()))
-    {
-        delete call;
-    }
-    else
-    {
-        _lines.insert(call->getUUID(), call);
-        ui->textEdit->setText(QString("Number: %1\nName: %3").arg(call->getCidNumber(), call->getCidName()));
-        QListWidgetItem *item = new QListWidgetItem(tr("%1 - %2 (Ringing)").arg(call->getCidName(), call->getCidNumber()), ui->listCalls);
-        item->setData(Qt::UserRole, call->getUUID());
-    }
+    Call *call = g_FSHost.getCallByUUID(uuid);
+    ui->textEdit->setText(QString("Calling %1 (%2)").arg(call->getCidName(), call->getCidNumber()));
+    QListWidgetItem *item = new QListWidgetItem(tr("%1 (%2) - Calling").arg(call->getCidName(), call->getCidNumber()));
+    item->setData(Qt::UserRole, uuid);
+    ui->listCalls->addItem(item);
+    ui->hangupBtn->setEnabled(true);
+}
+
+void MainWindow::ringing(QString uuid)
+{
+
+    Call *call = g_FSHost.getCallByUUID(uuid);
+    ui->textEdit->setText(QString("Call from %1 (%2)").arg(call->getCidName(), call->getCidNumber()));
+    QListWidgetItem *item = new QListWidgetItem(tr("%1 (%2) - Ringing").arg(call->getCidName(), call->getCidNumber()));
+    item->setData(Qt::UserRole, uuid);
+    ui->listCalls->addItem(item);
     ui->answerBtn->setEnabled(true);
+}
+
+void MainWindow::answered(QString uuid)
+{
+    Call *call = g_FSHost.getCallByUUID(uuid);
+    for (int i=0; i<ui->listCalls->count(); i++)
+    {
+        QListWidgetItem *item = ui->listCalls->item(i);
+        if (item->data(Qt::UserRole).toString() == uuid)
+        {
+            item->setText(tr("%1 (%2) - Active").arg(call->getCidName(), call->getCidNumber()));
+            break;
+        }
+    }
+}
+
+void MainWindow::hungup(QString uuid)
+{
+    Call *call = g_FSHost.getCallByUUID(uuid);
+    for (int i=0; i<ui->listCalls->count(); i++)
+    {
+        QListWidgetItem *item = ui->listCalls->item(i);
+        if (item->data(Qt::UserRole).toString() == uuid)
+        {
+            delete ui->listCalls->takeItem(i);
+            break;
+        }
+    }
+    ui->textEdit->setText(tr("Call with %1 (%2) hungup.").arg(call->getCidName(), call->getCidNumber()));
+    /* TODO: Will cause problems if 2 calls are received at the same time */
+    ui->answerBtn->setEnabled(false);
+    ui->hangupBtn->setEnabled(false);
 }
 
 void MainWindow::changeEvent(QEvent *e)

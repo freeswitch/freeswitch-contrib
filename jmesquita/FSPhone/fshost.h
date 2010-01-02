@@ -2,6 +2,7 @@
 #define FSHOST_H
 
 #include <QThread>
+#include <QHash>
 #include <switch.h>
 
 class Call;
@@ -13,14 +14,20 @@ public:
     explicit FSHost(QObject *parent = 0);
     switch_status_t sendCmd(const char *cmd, const char *args, QString *res);
     void generalEventHandler(switch_event_t *event);
+    Call * getCallByUUID(QString uuid) { return _active_calls.value(uuid, NULL); }
 
 protected:
     void run(void);
 
 signals:
     void ready(void);
-    void ringing(Call *call);
+    void ringing(QString);
+    void answered(QString);
+    void newOutgoingCall(QString);
+    void hungup(QString);
 
+private:
+    QHash<QString, Call*> _active_calls;
 };
 
 extern FSHost g_FSHost;
@@ -35,7 +42,7 @@ static void eventHandlerCallback(switch_event_t *event)
     if (switch_event_dup(&clone, event) == SWITCH_STATUS_SUCCESS) {
         g_FSHost.generalEventHandler(clone);
     }
-    /*switch_safe_free(event);*/
+    switch_safe_free(clone);
 }
 
 #endif // FSHOST_H

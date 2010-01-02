@@ -54,15 +54,18 @@ protected:
 
 private slots:
     void callListDoubleClick(QListWidgetItem *);
+    void makeCall();
     void fshostReady();
     void paAnswer();
-    void paCall();
+    void paCall(QString);
     void paHangup();
-    void ringing(Call *);
+    void newOutgoingCall(QString);
+    void ringing(QString);
+    void answered(QString);
+    void hungup(QString);
 
 private:
     Ui::MainWindow *ui;
-    QHash<QString, Call *> _lines;
 };
 
 #endif // MAINWINDOW_H

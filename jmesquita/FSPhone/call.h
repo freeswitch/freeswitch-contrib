@@ -19,6 +19,7 @@ public:
     QString getCidNumber(void) { return _cid_number; }
     int getCallID(void) { return _call_id; }
     QString getUUID(void) { return _uuid; }
+    fsphone_call_direction_t getDirection() { return _direction; }
 
 private:
     int _call_id;
