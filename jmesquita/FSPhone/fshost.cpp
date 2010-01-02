@@ -39,6 +39,11 @@ void FSHost::run(void)
             printf("Something went really wrong while binding to events...");
     }
 
+    /* Load our QSettings module */
+    if (switch_loadable_module_load_module("", "mod_qsettings", SWITCH_FALSE, &err) != SWITCH_STATUS_SUCCESS)
+    {
+        printf("Something went wrong when loading our QSettings module\n");
+    }
     emit ready();
     /* Go into the runtime loop. If the argument is true, this basically sets runtime.running = 1 and loops while that is set
      * If its false, it initializes the libedit for the console, then does the same thing

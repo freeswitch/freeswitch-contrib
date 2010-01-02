@@ -23,7 +23,8 @@ LIBS = -L../../../.libs \
 SOURCES += main.cpp \
     mainwindow.cpp \
     fshost.cpp \
-    call.cpp
+    call.cpp \
+    mod_qsettings/mod_qsettings.cpp
 HEADERS += mainwindow.h \
     fshost.h \
     call.h
