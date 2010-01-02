@@ -1,6 +1,7 @@
 #include <QtGui>
 #include "fshost.h"
 #include "call.h"
+#include "mod_qsettings/mod_qsettings.h"
 
 /* Declare it globally */
 FSHost g_FSHost;
@@ -40,7 +41,7 @@ void FSHost::run(void)
     }
 
     /* Load our QSettings module */
-    if (switch_loadable_module_load_module("", "mod_qsettings", SWITCH_FALSE, &err) != SWITCH_STATUS_SUCCESS)
+    if (switch_loadable_module_build_dynamic("mod_qsettings",mod_qsettings_load,NULL,mod_qsettings_shutdown,SWITCH_FALSE) != SWITCH_STATUS_SUCCESS)
     {
         printf("Something went wrong when loading our QSettings module\n");
     }

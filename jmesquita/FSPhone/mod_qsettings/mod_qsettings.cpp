@@ -30,11 +30,12 @@
  * Module to load configurations from Qt preference system QSettings
  *
  */
-#include <switch.h>
 
-SWITCH_MODULE_LOAD_FUNCTION(mod_qsettings_load);
-SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_qsettings_shutdown);
+#include "mod_qsettings/mod_qsettings.h"
+
+/*
 SWITCH_MODULE_DEFINITION(mod_qsettings, mod_qsettings_load, mod_qsettings_shutdown, NULL);
+*/
 
 
 struct xml_binding {
@@ -63,8 +64,7 @@ static switch_xml_t xml_url_fetch(const char *section, const char *tag_name, con
 	return NULL;
 }
 
-#define ENABLE_PARAM_VALUE "enabled"
-static switch_status_t do_config(void)
+/*static switch_status_t do_config(void)
 {
         char *cf = "qsettings.conf";
 	switch_xml_t cfg, xml, bindings_tag, binding_tag, param;
@@ -107,25 +107,26 @@ static switch_status_t do_config(void)
 	switch_xml_free(xml);
 
 	return x ? SWITCH_STATUS_SUCCESS : SWITCH_STATUS_FALSE;
-}
+}*/
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_qsettings_load)
 {
         /*switch_api_interface_t *qsettings_api_interface;*/
 
 	/* connect my internal structure to the blank pointer passed to me */
-	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
+        *module_interface = switch_loadable_module_create_module_interface(pool, "mod_qsettings");
 
 	memset(&globals,0,sizeof(globals));
 	globals.pool = pool;
 
-	if (do_config() == SWITCH_STATUS_SUCCESS) {
+/*	if (do_config() == SWITCH_STATUS_SUCCESS) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding worked!");
 	} else {
 		return SWITCH_STATUS_FALSE;
 	}
+*/
 
-
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "We loaded mod_qsettings.\n");
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
 }

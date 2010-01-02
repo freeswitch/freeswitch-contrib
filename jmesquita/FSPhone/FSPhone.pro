@@ -27,5 +27,6 @@ SOURCES += main.cpp \
     mod_qsettings/mod_qsettings.cpp
 HEADERS += mainwindow.h \
     fshost.h \
-    call.h
+    call.h \
+    mod_qsettings/mod_qsettings.h
 FORMS += mainwindow.ui
