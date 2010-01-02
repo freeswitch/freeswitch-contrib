@@ -7,6 +7,28 @@
 
 class Call;
 
+#define FSPHONE_GW_STATE_TRYING 0
+#define FSPHONE_GW_STATE_REGISTER 1
+#define FSPHONE_GW_STATE_REGED 2
+#define FSPHONE_GW_STATE_UNREGED 3
+#define FSPHONE_GW_STATE_UNREGISTER 4
+#define FSPHONE_GW_STATE_FAILED 5
+#define FSPHONE_GW_STATE_FAIL_WAIT 6
+#define FSPHONE_GW_STATE_EXPIRED 7
+#define FSPHONE_GW_STATE_NOREG 8
+
+static const char *fsphone_gw_state_names[] = {
+    "TRYING",
+    "REGISTER",
+    "REGED",
+    "UNREGED",
+    "UNREGISTER",
+    "FAILED",
+    "FAIL_WAIT",
+    "EXPIRED",
+    "NOREG"
+};
+
 class FSHost : public QThread
 {
 Q_OBJECT
@@ -15,6 +37,7 @@ public:
     switch_status_t sendCmd(const char *cmd, const char *args, QString *res);
     void generalEventHandler(switch_event_t *event);
     Call * getCallByUUID(QString uuid) { return _active_calls.value(uuid, NULL); }
+    QString getGwStateName(int id) { return fsphone_gw_state_names[id]; }
 
 protected:
     void run(void);
@@ -25,6 +48,7 @@ signals:
     void answered(QString);
     void newOutgoingCall(QString);
     void hungup(QString);
+    void gwStateChange(QString, int);
 
 private:
     QHash<QString, Call*> _active_calls;

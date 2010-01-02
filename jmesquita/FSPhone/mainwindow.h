@@ -57,6 +57,7 @@ signals:
     void dtmfDialed(QString);
 
 private slots:
+    void gwStateChanged(QString, int);
     void dialDTMF(QString);
     void callListDoubleClick(QListWidgetItem *);
     void makeCall();

@@ -112,6 +112,29 @@ void FSHost::generalEventHandler(switch_event_t *event)
                 _active_calls.insert(uuid, call);
                 emit newOutgoingCall(uuid);
             }
+            else if (strcmp(event->subclass_name, "sofia::gateway_state") == 0)
+            {
+                QString state = switch_event_get_header_nil(event, "State");
+                QString gw = switch_event_get_header_nil(event, "Gateway");
+                if (state == "TRYING")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_TRYING);
+                else if (state == "REGISTER")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_REGISTER);
+                else if (state == "REGED")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_REGED);
+                else if (state == "UNREGED")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_UNREGED);
+                else if (state == "UNREGISTER")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_UNREGISTER);
+                else if (state =="FAILED")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_FAILED);
+                else if (state == "FAIL_WAIT")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_FAIL_WAIT);
+                else if (state == "EXPIRED")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_EXPIRED);
+                else if (state == "NOREG")
+                    emit gwStateChange(gw, FSPHONE_GW_STATE_NOREG);
+            }
             else
             {
                 printf("We got a not treated custom event: %s\n", (!zstr(event->subclass_name) ? event->subclass_name : "NULL"));

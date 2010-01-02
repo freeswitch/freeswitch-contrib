@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&g_FSHost, SIGNAL(answered(QString)), this, SLOT(answered(QString)));
     connect(&g_FSHost, SIGNAL(hungup(QString)), this, SLOT(hungup(QString)));
     connect(&g_FSHost, SIGNAL(newOutgoingCall(QString)), this, SLOT(newOutgoingCall(QString)));
+    connect(&g_FSHost, SIGNAL(gwStateChange(QString,int)), this, SLOT(gwStateChanged(QString,int)));
 
     connect(ui->newCallBtn, SIGNAL(clicked()), this, SLOT(makeCall()));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
@@ -55,6 +56,31 @@ MainWindow::~MainWindow()
     QString res;
     g_FSHost.sendCmd("fsctl", "shutdown", &res);
     g_FSHost.wait();
+}
+
+void MainWindow::gwStateChanged(QString gw, int state)
+{
+    ui->statusBar->showMessage(tr("Account %1 is %2").arg(gw, g_FSHost.getGwStateName(state)));
+
+    /* TODO: This should be placed somewhere else when the config handler is here... */
+    QList<QTableWidgetItem *> match = ui->tableAccounts->findItems(gw, Qt::MatchExactly);
+    if (match.isEmpty())
+    {
+        /* Create the damn thing */
+        ui->tableAccounts->setRowCount(ui->tableAccounts->rowCount()+1);
+        QTableWidgetItem *gwField = new QTableWidgetItem(gw);
+        QTableWidgetItem *stField = new QTableWidgetItem(g_FSHost.getGwStateName(state));
+        ui->tableAccounts->setItem(0,0,gwField);
+        ui->tableAccounts->setItem(0,1,stField);
+        ui->tableAccounts->resizeColumnsToContents();
+        return;
+    }
+
+    QTableWidgetItem *gwField = match.at(0);
+    QTableWidgetItem *stField = ui->tableAccounts->item(gwField->row(),1);
+    stField->setText(g_FSHost.getGwStateName(state));
+    ui->tableAccounts->resizeColumnsToContents();
+
 }
 
 void MainWindow::dialDTMF(QString dtmf)
@@ -92,7 +118,7 @@ void MainWindow::makeCall()
 
 void MainWindow::fshostReady()
 {
-    ui->statusBar->showMessage("Ready", 0);
+    ui->statusBar->showMessage("Ready");
     ui->newCallBtn->setEnabled(true);
     ui->textEdit->setEnabled(true);
     ui->textEdit->setText("Ready to dial and receive calls!");
@@ -131,7 +157,7 @@ void MainWindow::paHangup()
     }
 
     ui->textEdit->setText("Click to dial number...");
-    ui->statusBar->showMessage("Call hungup", 10);
+    ui->statusBar->showMessage("Call hungup");
     ui->hangupBtn->setEnabled(false);
 }
 
