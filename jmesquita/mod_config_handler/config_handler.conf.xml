@@ -1,7 +1,0 @@
-<configuration name="config_handler.conf" description="Softphone config handler">
-  <bindings>
-    <binding name="example">
-      <param name="bindings" value="dialplan"/> 
-    </binding>
-  </bindings>
-</configuration>
