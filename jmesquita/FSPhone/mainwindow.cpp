@@ -1,4 +1,5 @@
 #include <QInputDialog>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -41,13 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&g_FSHost, SIGNAL(hungup(QString)), this, SLOT(hungup(QString)));
     connect(&g_FSHost, SIGNAL(newOutgoingCall(QString)), this, SLOT(newOutgoingCall(QString)));
     connect(&g_FSHost, SIGNAL(gwStateChange(QString,int)), this, SLOT(gwStateChanged(QString,int)));
+    /*connect(&g_FSHost, SIGNAL(coreLoadingError(QString)), this, SLOT(coreLoadingError(QString)));*/
 
     connect(ui->newCallBtn, SIGNAL(clicked()), this, SLOT(makeCall()));
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
     connect(ui->listCalls, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(callListDoubleClick(QListWidgetItem*)));
-
-    g_FSHost.start();
 }
 
 MainWindow::~MainWindow()
@@ -56,6 +56,12 @@ MainWindow::~MainWindow()
     QString res;
     g_FSHost.sendCmd("fsctl", "shutdown", &res);
     g_FSHost.wait();
+}
+
+void MainWindow::coreLoadingError(QString err)
+{
+    QMessageBox::warning(this, "Error Loading Core...", err, QMessageBox::Ok);
+    QApplication::exit(255);
 }
 
 void MainWindow::gwStateChanged(QString gw, int state)

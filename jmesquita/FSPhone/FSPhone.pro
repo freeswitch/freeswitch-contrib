@@ -30,3 +30,4 @@ HEADERS += mainwindow.h \
     call.h \
     mod_qsettings/mod_qsettings.h
 FORMS += mainwindow.ui
+RESOURCES += resources.qrc

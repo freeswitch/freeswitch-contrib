@@ -33,11 +33,6 @@
 
 #include "mod_qsettings/mod_qsettings.h"
 
-/*
-SWITCH_MODULE_DEFINITION(mod_qsettings, mod_qsettings_load, mod_qsettings_shutdown, NULL);
-*/
-
-
 struct xml_binding {
 	char *bindings;
 };

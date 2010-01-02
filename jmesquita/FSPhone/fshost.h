@@ -43,6 +43,7 @@ protected:
     void run(void);
 
 signals:
+    void coreLoadingError(QString);
     void ready(void);
     void ringing(QString);
     void answered(QString);

@@ -20,17 +20,28 @@ FSHost::FSHost(QObject *parent) :
 
 void FSHost::run(void)
 {
-    switch_core_flag_t flags = SCF_USE_SQL | SCF_USE_AUTO_NAT;
+    switch_core_flag_t flags = SCF_USE_SQL; //| SCF_USE_AUTO_NAT;
     const char *err = NULL;
     switch_bool_t console = SWITCH_FALSE;
     switch_status_t destroy_status;
+
+    QDir conf_dir = QDir(QCoreApplication::applicationDirPath());
+    if (conf_dir.cd("conf"))
+    {
+        SWITCH_GLOBAL_dirs.conf_dir = (char *) malloc(strlen(conf_dir.absolutePath().toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.conf_dir) {
+            fprintf(stderr, "Allocation error\n");
+            emit coreLoadingError(err);
+        }
+        strcpy(SWITCH_GLOBAL_dirs.conf_dir, conf_dir.absolutePath().toAscii().constData());
+    }
 
     /* If you need to override configuration directories, you need to change them in the SWITCH_GLOBAL_dirs global structure */
     printf("Initializing core...\n");
     /* Initialize the core and load modules, that will startup FS completely */
     if (switch_core_init_and_modload(flags, console, &err) != SWITCH_STATUS_SUCCESS) {
-            fprintf(stderr, "Failed to initialize FreeSWITCH's core: %s\n", err);
-            return;
+        fprintf(stderr, "Failed to initialize FreeSWITCH's core: %s\n", err);
+        emit coreLoadingError(err);
     }
 
     printf("Everything OK, Entering runtime loop.\n");
