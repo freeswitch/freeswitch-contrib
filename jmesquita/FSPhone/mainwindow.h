@@ -25,8 +25,6 @@
  *
  * Joao Mesquita <jmesquita@freeswitch.org>
  *
- *
- *
  */
 
 
