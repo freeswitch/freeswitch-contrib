@@ -1,7 +1,7 @@
 <include>
-  <gateway name="voicetechnology.com.ar">
+  <!--<gateway name="default">-->
   <!--/// account username *required* ///-->
-  <param name="username" value="1001"/>
+  <!--<param name="username" value="cluecon"/>-->
   <!--/// auth realm: *optional* same as gateway name, if blank ///-->
   <!--<param name="realm" value="asterlink.com"/>-->
   <!--/// username to use in from: *optional* same as  username, if blank ///-->
@@ -9,7 +9,7 @@
   <!--/// domain to use in from: *optional* same as  realm, if blank ///-->
   <!--<param name="from-domain" value="asterlink.com"/>-->
   <!--/// account password *required* ///-->
-  <param name="password" value="cerrito2p"/>
+  <!--<param name="password" value="cluecon"/>-->
   <!--/// extension for inbound calls: *optional* same as username, if blank ///-->
   <!--<param name="extension" value="cluecon"/>-->
   <!--/// proxy host: *optional* same as realm, if blank ///-->
@@ -30,5 +30,5 @@
   <!--<param name="contact-params" value="tport=tcp"/>-->
   <!--send an options ping every x seconds, failure will unregister and/or mark it down-->
   <!--<param name="ping" value="25"/>-->
-  </gateway>
+  <!--</gateway>-->
 </include>

@@ -2,4 +2,8 @@
     <qresource prefix="/images">
         <file alias="splash.png">resources/splash.png</file>
     </qresource>
+    <qresource prefix="/confs">
+        <file alias="freeswitch.xml">conf/freeswitch.xml</file>
+        <file alias="example.xml">conf/accounts/example.xml</file>
+    </qresource>
 </RCC>

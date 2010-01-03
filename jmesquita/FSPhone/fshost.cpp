@@ -20,20 +20,61 @@ FSHost::FSHost(QObject *parent) :
 
 void FSHost::run(void)
 {
-    switch_core_flag_t flags = SCF_USE_SQL; //| SCF_USE_AUTO_NAT;
+    switch_core_flag_t flags = SCF_USE_SQL | SCF_USE_AUTO_NAT;
     const char *err = NULL;
     switch_bool_t console = SWITCH_FALSE;
     switch_status_t destroy_status;
 
-    QDir conf_dir = QDir(QCoreApplication::applicationDirPath());
-    if (conf_dir.cd("conf"))
+    /* Create directory structure for softphone with default configs */
+    QDir conf_dir = QDir(QDir::home());
+    if (!conf_dir.exists(".fsphone"))
     {
-        SWITCH_GLOBAL_dirs.conf_dir = (char *) malloc(strlen(conf_dir.absolutePath().toAscii().constData()) + 1);
+        conf_dir.mkpath(".fsphone/conf/accounts");
+        QFile rootXML(":/confs/freeswitch.xml");
+        QString dest = QString("%1/.fsphone/conf/freeswitch.xml").arg(conf_dir.absolutePath());
+        rootXML.copy(dest);
+
+        QFile defaultAccount(":/confs/example.xml");
+        dest = QString("%1/.fsphone/conf/accounts/example.xml").arg(conf_dir.absolutePath());
+        defaultAccount.copy(dest);
+    }
+    if (conf_dir.cd(".fsphone"))
+    {
+        SWITCH_GLOBAL_dirs.conf_dir = (char *) malloc(strlen(QString("%1/conf").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
         if (!SWITCH_GLOBAL_dirs.conf_dir) {
-            fprintf(stderr, "Allocation error\n");
-            emit coreLoadingError(err);
+            emit coreLoadingError("Cannot allocate memory for conf_dir.");
         }
-        strcpy(SWITCH_GLOBAL_dirs.conf_dir, conf_dir.absolutePath().toAscii().constData());
+        strcpy(SWITCH_GLOBAL_dirs.conf_dir, QString("%1/conf").arg(conf_dir.absolutePath()).toAscii().constData());
+
+        SWITCH_GLOBAL_dirs.log_dir = (char *) malloc(strlen(QString("%1/log").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.log_dir) {
+            emit coreLoadingError("Cannot allocate memory for log_dir.");
+        }
+        strcpy(SWITCH_GLOBAL_dirs.log_dir, QString("%1/log").arg(conf_dir.absolutePath()).toAscii().constData());
+
+        SWITCH_GLOBAL_dirs.run_dir = (char *) malloc(strlen(QString("%1/run").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.run_dir) {
+            emit coreLoadingError("Cannot allocate memory for run_dir.");
+        }
+        strcpy(SWITCH_GLOBAL_dirs.run_dir, QString("%1/run").arg(conf_dir.absolutePath()).toAscii().constData());
+
+        SWITCH_GLOBAL_dirs.db_dir = (char *) malloc(strlen(QString("%1/db").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.db_dir) {
+            emit coreLoadingError("Cannot allocate memory for db_dir.");
+        }
+        strcpy(SWITCH_GLOBAL_dirs.db_dir, QString("%1/db").arg(conf_dir.absolutePath()).toAscii().constData());
+
+        SWITCH_GLOBAL_dirs.script_dir = (char *) malloc(strlen(QString("%1/script").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.script_dir) {
+            emit coreLoadingError("Cannot allocate memory for script_dir.");
+        }
+        strcpy(SWITCH_GLOBAL_dirs.script_dir, QString("%1/script").arg(conf_dir.absolutePath()).toAscii().constData());
+
+        SWITCH_GLOBAL_dirs.htdocs_dir = (char *) malloc(strlen(QString("%1/htdocs").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);
+        if (!SWITCH_GLOBAL_dirs.htdocs_dir) {
+            emit coreLoadingError("Cannot allocate memory for htdocs_dir.");
+        }
+        strcpy(SWITCH_GLOBAL_dirs.htdocs_dir, QString("%1/htdocs").arg(conf_dir.absolutePath()).toAscii().constData());
     }
 
     /* If you need to override configuration directories, you need to change them in the SWITCH_GLOBAL_dirs global structure */
