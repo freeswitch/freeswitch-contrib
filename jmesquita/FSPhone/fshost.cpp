@@ -145,16 +145,15 @@ void FSHost::run(void)
     }
 }
 
-void FSHost::generalEventHandler(switch_event_t *event)
+switch_status_t FSHost::processAlegEvent(switch_event_t * event, QString uuid)
 {
-    QString uuid = switch_event_get_header_nil(event, "Unique-ID");
-
-    if (_active_calls.contains(uuid))
+    if (_active_calls.value(uuid)->getDirection() == FSPHONE_CALL_DIRECTION_INBOUND)
     {
         switch(event->event_id) {
         case SWITCH_EVENT_CHANNEL_ANSWER:
-        case SWITCH_EVENT_CHANNEL_BRIDGE:
             {
+                _active_calls.value(uuid)->setbUUID(switch_event_get_header_nil(event, "Other-Leg-Unique-ID"));
+                _bleg_uuids.insert(switch_event_get_header_nil(event, "Other-Leg-Unique-ID"), uuid);
                 emit answered(uuid);
                 break;
             }
@@ -163,18 +162,77 @@ void FSHost::generalEventHandler(switch_event_t *event)
                 emit hungup(uuid);
                 break;
             }
-        case SWITCH_EVENT_CUSTOM:
+        case SWITCH_EVENT_CHANNEL_STATE:
             {
-                /* We dont want to treat this anymore */
-                if (strcmp(event->subclass_name, "portaudio::ringing") == 0)
-                {
-                    return;
-                }
+                printf("CHANNEL_STATE Answer-State: %s | Channel-State: %s | %s | %s\n", switch_event_get_header_nil(event, "Answer-State"),switch_event_get_header_nil(event, "Channel-State"), uuid.toAscii().constData(), switch_event_get_header_nil(event, "Other-Leg-Unique-ID"));
+                break;
             }
         default:
             {
-                printf("Untreated event from an UUID we have: %s -> %s | %s\n", switch_event_name(event->event_id), (!zstr(event->subclass_name) ? event->subclass_name : "NULL"), uuid.toAscii().constData());
+                break;
             }
+        }
+    }
+    /* Outbound call */
+    else
+    {
+        switch(event->event_id)
+        {
+        case SWITCH_EVENT_CHANNEL_BRIDGE:
+            {
+                _active_calls.value(uuid)->setbUUID(switch_event_get_header_nil(event, "Other-Leg-Unique-ID"));
+                _bleg_uuids.insert(switch_event_get_header_nil(event, "Other-Leg-Unique-ID"), uuid);
+                break;
+            }
+        default:
+            break;
+        }
+    }
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t FSHost::processBlegEvent(switch_event_t * event, QString buuid)
+{
+    QString uuid = _bleg_uuids.value(buuid);
+    printf("We know this is an uuid related to our call: %s | Event: %s\n", buuid.toAscii().constData(),
+           switch_event_name(event->event_id));
+    /* Inbound call */
+    if (_active_calls.value(uuid)->getDirection() == FSPHONE_CALL_DIRECTION_INBOUND)
+    {
+        qDebug() << " Inbound call";
+    }
+    /* Outbound call */
+    else
+    {
+        switch(event->event_id)
+        {
+        case SWITCH_EVENT_CHANNEL_ANSWER:
+            {
+                emit answered(uuid);
+            }
+        default:
+            break;
+        }
+    }
+    return SWITCH_STATUS_SUCCESS;
+}
+
+void FSHost::generalEventHandler(switch_event_t *event)
+{
+    QString uuid = switch_event_get_header_nil(event, "Unique-ID");
+
+    if (_bleg_uuids.contains(uuid))
+    {
+        if (processBlegEvent(event, uuid) == SWITCH_STATUS_SUCCESS)
+        {
+            return;
+        }
+    }
+    if (_active_calls.contains(uuid))
+    {
+        if (processAlegEvent(event, uuid) == SWITCH_STATUS_SUCCESS)
+        {
+            return;
         }
     }
 
@@ -182,7 +240,7 @@ void FSHost::generalEventHandler(switch_event_t *event)
     switch(event->event_id) {
     case SWITCH_EVENT_CUSTOM:
         {
-            if (strcmp(event->subclass_name, "portaudio::ringing") == 0)
+            if (strcmp(event->subclass_name, "portaudio::ringing") == 0 && !_active_calls.contains(uuid))
             {
                 Call *call = new Call(atoi(switch_event_get_header_nil(event, "call_id")),
                                       switch_event_get_header_nil(event, "Caller-Caller-ID-Name"),
@@ -196,7 +254,7 @@ void FSHost::generalEventHandler(switch_event_t *event)
             {
                 Call *call = new Call(atoi(switch_event_get_header_nil(event, "call_id")),NULL,
                                       switch_event_get_header_nil(event, "Caller-Destination-Number"),
-                                      FSPHONE_CALL_DIRECTION_INBOUND,
+                                      FSPHONE_CALL_DIRECTION_OUTBOUND,
                                       uuid);
                 _active_calls.insert(uuid, call);
                 emit newOutgoingCall(uuid);
@@ -226,7 +284,7 @@ void FSHost::generalEventHandler(switch_event_t *event)
             }
             else
             {
-                printf("We got a not treated custom event: %s\n", (!zstr(event->subclass_name) ? event->subclass_name : "NULL"));
+                //printf("We got a not treated custom event: %s\n", (!zstr(event->subclass_name) ? event->subclass_name : "NULL"));
             }
             break;
         }

@@ -213,6 +213,9 @@
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QTableWidget" name="tableAccounts">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
            <property name="alternatingRowColors">
             <bool>false</bool>
            </property>
@@ -243,18 +246,6 @@
            <attribute name="verticalHeaderHighlightSections">
             <bool>false</bool>
            </attribute>
-           <attribute name="verticalHeaderVisible">
-            <bool>false</bool>
-           </attribute>
-           <attribute name="horizontalHeaderCascadingSectionResizes">
-            <bool>false</bool>
-           </attribute>
-           <attribute name="horizontalHeaderVisible">
-            <bool>true</bool>
-           </attribute>
-           <attribute name="verticalHeaderHighlightSections">
-            <bool>false</bool>
-           </attribute>
            <column>
             <property name="text">
              <string>Account</string>
@@ -280,7 +271,7 @@
      <x>0</x>
      <y>0</y>
      <width>579</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

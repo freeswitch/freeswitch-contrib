@@ -47,6 +47,7 @@ public:
     QString getCidNumber(void) { return _cid_number; }
     int getCallID(void) { return _call_id; }
     QString getUUID(void) { return _uuid; }
+    void setbUUID(QString uuid) { _buuid = uuid; }
     fsphone_call_direction_t getDirection() { return _direction; }
 
 private:
@@ -55,6 +56,7 @@ private:
     QString _cid_number;
     fsphone_call_direction_t _direction;
     QString _uuid;
+    QString _buuid;
 };
 
 Q_DECLARE_METATYPE(Call)

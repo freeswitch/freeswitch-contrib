@@ -80,7 +80,10 @@ signals:
     void gwStateChange(QString, int);
 
 private:
+    switch_status_t processBlegEvent(switch_event_t *, QString);
+    switch_status_t processAlegEvent(switch_event_t *, QString);
     QHash<QString, Call*> _active_calls;
+    QHash<QString, QString> _bleg_uuids;
 };
 
 extern FSHost g_FSHost;
