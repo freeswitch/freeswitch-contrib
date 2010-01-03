@@ -38,6 +38,8 @@ void FSHost::run(void)
         dest = QString("%1/.fsphone/conf/accounts/example.xml").arg(conf_dir.absolutePath());
         defaultAccount.copy(dest);
     }
+
+    /* Set all directories to the home user directory */
     if (conf_dir.cd(".fsphone"))
     {
         SWITCH_GLOBAL_dirs.conf_dir = (char *) malloc(strlen(QString("%1/conf").arg(conf_dir.absolutePath()).toAscii().constData()) + 1);

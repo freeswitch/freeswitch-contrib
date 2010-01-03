@@ -48,6 +48,10 @@
       </routes>
     </configuration>
 
+    <configuration name="qsettings.conf" description="configures our mod_qsettings">
+		<bindings value="dialplan" />
+    </configuration>
+
     <configuration name="local_stream.conf" description="stream files from local dir">
       <directory name="moh/48000" path="$${base_dir}/sounds/music/48000">
 	<param name="rate" value="48000"/>
@@ -143,7 +147,7 @@
 	  </gateways>
 	  <settings>
 	    <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
-	    <param name="user-agent-string" value="FreeSWITCH/SoftPhone"/>
+	    <param name="user-agent-string" value="FreeSWITCH/FSPhone"/>
 	    <!-- <param name="user-agent-string" value="FreeSWITCH Rocks!"/> -->
 	    <param name="debug" value="0"/>
 	    <param name="sip-trace" value="no"/>

@@ -30,11 +30,11 @@
  * Module to load configurations from Qt preference system QSettings
  *
  */
-
+#include <QString>
 #include "mod_qsettings/mod_qsettings.h"
 
 struct xml_binding {
-	char *bindings;
+        QString *bindings;
 };
 typedef struct xml_binding xml_binding_t;
 
@@ -59,12 +59,11 @@ static switch_xml_t xml_url_fetch(const char *section, const char *tag_name, con
 	return NULL;
 }
 
-/*static switch_status_t do_config(void)
+static switch_status_t do_config(void)
 {
         char *cf = "qsettings.conf";
-	switch_xml_t cfg, xml, bindings_tag, binding_tag, param;
+        switch_xml_t cfg, xml, bindings_tag;
 	xml_binding_t *binding = NULL;
-	int x = 0;
 
 	if (!(xml = switch_xml_open_cfg(cf, &cfg, NULL))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "open of %s failed\n", cf);
@@ -73,36 +72,27 @@ static switch_xml_t xml_url_fetch(const char *section, const char *tag_name, con
 
 	if (!(bindings_tag = switch_xml_child(cfg, "bindings"))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Missing <bindings> tag!\n");
-		goto done;
+                switch_xml_free(xml);
+                return SWITCH_STATUS_FALSE;
 	}
 
-	for (binding_tag = switch_xml_child(bindings_tag, "binding"); binding_tag; binding_tag = binding_tag->next) {
-		char *bname = (char *) switch_xml_attr_soft(binding_tag, "name");
-		char *bind_mask = NULL;
+        QString *bind_mask = new QString(switch_xml_attr_soft(bindings_tag, "value"));
 
-		for (param = switch_xml_child(binding_tag, "param"); param; param = param->next) {
-			bind_mask = (char *) switch_xml_attr_soft(param, "value");
-		}
+        binding = new xml_binding_t();
 
-                binding = new xml_binding_t();
-
-		if (bind_mask) {
-			binding->bindings = strdup(bind_mask);
-		}
+        if (!bind_mask->isEmpty()) {
+                binding->bindings = bind_mask;
+        }
 
 
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding [%s] XML Fetch Function [%s]\n",
-						  zstr(bname) ? "N/A" : bname, binding->bindings ? binding->bindings : "all");
-		switch_xml_bind_search_function(xml_url_fetch, switch_xml_parse_section_string(binding->bindings), binding);
-		x++;
-		binding = NULL;
-	}
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding XML Fetch Function [%s]\n",
+                          binding->bindings->isEmpty() ? "all" : binding->bindings->toAscii().constData());
+        switch_xml_bind_search_function(xml_url_fetch, switch_xml_parse_section_string(binding->bindings->toAscii().constData()), binding);
+        binding = NULL;
 
-  done:
-	switch_xml_free(xml);
-
-	return x ? SWITCH_STATUS_SUCCESS : SWITCH_STATUS_FALSE;
-}*/
+        switch_xml_free(xml);
+        return SWITCH_STATUS_SUCCESS;
+}
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_qsettings_load)
 {
@@ -114,12 +104,12 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_qsettings_load)
 	memset(&globals,0,sizeof(globals));
 	globals.pool = pool;
 
-/*	if (do_config() == SWITCH_STATUS_SUCCESS) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Binding worked!");
+        if (do_config() == SWITCH_STATUS_SUCCESS) {
+                switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Sucessfully configured.\n");
 	} else {
 		return SWITCH_STATUS_FALSE;
 	}
-*/
+
 
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "We loaded mod_qsettings.\n");
 	/* indicate that the module should continue to be loaded */
