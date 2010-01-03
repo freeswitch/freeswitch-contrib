@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&g_FSHost, SIGNAL(ready()),this, SLOT(fshostReady()));
     connect(&g_FSHost, SIGNAL(ringing(QString)), this, SLOT(ringing(QString)));
     connect(&g_FSHost, SIGNAL(answered(QString)), this, SLOT(answered(QString)));
-    connect(&g_FSHost, SIGNAL(hungup(QString)), this, SLOT(hungup(QString)));
+    connect(&g_FSHost, SIGNAL(hungup(Call*)), this, SLOT(hungup(Call*)));
     connect(&g_FSHost, SIGNAL(newOutgoingCall(QString)), this, SLOT(newOutgoingCall(QString)));
     connect(&g_FSHost, SIGNAL(gwStateChange(QString,int)), this, SLOT(gwStateChanged(QString,int)));
     /*connect(&g_FSHost, SIGNAL(coreLoadingError(QString)), this, SLOT(coreLoadingError(QString)));*/
@@ -210,6 +210,17 @@ void MainWindow::ringing(QString uuid)
 {
 
     Call *call = g_FSHost.getCallByUUID(uuid);
+    for (int i=0; i<ui->listCalls->count(); i++)
+    {
+        QListWidgetItem *item = ui->listCalls->item(i);
+        if (item->data(Qt::UserRole).toString() == uuid)
+        {
+            item->setText(tr("%1 - Ringing").arg(call->getCidNumber()));
+            ui->textEdit->setText(QString("Call from %1 (%2)").arg(call->getCidName(), call->getCidNumber()));
+            return;
+        }
+    }
+
     ui->textEdit->setText(QString("Call from %1 (%2)").arg(call->getCidName(), call->getCidNumber()));
     QListWidgetItem *item = new QListWidgetItem(tr("%1 (%2) - Ringing").arg(call->getCidName(), call->getCidNumber()));
     item->setData(Qt::UserRole, uuid);
@@ -225,8 +236,16 @@ void MainWindow::answered(QString uuid)
         QListWidgetItem *item = ui->listCalls->item(i);
         if (item->data(Qt::UserRole).toString() == uuid)
         {
-            item->setText(tr("%1 (%2) - Active").arg(call->getCidName(), call->getCidNumber()));
-            break;
+            if (call->getDirection() == FSPHONE_CALL_DIRECTION_INBOUND)
+            {
+                item->setText(tr("%1 (%2) - Active").arg(call->getCidName(), call->getCidNumber()));
+                break;
+            }
+            else
+            {
+                item->setText(tr("%1 - Active").arg(call->getCidNumber()));
+                break;
+            }
         }
     }
     ui->dtmf0Btn->setEnabled(true);
@@ -243,13 +262,12 @@ void MainWindow::answered(QString uuid)
     ui->dtmfPoundBtn->setEnabled(true);
 }
 
-void MainWindow::hungup(QString uuid)
+void MainWindow::hungup(Call* call)
 {
-    Call *call = g_FSHost.getCallByUUID(uuid);
     for (int i=0; i<ui->listCalls->count(); i++)
     {
         QListWidgetItem *item = ui->listCalls->item(i);
-        if (item->data(Qt::UserRole).toString() == uuid)
+        if (item->data(Qt::UserRole).toString() == call->getUUID())
         {
             delete ui->listCalls->takeItem(i);
             break;
@@ -271,6 +289,7 @@ void MainWindow::hungup(QString uuid)
     ui->dtmf9Btn->setEnabled(false);
     ui->dtmfAstBtn->setEnabled(false);
     ui->dtmfPoundBtn->setEnabled(false);
+    delete call;
 }
 
 void MainWindow::changeEvent(QEvent *e)

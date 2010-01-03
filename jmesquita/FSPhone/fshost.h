@@ -76,12 +76,14 @@ signals:
     void ringing(QString);
     void answered(QString);
     void newOutgoingCall(QString);
-    void hungup(QString);
+    void callFailed(QString);
+    void hungup(Call*);
     void gwStateChange(QString, int);
 
 private:
     switch_status_t processBlegEvent(switch_event_t *, QString);
     switch_status_t processAlegEvent(switch_event_t *, QString);
+    void printEventHeaders(switch_event_t *event);
     QHash<QString, Call*> _active_calls;
     QHash<QString, QString> _bleg_uuids;
 };

@@ -67,7 +67,7 @@ private slots:
     void newOutgoingCall(QString);
     void ringing(QString);
     void answered(QString);
-    void hungup(QString);
+    void hungup(Call*);
 
 private:
     Ui::MainWindow *ui;

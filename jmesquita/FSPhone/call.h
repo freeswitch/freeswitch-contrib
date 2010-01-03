@@ -34,6 +34,12 @@
 #include <fshost.h>
 
 typedef enum {
+    FSPHONE_CALL_STATE_RINGING = 0,
+    FSPHONE_CALL_STATE_TRYING  = 1,
+    FSPHONE_CALL_STATE_ANSWERED = 2
+} fsphone_call_state_t;
+
+typedef enum {
         FSPHONE_CALL_DIRECTION_INBOUND = 0,
         FSPHONE_CALL_DIRECTION_OUTBOUND = 1
 } fsphone_call_direction_t;
@@ -49,6 +55,8 @@ public:
     QString getUUID(void) { return _uuid; }
     void setbUUID(QString uuid) { _buuid = uuid; }
     fsphone_call_direction_t getDirection() { return _direction; }
+    fsphone_call_state_t getState() { return _state; }
+    void setState(fsphone_call_state_t state) { _state = state; }
 
 private:
     int _call_id;
@@ -57,6 +65,7 @@ private:
     fsphone_call_direction_t _direction;
     QString _uuid;
     QString _buuid;
+    fsphone_call_state_t _state;
 };
 
 Q_DECLARE_METATYPE(Call)
