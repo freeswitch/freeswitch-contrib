@@ -2,6 +2,8 @@
 #define PREFDIALOG_H
 
 #include <QDialog>
+#include <QDomDocument>
+#include <fshost.h>
 
 namespace Ui {
     class PrefDialog;
@@ -17,7 +19,9 @@ protected:
     void changeEvent(QEvent *e);
 
 private:
+    void getPaDevlist(void);
     Ui::PrefDialog *ui;
+    QDomDocument _xmlPaDevList;
 };
 
 #endif // PREFDIALOG_H
