@@ -30,9 +30,22 @@
 #ifndef MOD_QSETTINGS_H
 #define MOD_QSETTINGS_H
 
+#include <QString>
+#include <QSettings>
 #include <switch.h>
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_qsettings_load);
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_qsettings_shutdown);
+
+class XMLBinding
+{
+public:
+    XMLBinding(QString binding) : _binding(binding), _settings(new QSettings) {}
+    QString getBinding(void) { return _binding; }
+    switch_xml_t getConfigXML(QString);
+private:
+    QString _binding;
+    QSettings* _settings;
+};
 
 #endif // MOD_QSETTINGS_H

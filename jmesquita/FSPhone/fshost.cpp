@@ -59,6 +59,7 @@ void FSHost::run(void)
     if (!conf_dir.exists(".fsphone"))
     {
         conf_dir.mkpath(".fsphone/conf/accounts");
+        conf_dir.mkpath(".fsphone/templates");
         QFile rootXML(":/confs/freeswitch.xml");
         QString dest = QString("%1/.fsphone/conf/freeswitch.xml").arg(conf_dir.absolutePath());
         rootXML.copy(dest);
@@ -120,14 +121,15 @@ void FSHost::run(void)
 
     if (switch_event_bind("FSHost", SWITCH_EVENT_ALL, SWITCH_EVENT_SUBCLASS_ANY, eventHandlerCallback, NULL) != SWITCH_STATUS_SUCCESS) {
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind!\n");
-            printf("Something went really wrong while binding to events...");
     }
 
     /* Load our QSettings module */
     if (switch_loadable_module_build_dynamic("mod_qsettings",mod_qsettings_load,NULL,mod_qsettings_shutdown,SWITCH_FALSE) != SWITCH_STATUS_SUCCESS)
     {
-        printf("Something went wrong when loading our QSettings module\n");
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't load mod_qsettings\n");
     }
+    QString res;
+    sendCmd("load", "mod_event_socket", &res);
     emit ready();
     /* Go into the runtime loop. If the argument is true, this basically sets runtime.running = 1 and loops while that is set
      * If its false, it initializes the libedit for the console, then does the same thing
