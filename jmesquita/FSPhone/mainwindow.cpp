@@ -50,6 +50,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->dtmf7Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
     connect(ui->dtmf8Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
     connect(ui->dtmf9Btn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfABtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfBBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfCBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
+    connect(ui->dtmfDBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
     connect(ui->dtmfAstBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
     connect(ui->dtmfPoundBtn, SIGNAL(clicked()), dialpadMapper, SLOT(map()));
     dialpadMapper->setMapping(ui->dtmf0Btn, QString("0"));
@@ -62,6 +66,10 @@ MainWindow::MainWindow(QWidget *parent) :
     dialpadMapper->setMapping(ui->dtmf7Btn, QString("7"));
     dialpadMapper->setMapping(ui->dtmf8Btn, QString("8"));
     dialpadMapper->setMapping(ui->dtmf9Btn, QString("9"));
+    dialpadMapper->setMapping(ui->dtmfABtn, QString("A"));
+    dialpadMapper->setMapping(ui->dtmfBBtn, QString("B"));
+    dialpadMapper->setMapping(ui->dtmfCBtn, QString("C"));
+    dialpadMapper->setMapping(ui->dtmfDBtn, QString("D"));
     dialpadMapper->setMapping(ui->dtmfAstBtn, QString("*"));
     dialpadMapper->setMapping(ui->dtmfPoundBtn, QString("#"));
     connect(dialpadMapper, SIGNAL(mapped(QString)), this, SLOT(dialDTMF(QString)));
@@ -271,6 +279,10 @@ void MainWindow::answered(QString uuid)
     ui->dtmf7Btn->setEnabled(true);
     ui->dtmf8Btn->setEnabled(true);
     ui->dtmf9Btn->setEnabled(true);
+    ui->dtmfABtn->setEnabled(true);
+    ui->dtmfBBtn->setEnabled(true);
+    ui->dtmfCBtn->setEnabled(true);
+    ui->dtmfDBtn->setEnabled(true);
     ui->dtmfAstBtn->setEnabled(true);
     ui->dtmfPoundBtn->setEnabled(true);
 }
@@ -300,6 +312,10 @@ void MainWindow::hungup(Call* call)
     ui->dtmf7Btn->setEnabled(false);
     ui->dtmf8Btn->setEnabled(false);
     ui->dtmf9Btn->setEnabled(false);
+    ui->dtmfABtn->setEnabled(false);
+    ui->dtmfBBtn->setEnabled(false);
+    ui->dtmfCBtn->setEnabled(false);
+    ui->dtmfDBtn->setEnabled(false);
     ui->dtmfAstBtn->setEnabled(false);
     ui->dtmfPoundBtn->setEnabled(false);
     delete call;
