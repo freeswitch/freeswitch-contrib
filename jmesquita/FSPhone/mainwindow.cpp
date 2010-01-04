@@ -79,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
     connect(ui->listCalls, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(callListDoubleClick(QListWidgetItem*)));
     connect(ui->action_Preferences, SIGNAL(triggered()), this, SLOT(prefTriggered()));
+    connect(ui->action_Exit, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 MainWindow::~MainWindow()
