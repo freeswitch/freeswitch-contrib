@@ -7,6 +7,8 @@ contains(QT_VERSION, ^4\.[0-5]\..*) {
 }
 QT += xml
 TARGET = fsphone
+macx:TARGET = FSPhone
+
 TEMPLATE = app
 INCLUDEPATH = ../../../src/include \
     ../../../libs/apr/include \
