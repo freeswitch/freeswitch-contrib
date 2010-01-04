@@ -37,6 +37,7 @@
 #include <switch.h>
 #include <fshost.h>
 #include <call.h>
+#include <prefdialog.h>
 
 namespace Ui {
     class MainWindow;
@@ -55,6 +56,7 @@ signals:
     void dtmfDialed(QString);
 
 private slots:
+    void prefTriggered();
     void coreLoadingError(QString);
     void gwStateChanged(QString, int);
     void dialDTMF(QString);
@@ -72,6 +74,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QSignalMapper *dialpadMapper;
+    PrefDialog *preferences;
 };
 
 #endif // MAINWINDOW_H

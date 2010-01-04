@@ -34,7 +34,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    preferences(NULL)
 {
     ui->setupUi(this);
 
@@ -77,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->answerBtn, SIGNAL(clicked()), this, SLOT(paAnswer()));
     connect(ui->hangupBtn, SIGNAL(clicked()), this, SLOT(paHangup()));
     connect(ui->listCalls, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(callListDoubleClick(QListWidgetItem*)));
+    connect(ui->action_Preferences, SIGNAL(triggered()), this, SLOT(prefTriggered()));
 }
 
 MainWindow::~MainWindow()
@@ -85,6 +87,16 @@ MainWindow::~MainWindow()
     QString res;
     g_FSHost.sendCmd("fsctl", "shutdown", &res);
     g_FSHost.wait();
+}
+
+void MainWindow::prefTriggered()
+{
+    if (!preferences)
+        preferences = new PrefDialog();
+
+    preferences->raise();
+    preferences->show();
+    preferences->activateWindow();
 }
 
 void MainWindow::coreLoadingError(QString err)

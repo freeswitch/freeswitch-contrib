@@ -24,10 +24,13 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     fshost.cpp \
     call.cpp \
-    mod_qsettings/mod_qsettings.cpp
+    mod_qsettings/mod_qsettings.cpp \
+    prefdialog.cpp
 HEADERS += mainwindow.h \
     fshost.h \
     call.h \
-    mod_qsettings/mod_qsettings.h
-FORMS += mainwindow.ui
+    mod_qsettings/mod_qsettings.h \
+    prefdialog.h
+FORMS += mainwindow.ui \
+    prefdialog.ui
 RESOURCES += resources.qrc
