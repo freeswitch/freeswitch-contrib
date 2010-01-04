@@ -8,7 +8,6 @@ contains(QT_VERSION, ^4\.[0-5]\..*) {
 QT += xml
 TARGET = fsphone
 macx:TARGET = FSPhone
-
 TEMPLATE = app
 INCLUDEPATH = ../../../src/include \
     ../../../libs/apr/include \
@@ -36,3 +35,6 @@ HEADERS += mainwindow.h \
 FORMS += mainwindow.ui \
     prefdialog.ui
 RESOURCES += resources.qrc
+OTHER_FILES += conf/portaudio.conf.xml \
+    conf/event_socket.conf.xml \
+    conf/freeswitch.xml

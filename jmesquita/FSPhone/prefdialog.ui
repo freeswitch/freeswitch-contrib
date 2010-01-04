@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
+    <width>477</width>
     <height>356</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Preferences</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -165,42 +165,122 @@
         </layout>
        </widget>
        <widget class="QWidget" name="page_2">
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QGroupBox" name="groupBox_3">
            <property name="title">
             <string>Devices</string>
            </property>
+           <widget class="QLabel" name="label_7">
+            <property name="geometry">
+             <rect>
+              <x>72</x>
+              <y>34</y>
+              <width>34</width>
+              <height>17</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>indev</string>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="PaIndevCombo">
+            <property name="geometry">
+             <rect>
+              <x>111</x>
+              <y>32</y>
+              <width>111</width>
+              <height>26</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_8">
+            <property name="geometry">
+             <rect>
+              <x>63</x>
+              <y>64</y>
+              <width>43</width>
+              <height>17</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>outdev</string>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="PaOutdevCombo">
+            <property name="geometry">
+             <rect>
+              <x>111</x>
+              <y>62</y>
+              <width>111</width>
+              <height>26</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_9">
+            <property name="geometry">
+             <rect>
+              <x>59</x>
+              <y>94</y>
+              <width>47</width>
+              <height>17</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>rindgev</string>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="PaRingdevCombo">
+            <property name="geometry">
+             <rect>
+              <x>111</x>
+              <y>92</y>
+              <width>111</width>
+              <height>26</height>
+             </rect>
+            </property>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Files</string>
+           </property>
            <layout class="QFormLayout" name="formLayout_3">
             <item row="0" column="0">
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="label_10">
               <property name="text">
-               <string>indev</string>
+               <string>ring-file</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="PaIndevCombo"/>
+             <widget class="QLineEdit" name="lineEdit_2">
+              <property name="text">
+               <string>tone_stream://%(2000,4000,440.0,480.0);loops=20</string>
+              </property>
+             </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="label_8">
+             <widget class="QLabel" name="label_12">
               <property name="text">
-               <string>outdev</string>
+               <string>ring-interval</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QComboBox" name="PaOutdevCombo"/>
+             <widget class="QSpinBox" name="spinBox_4"/>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_9">
+             <widget class="QLabel" name="label_11">
               <property name="text">
-               <string>rindgev</string>
+               <string>hold-file</string>
               </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QComboBox" name="PaRingdevCombo"/>
+             <widget class="QLineEdit" name="lineEdit_3"/>
             </item>
            </layout>
           </widget>

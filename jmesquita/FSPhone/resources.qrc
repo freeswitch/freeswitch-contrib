@@ -8,5 +8,6 @@
         <file alias="freeswitch.xml">conf/freeswitch.xml</file>
         <file alias="example.xml">conf/accounts/example.xml</file>
         <file alias="event_socket.conf.xml">conf/event_socket.conf.xml</file>
+        <file alias="portaudio.conf.xml">conf/portaudio.conf.xml</file>
     </qresource>
 </RCC>
