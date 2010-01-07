@@ -47,9 +47,15 @@ namespace FreeSwitch.EventSocket.Ivr
 
         private void OnTimeout(object state)
         {
-            _timer.Dispose();
-            _timer = null;
-            _handler(this);
+            try
+            {
+                _timer.Dispose();
+                _timer = null;
+                _handler(this);
+            }
+            catch(Exception)
+            {
+            }
         }
 
         #region IDisposable Members

@@ -163,11 +163,23 @@ namespace FreeSwitch.EventSocket
 
         private void OnReadCompleted(IAsyncResult ar)
         {
+            try
+            {
+                ReceiveWrapper(ar);
+            }
+            catch(Exception err)
+            {
+                _logWriter(LogPrio.Error, err.ToString());
+            }
+        }
+
+        private void ReceiveWrapper(IAsyncResult ar)
+        {
             string inbuffer;
             try
             {
                 if (_stream == null)
-                    return; // closed socket.
+                    return;
 
                 int bytesRead = _stream.EndRead(ar);
                 if (bytesRead == 0)
@@ -177,10 +189,9 @@ namespace FreeSwitch.EventSocket
                     return;
                 }
                 inbuffer = Encoding.ASCII.GetString(_readBuffer, 0, bytesRead);
-                _parser.Append(inbuffer);
                 BeginRead();
             }
-            catch (IOException err)
+            catch (Exception err)
             {
                 LogWriter(LogPrio.Debug, "IO exception during read: " + err.Message);
                 // Remote end disconnected.
@@ -188,6 +199,7 @@ namespace FreeSwitch.EventSocket
                 return;
             }
 
+            _parser.Append(inbuffer);
             if (!string.IsNullOrEmpty(inbuffer))
                 DataReceived(inbuffer);
 
