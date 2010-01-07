@@ -131,6 +131,11 @@ namespace FreeSwitch.EventSocket
                 TryConnect();
                 LogWriter(LogPrio.Debug, "Connected to freeswitch.");
             }
+			catch(InvalidOperationException err)
+			{
+				LogWriter(LogPrio.Debug, "Failed to connect to freeswitch, reason: " + err.Message);
+				HandleDisconnect();
+			}
             catch (SocketException err)
             {
                 LogWriter(LogPrio.Debug, "Failed to connect to freeswitch, reason: " + err.Message);
@@ -148,12 +153,6 @@ namespace FreeSwitch.EventSocket
 
                 Connected(this);
                 BeginRead();
-
-                if (_timer == null) return;
-                Timer tmr = _timer;
-                _timer = null;
-                tmr.Change(Timeout.Infinite, Timeout.Infinite);
-                tmr.Dispose();
             }
         }
 
@@ -235,15 +234,9 @@ namespace FreeSwitch.EventSocket
                 return;
             if (!_socket.Connected)
             {
-                try
-                {
-                    TryConnect();
-                    LogWriter(LogPrio.Info, "We've connected again");
-                }
-                catch (SocketException)
-                {
-                    return;
-                }
+				if (_timer == null)
+					_timer = new Timer(OnTryConnect, null, RetryTimeout, RetryTimeout);
+            	return;
             }
 
             byte[] bytes = Encoding.ASCII.GetBytes(s);
@@ -321,12 +314,35 @@ namespace FreeSwitch.EventSocket
             }
 
             Disconnected(this);
-            if (!AutoConnect || _timer != null) return;
+            if (!AutoConnect || _timer != null) 
+				return;
+
             LogWriter(LogPrio.Info, "Launching autoconnect timer.");
-            _timer = new Timer(TryConnect, this, RetryTimeout, RetryTimeout);
+            _timer = new Timer(OnTryConnect, this, RetryTimeout, RetryTimeout);
         }
 
-        private void RequestEvents()
+    	private void OnTryConnect(object state)
+    	{
+    		try
+    		{
+				TryConnect();
+				LogWriter(LogPrio.Info, "Connected again.");
+				if (_timer == null)
+					return;
+
+				Timer tmr = _timer;
+				_timer = null;
+				tmr.Change(Timeout.Infinite, Timeout.Infinite);
+				tmr.Dispose();
+    		}
+			catch(Exception err)
+			{
+				if (!(err is SocketException))
+					LogWriter(LogPrio.Error, "Unexpected exception in try connect: " + err);
+			}
+    	}
+
+    	private void RequestEvents()
         {
             if (_events.Count <= 0 && _authed)
                 return;
@@ -362,18 +378,6 @@ namespace FreeSwitch.EventSocket
 
             // All commands need replies.
             Write(command + "\n\n");
-        }
-
-        private void TryConnect(object state)
-        {
-            EventSocket client = (EventSocket) state;
-            try
-            {
-                client.TryConnect();
-                LogWriter(LogPrio.Info, "Connected again.");
-            }
-            catch (SocketException)
-            {}
         }
     }
 }

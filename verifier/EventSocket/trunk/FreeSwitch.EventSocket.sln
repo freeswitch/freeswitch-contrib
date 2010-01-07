@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeSwitch.EventSocket", "FreeSwitchEventSocket\FreeSwitch.EventSocket.csproj", "{3F8895F6-F710-4323-B96A-4EFB6BC97E08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeSwitch.EventSocket.Test", "FreeSwitch.EventSocket.Test\FreeSwitch.EventSocket.Test.csproj", "{3679225D-79A3-4B6C-BCA1-E2DC265E423A}"

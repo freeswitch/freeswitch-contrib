@@ -31,6 +31,11 @@ namespace FreeSwitch.EventSocket
         private readonly object _logLocker = new object();
         private readonly LogWriterHandler _logWriter;
 
+    	/// <summary>
+    	/// Gets or sets display all missing event types.
+    	/// </summary>
+    	public bool DisplayMissingEventTypes { get; set; }
+
         /// <summary>
         /// FreeSWITCH password, default is "ClueCon".
         /// </summary>
@@ -129,7 +134,7 @@ namespace FreeSwitch.EventSocket
                 eb.Parse(parameters);
                 EventReceived(eb);
             }
-            else
+			else if (DisplayMissingEventTypes)
                 _logWriter(LogPrio.Warning, "Failed to load '" + eventName + "'.");
         }
 
