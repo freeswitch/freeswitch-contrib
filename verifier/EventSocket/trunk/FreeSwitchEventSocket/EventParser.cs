@@ -136,6 +136,12 @@ namespace FreeSwitch.EventSocket
 
 					// since Freeswitch report false sizes sometimes,
 					// we need to go through all lines to find contents.
+					//
+					// If FreeSWITCH is actually doing something wrong and you can prove it, you should report it as a bug.
+					// More likely you are misunderstanding the protocol and confusing the events with more encapsulated events
+					// as a mistake. Dozens of other people have had that same mistake making an ESL client.
+					// You should look in libs/esl and try to get the swig wrapper on the esl lib working instead.
+
                 	int endOfBody = FindEmptyLine(i) + 2; // include the first and last \n
 					if (endOfBody-i != plainEvent.ContentLength)
 					{
