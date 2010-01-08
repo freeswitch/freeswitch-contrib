@@ -79,25 +79,21 @@ namespace FreeSwitch.EventSocket
                 _text.Append(_piecesToAppend.Dequeue());
             }
 
+			if (_text.Length == 0)
+				return null;
+
             PlainEventMsg plainEvent;
             lock (_text)
             {
-                int i = 0;
+            	int i = 0;
+				IgnoreLineBreaks(ref i);
+            	_text.Remove(0, i);
 
-                // find complete header
-                bool found = false;
-                for (; i < _text.Length - 1; ++i)
-                {
-                    if (_text[i] == '\n' && _text[i + 1] == '\n')
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    return null;
+            	i = FindEmptyLine(i);
+				if (i == -1)
+					return null;
 
-                // extract header
+            	// extract header
                 char[] chars = new char[i];
                 _text.CopyTo(0, chars, 0, i);
                 string headers = new string(chars);
@@ -114,7 +110,7 @@ namespace FreeSwitch.EventSocket
                     // this will eat that kind of header.
                     if (_text.Length >= BugWorkaround.Length + i)
                     {
-                        found = true;
+                        bool found = true;
                         for (int index = 0; index < BugWorkaround.Length; ++index)
                         {
                             if (_text[index + i] != BugWorkaround[index])
@@ -137,8 +133,18 @@ namespace FreeSwitch.EventSocket
                         return null;
 
                     // extract body
-                    chars = new char[plainEvent.ContentLength];
-                    _text.CopyTo(i, chars, 0, plainEvent.ContentLength);
+
+					// since Freeswitch report false sizes sometimes,
+					// we need to go through all lines to find contents.
+                	int endOfBody = FindEmptyLine(i) + 2; // include the first and last \n
+					if (endOfBody-i != plainEvent.ContentLength)
+					{
+						Console.WriteLine("Invalid content length, actual length: " + (endOfBody - i) + ", reported length: " +
+						                  plainEvent.ContentLength);
+						plainEvent.ContentLength = endOfBody - i;
+					}
+					chars = new char[plainEvent.ContentLength];
+					_text.CopyTo(i, chars, 0, plainEvent.ContentLength);
                     plainEvent.Body = new string(chars);
 
                     // api/response is buggy for originate, no \n\n are appended at the end.
@@ -175,8 +181,18 @@ namespace FreeSwitch.EventSocket
             return plainEvent;
         }
 
+    	private int FindEmptyLine(int i)
+    	{
+    		for (; i < _text.Length - 1; ++i)
+    		{
+    			if (_text[i] == '\n' && _text[i + 1] == '\n')
+    				return i;
+    		}
+    		return -1;
+    	}
 
-        public void Append(string text)
+
+    	public void Append(string text)
         {
             lock (_piecesToAppend)
                 _piecesToAppend.Enqueue(text);
