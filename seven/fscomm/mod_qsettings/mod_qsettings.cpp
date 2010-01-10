@@ -43,7 +43,7 @@ switch_xml_t XMLBinding::getConfigXML(QString tmpl)
 
     if (QFile::exists(QString("%1/.fscomm/templates/%2.xml").arg(QDir::homePath(),tmpl))) {
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO,
-                          "Using template %s.xml on .fscomm/.\n",
+                          "Using template .fscomm/templates/%s.xml\n",
                           tmpl.toAscii().constData());
     }
     else if(QFile::exists(QString(":/confs/%1.xml").arg(tmpl)))

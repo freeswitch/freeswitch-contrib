@@ -39,7 +39,7 @@ FSHost::FSHost(QObject *parent) :
     QThread(parent)
 {
     /* Initialize libs & globals */
-    printf("Initializing globals...\n");
+    qDebug() << "Initializing globals..." << endl;
     switch_core_setrlimits();
     switch_core_set_globals();
 
@@ -112,14 +112,14 @@ void FSHost::run(void)
     }
 
     /* If you need to override configuration directories, you need to change them in the SWITCH_GLOBAL_dirs global structure */
-    printf("Initializing core...\n");
+    qDebug() << "Initializing core..." << endl;
     /* Initialize the core and load modules, that will startup FS completely */
     if (switch_core_init(flags, console, &err) != SWITCH_STATUS_SUCCESS) {
         fprintf(stderr, "Failed to initialize FreeSWITCH's core: %s\n", err);
         emit coreLoadingError(err);
     }
 
-    printf("Everything OK, Entering runtime loop.\n");
+    qDebug() << "Everything OK, Entering runtime loop ..." << endl;
 
     if (switch_event_bind("FSHost", SWITCH_EVENT_ALL, SWITCH_EVENT_SUBCLASS_ANY, eventHandlerCallback, NULL) != SWITCH_STATUS_SUCCESS) {
             switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind!\n");
@@ -149,7 +149,7 @@ void FSHost::run(void)
     destroy_status = switch_core_destroy();
     if (destroy_status == SWITCH_STATUS_SUCCESS)
     {
-        printf("We have properly shutdown the core.\n");
+        qDebug() << "We have properly shutdown the core." << endl;
     }
 }
 
@@ -341,6 +341,7 @@ switch_status_t FSHost::sendCmd(const char *cmd, const char *args, QString *res)
     switch_status_t status = SWITCH_STATUS_FALSE;
     switch_stream_handle_t stream = { 0 };
     SWITCH_STANDARD_STREAM(stream);
+    qDebug() << "Sending command: " << cmd << args << endl;
     status = switch_api_execute(cmd, args, NULL, &stream);
     *res = switch_str_nil((char *) stream.data);
 

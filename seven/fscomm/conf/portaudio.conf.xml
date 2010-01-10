@@ -14,8 +14,8 @@
                 <param name="dialplan" value="XML"/>
                 <param name="cid-name" value="${cid-name}"/>
                 <param name="cid-num" value="${cid-num}"/>
-                <param name="sample-rate" value="48000"/>
-                <param name="codec-ms" value="10"/>
+                <param name="sample-rate" value="${sample-rate}"/>
+                <param name="codec-ms" value="${codec-ms}"/>
             </settings>
         </configuration>
     </section>
