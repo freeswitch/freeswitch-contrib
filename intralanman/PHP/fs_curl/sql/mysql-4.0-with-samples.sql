@@ -241,7 +241,7 @@ INSERT INTO `dialplan_actions` (`action_id`, `condition_id`, `application`, `dat
 (52, 30, 'sleep', '1000', 'action', 520),
 (53, 30, 'voicemail', 'check default ${domain_name} ${dialed_extension}', 'action', 530),
 (54, 30, 'bind_meta_app', '1 b s execute_extension::dx XML features', 'anti-action', 540),
-(55, 30, 'bind_meta_app', '2 b s record_session::$${base_dir}/recordings/${caller_id_number}.${strftime(%Y-%m-%d-%H-%M-%S)}.wav', 'anti-action', 550),
+(55, 30, 'bind_meta_app', '2 b s record_session::$${recordings_dir}//${caller_id_number}.${strftime(%Y-%m-%d-%H-%M-%S)}.wav', 'anti-action', 550),
 (56, 30, 'bind_meta_app', '3 b s execute_extension::cf XML features', 'anti-action', 560),
 (57, 30, 'set', 'ringback=${us-ring}', 'anti-action', 570),
 (58, 30, 'set', 'transfer_ringback=$${hold_music}', 'anti-action', 580),
