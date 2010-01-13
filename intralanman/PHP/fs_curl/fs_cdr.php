@@ -60,7 +60,7 @@ class fs_cdr extends fs_curl {
      */
     public function fs_cdr() {
         $this->fs_curl();
-        $this->cdr = $this->request['cdr'];
+        $this->cdr = stripslashes($this->request['cdr']);
         $this->xml_cdr = new SimpleXMLElement($this->cdr);
     }
 
