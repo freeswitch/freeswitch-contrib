@@ -213,10 +213,10 @@ CREATE TABLE cdr (
   end_stamp character varying NOT NULL,
   duration character varying NOT NULL,
   billsec character varying NOT NULL,
-  hangup_cause character(1) NOT NULL,
+  hangup_cause character(128) NOT NULL,
   uuid character varying NOT NULL,
   bleg_uuid character varying NOT NULL,
-  accountcode character(1) NOT NULL,
+  accountcode character(128) NOT NULL,
   read_codec character varying NOT NULL,
   write_codec character varying NOT NULL,
   CONSTRAINT cdr_pkey PRIMARY KEY (id)
