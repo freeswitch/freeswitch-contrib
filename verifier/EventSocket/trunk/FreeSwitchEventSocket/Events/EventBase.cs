@@ -134,7 +134,14 @@ namespace FreeSwitch.EventSocket
                     m_coreId = value;
                     break;
                 case "event-date-local":
-                    m_dateLocal = DateTime.Parse(value);
+					try
+					{
+						m_dateLocal = DateTime.Parse(value);
+					}
+					catch(Exception err)
+					{
+						Console.WriteLine(err.ToString());
+					}
                     break;
                 case "event-date-gmt":
                     m_dateGMT = DateTime.Parse(value);

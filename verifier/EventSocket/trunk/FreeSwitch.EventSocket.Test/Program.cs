@@ -9,6 +9,12 @@ namespace FreeSwitch.EventSocket.Test
     {
         static void Main(string[] args)
         {
+			ParserTest pt = new ParserTest();
+			pt.ParseMessages();
+			pt.ParseAuth();
+			pt.ParsePartials();
+			pt.ParseMessages2();
+
             /*EventManager mgr = new EventManager();
             mgr.Subscribe(Events.GetChannelEvents());
             mgr.Start("localhost");
@@ -20,12 +26,12 @@ namespace FreeSwitch.EventSocket.Test
         }
 
         private int _counter;
-        private EventParser _parser;
+        private Parser _parser;
         Random _rand = new Random((int)DateTime.Now.Ticks);
 
         public void Test()
         {
-            _parser = new EventParser();
+            _parser = new Parser();
             string text = File.ReadAllText("C:\\mymsgs.txt");
             Thread[] threads = new Thread[5];
             for (int i = 0; i < 5; ++i)

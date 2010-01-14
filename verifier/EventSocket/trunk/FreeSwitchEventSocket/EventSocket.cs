@@ -25,7 +25,7 @@ namespace FreeSwitch.EventSocket
 		private readonly Queue<CmdBase> _commands = new Queue<CmdBase>();
 		private readonly object _lockobj = new object();
 		private readonly ManualResetEvent _parseEvent = new ManualResetEvent(false);
-		private readonly EventParser _parser = new EventParser();
+		private readonly Parser _parser = new Parser();
 		private readonly Thread _parseThread;
 		private readonly byte[] _readBuffer = new byte[8192];
 		private bool _authed;

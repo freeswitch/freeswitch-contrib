@@ -188,19 +188,19 @@ namespace FreeSwitch.EventSocket
             {
                 ++_pos; // skip delimiter
                 int endpos = TrimEnd(); // skip 
-                return _text.Substring(startpos, endpos - startpos);
+                return _text.Substring(startpos, endpos - startpos-1);
             }
         }
 
         private int TrimEnd()
         {
-            if (EOF)
-                return _pos;
+			if (EOF || !IsWS(_text[_pos]))
+				return _pos;
 
             int pos = _pos;
             while (IsWS(_text[pos]))
                 --pos;
-            return pos;
+            return pos+1;
         }
 
         private int FindWS(bool stopAtEOL)
