@@ -17,7 +17,7 @@
           dir_users.&quot;${key}&quot; = '${user}' AND
           dir_domains.name = '${domain}' AND
           dir_users.dir_domain_id = dir_domains.id AND
-          dir_users.enabled = '1';"/>
+          dir_users.enabled = 'true';"/>
       <section name="directory">
         <domain name="${domain}">
           <params>
