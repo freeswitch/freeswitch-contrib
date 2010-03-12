@@ -1,18 +1,34 @@
---print(xcdr_varget("uuid"), xcdr_varget("billsec"), xcdr_varget("uuid") )
-
-uuid = xcdr_varget("uuid")
-billsec = xcdr_varget("billsec")
+--  Lua script _must_ provide three functions:
+--  luaexec_init()
+--  luaexec_free()
+--  luaexec_man()
+--  Functions listed above can be empty, but they must exist for successful run.
 
 
 require "luasql.odbc"
-env = assert(luasql.odbc())
-db_conn = assert(env:connect("ddp") )
-db_conn:execute(string.format("insert into cdr (uuid,billsec) values ('%s', %d)", uuid, billsec))
 
-db_conn:close()
-env:close()
+env = nil
+db_conn = nil
+count = 0
 
---local file = assert(io.open("output.lua", "w"))
---file:write("Hello world\n")
---file:close()
+function luaexec_init ()
+  env = assert(luasql.odbc())
+  db_conn = assert(env:connect("ddp") )
+  count = 1
+end
+
+
+function luaexec_free ()
+  db_conn:close()
+  env:close()
+end
+
+function luaexec_main ()
+
+  uuid = xcdr_varget("uuid")
+  billsec = xcdr_varget("billsec")
+
+  db_conn:execute(string.format("insert into planeta_cdr_notify (uuid,billsec) values ('%s', %d)", uuid, billsec + count))
+  count = count + 1
+end
 

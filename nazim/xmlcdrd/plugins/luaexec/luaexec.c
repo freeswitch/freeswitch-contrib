@@ -1,6 +1,44 @@
 /*
   plugin_init() accepts single option - absolute name of configuration file to parse.
+
+  Lua script _must_ provide three functions:
+  luaexec_init()
+  luaexec_free()
+  luaexec_man()
+
+  Functions listed above can be empty, but they must exist for successful run.
+
+  ******* Example script ********
+require "luasql.odbc"
+
+env = nil
+db_conn = nil
+count = 0
+
+function luaexec_init ()
+  env = assert(luasql.odbc())
+  db_conn = assert(env:connect("ddp") )
+  count = 1
+end
+
+
+function luaexec_free ()
+  db_conn:close()
+  env:close()
+end
+
+function luaexec_main ()
+  uuid = xcdr_varget("uuid")
+  billsec = xcdr_varget("billsec")
+
+  db_conn:execute(string.format("insert into planeta_cdr_notify (uuid,billsec) values ('%s', %d)", uuid, billsec + count))
+
+  count = count + 1
+end
+
+  ******* End of example script ********
 */
+
 #include "plugcommon.h"
 #include "plug.h"
 #include "stmtexp.h"
@@ -22,7 +60,12 @@
 #define STR_LEN_MAX 256
 
 /*that's what lua script would call to get variable*/
-#define LUA_VAR_GET_FUNC "xcdr_varget"
+#define LUAEXEC_VAR_GET_FUNC "xcdr_varget"
+
+/*Names of standard function which script must provide*/
+#define LUAEXEC_FUNC_INIT "luaexec_init"
+#define LUAEXEC_FUNC_FREE "luaexec_free"
+#define LUAEXEC_FUNC_PROCESS_CDR "luaexec_main"
 
 typedef struct luaexec_local_vars
 {
@@ -117,6 +160,30 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
         snprintf (vars->luascript, FILENAME_LEN_MAX - 1, "%s", t);
 
     config_destroy(&vars->cfg);
+
+    vars->L = lua_open();
+    luaL_openlibs (vars->L);
+
+    lua_pushcfunction(vars->L, l_varget);
+    lua_setglobal(vars->L, LUAEXEC_VAR_GET_FUNC);
+
+    
+    if (luaL_loadfile(vars->L, vars->luascript) )
+        fprintf(stderr, "can't load file: %s, %s\n", vars->luascript,
+                lua_tostring(vars->L, -1));
+
+    if(lua_pcall(vars->L, 0, 0, 0) )
+        fprintf(stderr, "can't run file: %s, %s\n", vars->luascript,
+                lua_tostring(vars->L, -1));
+
+    
+    lua_getglobal(vars->L, LUAEXEC_FUNC_INIT);
+    if(lua_pcall(vars->L, 0, 0, 0) )
+        fprintf(stderr, "can't run %s function: %s, %s\n", 
+                LUAEXEC_FUNC_INIT,
+                vars->luascript,
+                lua_tostring(vars->L, -1));
+    
     return PLUG_STATUS_OK;
 }
 
@@ -124,6 +191,16 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
 int plugin_free (XCDR_PLUGSTATE *state)
 {
     vars = state->local_vars;
+
+    lua_getglobal(vars->L, LUAEXEC_FUNC_FREE);
+    if(lua_pcall(vars->L, 0, 0,0) )
+        fprintf(stderr, "can't run %s function: %s, %s\n",
+                LUAEXEC_FUNC_FREE,
+                vars->luascript,
+                lua_tostring(vars->L, -1));
+
+
+    lua_close (vars->L);
 
     free (vars);
     
@@ -137,23 +214,19 @@ int plugin_main (STMTEXP_TAB *vex, XCDR_PLUGSTATE *state)
     vars = state->local_vars;
     vars->vex = vex;
 
-    vars->L = lua_open();
-    luaL_openlibs (vars->L);
-
-    lua_pushcfunction(vars->L, l_varget);
-    lua_setglobal(vars->L, LUA_VAR_GET_FUNC);
-
     
-    if (luaL_loadfile(vars->L, vars->luascript) )
-        fprintf(stderr, "can't load file: %s, %s\n", vars->luascript,
-            lua_tostring(vars->L, -1));
-    
+    int res = PLUG_STATUS_OK;
 
-    if(lua_pcall(vars->L, 0, 0, 0) )
-        fprintf(stderr, "can't run file: %s, %s\n", vars->luascript,
+    lua_getglobal(vars->L, LUAEXEC_FUNC_PROCESS_CDR);
+    if(lua_pcall(vars->L, 0, 0, 0))
+    {
+        fprintf(stderr, "can't run %s function: %s, %s\n", 
+                LUAEXEC_FUNC_PROCESS_CDR,
+                vars->luascript,
                 lua_tostring(vars->L, -1));
+        
+        res = PLUG_STATUS_ERROR;
+    }
     
-    lua_close (vars->L);
-    
-    return PLUG_STATUS_OK;
+    return res;
 }
