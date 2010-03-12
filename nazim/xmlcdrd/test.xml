@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<cdr>
+  <variables>
+    <sip_received_ip>192.168.50.21</sip_received_ip>
+    <sip_received_port>39368</sip_received_port>
+    <sip_authorized>true</sip_authorized>
+    <sip_mailbox>1160</sip_mailbox>
+    <sip_auth_username>1160</sip_auth_username>
+
+    <sip_auth_realm>192.168.50.229</sip_auth_realm>
+    <mailbox>1160</mailbox>
+    <record_stereo>true</record_stereo>
+    <accountcode>1160</accountcode>
+    <user_context>default</user_context>
+    <effective_caller_id_name>Michael%20S%20Collins</effective_caller_id_name>
+
+    <effective_caller_id_number>5597993757</effective_caller_id_number>
+    <sip_from_user>1160</sip_from_user>
+    <sip_from_uri>1160%40192.168.50.229</sip_from_uri>
+    <sip_from_host>192.168.50.229</sip_from_host>
+    <sip_from_user_stripped>1160</sip_from_user_stripped>
+    <sip_from_tag>a360bd54</sip_from_tag>
+
+    <sofia_profile_name>internal</sofia_profile_name>
+    <sofia_profile_domain_name>192.168.50.229</sofia_profile_domain_name>
+    <sip_req_user>92137991400</sip_req_user>
+    <sip_req_uri>92137991400%40192.168.50.229</sip_req_uri>
+    <sip_req_host>192.168.50.229</sip_req_host>
+    <sip_to_user>92137991400</sip_to_user>
+
+    <sip_to_uri>92137991400%40192.168.50.229</sip_to_uri>
+    <sip_to_host>192.168.50.229</sip_to_host>
+    <sip_contact_user>1160</sip_contact_user>
+    <sip_contact_port>39368</sip_contact_port>
+    <sip_contact_uri>1160%40192.168.50.21%3A39368</sip_contact_uri>
+    <sip_contact_host>192.168.50.21</sip_contact_host>
+
+    <channel_name>sofia/internal/1160%40192.168.50.229</channel_name>
+    <sip_call_id>NzUyYzU2ZmU0NjQ0NmNkMGExYTNiZjIzMjIwMWNiODc.</sip_call_id>
+    <sip_via_host>192.168.50.21</sip_via_host>
+    <sip_via_port>39368</sip_via_port>
+    <sip_via_rport>39368</sip_via_rport>
+    <max_forwards>70</max_forwards>
+
+    <presence_id>1160%40192.168.50.229</presence_id>
+    <switch_r_sdp>v%3D0%0D%0Ao%3D-%206%202%20IN%20IP4%20192.168.50.21%0D%0As%3DCounterPath%20X-Lite%203.0%0D%0Ac%3DIN%20IP4%20192.168.50.21%0D%0At%3D0%200%0D%0Am%3Daudio%209140%20RTP/AVP%20107%20119%20100%20106%200%20105%2098%208%203%20101%0D%0Aa%3Drtpmap%3A107%20BV32/16000%0D%0Aa%3Drtpmap%3A119%20BV32-FEC/16000%0D%0Aa%3Drtpmap%3A100%20SPEEX/16000%0D%0Aa%3Drtpmap%3A106%20SPEEX-FEC/16000%0D%0Aa%3Drtpmap%3A105%20SPEEX-FEC/8000%0D%0Aa%3Drtpmap%3A98%20iLBC/8000%0D%0Aa%3Drtpmap%3A101%20telephone-event/8000%0D%0Aa%3Dfmtp%3A101%200-15%0D%0Aa%3Dalt%3A1%201%20%3A%20CV3qZAA1%209gFf2/Iz%20192.168.50.21%209140%0D%0A</switch_r_sdp>
+    <remote_media_ip>192.168.50.21</remote_media_ip>
+    <remote_media_port>9140</remote_media_port>
+    <write_codec>PCMU</write_codec>
+    <write_rate>8000</write_rate>
+
+    <open>true</open>
+    <use_profile>nat</use_profile>
+    <numbering_plan>US</numbering_plan>
+    <default_gateway>asterlink.com</default_gateway>
+    <default_area_code>559</default_area_code>
+    <user_name>default</user_name>
+
+    <domain_name>192.168.50.229</domain_name>
+    <local_media_ip>192.168.50.229</local_media_ip>
+    <local_media_port>9140</local_media_port>
+    <current_application>bridge</current_application>
+    <originate_disposition>SUCCESS</originate_disposition>
+    <bridge_channel>OpenZAP/1%3A23/2137991400</bridge_channel>
+
+    <bridge_uuid>e012ce96-7f9c-4194-87fe-5ba86a3930ca</bridge_uuid>
+    <signal_bond>e012ce96-7f9c-4194-87fe-5ba86a3930ca</signal_bond>
+    <sip_nat_detected>true</sip_nat_detected>
+    <endpoint_disposition>ANSWER</endpoint_disposition>
+    <sip_user_agent>X-Lite%20release%201100l%20stamp%2047546</sip_user_agent>
+    <sip_term_status>200</sip_term_status>
+
+    <sip_term_cause>16</sip_term_cause>
+    <hangup_cause>NORMAL_CLEARING</hangup_cause>
+    <start_stamp>2008-07-31%2011%3A35%3A38</start_stamp>
+    <profile_start_stamp>2008-07-31%2011%3A35%3A38</profile_start_stamp>
+    <answer_stamp>2008-07-31%2011%3A35%3A41</answer_stamp>
+    <progress_stamp>2008-07-31%2011%3A35%3A38</progress_stamp>
+
+    <progress_media_stamp>2008-07-31%2011%3A35%3A38</progress_media_stamp>
+    <end_stamp>2008-07-31%2011%3A36%3A17</end_stamp>
+    <start_epoch>1217529338</start_epoch>
+    <start_uepoch>1217529338212616</start_uepoch>
+    <profile_start_epoch>1217529338</profile_start_epoch>
+    <profile_start_uepoch>1217529338212616</profile_start_uepoch>
+
+    <answer_epoch>1217529338</answer_epoch>
+    <answer_uepoch>1217529338452698</answer_uepoch>
+    <end_epoch>1217529377</end_epoch>
+    <end_uepoch>1217529377795951</end_uepoch>
+    <last_app>bridge</last_app>
+    <last_arg>openzap/1/A/2137991400</last_arg>
+
+    <caller_id>%22Mikey%22%20%3C1160%3E</caller_id>
+    <duration>39</duration>
+    <billsec>36</billsec>
+    <progresssec>0</progresssec>
+    <progress_mediasec>0</progress_mediasec>
+    <flow_billsec>39</flow_billsec>
+
+    <mduration>39583</mduration>
+    <billmsec>36267</billmsec>
+    <progressmsec>238</progressmsec>
+    <progress_mediamsec>237955</progress_mediamsec>
+    <flow_billmsec>39583</flow_billmsec>
+    <uduration>39583335</uduration>
+
+    <billusec>36267529</billusec>
+    <progressusec>237955</progressusec>
+    <progress_mediausec>237955</progress_mediausec>
+    <flow_billusec>39583335</flow_billusec>
+    <read_codec>PCMU</read_codec>
+    <read_rate>8000</read_rate>
+
+  </variables>
+  <app_log>
+    <application app_name="set" app_data="open=true"></application>
+    <application app_name="set" app_data="use_profile=nat"></application>
+    <application app_name="set_user" app_data="default@192.168.50.229"></application>
+    <application app_name="db" app_data="insert/spymap/1160/6f32e2f8-38d1-43a7-b6ea-215bbfe6a314"></application>
+    <application app_name="db" app_data="insert/last_dial/1160/92137991400"></application>
+    <application app_name="db" app_data="insert/last_dial/global/6f32e2f8-38d1-43a7-b6ea-215bbfe6a314"></application>
+    <application app_name="record_session" app_data="/mnt/powervault/Databases/XMLCDR/6f32e2f8-38d1-43a7-b6ea-215bbfe6a314__1.wav"></application>
+
+    <application app_name="bridge" app_data="openzap/1/A/2137991400"></application>
+  </app_log>
+  <callflow dialplan="XML" profile_index="1">
+    <extension name="tod_example" number="92137991400">
+      <application app_name="set" app_data="open=true"></application>
+      <application app_name="set" app_data="use_profile=${cond(${acl(${network_addr} rfc1918)} == true ? nat : default)}"></application>
+      <application app_name="set_user" app_data="default@${domain}"></application>
+      <application app_name="db" app_data="insert/spymap/${caller_id_number}/${uuid}"></application>
+      <application app_name="db" app_data="insert/last_dial/${caller_id_number}/${destination_number}"></application>
+
+      <application app_name="db" app_data="insert/last_dial/global/${uuid}"></application>
+      <application app_name="record_session" app_data="/mnt/powervault/Databases/XMLCDR/${uuid}__1.wav"></application>
+      <application app_name="bridge" app_data="openzap/1/A/2137991400"></application>
+    </extension>
+    <caller_profile>
+      <username>1160</username>
+      <dialplan>XML</dialplan>
+      <caller_id_name>Mikey</caller_id_name>
+
+      <ani></ani>
+      <aniii></aniii>
+      <caller_id_number>1160</caller_id_number>
+      <network_addr>192.168.50.21</network_addr>
+      <rdnis></rdnis>
+      <destination_number>92137991400</destination_number>
+      <uuid>6f32e2f8-38d1-43a7-b6ea-215bbfe6a314</uuid>
+
+      <source>mod_sofia</source>
+      <context>default</context>
+      <chan_name>sofia/internal/1160@192.168.50.229</chan_name>
+      <originatee>
+        <originatee_caller_profile>
+          <username>1160</username>
+          <dialplan>XML</dialplan>
+
+          <caller_id_name>Michael S Collins</caller_id_name>
+          <ani></ani>
+          <aniii></aniii>
+          <caller_id_number>5597993757</caller_id_number>
+          <network_addr>192.168.50.21</network_addr>
+          <rdnis></rdnis>
+          <destination_number>1/A/2137991400</destination_number>
+
+          <uuid>e012ce96-7f9c-4194-87fe-5ba86a3930ca</uuid>
+          <source>mod_sofia</source>
+          <context>default</context>
+          <chan_name>OpenZAP/1:23/2137991400</chan_name>
+        </originatee_caller_profile>
+      </originatee>
+    </caller_profile>
+
+    <times>
+      <created_time>1217529338212616</created_time>
+      <profile_created_time>1217529338212616</profile_created_time>
+      <progress_time>1217529338450571</progress_time>
+      <progress_media_time>1217529338452698</progress_media_time>
+      <answered_time>1217529341528422</answered_time>
+
+      <hangup_time>1217529377795951</hangup_time>
+      <transfer_time>0</transfer_time>
+    </times>
+  </callflow>
+</cdr>

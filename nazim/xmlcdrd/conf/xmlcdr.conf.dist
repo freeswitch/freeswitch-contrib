@@ -1,0 +1,115 @@
+#Copy this file to /etc/xmlcdrd/xmlcdr.conf
+
+#Variables section
+Variables = (
+
+{
+name = "uuid";
+var_id = "uuid";
+xpath = "/cdr/callflow[@profile_index='1']/caller_profile/uuid";
+}
+,
+{
+name = "context";
+var_id = "context";
+xpath = "/cdr/callflow[@profile_index='1']/caller_profile/context";
+}
+,
+{
+name = "effective_caller_id_number";
+var_id = "effective_caller_id_number";
+xpath = "/cdr/variables/effective_caller_id_number";
+}
+,
+{
+name = "caller_id_number";
+var_id = "caller_id_number";
+xpath = "/cdr/callflow[@profile_index='1']/caller_profile/caller_id_number";
+}
+,
+{
+name = "destination_number";
+var_id = "destination_number";
+xpath = "/cdr/callflow[@profile_index='1']/caller_profile/destination_number";
+}
+,
+{
+name = "profile_destination_number";
+var_id = "profile_destination_number";
+xpath = "/cdr/callflow[@profile_index='1']/caller_profile/originatee/originatee_caller_profile/destination_number";
+}
+,
+{
+name = "callgroup";
+var_id = "callgroup";
+xpath = "/cdr/variables/planeta_callgroup";
+}
+,
+{
+name = "billsec";
+var_id = "billsec";
+xpath = "/cdr/variables/billsec";
+}
+,
+{
+name = "startep";
+var_id = "startep";
+xpath = "/cdr/variables/start_epoch";
+}
+,
+{
+name = "answep";
+var_id = "answep";
+xpath = "/cdr/variables/answer_epoch";
+}
+,
+{
+name = "endep";
+var_id = "endep";
+xpath = "/cdr/variables/end_epoch";
+}
+
+);
+#End of Variables
+
+
+#Plugins directory
+plugin_dir = "/usr/local/lib/xmlcdrd";
+
+
+
+#Plugins section
+Plugins = (
+
+#Plugin declaration
+{
+  #name is a name of so file without the extension
+  name="mysqlcdr";
+
+  #config file for plugin
+  options = "/etc/xmlcdrd/db1.conf";
+  priority = 10;
+
+  #Metrics control plugin execution
+  #Plugin with no metrics defined will be executed everytime
+  Metrics = (
+	{
+       metric = "destination_number";
+       regexp = "^6969.*";
+        }
+  );
+  #end of metrics
+
+},
+{
+  name="luaexec";
+  options="/etc/xmlcdrd/luaexec.conf";
+  priority=20;
+}
+
+#End of plugin declaration
+#You could define multiple plugins
+#Plugin declarations are separated with comma. See libconfig manual for details.
+
+);
+#End of Plugin section
