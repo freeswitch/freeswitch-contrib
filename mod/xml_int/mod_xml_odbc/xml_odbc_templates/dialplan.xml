@@ -1,5 +1,0 @@
-<include> <!-- NOT FINISHED ! -->
-  <template name="dialplan">
-    <xml-odbc-do name="break-to" value="not-found"/>
-  </template>
-</include>

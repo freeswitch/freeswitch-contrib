@@ -56,7 +56,11 @@
       </document>
     </template>
 
-    <X-PRE-PROCESS cmd="include" data="xml_odbc_templates/*.xml"/>
+    <!-- There is some difference in queries to mysql or postgresql, for example:
+         mysql: tablename.`columnname-contains-hyphens`
+         postgresql: tablename."columnname-contains-hyphens"
+         Choose the database you're using in the include data (pgsql or mysql) -->
+    <X-PRE-PROCESS cmd="include" data="xml_odbc_templates/*.pgsql.xml"/>
 
   </templates>
 

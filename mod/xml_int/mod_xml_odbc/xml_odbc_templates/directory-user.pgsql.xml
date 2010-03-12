@@ -1,0 +1,92 @@
+<include>
+  <template name="directory-user">
+    <document type="freeswitch/xml">
+      <xml-odbc-do name="set-event-header" if-name="key" if-value="id" to-value="username"/>
+      <xml-odbc-do name="query" on-empty-result-break-to="not-found" value="
+        SELECT
+          dir_domains.id AS domain_id,
+          dir_users.id AS user_id,
+          dir_users.username,
+          dir_users.cidr,
+          dir_users.mailbox,
+          dir_users.&quot;number-alias&quot;
+        FROM
+          dir_domains,
+          dir_users
+        WHERE
+          dir_users.&quot;${key}&quot; = '${user}' AND
+          dir_domains.name = '${domain}' AND
+          dir_users.dir_domain_id = dir_domains.id AND
+          dir_users.enabled = '1';"/>
+      <section name="directory">
+        <domain name="${domain}">
+          <params>
+            <xml-odbc-do name="query" value="
+              SELECT
+                name, value
+              FROM
+                dir_domain_params
+              WHERE
+                dir_domain_id = '${domain_id}';">
+              <param name="${name}" value="${value}"/>
+            </xml-odbc-do>
+          </params>
+          <variables>
+            <xml-odbc-do name="query" value="
+              SELECT
+                name, value
+              FROM
+                dir_domain_variables
+              WHERE
+                dir_domain_id = '${domain_id}';">
+              <variable name="${name}" value="${value}"/>
+            </xml-odbc-do>
+          </variables>
+          <groups>
+            <group name="default">
+              <users>
+                <user id="${username}" mailbox="${mailbox}" cidr="${cidr}" number-alias="${number-alias}">
+                  <params>
+                    <xml-odbc-do name="query" on-empty-result-break-to="not-found" value="
+                      SELECT
+                        name, value
+                      FROM
+                        dir_user_params
+                      WHERE
+                        dir_user_id = '${user_id}';">
+                      <param name="${name}" value="${value}"/>
+                    </xml-odbc-do>
+                  </params>
+                  <variables>
+                    <xml-odbc-do name="query" value="
+                      SELECT
+                        name, value
+                      FROM
+                        dir_user_variables
+                      WHERE
+                        dir_user_id = '${user_id}';">
+                      <variable name="${name}" value="${value}"/>
+                    </xml-odbc-do>
+                  </variables>
+                </user>
+              </users>
+            </group>
+            <xml-odbc-do name="query" value="
+              SELECT
+                name AS group_name
+              FROM
+                dir_groups,
+                dir_groups_users
+              WHERE
+                dir_groups_users.dir_group_id = dir_groups.id AND
+                dir_user_id = '${user_id}';">
+              <group name="${group_name}">
+                <user id="${username}" type="pointer"/>
+              </group>
+            </xml-odbc-do>
+          </groups>
+        </domain>
+      </section>
+    </document>
+  </template>
+</include>

@@ -1,0 +1,17 @@
+<include>
+  <!-- purpose=gateways is not only called for getting gateways, but also for getting a list
+       of domains that will be aliased to a profile if <domain .. alias="true"/> is set -->
+  <template name="directory-gateways">
+    <document type="freeswitch/xml">
+      <section name="directory"> <!-- not the most efficient way, but gets executed seldom, so let it slide... -->
+        <xml-odbc-do name="set-event-header" to-name="where-clause" to-value="&quot;${key_name}&quot;='${key_value}'"/>
+	<xml-odbc-do name="set-event-header" if-name="where-clause" if-value="&quot;&quot;=''" to-value="true"/>
+        <xml-odbc-do name="query" on-empty-result-break-to="not-found"
+                     value="SELECT name AS domain_name FROM dir_domains WHERE ${where-clause};">
+          <domain name="${domain_name}"/>
+          <!-- select all gateways of users within this domain_name here, to make parse=true working -->
+        </xml-odbc-do>
+      </section>
+    </document>
+  </template>
+</include>
