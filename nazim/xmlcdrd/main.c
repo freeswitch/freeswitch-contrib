@@ -260,13 +260,14 @@ int main(int argc, char** argv)
                 //If no metrics defined, run anyway
                 if (0 == plugtab.tags[i].metrics.tag_count)
                 {
+                    fprintf (stderr, "plugin matched\n");
                     plug->plugin_main(&vex, &plug->state);
                     continue;
                 }
 
                 //match metric regexps
                 int j;
-                int run = 0;
+                int run = 1;
                 for (j = 0; j < plugtab.tags[i].metrics.tag_count; j++)
                 {
                     const char *metric_val = 
@@ -288,17 +289,18 @@ int main(int argc, char** argv)
                              
                              
 
-                    if (-1 < 
-                        xcdr_plugldr_match_regexp (
+                    if (0 > xcdr_plugldr_match_regexp (
                             plugtab.tags[i].metrics.tags[j].regexp,
                             metric_val, strlen(metric_val)) )
-                        run = 1;
-                    else run = 0;
+                    {
+                        run = 0;
+                        break;
+                    }
                 }
 
                 if (0 < run)
                 {
-                    fprintf (stderr, "metrics matched\n");
+                    fprintf (stderr, "plugin metrics matched\n");
                     plug->plugin_main(&vex, &plug->state);
                 }
             }
