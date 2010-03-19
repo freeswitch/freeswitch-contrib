@@ -7,6 +7,9 @@
 	Dial numbers in <number_file_name> and playback a sound once a time 
 	
 	Usage: luarun dialer.lua
+	
+	See also:
+	http://www.dujinfang.com/past/2010/3/13/yi-ge-zai-freeswitchzhong-wai-hu-de-luajiao-ben/
 ]]
 
 prefix = "{ignore_early_media=true}sofia/gateway/cnc/"

@@ -1,7 +1,9 @@
---- Lua gateway report - Monitor and report gateway status by catching events
---- Seven AT idapted.com
-  
 --[[
+	Author: Seven du (seven .. at .. idapted.com)
+	Licence: MIT
+	WWW: http://www.idapted.com
+	
+
   Listen to FreeSWITCH events and report to
 	1) fire an event
 	2) post to a http server
@@ -55,10 +57,10 @@
     <Sip-Gateway-Sample-Time2>10</Sip-Gateway-Sample-Time2>
   </headers>
 </event>
-]]
 
--- Standard FreeSWITCH doesn't has argv[0]
-argv[0] = "gateway_report.lua"
+	A Chinese explaination is available at: 
+http://www.dujinfang.com/past/2010/3/13/zai-freeswitchzhong-zhi-xing-chang-qi-yun-xing-de-qian-ru-shi-jiao-ben-luayu-yan-li-zi/
+]]
 
 script_name = argv[0]
 report_type = argv[1] or "http_post"
