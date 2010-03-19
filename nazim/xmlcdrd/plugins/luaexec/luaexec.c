@@ -179,10 +179,15 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
     
     lua_getglobal(vars->L, LUAEXEC_FUNC_INIT);
     if(lua_pcall(vars->L, 0, 0, 0) )
+    {
         fprintf(stderr, "can't run %s function: %s, %s\n", 
                 LUAEXEC_FUNC_INIT,
                 vars->luascript,
                 lua_tostring(vars->L, -1));
+        
+        lua_pop(vars->L, 1);
+        
+    }
     
     return PLUG_STATUS_OK;
 }
@@ -194,14 +199,17 @@ int plugin_free (XCDR_PLUGSTATE *state)
 
     lua_getglobal(vars->L, LUAEXEC_FUNC_FREE);
     if(lua_pcall(vars->L, 0, 0,0) )
+    {        
         fprintf(stderr, "can't run %s function: %s, %s\n",
                 LUAEXEC_FUNC_FREE,
                 vars->luascript,
                 lua_tostring(vars->L, -1));
 
-
+        lua_pop(vars->L, 1);
+    }
+    
     lua_close (vars->L);
-
+    
     free (vars);
     
     return PLUG_STATUS_OK;
@@ -224,6 +232,8 @@ int plugin_main (STMTEXP_TAB *vex, XCDR_PLUGSTATE *state)
                 LUAEXEC_FUNC_PROCESS_CDR,
                 vars->luascript,
                 lua_tostring(vars->L, -1));
+
+        lua_pop(vars->L, 1);
         
         res = PLUG_STATUS_ERROR;
     }
