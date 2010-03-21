@@ -62,6 +62,8 @@ end
 /*that's what lua script would call to get variable*/
 #define LUAEXEC_VAR_GET_FUNC "xcdr_varget"
 
+#define LUAEXEC_DBG_PRN_FUNCT "xcdr_prn_debug"
+
 /*Names of standard function which script must provide*/
 #define LUAEXEC_FUNC_INIT "luaexec_init"
 #define LUAEXEC_FUNC_FREE "luaexec_free"
@@ -119,6 +121,20 @@ static int l_varget (lua_State *L)
 }
 
 
+
+
+static int l_debug_prn (lua_State *L)
+{
+    const char* str = luaL_checkstring(L, 1);
+
+    fprintf (stderr, "%s\n", str);
+    syslog (LOG_DEBUG, "xmlcdr '%s' [%d]: %s\n", vars->luascript, getpid(), str);    
+
+    return 0;
+}
+
+
+
  /**/ 
 int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *state)
 {
@@ -166,6 +182,9 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
 
     lua_pushcfunction(vars->L, l_varget);
     lua_setglobal(vars->L, LUAEXEC_VAR_GET_FUNC);
+
+    lua_pushcfunction(vars->L, l_debug_prn);
+    lua_setglobal(vars->L, LUAEXEC_DBG_PRN_FUNCT);
 
     
     if (luaL_loadfile(vars->L, vars->luascript) )
