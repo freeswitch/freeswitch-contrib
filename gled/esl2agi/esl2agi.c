@@ -554,9 +554,17 @@ static int handle_getdata(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 		goto end;
 	}
 
-	args = malloc(1024);
-	snprintf(args,1024,"1 %s 1 %s # %s invalid.wav play_get_digits_values \\d+",argv[4] ? argv[4] : "9999", argv[3] ? argv[3] : "2000", argv[2]);
+	size = strlen(argv[2]);
+	if (argv[3])
+		size += strlen(argv[3]);
+	if (argv[4])
+		size += strlen(argv[4]);
 
+	size += 59;
+	args = malloc(size +1);
+
+	snprintf(args,size+1,"1 %s 1 %s # %s invalid.wav play_get_digits_values \\d+*",argv[4] ? argv[4] : "9999", argv[3] ? argv[3] : "2000", argv[2]);
+	fprintf(stderr,"Executing play_and_get_digits %s",args);
 	if (do_execute(eslC,"play_and_get_digits",args,NULL,&reply) < 0 ) {
 		res = -1;
 		goto end;
@@ -569,7 +577,6 @@ static int handle_getdata(esl_handle_t *eslC,int fd,int *argc, char *argv[]) {
 			res = -1;
 			goto end;
 		}
-
 	}
 
 end:
@@ -579,9 +586,9 @@ end:
 		size = safe_int_snprintf_buffer(&buf,"200 result=%d\n\n",res);
 	}
 	else {
-		size = strlen(args) + 10;
+		size = strlen(args) + 12;
 		buf = malloc(size + 1);
-		snprintf(buf,size + 1,"200 result=%s",args);
+		snprintf(buf,size + 1,"200 result=%s\n\n",args);
 	}
 
 	res = write(fd,buf,size);
