@@ -45,11 +45,13 @@ SWITCH_MODULE_DEFINITION(mod_fgi, mod_fgi_load, mod_fgi_shutdown, NULL);
   
 #define FG_READ 0
 #define FG_WRITE 1
+#define _MAX_CMD_ARGS 128
 
-static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
-pid_t fgi_open_process( const char *cmd, int *in, int *out);
+#define MAX(x,y)                ((x) > (y) ? (x) : (y))
+#define MIN(x,y)                ((x) < (y) ? (x) : (y))
 
-  
+static void parse_fgi_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]);
+
 pid_t fgi_open_process( const char *cmd, int *in, int *out,int *thread_running) {
 	int p_in[2], p_out[2];
 	pid_t pid;
@@ -101,45 +103,39 @@ pid_t fgi_open_process( const char *cmd, int *in, int *out,int *thread_running) 
 static switch_status_t find_and_exec_command(char *cmd, int fd_reply) {
 	char *argv[1024];
 	int argc = 0;
-	int r = -1;
-	command_binding_t *bind;
 
-	pargc =parse_fgi_args(cmd,argv);
-
- 	bind = find_binding(argv);
-	if (bind) {
-		r = bind->handler(eslC,fd,&argc,argv);
-	}
-	return r;
+	parse_fgi_args(cmd,&argc,argv);
+	/* */
 	return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_status_t exec_fgi_run() {
+static switch_status_t exec_fgi_run(char *argv) {
 	int in,out;
 	pid_t pid;
-	int res,nfds;
+	int res=0;
+	int nfds=0;
 	fd_set rd;
-	char cmd_buf[2048];
 	int thread_running;
+	char cmdbuf[_MAX_CMD_ARGS*128];
 
-	pid = fgi_open_process(cmd,&in,&out,&thread_running);
+	pid = fgi_open_process(argv,&in,&out,&thread_running);
 	if ( pid <= 0)
-		return SWITCH_STATUS_FAIL;
+		return SWITCH_STATUS_SUCCESS;
 
 	while (thread_running) {
 		FD_ZERO(&rd);
 		FD_SET(in, &rd);
-		nfds = MAX(nfds,pipes.script[0]);
+		nfds = MAX(nfds,out);
 
 		res = select(nfds + 1, &rd, NULL, NULL, NULL);
-		if (r == -1 )
+		if (res == -1 )
 			break;
-		else if (FD_ISSET(out,&rd) ) { /* They have something to say
- 			r = read(out,&cmdbuf,2047);
-			if (r<0)
+		else if (FD_ISSET(out,&rd) ) { /* They have something to say */
+ 			res = read(out,&cmdbuf,2047);
+			if (res<0)
 				goto end;
 			else {
-				if ( find_and_exec_command(char *) &cmdbuf,reply_fd) != SWITCH_STATUS_SUCCESS )
+				if ( find_and_exec_command((char *) &cmdbuf,in) != SWITCH_STATUS_SUCCESS )
 					goto end;
 				}
                         }
@@ -155,7 +151,7 @@ SWITCH_STANDARD_APP(launch_fgi_thread) {
 	char *argv[6] = { 0 };
 	int argc;
 	char *mydata = NULL;
-	switch_channel_t *channel = switch_core_session_get_channel(session);
+//	switch_channel_t *channel = switch_core_session_get_channel(session);
 
 	if (zstr(data) || !(mydata = switch_core_session_strdup(session, data))) {
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "INVALID ARGS!\n");
@@ -166,20 +162,18 @@ SWITCH_STANDARD_APP(launch_fgi_thread) {
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "INVALID ARGS!\n");
 		return;
 	}
-	exec_fgi_run(argc,argv);
-	return SWITCH_STATUS_SUCCESS;
+	exec_fgi_run(mydata);
+	/* Free up things ? */
 }
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_fgi_load) {
-	switch_app_interface_t *app_interface;
+	switch_application_interface_t *app_interface;
+
 	/* connect my internal structure to the blank pointer passed to me */
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Hello World!\n");
-
-	do_config(SWITCH_FALSE);
-
-	SWITCH_ADD_APP(app_interface, "fgi", "Freeswitch Gateway Interface", launch_fgi_thread, "fgi path_to_executable args");
+	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "Hello !\n");
+        SWITCH_ADD_APP(app_interface, "fgi", "Fgi", "launch and give control to an external entity with STDIN/STDOUT", launch_fgi_thread, "fgi <path_to_executable> [<args>]", SAF_NONE);
 
 	/* indicate that the module should continue to be loaded */
 	return SWITCH_STATUS_SUCCESS;
@@ -193,7 +187,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_fgi_shutdown) {
 }
 
 
-static void parse_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]) {
+static void parse_fgi_args(char *buf,int *argc,char *argv[_MAX_CMD_ARGS]) {
         char *cur;
         int x = 0;
         int quote = 0;
