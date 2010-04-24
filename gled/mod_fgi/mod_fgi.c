@@ -115,15 +115,30 @@ static switch_status_t find_and_exec_command(char *cmd, int fd_reply,switch_core
 	*/
 	for (x=0; x < argc; x++) {
 		if ( !strcasecmp(argv[x], "ANSWER") ) {
-		        switch_channel_t *channel = switch_core_session_get_channel(session);
-			y = switch_channel_answer(channel);
+			y = switch_channel_answer(switch_core_session_get_channel(session));
+
 			buf = malloc(20 * sizeof(char));
+			memset (buf, 0, sizeof(buf));
 			sprintf(buf,"200 result=%d\n\n",y);
 			write(fd_reply,buf,strlen(buf));
 			free(buf);
+
+			break;
 		}
 		else if (!strcasecmp(argv[x],"HANGUP")) {
+		        switch_call_cause_t cause = SWITCH_CAUSE_NORMAL_CLEARING;
+			if (!zstr(argv[x+1])) {
+				cause = switch_channel_str2cause(argv[x+1]);
+			}
+			y = switch_channel_hangup(switch_core_session_get_channel(session), cause);
 
+			buf = malloc(20 * sizeof(char));
+			memset (buf, 0, sizeof(buf));
+			sprintf(buf,"200 result=%d\n\n",y);
+			write(fd_reply,buf,strlen(buf));
+			free(buf);
+
+			break;
 		}
 		else if (!strcasecmp(argv[x],"EXEC")) {
 
