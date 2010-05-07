@@ -7,8 +7,9 @@ all:
 	$(CC) $(CFLAGS) \
 	-shared -fPIC -o luaexec.so luaexec.c \
 	-I../../ \
+        -I@with_lua_includes@ \
 	@with_glib2_flags@ \
-	-llua -ldl -lglib-2.0 \
+	@with_lua_lib@ -ldl -lglib-2.0 \
 	-lconfig \
 	../../stmtexpldr.o ../../stmtexp.o ../../log.o
 

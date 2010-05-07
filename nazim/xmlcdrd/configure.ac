@@ -63,6 +63,20 @@ AC_ARG_WITH(glib2_flags,
     [with_glib2_flags="$withval"],[with_glib2_flags="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include"])
 AC_SUBST(with_glib2_flags)
 
+AC_MSG_CHECKING(for lua includes)
+AC_ARG_WITH(lua_includes,
+    AC_HELP_STRING([--with-lua-includes],[--with-lua-includes@<:@=PATH@:>@]),
+    [with_lua_includes="$withval"],[with_lua_includes="-I/usr/include/lua5.1"])
+AC_SUBST(with_lua_includes)
+
+AC_MSG_CHECKING(for lua lib)
+AC_ARG_WITH(lua_lib,
+    AC_HELP_STRING([--with-lua-lib],[--with-lua-lib@<:@=-llua51@:>@]),
+    [with_lua_lib="$withval"],[with_lua_lib="-llua5.1"])
+AC_SUBST(with_lua_lib)
+
+
+
 
 #Plugins to build
 
