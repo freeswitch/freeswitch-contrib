@@ -51,9 +51,9 @@ static struct {
   char *query;
   switch_bool_t debug;
 
-  char *attributes;
-  int attributes_c;
-  char *attributes_v[10];
+  char *attrs;
+  int attrs_c;
+  char *attrs_v[10];
 
   char *params;
   int params_c;
@@ -131,14 +131,14 @@ static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const
 }
 
 
-/* Config callback - separate attributes, params or variables string and save elements in their globals. _c and _v */
+/* Config callback - separate attrs, params or variables string and save elements in their globals. _c and _v */
 static switch_status_t config_callback_separate_string(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
   if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
-    if (!strcmp(data->key, "attributes")) {
-      globals.attributes_c = switch_separate_string(globals.attributes, ',', globals.attributes_v,
-                               (sizeof(globals.attributes_v) / sizeof(globals.attributes_v[0])));
+    if (!strcmp(data->key, "attrs")) {
+      globals.attrs_c = switch_separate_string(globals.attrs, ',', globals.attrs_v,
+                               (sizeof(globals.attrs_v) / sizeof(globals.attrs_v[0])));
     } else if (!strcmp(data->key, "params")) {
       globals.params_c = switch_separate_string(globals.params, ',', globals.params_v,
                                (sizeof(globals.params_v) / sizeof(globals.params_v[0])));
@@ -162,12 +162,10 @@ static switch_xml_config_string_options_t config_opt_valid_odbc_dsn = { NULL, 0,
 static switch_xml_config_item_t instructions[] = {
   SWITCH_CONFIG_ITEM_CALLBACK("odbc-dsn", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
     &globals.odbc_dsn, "db:user:password", config_callback_dsn, &config_opt_valid_odbc_dsn, "db:user:password", "ODBC DSN to use"),
-  SWITCH_CONFIG_ITEM("query", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
-    &globals.query, "select * from users where domain='${domain}' and ${key}='${user}';", &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM("debug", SWITCH_CONFIG_BOOL, CONFIG_RELOADABLE,
     &globals.debug, (void *) SWITCH_FALSE, NULL, NULL, NULL),
-  SWITCH_CONFIG_ITEM_CALLBACK("attributes", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.attributes, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
+  SWITCH_CONFIG_ITEM_CALLBACK("attrs", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
+    &globals.attrs, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("params", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
     &globals.params, "password", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("variables", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
@@ -285,10 +283,10 @@ static int lookup_callback(void *pArg, int col_c, char **col_v, char **col_n)
   /* Add user, params and variables children */
   if ((user = switch_xml_add_child_d(cbt->xml, "user", cbt->off++))) {
 
-    /* Add user attributes */
-    for (i = 0; i < globals.attributes_c; i++) {
+    /* Add user attrs */
+    for (i = 0; i < globals.attrs_c; i++) {
       for (j = 0; j < col_c; j++) {
-        if (!strcmp(globals.attributes_v[i], col_n[j])) {
+        if (!strcmp(globals.attrs_v[i], col_n[j])) {
           if (strcmp(col_v[j], "")) {
             switch_xml_set_attr_d(user, col_n[j], col_v[j]);
           }
@@ -349,8 +347,8 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   switch_event_header_t *hi;
   switch_xml_t xml = NULL, sub = NULL;
   callback_t cbt = { 0 };
-  char *domain = NULL;
-  char *query = NULL;
+  char *domain = NULL, *purpose = NULL;
+  char *query = NULL, *expanded_query = NULL;
   char *err = NULL;
   int off = 0;
   char *xml_char;
@@ -374,13 +372,19 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
       if (!strcmp(hi->name, "domain")) {
         domain = strdup(hi->value);
       }
+      else if (!strcmp(hi->name, "purpose")) {
+        purpose = strdup(hi->value);
+      }
     }
   }
 
   if (!domain) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No domain was specified !\n");
+    switch_safe_free(purpose);
     return NULL;
   }
+
+  if (!purpose) purpose = strdup("default");
 
   /* Create simple directory xml */
   if ((xml = switch_xml_new("directory"))) {
@@ -399,19 +403,29 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   cbt.rowcount = 0;
 
   /* Generate query */
-  query = switch_event_expand_headers(event, globals.query);
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "SQL Query: %s\n", query);
+  if (!(query = switch_core_hash_find(globals.queries, purpose))) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not find a query named: [%s]\n", purpose);
+    switch_safe_free(purpose);
+    return NULL;
+  }
 
-  /* Execute query */
-  if (!execute_sql_callback(query, lookup_callback, &cbt, &err)) {
+  expanded_query = switch_event_expand_headers(event, query);
+  if (globals.debug == SWITCH_TRUE) switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "SQL Query: %s\n", expanded_query);
+
+  /* Execute expanded_query */
+  if (!execute_sql_callback(expanded_query, lookup_callback, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to lookup cid: %s\n", err ? err : "(null)");
   }
 
   /* Cleanup */
-  if (query != globals.query) {
-    switch_safe_free(query);
+
+  switch_safe_free(purpose);
+
+  if (expanded_query != query) {
+    switch_safe_free(expanded_query);
   }
 
+//  switch_safe_free(query); /* TODO SHOULDN'T THIS BE FREED?!?! */
   switch_safe_free(domain);
 
   /* See if we got any entries returned */
