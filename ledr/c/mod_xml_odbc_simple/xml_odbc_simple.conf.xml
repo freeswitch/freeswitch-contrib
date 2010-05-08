@@ -12,7 +12,7 @@
     <!-- The following params are hardcoded in the module. Uncomment and change if you want to override them -->
     <!-- <param name="debug" value="false"/> -->
     <!-- <param name="attributes" value="id,mailbox,cidr,number-alias"/> -->
-    <!-- <param name="properties" value="password,dial-string"/> -->
+    <!-- <param name="params" value="password,dial-string"/> -->
     <!-- <param name="variables" value="user_context"/> -->
   </settings>
 

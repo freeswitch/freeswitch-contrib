@@ -55,9 +55,9 @@ static struct {
   int attributes_c;
   char *attributes_v[10];
 
-  char *properties;
-  int properties_c;
-  char *properties_v[30];
+  char *params;
+  int params_c;
+  char *params_v[30];
 
   char *variables;
   int variables_c;
@@ -129,7 +129,7 @@ static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const
 }
 
 
-/* Config callback - separate attributes, properties or variables string and save elements in their globals. _c and _v */
+/* Config callback - separate attributes, params or variables string and save elements in their globals. _c and _v */
 static switch_status_t config_callback_separate_string(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
@@ -137,9 +137,9 @@ static switch_status_t config_callback_separate_string(switch_xml_config_item_t 
     if (!strcmp(data->key, "attributes")) {
       globals.attributes_c = switch_separate_string(globals.attributes, ',', globals.attributes_v,
                                (sizeof(globals.attributes_v) / sizeof(globals.attributes_v[0])));
-    } else if (!strcmp(data->key, "properties")) {
-      globals.properties_c = switch_separate_string(globals.properties, ',', globals.properties_v,
-                               (sizeof(globals.properties_v) / sizeof(globals.properties_v[0])));
+    } else if (!strcmp(data->key, "params")) {
+      globals.params_c = switch_separate_string(globals.params, ',', globals.params_v,
+                               (sizeof(globals.params_v) / sizeof(globals.params_v[0])));
     } else if (!strcmp(data->key, "variables")) {
       globals.variables_c = switch_separate_string(globals.variables, ',', globals.variables_v,
                                (sizeof(globals.variables_v) / sizeof(globals.variables_v[0])));
@@ -166,10 +166,10 @@ static switch_xml_config_item_t instructions[] = {
     &globals.debug, (void *) SWITCH_FALSE, NULL, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("attributes", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
     &globals.attributes, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
-  SWITCH_CONFIG_ITEM_CALLBACK("properties", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.properties, "password", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
+  SWITCH_CONFIG_ITEM_CALLBACK("params", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
+    &globals.params, "password", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("variables", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.variables, "", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
+    &globals.variables, "user_context", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_END()
 };
 
@@ -229,12 +229,12 @@ static switch_bool_t execute_sql_callback(char *sql, switch_core_db_callback_fun
 static int lookup_callback(void *pArg, int col_c, char **col_v, char **col_n)
 {
   callback_t *cbt = (callback_t *) pArg;
-  switch_xml_t user = NULL, properties = NULL, variables = NULL, sub = NULL;
+  switch_xml_t user = NULL, params = NULL, variables = NULL, sub = NULL;
   int i, j;
 
   cbt->rowcount++;
 
-  /* Add user, properties and variables children */
+  /* Add user, params and variables children */
   if ((user = switch_xml_add_child_d(cbt->xml, "user", cbt->off++))) {
 
     /* Add user attributes */
@@ -249,13 +249,13 @@ static int lookup_callback(void *pArg, int col_c, char **col_v, char **col_n)
       }
     }
 
-    /* Add property children */
-    for (i = 0; i < globals.properties_c; i++) {
+    /* Add param children */
+    for (i = 0; i < globals.params_c; i++) {
       for (j = 0; j < col_c; j++) {
-        if (!strcmp(globals.properties_v[i], col_n[j])) {
+        if (!strcmp(globals.params_v[i], col_n[j])) {
           if (strcmp(col_v[j], "")) {
-            if (!properties) properties = switch_xml_add_child_d(user, "properties", cbt->off++);
-            if ((sub = switch_xml_add_child_d(properties, "property", cbt->off++))) {
+            if (!params) params = switch_xml_add_child_d(user, "params", cbt->off++);
+            if ((sub = switch_xml_add_child_d(params, "param", cbt->off++))) {
               switch_xml_set_attr_d(sub, "name", col_n[j]);
               switch_xml_set_attr_d(sub, "value", col_v[j]);
             }
