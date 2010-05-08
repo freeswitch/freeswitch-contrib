@@ -320,6 +320,9 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   /* Get value of domain from event headers */
   if ((hi = event->headers)) {
     for (; hi; hi = hi->next) {
+      if (globals.debug == SWITCH_TRUE) {
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "event header [%s]=[%s]\n", hi->name, hi->value);
+      }
       if (!strcmp(hi->name, "domain")) {
         domain = strdup(hi->value);
       }
@@ -366,6 +369,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   /* See if we got any entries returned */
   if (cbt.rowcount == 0) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "No user was found !\n");
+    switch_xml_free(xml); /* don't forget */
     return NULL;
   }
 

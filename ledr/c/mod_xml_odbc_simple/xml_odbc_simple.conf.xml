@@ -4,16 +4,17 @@
 
   <settings>
     <param name="odbc-dsn" value="db:user:password"/>
-
-    <!-- Uncomment the sql query that is appropriate for your database, otherwise no hyphen is allowed in the value of ${key} -->
-    <!-- <param name="query" value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
-    <!-- <param name="query" value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
-
-    <!-- The following params are hardcoded in the module. Uncomment and change if you want to override them -->
-    <!-- <param name="debug" value="false"/> -->
-    <!-- <param name="attributes" value="id,mailbox,cidr,number-alias"/> -->
-    <!-- <param name="params" value="password,dial-string"/> -->
-    <!-- <param name="variables" value="user_context"/> -->
+    <param name="debug" value="false"/>
+    <param name="attrs" value="id,mailbox,cidr,number-alias"/> <!-- max 10 -->
+    <param name="params" value="password,dial-string"/> <!-- max 30 -->
+    <param name="variables" value="user_context"/> <!-- max 30 -->
   </settings>
+
+  <queries>
+    <query name="network-list" value="select id, cidr from users where domain='${domain}';"/>
+    <query name="default" value="select * from users where domain='${domain}' and ${key}='${user}';"/>
+    <!-- <query value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
+    <!-- <query value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
+  </queries>
 
 </configuration>
