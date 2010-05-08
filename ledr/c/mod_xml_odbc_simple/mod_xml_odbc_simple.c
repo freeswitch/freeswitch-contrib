@@ -234,50 +234,53 @@ static int lookup_callback(void *pArg, int col_c, char **col_v, char **col_n)
 
   cbt->rowcount++;
 
+  /* Add user, properties and variables children */
   if ((user = switch_xml_add_child_d(cbt->xml, "user", cbt->off++))) {
-    properties = switch_xml_add_child_d(user, "properties", cbt->off++);
-    variables = switch_xml_add_child_d(user, "variables", cbt->off++);
-  }
 
-  /* Refactor this shit */
-
-  for (i = 0; i < globals.attributes_c; i++) {
-    for (j = 0; j < col_c; j++) {
-      if (!strcmp(globals.attributes_v[i], col_n[j])) {
-        if (strcmp(col_v[j], "")) {
-          switch_xml_set_attr_d(user, col_n[j], col_v[j]);
-        }
-        break;
-      }
-    }
-  }
-
-  for (i = 0; i < globals.properties_c; i++) {
-    for (j = 0; j < col_c; j++) {
-      if (!strcmp(globals.properties_v[i], col_n[j])) {
-        if (strcmp(col_v[j], "")) {
-          if ((sub = switch_xml_add_child_d(properties, "property", cbt->off++))) {
-            switch_xml_set_attr_d(sub, "name", col_n[j]);
-            switch_xml_set_attr_d(sub, "value", col_v[j]);
+    /* Add user attributes */
+    for (i = 0; i < globals.attributes_c; i++) {
+      for (j = 0; j < col_c; j++) {
+        if (!strcmp(globals.attributes_v[i], col_n[j])) {
+          if (strcmp(col_v[j], "")) {
+            switch_xml_set_attr_d(user, col_n[j], col_v[j]);
           }
+          break;
         }
-        break;
       }
     }
-  }
 
-  for (i = 0; i < globals.variables_c; i++) {
-    for (j = 0; j < col_c; j++) {
-      if (!strcmp(globals.variables_v[i], col_n[j])) {
-        if (strcmp(col_v[j], "")) {
-          if ((sub = switch_xml_add_child_d(variables, "variable", cbt->off++))) {
-            switch_xml_set_attr_d(sub, "name", col_n[j]);
-            switch_xml_set_attr_d(sub, "value", col_v[j]);
+    /* Add property children */
+    for (i = 0; i < globals.properties_c; i++) {
+      for (j = 0; j < col_c; j++) {
+        if (!strcmp(globals.properties_v[i], col_n[j])) {
+          if (strcmp(col_v[j], "")) {
+            if (!properties) properties = switch_xml_add_child_d(user, "properties", cbt->off++);
+            if ((sub = switch_xml_add_child_d(properties, "property", cbt->off++))) {
+              switch_xml_set_attr_d(sub, "name", col_n[j]);
+              switch_xml_set_attr_d(sub, "value", col_v[j]);
+            }
           }
+          break;
         }
-        break;
       }
     }
+
+    /* Add variable children */
+    for (i = 0; i < globals.variables_c; i++) {
+      for (j = 0; j < col_c; j++) {
+        if (!strcmp(globals.variables_v[i], col_n[j])) {
+          if (strcmp(col_v[j], "")) {
+            if (!variables) variables = switch_xml_add_child_d(user, "variables", cbt->off++);
+            if ((sub = switch_xml_add_child_d(variables, "variable", cbt->off++))) {
+              switch_xml_set_attr_d(sub, "name", col_n[j]);
+              switch_xml_set_attr_d(sub, "value", col_v[j]);
+            }
+          }
+          break;
+        }
+      }
+    }
+
   }
 
   return SWITCH_STATUS_SUCCESS;
