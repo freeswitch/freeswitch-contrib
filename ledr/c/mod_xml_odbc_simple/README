@@ -1,1 +1,12 @@
-UNDER CONSTRUCTION
+mod_xml_odbc_simple
+
+A simple variant of mod_xml_odbc, without the templating stuff. This module is especially nice
+if you have your users defined in 'flat' tables where each attr, param and variable is simply
+a column in the result of your query.
+
+
+
+Todo:
+
+- Get rid of all memory leaks (valgrind)
+- Make it possible to define an odbc-dsn per query - should be easy with this switch_cache_db stuff
