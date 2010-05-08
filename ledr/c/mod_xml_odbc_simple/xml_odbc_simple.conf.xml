@@ -1,0 +1,19 @@
+<configuration name="xml_odbc_simple.conf" description="XML ODBC Simple Configuration">
+
+  <!-- NOTE: This module can only be used for User Directory lookups -->
+
+  <settings>
+    <param name="odbc-dsn" value="db:user:password"/>
+
+    <!-- Uncomment the sql query that is appropriate for your database, otherwise no hyphen is allowed in the value of ${key} -->
+    <!-- <param name="query" value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
+    <!-- <param name="query" value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
+
+    <!-- The following params are hardcoded in the module. Uncomment and change if you want to override them -->
+    <!-- <param name="debug" value="false"/> -->
+    <!-- <param name="attributes" value="id,mailbox,cidr,number-alias"/> -->
+    <!-- <param name="properties" value="password,dial-string"/> -->
+    <!-- <param name="variables" value="user_context"/> -->
+  </settings>
+
+</configuration>
