@@ -63,6 +63,8 @@ static struct {
   int variables_c;
   char *variables_v[30];
 
+  switch_hash_t *queries;
+
   switch_memory_pool_t *pool;
 } globals;
 
@@ -177,11 +179,57 @@ static switch_xml_config_item_t instructions[] = {
 /* Do Config - Called at startup and reload of this module */
 static switch_status_t do_config(switch_bool_t reload)
 {
-  if (switch_xml_config_parse_module_settings("xml_odbc_simple.conf", reload, instructions) != SWITCH_STATUS_SUCCESS) {
+  char *cf = "xml_odbc_simple.conf";
+  switch_xml_t cfg, xml = NULL, queries, query;
+  switch_status_t status = SWITCH_STATUS_FALSE;
+  switch_hash_index_t *hi;
+  void *val;
+  char *query_name;
+
+  if (switch_xml_config_parse_module_settings(cf, reload, instructions) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not open xml_odbc_simple.conf\n");
     return SWITCH_STATUS_FALSE;
   }
-  return SWITCH_STATUS_SUCCESS;
+
+  /* also parse queries section here (based on purpose event-header)
+   * <query name="network-list" value="select..."/>
+   * <query name="default" value="select..."/>
+   */
+
+  if (!(xml = switch_xml_open_cfg(cf, &cfg, NULL))) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "open of %s failed\n", cf);
+    goto done;
+  }
+
+  /* get queries and put them in globals.queries */
+  if ((queries = switch_xml_child(cfg, "queries"))) {
+    for (query = switch_xml_child(queries, "query"); query; query = query->next) {
+      char *var = (char *) switch_xml_attr_soft(query, "name");
+      char *val = (char *) switch_xml_attr_soft(query, "value");
+      if (!zstr(var) && !zstr(val)) {
+        switch_core_hash_insert(globals.queries, var, val);
+      }
+    }
+  }
+
+  /* remove entries from globals.queries that are not in current configuration */
+  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
+    switch_hash_this(hi, NULL, NULL, &val);
+    query_name = (char *) val;
+    hi = switch_hash_next(hi);
+    if (!switch_xml_find_child(queries, "query", "name", query_name)) {
+      switch_core_hash_delete(globals.queries, query_name);
+    }
+  }
+
+  status = SWITCH_STATUS_SUCCESS;
+
+ done:
+
+  /* Cleanup */
+  switch_xml_free(xml);
+
+  return status;
 }
 
 
@@ -389,6 +437,8 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
 //  switch_api_interface_t *xml_odbc_simple_api_interface;
   xml_binding_t *binding = NULL;
 
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC Simple module loading...\n");
+
   memset(&globals, 0, sizeof(globals));
 
   globals.pool = pool;
@@ -398,7 +448,11 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
     return SWITCH_STATUS_FALSE;
   }
 
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC Simple module loading...\n");
+  /* allocate the queries hash */
+  if (switch_core_hash_init(&globals.queries, globals.pool) != SWITCH_STATUS_SUCCESS) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
+    return SWITCH_STATUS_GENERR;
+  }
 
   if (do_config(SWITCH_FALSE) != SWITCH_STATUS_SUCCESS) {
     return SWITCH_STATUS_FALSE;
@@ -422,6 +476,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
     return SWITCH_STATUS_TERM;
   }
 
+
 //  SWITCH_ADD_API(xml_odbc_simple_api_interface, "xml_odbc_simple", "XML ODBC Simple", xml_odbc_simple_function, XML_ODBC_SIMPLE_SYNTAX);
 //  switch_console_set_complete("add xml_odbc_simple debug_on");
 //  switch_console_set_complete("add xml_odbc_simple debug_off");
@@ -434,6 +489,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_simple_shutdown)
 {
   switch_xml_unbind_search_function_ptr(xml_odbc_simple_search);
+  switch_core_hash_destroy(&globals.queries);
   return SWITCH_STATUS_SUCCESS;
 }
 

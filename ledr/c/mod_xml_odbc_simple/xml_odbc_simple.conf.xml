@@ -13,8 +13,8 @@
   <queries>
     <query name="network-list" value="select id, cidr from users where domain='${domain}';"/>
     <query name="default" value="select * from users where domain='${domain}' and ${key}='${user}';"/>
-    <!-- <query value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
-    <!-- <query value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
+    <!-- <query name="default" value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
+    <!-- <query name="default" value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
   </queries>
 
 </configuration>
