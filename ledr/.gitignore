@@ -5,6 +5,7 @@
 *.a
 *.la
 *.loT
+.*.swp
 .libs
 .deps
 .\#*
