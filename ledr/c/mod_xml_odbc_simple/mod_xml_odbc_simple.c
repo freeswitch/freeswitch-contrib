@@ -425,7 +425,6 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
     switch_safe_free(expanded_query);
   }
 
-//  switch_safe_free(query); /* TODO SHOULDN'T THIS BE FREED?!?! */
   switch_safe_free(domain);
 
   /* See if we got any entries returned */
