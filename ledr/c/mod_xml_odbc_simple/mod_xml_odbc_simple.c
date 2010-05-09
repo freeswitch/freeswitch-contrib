@@ -49,7 +49,6 @@ static struct {
   char *odbc_user;
   char *odbc_pass;
   char *query;
-  switch_bool_t debug;
 
   char *attrs;
   int attrs_c;
@@ -162,8 +161,6 @@ static switch_xml_config_string_options_t config_opt_valid_odbc_dsn = { NULL, 0,
 static switch_xml_config_item_t instructions[] = {
   SWITCH_CONFIG_ITEM_CALLBACK("odbc-dsn", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
     &globals.odbc_dsn, "db:user:password", config_callback_dsn, &config_opt_valid_odbc_dsn, "db:user:password", "ODBC DSN to use"),
-  SWITCH_CONFIG_ITEM("debug", SWITCH_CONFIG_BOOL, CONFIG_RELOADABLE,
-    &globals.debug, (void *) SWITCH_FALSE, NULL, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("attrs", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
     &globals.attrs, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_CALLBACK("params", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
@@ -367,9 +364,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   /* Get value of domain from event headers */
   if ((hi = event->headers)) {
     for (; hi; hi = hi->next) {
-      if (globals.debug == SWITCH_TRUE) {
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Event Header [%s] [%s]\n", hi->name, hi->value);
-      }
+      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Event Header %s [%s]\n", hi->name, hi->value);
       if (!strcmp(hi->name, "domain")) {
         domain = strdup(hi->value);
       }
@@ -411,7 +406,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   }
 
   expanded_query = switch_event_expand_headers(event, query);
-  if (globals.debug == SWITCH_TRUE) switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG SQL Query [%s] [%s]\n", purpose, expanded_query);
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "SQL Query %s [%s]\n", purpose, expanded_query);
 
   /* Execute expanded_query */
   if (!execute_sql_callback(expanded_query, lookup_callback, &cbt, &err)) {
@@ -428,24 +423,22 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
   switch_safe_free(domain);
 
-  /* How long did it take ? */
-  if (globals.debug == SWITCH_TRUE) {
-    done = switch_micro_time_now();
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Time Elapsed: %lu ms\n", (done - start)/1000 );
-  }
-
   /* See if we got any entries returned */
   if (cbt.rowcount == 0) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "No user was found !\n");
-    switch_xml_free(xml); /* don't forget */
-    return NULL;
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Empty Result - No XML was generated\n");
+  } else {
+    xml_char = switch_xml_toxml(xml, SWITCH_FALSE);
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Result %i Rows - XML generated:\n%s", cbt.rowcount, xml_char);
+    switch_safe_free(xml_char);
   }
 
-  /* All went fine. Debug dump */
-  if (globals.debug == SWITCH_TRUE) {
-    xml_char = switch_xml_toxml(xml, SWITCH_FALSE);
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG XML Dump:\n%s", xml_char);
-    switch_safe_free(xml_char);
+  /* How long did it take ? */
+  done = switch_micro_time_now();
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %lu ms\n", (done - start)/1000 );
+
+  if (cbt.rowcount == 0) {
+    switch_xml_free(xml); /* don't forget */
+    return NULL;
   }
 
   return xml;
@@ -454,7 +447,6 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
 SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
 {
-//  switch_api_interface_t *xml_odbc_simple_api_interface;
   xml_binding_t *binding = NULL;
 
   switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "XML ODBC Simple module loading...\n");
@@ -495,11 +487,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Couldn't bind event!\n");
     return SWITCH_STATUS_TERM;
   }
-
-
-//  SWITCH_ADD_API(xml_odbc_simple_api_interface, "xml_odbc_simple", "XML ODBC Simple", xml_odbc_simple_function, XML_ODBC_SIMPLE_SYNTAX);
-//  switch_console_set_complete("add xml_odbc_simple debug_on");
-//  switch_console_set_complete("add xml_odbc_simple debug_off");
 
   /* indicate that the module should continue to be loaded */
   return SWITCH_STATUS_SUCCESS;

@@ -4,7 +4,6 @@
 
   <settings>
     <param name="odbc-dsn" value="db:user:password"/>
-    <param name="debug" value="false"/>
     <param name="attrs" value="id,mailbox,cidr,number-alias"/> <!-- max 10 -->
     <param name="params" value="password,dial-string"/> <!-- max 30 -->
     <param name="variables" value="user_context"/> <!-- max 30 -->
