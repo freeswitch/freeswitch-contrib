@@ -343,6 +343,7 @@ typedef struct xml_binding {
 static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_name, const char *key_name,
   const char *key_value, switch_event_t *event, void *user_data)
 {
+  switch_time_t start = switch_micro_time_now(), done;
   xml_binding_t *binding = (xml_binding_t *) user_data;
   switch_event_header_t *hi;
   switch_xml_t xml = NULL, sub = NULL;
@@ -367,7 +368,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   if ((hi = event->headers)) {
     for (; hi; hi = hi->next) {
       if (globals.debug == SWITCH_TRUE) {
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "event header [%s]=[%s]\n", hi->name, hi->value);
+        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Event Header [%s] [%s]\n", hi->name, hi->value);
       }
       if (!strcmp(hi->name, "domain")) {
         domain = strdup(hi->value);
@@ -410,7 +411,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   }
 
   expanded_query = switch_event_expand_headers(event, query);
-  if (globals.debug == SWITCH_TRUE) switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "SQL Query: %s\n", expanded_query);
+  if (globals.debug == SWITCH_TRUE) switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG SQL Query [%s] [%s]\n", purpose, expanded_query);
 
   /* Execute expanded_query */
   if (!execute_sql_callback(expanded_query, lookup_callback, &cbt, &err)) {
@@ -427,6 +428,12 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
   switch_safe_free(domain);
 
+  /* How long did it take ? */
+  if (globals.debug == SWITCH_TRUE) {
+    done = switch_micro_time_now();
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG Time Elapsed: %lu ms\n", (done - start)/1000 );
+  }
+
   /* See if we got any entries returned */
   if (cbt.rowcount == 0) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "No user was found !\n");
@@ -437,7 +444,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   /* All went fine. Debug dump */
   if (globals.debug == SWITCH_TRUE) {
     xml_char = switch_xml_toxml(xml, SWITCH_FALSE);
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Debug dump of generated XML:\n%s", xml_char);
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "DEBUG XML Dump:\n%s", xml_char);
     switch_safe_free(xml_char);
   }
 
