@@ -10,7 +10,7 @@
   </settings>
 
   <queries>
-    <query name="network-list" value="select id, cidr from users where domain='${domain}';"/>
+    <query name="network-list" value="select id, cidr from users where domain = '${domain}' and cidr != '';"/>
     <query name="default" value="select * from users where domain='${domain}' and ${key}='${user}';"/>
     <!-- <query name="default" value="select * from users where domain='${domain}' and &quot;${key}&quot;='${user}';"/> --> <!-- pgsql -->
     <!-- <query name="default" value="select * from users where domain='${domain}' and `${key}`='${user}';"/> --> <!-- mysql -->
