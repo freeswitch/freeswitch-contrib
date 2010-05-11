@@ -523,7 +523,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_simple_shutdown)
   switch_xml_unbind_search_function_ptr(xml_odbc_simple_search);
 
   /* Free all queries in globals.queries */
-  for (hi = switch_hash_first(NULL, globals.queries); hi; switch_hash_next(hi)) {
+  for (hi = switch_hash_first(NULL, globals.queries); hi; hi = switch_hash_next(hi)) {
     switch_hash_this(hi, NULL, NULL, &val);
     query = (query_t *) val;
     free(query);
