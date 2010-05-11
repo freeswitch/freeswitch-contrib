@@ -183,7 +183,7 @@ static switch_status_t do_config(switch_bool_t reload)
   switch_hash_index_t *hi;
   char *name;
   void *val;
-  query_t *query;
+  query_t *query, *query_tmp;
 
   if (switch_xml_config_parse_module_settings(cf, reload, instructions) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not open xml_odbc_simple.conf\n");
@@ -204,13 +204,15 @@ static switch_status_t do_config(switch_bool_t reload)
   if ((x_queries = switch_xml_child(cfg, "queries"))) {
     for (x_query = switch_xml_child(x_queries, "query"); x_query; x_query = x_query->next) {
 
-      switch_zmalloc(query, sizeof(*query)); ///////////////////////////// THIS IS GONNA LEAK !!!!!!!!!!!!!!!!!! TODO TODO TODO
+      switch_zmalloc(query, sizeof(*query));
 
       query->name = (char *) switch_xml_attr_soft(x_query, "name");
       query->odbc_dsn = (char *) switch_xml_attr(x_query, "odbc-dsn");
       query->value = (char *) switch_xml_attr_soft(x_query, "value");
 
-      if (!zstr(query->name) && !zstr(query->value)) {
+      if (zstr(query->name) || zstr(query->value)) {
+        free(query);
+      } else {
         if (query->odbc_dsn) {
           split_dsn_into_db_user_pass(query->odbc_dsn, query->odbc_user, query->odbc_pass);
         } else {
@@ -218,6 +220,8 @@ static switch_status_t do_config(switch_bool_t reload)
           query->odbc_user = globals.odbc_pass;
           query->odbc_pass = globals.odbc_pass;
         }
+        if ((query_tmp = switch_core_hash_find(globals.queries, query->name)))
+          free(query_tmp);
         switch_core_hash_insert(globals.queries, query->name, query);
       }
 
@@ -230,6 +234,8 @@ static switch_status_t do_config(switch_bool_t reload)
     name = (char *) val;
     hi = switch_hash_next(hi);
     if (!switch_xml_find_child(x_queries, "query", "name", name)) {
+      if ((query_tmp = switch_core_hash_find(globals.queries, name)))
+        free(query_tmp);
       switch_core_hash_delete(globals.queries, name);
     }
   }
@@ -510,8 +516,21 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
 
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_xml_odbc_simple_shutdown)
 {
+  query_t *query;
+  switch_hash_index_t *hi;
+  void *val;
+
   switch_xml_unbind_search_function_ptr(xml_odbc_simple_search);
+
+  /* Free all queries in globals.queries */
+  for (hi = switch_hash_first(NULL, globals.queries); hi; switch_hash_next(hi)) {
+    switch_hash_this(hi, NULL, NULL, &val);
+    query = (query_t *) val;
+    free(query);
+  }
+
   switch_core_hash_destroy(&globals.queries);
+
   return SWITCH_STATUS_SUCCESS;
 }
 
