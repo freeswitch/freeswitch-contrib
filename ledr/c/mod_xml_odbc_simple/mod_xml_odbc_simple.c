@@ -86,7 +86,7 @@ static switch_cache_db_handle_t *get_db_handle(void)
 }
 
 
-/* Config callback - connects to database */
+/* Config callback - split dsn into db:user:password and test connect to database */
 static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
@@ -178,8 +178,8 @@ static switch_status_t do_config(switch_bool_t reload)
   switch_xml_t cfg, xml = NULL, queries, query;
   switch_status_t status = SWITCH_STATUS_FALSE;
   switch_hash_index_t *hi;
+  char *name, *value;
   void *val;
-  char *query_name;
 
   if (switch_xml_config_parse_module_settings(cf, reload, instructions) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not open xml_odbc_simple.conf\n");
@@ -199,10 +199,10 @@ static switch_status_t do_config(switch_bool_t reload)
   /* get queries and put them in globals.queries */
   if ((queries = switch_xml_child(cfg, "queries"))) {
     for (query = switch_xml_child(queries, "query"); query; query = query->next) {
-      char *var = (char *) switch_xml_attr_soft(query, "name");
-      char *val = (char *) switch_xml_attr_soft(query, "value");
-      if (!zstr(var) && !zstr(val)) {
-        switch_core_hash_insert(globals.queries, var, val);
+      name = (char *) switch_xml_attr_soft(query, "name");
+      value = (char *) switch_xml_attr_soft(query, "value");
+      if (!zstr(name) && !zstr(value)) {
+        switch_core_hash_insert(globals.queries, name, value);
       }
     }
   }
@@ -210,10 +210,10 @@ static switch_status_t do_config(switch_bool_t reload)
   /* remove entries from globals.queries that are not in current configuration */
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, NULL, NULL, &val);
-    query_name = (char *) val;
+    name = (char *) val;
     hi = switch_hash_next(hi);
-    if (!switch_xml_find_child(queries, "query", "name", query_name)) {
-      switch_core_hash_delete(globals.queries, query_name);
+    if (!switch_xml_find_child(queries, "query", "name", name)) {
+      switch_core_hash_delete(globals.queries, name);
     }
   }
 
