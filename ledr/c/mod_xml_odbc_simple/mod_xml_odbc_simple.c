@@ -69,7 +69,7 @@ static struct {
 
 
 /* Per query DSN */
-typedef struct query {
+typedef struct query_obj {
   char *name;
   char *odbc_dsn;
   char *odbc_user;
