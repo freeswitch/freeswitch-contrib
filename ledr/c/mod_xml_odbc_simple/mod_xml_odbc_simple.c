@@ -259,8 +259,7 @@ static switch_bool_t execute_sql_callback(char *sql, switch_core_db_callback_fun
       retval = SWITCH_TRUE;
     }
   } else {
-    // NO POOL !! FIX IT ? TODO
-    //*err = switch_core_sprintf(cbt->pool, "Unable to get ODBC handle.  dsn: %s, dbh is %s\n", globals.odbc_dsn, dbh ? "not null" : "null");
+    *err = switch_core_sprintf(cbt->pool, "Unable to get ODBC handle.  dsn: %s, dbh is %s\n", globals.odbc_dsn, dbh ? "not null" : "null");
   }
 
   switch_cache_db_release_db_handle(&dbh);
@@ -343,13 +342,15 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   switch_time_t start = switch_micro_time_now(), done;
   xml_binding_t *binding = (xml_binding_t *) user_data;
   switch_event_header_t *hi;
-  switch_xml_t xml = NULL, sub = NULL;
+  switch_xml_t xml = NULL;
   callback_t cbt = { 0 };
   char *domain = NULL, *purpose = NULL;
   char *query = NULL, *expanded_query = NULL;
   char *err = NULL;
-  int off = 0;
   char *xml_char;
+
+  cbt.off = 0;
+  cbt.rowcount = 0;
 
   if (!binding) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "How can there be no binding ?!\n");
@@ -358,6 +359,12 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
   if (!event) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "How can there be no event ?!\n");
+    return NULL;
+  }
+
+  /* Initialize memory pool in cbt */
+  if (switch_core_new_memory_pool(&cbt.pool) != SWITCH_STATUS_SUCCESS) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not initialize memory pool\n");
     return NULL;
   }
 
@@ -376,8 +383,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
   if (!domain) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "No domain was specified !\n");
-    switch_safe_free(purpose);
-    return NULL;
+    goto done;
   }
 
   if (!purpose) purpose = strdup("default");
@@ -385,24 +391,18 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   /* Create simple directory xml */
   if ((xml = switch_xml_new("directory"))) {
     switch_xml_set_attr_d(xml, "type", "freeswitch/xml");
-    if ((sub = switch_xml_add_child_d(xml, "section", off++))) {
-      switch_xml_set_attr_d(sub, "name", "directory");
-      if (( sub = switch_xml_add_child_d(sub, "domain", off++))) {
-        switch_xml_set_attr_d(sub, "name", domain);
+    if ((cbt.xml = switch_xml_add_child_d(xml, "section", cbt.off++))) {
+      switch_xml_set_attr_d(cbt.xml, "name", "directory");
+      if ((cbt.xml = switch_xml_add_child_d(cbt.xml, "domain", cbt.off++))) {
+        switch_xml_set_attr_d(cbt.xml, "name", domain);
       }
     }
   }
 
-  /* Populate cbt */
-  cbt.xml = sub;
-  cbt.off = off;
-  cbt.rowcount = 0;
-
   /* Generate query */
   if (!(query = switch_core_hash_find(globals.queries, purpose))) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not find a query named: [%s]\n", purpose);
-    switch_safe_free(purpose);
-    return NULL;
+    goto done;
   }
 
   expanded_query = switch_event_expand_headers(event, query);
@@ -414,8 +414,6 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   }
 
   /* Cleanup */
-
-  switch_safe_free(purpose);
 
   if (expanded_query != query) {
     switch_safe_free(expanded_query);
@@ -436,15 +434,21 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   done = switch_micro_time_now();
   switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %lu ms\n", (done - start)/1000 );
 
-  if (cbt.rowcount == 0) {
-    switch_xml_free(xml); /* don't forget */
+ done:
+
+  if (xml && cbt.rowcount == 0) {
+    switch_xml_free(xml);
     return NULL;
   }
+
+  switch_safe_free(purpose);
+  switch_core_destroy_memory_pool(&cbt.pool);
 
   return xml;
 }
 
 
+/* Macro expands to: switch_status_t mod_cidlookup_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_xml_odbc_simple_load)
 {
   xml_binding_t *binding = NULL;
