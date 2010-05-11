@@ -204,10 +204,7 @@ static switch_status_t do_config(switch_bool_t reload)
   if ((x_queries = switch_xml_child(cfg, "queries"))) {
     for (x_query = switch_xml_child(x_queries, "query"); x_query; x_query = x_query->next) {
 
-      if (!(query = malloc(sizeof(*query)))) ///////////////////////////// THIS IS GONNA LEAK !!!!!!!!!!!!!!!!!! TODO TODO TODO
-        return SWITCH_STATUS_MEMERR;
-
-      memset(query, 0, sizeof(*query));
+      switch_zmalloc(query, sizeof(*query)); ///////////////////////////// THIS IS GONNA LEAK !!!!!!!!!!!!!!!!!! TODO TODO TODO
 
       query->name = (char *) switch_xml_attr_soft(x_query, "name");
       query->odbc_dsn = (char *) switch_xml_attr(x_query, "odbc-dsn");
