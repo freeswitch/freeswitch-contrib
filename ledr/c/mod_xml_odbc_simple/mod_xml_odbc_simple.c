@@ -181,7 +181,6 @@ static switch_status_t do_config(switch_bool_t reload)
   switch_xml_t cfg, xml = NULL, x_queries, x_query;
   switch_status_t status = SWITCH_STATUS_FALSE;
   switch_hash_index_t *hi;
-  char *name;
   void *val;
   query_t *query, *query_tmp;
 
@@ -231,12 +230,11 @@ static switch_status_t do_config(switch_bool_t reload)
   /* remove entries from globals.queries that are not in current configuration */
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, NULL, NULL, &val);
-    name = (char *) val;
+    query_tmp = (query_t *) val;
     hi = switch_hash_next(hi);
-    if (!switch_xml_find_child(x_queries, "query", "name", name)) {
-      if ((query_tmp = switch_core_hash_find(globals.queries, name)))
-        free(query_tmp);
-      switch_core_hash_delete(globals.queries, name);
+    if (!switch_xml_find_child(x_queries, "query", "name", query_tmp->name)) {
+      switch_core_hash_delete(globals.queries, query_tmp->name);
+      free(query_tmp);
     }
   }
 
