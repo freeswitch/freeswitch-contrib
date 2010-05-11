@@ -68,6 +68,18 @@ static struct {
 } globals;
 
 
+static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, switch_event_t *event, const char *in)
+{
+  char *tmp, *out;
+
+  tmp = switch_event_expand_headers(event, in);
+  out = switch_core_strdup(pool, tmp);
+  if (tmp != in) switch_safe_free(tmp);
+
+  return out;
+}
+
+
 /* Get database handle */
 static switch_cache_db_handle_t *get_db_handle(void)
 {
@@ -373,10 +385,10 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
     for (; hi; hi = hi->next) {
       switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Event Header %s [%s]\n", hi->name, hi->value);
       if (!strcmp(hi->name, "domain")) {
-        domain = strdup(hi->value);
+        domain = switch_core_strdup(cbt.pool, hi->value);
       }
       else if (!strcmp(hi->name, "purpose")) {
-        purpose = strdup(hi->value);
+        purpose = switch_core_strdup(cbt.pool, hi->value);
       }
     }
   }
@@ -386,7 +398,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
     goto done;
   }
 
-  if (!purpose) purpose = strdup("default");
+  if (!purpose) purpose = switch_core_strdup(cbt.pool, "default");
 
   /* Create simple directory xml */
   if ((xml = switch_xml_new("directory"))) {
@@ -405,7 +417,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
     goto done;
   }
 
-  expanded_query = switch_event_expand_headers(event, query);
+  expanded_query = switch_event_expand_headers_by_pool(cbt.pool, event, query);
   switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "SQL Query %s [%s]\n", purpose, expanded_query);
 
   /* Execute expanded_query */
@@ -414,12 +426,6 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   }
 
   /* Cleanup */
-
-  if (expanded_query != query) {
-    switch_safe_free(expanded_query);
-  }
-
-  switch_safe_free(domain);
 
   /* See if we got any entries returned */
   if (cbt.rowcount == 0) {
@@ -436,13 +442,12 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
  done:
 
+  switch_core_destroy_memory_pool(&cbt.pool);
+
   if (xml && cbt.rowcount == 0) {
     switch_xml_free(xml);
     return NULL;
   }
-
-  switch_safe_free(purpose);
-  switch_core_destroy_memory_pool(&cbt.pool);
 
   return xml;
 }
