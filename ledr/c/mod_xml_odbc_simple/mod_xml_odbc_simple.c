@@ -48,7 +48,6 @@ static struct {
   char *odbc_dsn;
   char *odbc_user;
   char *odbc_pass;
-  char *query;
 
   char *attrs;
   int attrs_c;
@@ -68,77 +67,69 @@ static struct {
 } globals;
 
 
+
+/* Per query DSN */
+typedef struct query {
+  char *name;
+  char *odbc_dsn;
+  char *odbc_user;
+  char *odbc_pass;
+  char *value;
+} query_t;
+
+
 static char* switch_event_expand_headers_by_pool(switch_memory_pool_t *pool, switch_event_t *event, const char *in)
 {
-  char *tmp, *out;
-
-  tmp = switch_event_expand_headers(event, in);
-  out = switch_core_strdup(pool, tmp);
+  char *tmp = switch_event_expand_headers(event, in);
+  char *out = switch_core_strdup(pool, tmp);
   if (tmp != in) switch_safe_free(tmp);
-
   return out;
 }
 
 
 /* Get database handle */
-static switch_cache_db_handle_t *get_db_handle(void)
+static switch_cache_db_handle_t *get_db_handle(query_t *query)
 {
   switch_cache_db_connection_options_t options = { {0} };
   switch_cache_db_handle_t *dbh = NULL;
 
-  if (!zstr(globals.odbc_dsn)) {
-    options.odbc_options.dsn = globals.odbc_dsn;
-    options.odbc_options.user = globals.odbc_user;
-    options.odbc_options.pass = globals.odbc_pass;
+  options.odbc_options.dsn = query->odbc_dsn;
+  options.odbc_options.user = query->odbc_user;
+  options.odbc_options.pass = query->odbc_pass;
 
-    if (switch_cache_db_get_db_handle(&dbh, SCDB_TYPE_ODBC, &options) != SWITCH_STATUS_SUCCESS)
-      dbh = NULL;
-  }
+  if (switch_cache_db_get_db_handle(&dbh, SCDB_TYPE_ODBC, &options) != SWITCH_STATUS_SUCCESS)
+    dbh = NULL;
+
   return dbh;
 }
 
 
-/* Config callback - split dsn into db:user:password and test connect to database */
+static switch_status_t split_dsn_into_db_user_pass(char *db, char *user, char *pass)
+{
+  if ((user = strchr(db, ':'))) {
+    *user++ = '\0';
+    if ((pass = strchr(user, ':'))) {
+      *pass++ = '\0';
+    }
+  }
+  return SWITCH_STATUS_SUCCESS;
+}
+
+
+/* Config callback - split dsn into db:user:password */
 static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
-  switch_status_t status = SWITCH_STATUS_SUCCESS;
-
-  switch_cache_db_handle_t *dbh = NULL;
-
-  if (!switch_odbc_available()) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "ODBC is not compiled in.  Do not configure odbc-dsn parameter!\n");
-    return SWITCH_STATUS_FALSE;
-  }
-
   if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
-
     if (zstr(newvalue)) {
       switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "No local database defined.\n");
     } else {
       switch_safe_free(globals.odbc_dsn);
       globals.odbc_dsn = strdup(newvalue);
-      if ((globals.odbc_user = strchr(globals.odbc_dsn, ':'))) {
-        *globals.odbc_user++ = '\0';
-        if ((globals.odbc_pass = strchr(globals.odbc_user, ':'))) {
-          *globals.odbc_pass++ = '\0';
-        }
-      }
-
-      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Connecting to dsn: %s\n", globals.odbc_dsn);
-
-      if (!(dbh = get_db_handle())) {
-        switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Cannot Open ODBC Database!\n");
-        switch_goto_status(SWITCH_STATUS_FALSE, done);
-      }
+      split_dsn_into_db_user_pass(globals.odbc_dsn, globals.odbc_user, globals.odbc_pass);
     }
   }
-
-  switch_goto_status(SWITCH_STATUS_SUCCESS, done);
-
- done:
-  switch_cache_db_release_db_handle(&dbh);
-  return status;
+  return SWITCH_STATUS_SUCCESS;
 }
 
 
@@ -187,11 +178,12 @@ static switch_xml_config_item_t instructions[] = {
 static switch_status_t do_config(switch_bool_t reload)
 {
   char *cf = "xml_odbc_simple.conf";
-  switch_xml_t cfg, xml = NULL, queries, query;
+  switch_xml_t cfg, xml = NULL, x_queries, x_query;
   switch_status_t status = SWITCH_STATUS_FALSE;
   switch_hash_index_t *hi;
-  char *name, *value;
+  char *name;
   void *val;
+  query_t *query;
 
   if (switch_xml_config_parse_module_settings(cf, reload, instructions) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not open xml_odbc_simple.conf\n");
@@ -209,13 +201,29 @@ static switch_status_t do_config(switch_bool_t reload)
   }
 
   /* get queries and put them in globals.queries */
-  if ((queries = switch_xml_child(cfg, "queries"))) {
-    for (query = switch_xml_child(queries, "query"); query; query = query->next) {
-      name = (char *) switch_xml_attr_soft(query, "name");
-      value = (char *) switch_xml_attr_soft(query, "value");
-      if (!zstr(name) && !zstr(value)) {
-        switch_core_hash_insert(globals.queries, name, value);
+  if ((x_queries = switch_xml_child(cfg, "queries"))) {
+    for (x_query = switch_xml_child(x_queries, "query"); x_query; x_query = x_query->next) {
+
+      if (!(query = malloc(sizeof(*query)))) ///////////////////////////// THIS IS GONNA LEAK !!!!!!!!!!!!!!!!!! TODO TODO TODO
+        return SWITCH_STATUS_MEMERR;
+
+      memset(query, 0, sizeof(*query));
+
+      query->name = (char *) switch_xml_attr_soft(x_query, "name");
+      query->odbc_dsn = (char *) switch_xml_attr(x_query, "odbc-dsn");
+      query->value = (char *) switch_xml_attr_soft(x_query, "value");
+
+      if (!zstr(query->name) && !zstr(query->value)) {
+        if (query->odbc_dsn) {
+          split_dsn_into_db_user_pass(query->odbc_dsn, query->odbc_user, query->odbc_pass);
+        } else {
+          query->odbc_dsn = globals.odbc_dsn;
+          query->odbc_user = globals.odbc_pass;
+          query->odbc_pass = globals.odbc_pass;
+        }
+        switch_core_hash_insert(globals.queries, query->name, query);
       }
+
     }
   }
 
@@ -224,7 +232,7 @@ static switch_status_t do_config(switch_bool_t reload)
     switch_hash_this(hi, NULL, NULL, &val);
     name = (char *) val;
     hi = switch_hash_next(hi);
-    if (!switch_xml_find_child(queries, "query", "name", name)) {
+    if (!switch_xml_find_child(x_queries, "query", "name", name)) {
       switch_core_hash_delete(globals.queries, name);
     }
   }
@@ -259,12 +267,12 @@ typedef struct callback_obj {
 
 
 /* Execute SQL callback */
-static switch_bool_t execute_sql_callback(char *sql, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
+static switch_bool_t execute_sql_callback(query_t *query, char *sql, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
 {
   switch_bool_t retval = SWITCH_FALSE;
   switch_cache_db_handle_t *dbh = NULL;
 
-  if (globals.odbc_dsn && (dbh = get_db_handle())) {
+  if (globals.odbc_dsn && (dbh = get_db_handle(query))) {
     if (switch_cache_db_execute_sql_callback(dbh, sql, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
       retval = SWITCH_FALSE;
     } else {
@@ -356,8 +364,9 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
   switch_event_header_t *hi;
   switch_xml_t xml = NULL;
   callback_t cbt = { 0 };
+  query_t *query;
   char *domain = NULL, *purpose = NULL;
-  char *query = NULL, *expanded_query = NULL;
+  char *expanded_query_value = NULL;
   char *err = NULL;
   char *xml_char;
 
@@ -417,11 +426,11 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
     goto done;
   }
 
-  expanded_query = switch_event_expand_headers_by_pool(cbt.pool, event, query);
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "SQL Query %s [%s]\n", purpose, expanded_query);
+  expanded_query_value = switch_event_expand_headers_by_pool(cbt.pool, event, query->value);
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "SQL Query %s [%s]\n", purpose, expanded_query_value);
 
   /* Execute expanded_query */
-  if (!execute_sql_callback(expanded_query, lookup_callback, &cbt, &err)) {
+  if (!execute_sql_callback(query, expanded_query_value, lookup_callback, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to lookup cid: %s\n", err ? err : "(null)");
   }
 
