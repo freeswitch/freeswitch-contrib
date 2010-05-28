@@ -318,7 +318,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 
   /* How long did it take ? */
   stop = switch_micro_time_now();
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %lu ms\n", (stop - start)/1000 );
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %u ms\n", (uint32_t) (stop - start)/1000 );
 }
 
 
