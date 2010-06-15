@@ -143,6 +143,9 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_params($user_id) {
+    	if (!is_array($this->users_params)) {
+    		return;
+    	}
         if (array_key_exists($user_id, $this->users_params)
                 && is_array($this->users_params[$user_id])
                 && count($this->users_params[$user_id]) > 0) {
@@ -187,6 +190,9 @@ class fs_directory extends fs_curl {
      * @return void
      */
     private function write_variables($user_id) {
+    	if (!is_array($this->users_vars)) {
+    		return;
+    	}
         if (array_key_exists($user_id, $this->users_vars)
                 && is_array($this->users_vars[$user_id])) {
             $this -> xmlw -> startElement('variables');
