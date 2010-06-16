@@ -52,43 +52,29 @@ typedef struct {
 static inbound_event_profile_t profiles[128] = {{{0}}};
 static int pcount = 0;
 
-
-static void mycallback(esl_event_t *event, char * path)
+static void mycallback (esl_event_t *event, char * path)
 {
-    int pipefd[2];
-    int pid;
-    char * serialized = NULL;
-
-/*make a pipe (fds go in pipefd[0] and pipefd[1])*/
-    pipe(pipefd);
-
-    pid = fork();
-
-    if (pid == 0)
-    {
-      /* Wire fd to stdin */
-        dup2(pipefd[0], 0);
-
-    // close unused hald of pipe
-
-        close(pipefd[1]);
-
-    // execute grep
-
-        execl(path, path, (char *)NULL);
-        _exit(EXIT_SUCCESS);
-    }
-    else /* Parent */
-    {
-    // close unused unput half of pipe
-        close(pipefd[0]);
-
+    FILE *output;
+    char *serialized = NULL;
+    
+    if (fork() == 0) {
+        output = popen (path, "w");
+        if (!output) {
+          fprintf (stderr, "Could not execute script.\n");
+          exit (EXIT_FAILURE);
+        }
+        /* Pass information to new process */
         esl_event_serialize(event, &serialized, ESL_FALSE);
-        write(pipefd[1], serialized, strlen(serialized));
-        close(pipefd[1]);
+        fprintf (output, "%s", serialized);
+        if (ferror (output)) {
+            fprintf (stderr, "Output to stream failed.\n");
+            exit (EXIT_FAILURE);
+        }
+        pclose (output); /* Might be already closed, but might as well try */
+        /* Free memory */
         esl_safe_free(serialized);
+        exit(0);
     }
-    return;
 }
 
 static int usage(char *name){
@@ -136,6 +122,7 @@ int main(int argc, char *argv[])
     int argv_conf = 0;
 	
     esl_global_set_default_logger(6);
+    signal(SIGCHLD, SIG_IGN);
 
 	for(;;) {
 		int option_index = 0;
