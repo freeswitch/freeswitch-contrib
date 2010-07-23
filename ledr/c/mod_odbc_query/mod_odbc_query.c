@@ -60,18 +60,6 @@ typedef struct query_obj {
 } query_t;
 
 
-static char* switch_channel_expand_variables_by_pool(switch_memory_pool_t *pool, switch_channel_t *channel, const char *in)
-{
-  char *tmp, *out;
-
-  tmp = switch_channel_expand_variables(channel, in);
-  out = switch_core_strdup(pool, tmp);
-  if (tmp != in) switch_safe_free(tmp);
-
-  return out;
-}
-
-
 /* Get database handle */
 static switch_cache_db_handle_t *get_db_handle(query_t *query)
 {
@@ -250,13 +238,13 @@ typedef struct callback_obj {
 
 
 /* Execute SQL callback */
-static switch_bool_t execute_sql_callback(query_t *query, char *sql, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
+static switch_bool_t execute_sql_callback(query_t *query, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
 {
   switch_bool_t retval = SWITCH_FALSE;
   switch_cache_db_handle_t *dbh = NULL;
 
   if (globals.odbc_dsn && (dbh = get_db_handle(query))) {
-    if (switch_cache_db_execute_sql_callback(dbh, sql, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
+    if (switch_cache_db_execute_sql_callback(dbh, query->value, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
       retval = SWITCH_FALSE;
     } else {
       retval = SWITCH_TRUE;
@@ -298,8 +286,8 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
   switch_time_t stop;
   callback_t cbt = { 0 };
   query_t *query, *t_query;
-  char *expanded_query_value = NULL;
   char *err = NULL;
+  char *t_value = NULL;
 
   cbt.pool = switch_core_session_get_pool(session);
   cbt.channel = switch_core_session_get_channel(session);
@@ -322,7 +310,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
     query->odbc_dsn  = switch_core_session_strdup(session, globals.odbc_dsn);
     query->odbc_user = switch_core_session_strdup(session, globals.odbc_user);
     query->odbc_pass = switch_core_session_strdup(session, globals.odbc_pass);
-    query->value     = switch_core_session_strdup(session, data);
+    t_value          = switch_core_session_strdup(session, data);
     switch_mutex_unlock(globals.mutex);
   }
 
@@ -332,7 +320,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
     query->odbc_dsn  = switch_core_session_strdup(session, t_query->odbc_dsn);
     query->odbc_user = switch_core_session_strdup(session, t_query->odbc_user);
     query->odbc_pass = switch_core_session_strdup(session, t_query->odbc_pass);
-    query->value     = switch_core_session_strdup(session, t_query->value);
+    t_value          = switch_core_session_strdup(session, t_query->value);
     switch_mutex_unlock(globals.mutex);
   }
 
@@ -341,12 +329,12 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
     goto done;
   }
 
-  expanded_query_value = switch_channel_expand_variables_by_pool(cbt.pool, cbt.channel, query->value);
-
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Expanded query %s, value %s\n", query->name, expanded_query_value);
+  query->value = switch_channel_expand_variables(switch_core_session_get_channel(session), t_value);
+  
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Expanded query name [%s] value [%s]\n", query->name, query->value);
 
   /* Execute expanded_query */
-  if (!execute_sql_callback(query, expanded_query_value, odbc_query_callback, &cbt, &err)) {
+  if (!execute_sql_callback(query, odbc_query_callback, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to lookup cid: %s\n", err ? err : "(null)");
   }
 
