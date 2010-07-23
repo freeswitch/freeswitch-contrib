@@ -134,7 +134,7 @@ static switch_status_t do_config(switch_bool_t reload)
   void *val;
 
   query_t *query;
-  char *t_name, *t_odbc_dsn, *t_odbc_user, *t_odbc_pass, *t_value;
+  char *t_name, *t_odbc_dsn, *t_odbc_dsn_2, *t_odbc_user, *t_odbc_pass, *t_value;
 
   switch_mutex_lock(globals.mutex);
 
@@ -176,11 +176,12 @@ static switch_status_t do_config(switch_bool_t reload)
       }
 
       if (!zstr(t_odbc_dsn)) {
-        if ((t_odbc_user = strchr(t_odbc_dsn, ':'))) {
+        t_odbc_dsn_2 = strdup(t_odbc_dsn);
+        if ((t_odbc_user = strchr(t_odbc_dsn_2, ':'))) {
           *t_odbc_user++ = '\0';
           if ((t_odbc_pass = strchr(t_odbc_user, ':'))) {
             *t_odbc_pass++ = '\0';
-            query->odbc_dsn = strdup(t_odbc_dsn);
+            query->odbc_dsn = strdup(t_odbc_dsn_2);
             query->odbc_user = strdup(t_odbc_user);
             query->odbc_pass = strdup(t_odbc_pass);
           } else {
@@ -189,6 +190,7 @@ static switch_status_t do_config(switch_bool_t reload)
         } else {
           switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "invalid odbc-dsn, using global one\n");
         }
+        switch_safe_free(t_odbc_dsn_2);
       }
 
       if (!query->odbc_dsn) {
@@ -211,7 +213,10 @@ static switch_status_t do_config(switch_bool_t reload)
     hi = switch_hash_next(hi);
     if (!switch_xml_find_child(x_queries, "query", "name", query->name)) {
       switch_core_hash_delete(globals.queries, query->name);
-      free(query);
+      switch_safe_free(query->name);
+      switch_safe_free(query->odbc_dsn);
+      switch_safe_free(query->value);
+      switch_safe_free(query);
     }
   }
 
@@ -236,9 +241,6 @@ static void reload_event_handler(switch_event_t *event)
 }
 
 static switch_event_node_t *reload_xml_event = NULL;
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /* Callback_t struct passed to each callback */
@@ -351,7 +353,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
   }
 
   /* cleanup */
-  free(query);
+  switch_safe_free(query);
 
  done:
 
@@ -419,13 +421,15 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
 
   switch_mutex_lock(globals.mutex);
 
-  for (hi = switch_hash_first(NULL, globals.queries); hi; hi = switch_hash_next(hi)) {
+  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, NULL, NULL, &val);
     query = (query_t *) val;
+    hi = switch_hash_next(hi);
+    switch_core_hash_delete(globals.queries, query->name);
     switch_safe_free(query->name);
     switch_safe_free(query->odbc_dsn);
     switch_safe_free(query->value);
-    free(query);
+    switch_safe_free(query);
   }
 
   switch_mutex_unlock(globals.mutex);
