@@ -149,7 +149,7 @@ static switch_status_t do_config(switch_bool_t reload)
     goto done;
   }
 
-  /* get queries and put them in globals.queries */
+  /* get queries and insert (or over-write) them in globals.queries */
   if ((x_queries = switch_xml_child(cfg, "queries"))) {
     for (x_query = switch_xml_child(x_queries, "query"); x_query; x_query = x_query->next) {
       t_name = (char *) switch_xml_attr_soft(x_query, "name");
@@ -175,6 +175,8 @@ static switch_status_t do_config(switch_bool_t reload)
         query->name = strdup(t_name);
       }
 
+      query->value = strdup(t_value);
+
       if (!zstr(t_odbc_dsn)) {
         t_odbc_dsn_2 = strdup(t_odbc_dsn);
         if ((t_odbc_user = strchr(t_odbc_dsn_2, ':'))) {
@@ -198,10 +200,6 @@ static switch_status_t do_config(switch_bool_t reload)
         query->odbc_user = strdup(globals.odbc_user);
         query->odbc_pass = strdup(globals.odbc_pass);
       }
-
-      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "6 ODBC DSN = [%s]\n", query->odbc_dsn);
-      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "6 ODBC USER = [%s]\n", query->odbc_user);
-      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "6 ODBC PASS = [%s]\n", query->odbc_pass);
 
     }
   }
@@ -345,7 +343,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 
   expanded_query_value = switch_channel_expand_variables_by_pool(cbt.pool, cbt.channel, query->value);
 
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Expanded query %s, value %s\n", query->name , expanded_query_value);
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Expanded query %s, value %s\n", query->name, expanded_query_value);
 
   /* Execute expanded_query */
   if (!execute_sql_callback(query, expanded_query_value, odbc_query_callback, &cbt, &err)) {
