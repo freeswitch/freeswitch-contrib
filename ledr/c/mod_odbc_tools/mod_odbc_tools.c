@@ -61,6 +61,11 @@ typedef struct query_obj {
 } query_t;
 
 
+typedef struct xml_binding {
+  char *bindings;
+} xml_binding_t;
+
+
 /* Get database handle */
 static switch_cache_db_handle_t *get_db_handle(query_t *query)
 {
@@ -350,6 +355,21 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
+/* Do xml lookups for certain bindings and generate an appropriate xml */
+static switch_xml_t odbc_generate_xml(const char *section, const char *tag_name,
+  const char *key_name, const char *key_value, switch_event_t *params, void *user_data)
+{
+  xml_binding_t *binding = (xml_binding_t *) user_data;
+  switch_xml_t xml = NULL;
+
+  if (!binding) {
+    return NULL;
+  }
+
+  return xml;
+}
+
+
 /* Macro expands to: switch_status_t mod_odbc_tools_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_tools_load)
 {
@@ -408,6 +428,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_tools_shutdown)
   switch_hash_index_t *hi;
   void *val;
 
+  switch_xml_unbind_search_function_ptr(odbc_generate_xml);
   switch_event_unbind_callback(reload_event_handler);
 
   switch_mutex_lock(globals.mutex);
