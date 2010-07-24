@@ -11,10 +11,10 @@
   <queries>
 
     <!-- sample queries for using by directory binding -->
-    <query name="network-list" value="select id, cidr from users where domain = '${domain}' and cidr != '';"/>
-    <query name="default" value="select * from users where domain = '${domain}' and ${key} = '${user}';"/>
-    <!-- <query name="default" value="select * from users where domain = '${domain}' and &quot;${key}&quot; = '${user}';"/> --> <!-- pgsql -->
-    <!-- <query name="default" value="select * from users where domain = '${domain}' and `${key}` = '${user}';"/> --> <!-- mysql -->
+    <query name="directory-network-list" value="select id, cidr from users where domain = '${domain}' and cidr != '';"/>
+    <query name="directory-default" value="select * from users where domain = '${domain}' and ${key} = '${user}';"/>
+    <!-- <query name="directory-default" value="select * from users where domain = '${domain}' and &quot;${key}&quot; = '${user}';"/> --> <!-- pgsql -->
+    <!-- <query name="directory-default" value="select * from users where domain = '${domain}' and `${key}` = '${user}';"/> --> <!-- mysql -->
 
     <!-- sample queries for using by dialplan app odbc_query -->
     <query name="map-e164-to-user_id" value="SELECT user_id FROM e164_users WHERE e164 = ${dialed_e164_number};"/>
