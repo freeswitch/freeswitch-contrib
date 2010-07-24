@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>mod_dptools</ProjectName>
+    <ProjectName>mod_odbc_tools</ProjectName>
     <ProjectGuid>{115a9730-96b9-11df-981c-0800200c9a66}</ProjectGuid>
-    <RootNamespace>mod_dptools</RootNamespace>
+    <RootNamespace>mod_odbc_tools</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -117,7 +117,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="mod_dptools.c" />
+    <ClCompile Include="mod_odbc_tools.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\libs\win32\apr\libapr.2010.vcxproj">
