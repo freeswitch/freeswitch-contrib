@@ -47,22 +47,6 @@ static struct {
   switch_hash_t *queries;
   switch_memory_pool_t *pool;
   switch_mutex_t *mutex;
-
-  /* TODO put these in a hash ? */
-  char *bindings;
-
-  char *directory_attrs;
-  int directory_attrs_c;
-  char *directory_attrs_v[10];
-
-  char *directory_params;
-  int directory_params_c;
-  char *directory_params_v[30];
-
-  char *directory_variables;
-  int directory_variables_c;
-  char *directory_variables_v[30];
-
 } globals;
 
 
@@ -74,16 +58,6 @@ typedef struct query_obj {
   char *odbc_pass;
   char *value;
 } query_t;
-
-
-typedef struct xml_binding {
-  char *bindings;
-} xml_binding_t;
-
-
-/* definition */
-static switch_xml_t odbc_generate_xml(const char *section, const char *tag_name,
-  const char *key_name, const char *key_value, switch_event_t *params, void *user_data);
 
 
 /* Get database handle */
@@ -125,65 +99,15 @@ static switch_status_t config_callback_set_odbc_dsn(switch_xml_config_item_t *da
 }
 
 
-/* Config callback - save odbc_dsn, _user and _pass in globals */
-static switch_status_t config_callback_set_bindings(switch_xml_config_item_t *data, const char *newvalue,
-  switch_config_callback_type_t callback_type, switch_bool_t changed)
-{
-  xml_binding_t *binding = NULL;
-
-  if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
-    if (zstr(globals.bindings)) {
-      switch_xml_unbind_search_function_ptr(odbc_generate_xml);
-    } else {
-      /* blergh, I'm tired... TODO CONTINUE HERE ! TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO */
-      /* COPY FROM mod_xml_odbc_simple.c AT LINE 493a TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO  */
-      switch_xml_bind_search_function(odbc_generate_xml, switch_xml_parse_section_string(binding->bindings), binding);
-    }
-  }
-  return SWITCH_STATUS_SUCCESS;
-}
-
-
-/* Config callback - separate attrs, params or variables string and save elements in their globals. _c and _v */
-static switch_status_t config_callback_separate_string(switch_xml_config_item_t *data, const char *newvalue,
-  switch_config_callback_type_t callback_type, switch_bool_t changed)
-{
-  if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
-    if (!strcmp(data->key, "directory-attrs")) {
-      globals.directory_attrs_c = switch_separate_string(globals.directory_attrs, ',', globals.directory_attrs_v,
-                               (sizeof(globals.directory_attrs_v) / sizeof(globals.directory_attrs_v[0])));
-    } else if (!strcmp(data->key, "directory-params")) {
-      globals.directory_params_c = switch_separate_string(globals.directory_params, ',', globals.directory_params_v,
-                               (sizeof(globals.directory_params_v) / sizeof(globals.directory_params_v[0])));
-    } else if (!strcmp(data->key, "directory-variables")) {
-      globals.directory_variables_c = switch_separate_string(globals.directory_variables, ',', globals.directory_variables_v,
-                               (sizeof(globals.directory_variables_v) / sizeof(globals.directory_variables_v[0])));
-    } else {
-      return SWITCH_STATUS_FALSE;
-    }
-  }
-  return SWITCH_STATUS_SUCCESS;
-}
-
-
 /* Config item validations */
-static switch_xml_config_string_options_t config_opt_valid_anything = { NULL, 0, NULL };
+/* static switch_xml_config_string_options_t config_opt_valid_anything = { NULL, 0, NULL }; */
 static switch_xml_config_string_options_t config_opt_valid_odbc_dsn = { NULL, 0, "^.+:.+:.+$" };
-static switch_xml_config_string_options_t config_opt_valid_bindings = { NULL, 0, "^(|directory)$" };
 
 
 /* Config items */
 static switch_xml_config_item_t instructions[] = {
   SWITCH_CONFIG_ITEM_CALLBACK("odbc-dsn", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
     &globals.odbc_dsn, "db:user:password", config_callback_set_odbc_dsn, &config_opt_valid_odbc_dsn, "db:user:password", "ODBC DSN to use"),
-  SWITCH_CONFIG_ITEM_CALLBACK("bindings", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
-    &globals.bindings, "directory", config_callback_set_bindings, &config_opt_valid_bindings, "directory", "Currently only directory"),
-  SWITCH_CONFIG_ITEM_CALLBACK("directory-attrs", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.directory_attrs, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
-  SWITCH_CONFIG_ITEM_CALLBACK("directory-params", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.directory_params, "password", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
-  SWITCH_CONFIG_ITEM_CALLBACK("directory-variables", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
-    &globals.directory_variables, "user_context", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_END()
 };
 
@@ -310,8 +234,6 @@ typedef struct callback_obj {
   switch_channel_t *channel;
   switch_memory_pool_t *pool;
   int rowcount;
-  switch_xml_t xml;
-  int off;
 } callback_t;
 
 
@@ -427,21 +349,6 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
-/* Do xml lookups for certain bindings and generate an appropriate xml */
-static switch_xml_t odbc_generate_xml(const char *section, const char *tag_name,
-  const char *key_name, const char *key_value, switch_event_t *params, void *user_data)
-{
-  xml_binding_t *binding = (xml_binding_t *) user_data;
-  switch_xml_t xml = NULL;
-
-  if (!binding) {
-    return NULL;
-  }
-
-  return xml;
-}
-
-
 /* Macro expands to: switch_status_t mod_odbc_tools_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_tools_load)
 {
@@ -495,7 +402,6 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_tools_shutdown)
   switch_hash_index_t *hi;
   void *val;
 
-  switch_xml_unbind_search_function_ptr(odbc_generate_xml);
   switch_event_unbind_callback(reload_event_handler);
 
   switch_mutex_lock(globals.mutex);
