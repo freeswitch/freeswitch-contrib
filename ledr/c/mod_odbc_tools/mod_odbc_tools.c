@@ -45,6 +45,7 @@ static struct {
   char *odbc_user;
   char *odbc_pass;
   switch_hash_t *queries;
+  switch_hash_t *tag_indicators;
   switch_memory_pool_t *pool;
   switch_mutex_t *mutex;
 } globals;
@@ -367,9 +368,14 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_tools_load)
   globals.pool = pool;
   switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
 
-  /* allocate the queries hash */
+  /* allocate the queries- and tag_indicators hash */
   if (switch_core_hash_init(&globals.queries, globals.pool) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
+    return SWITCH_STATUS_GENERR;
+  }
+
+  if (switch_core_hash_init(&globals.tag_indicators, globals.pool) != SWITCH_STATUS_SUCCESS) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the tag_indicators hash\n");
     return SWITCH_STATUS_GENERR;
   }
 
@@ -406,6 +412,7 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_tools_shutdown)
 
   switch_mutex_lock(globals.mutex);
 
+  /* cleanup globals.queries hash */
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, NULL, NULL, &val);
     query = (query_t *) val;
@@ -415,6 +422,12 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_tools_shutdown)
     switch_safe_free(query->odbc_dsn);
     switch_safe_free(query->value);
     switch_safe_free(query);
+  }
+
+  /* cleanup globals.tag_indicators hash */
+  for (hi = switch_hash_first(NULL, globals.tag_indicators); hi;) {
+    switch_hash_this(hi, NULL, NULL, &val);
+    // iterate through all tag_indicators and free each element
   }
 
   switch_mutex_unlock(globals.mutex);
