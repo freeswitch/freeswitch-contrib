@@ -81,6 +81,11 @@ typedef struct xml_binding {
 } xml_binding_t;
 
 
+/* definition */
+static switch_xml_t odbc_generate_xml(const char *section, const char *tag_name,
+  const char *key_name, const char *key_value, switch_event_t *params, void *user_data);
+
+
 /* Get database handle */
 static switch_cache_db_handle_t *get_db_handle(query_t *query)
 {
@@ -124,6 +129,17 @@ static switch_status_t config_callback_set_odbc_dsn(switch_xml_config_item_t *da
 static switch_status_t config_callback_set_bindings(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
+  xml_binding_t *binding = NULL;
+
+  if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
+    if (zstr(globals.bindings)) {
+      switch_xml_unbind_search_function_ptr(odbc_generate_xml);
+    } else {
+      /* blergh, I'm tired... TODO CONTINUE HERE ! TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO */
+      /* COPY FROM mod_xml_odbc_simple.c AT LINE 493a TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO  */
+      switch_xml_bind_search_function(odbc_generate_xml, switch_xml_parse_section_string(binding->bindings), binding);
+    }
+  }
   return SWITCH_STATUS_SUCCESS;
 }
 
@@ -294,6 +310,8 @@ typedef struct callback_obj {
   switch_channel_t *channel;
   switch_memory_pool_t *pool;
   int rowcount;
+  switch_xml_t xml;
+  int off;
 } callback_t;
 
 
