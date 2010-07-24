@@ -2,7 +2,7 @@
 
   <settings>
     <param name="odbc-dsn" value="db:user:password"/>
-    <param name="bindings" value="directory"/> <!-- comment out or set value to "" to disable bindings -->
+    <param name="bindings" value="directory"/> <!-- set value to "" to disable bindings -->
     <param name="directory-attrs" value="id,mailbox,cidr,number-alias"/> <!-- max 10 -->
     <param name="directory-params" value="password,dial-string"/> <!-- max 30 -->
     <param name="directory-variables" value="user_context"/> <!-- max 30 -->

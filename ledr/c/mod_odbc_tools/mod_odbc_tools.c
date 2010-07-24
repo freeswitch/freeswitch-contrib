@@ -45,9 +45,24 @@ static struct {
   char *odbc_user;
   char *odbc_pass;
   switch_hash_t *queries;
-  switch_hash_t *tag_indicators;
   switch_memory_pool_t *pool;
   switch_mutex_t *mutex;
+
+  /* TODO put these in a hash ? */
+  char *bindings;
+
+  char *directory_attrs;
+  int directory_attrs_c;
+  char *directory_attrs_v[10];
+
+  char *directory_params;
+  int directory_params_c;
+  char *directory_params_v[30];
+
+  char *directory_variables;
+  int directory_variables_c;
+  char *directory_variables_v[30];
+
 } globals;
 
 
@@ -84,7 +99,7 @@ static switch_cache_db_handle_t *get_db_handle(query_t *query)
 
 
 /* Config callback - save odbc_dsn, _user and _pass in globals */
-static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const char *newvalue,
+static switch_status_t config_callback_set_odbc_dsn(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
 {
   if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
@@ -105,15 +120,54 @@ static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const
 }
 
 
+/* Config callback - save odbc_dsn, _user and _pass in globals */
+static switch_status_t config_callback_set_bindings(switch_xml_config_item_t *data, const char *newvalue,
+  switch_config_callback_type_t callback_type, switch_bool_t changed)
+{
+  return SWITCH_STATUS_SUCCESS;
+}
+
+
+/* Config callback - separate attrs, params or variables string and save elements in their globals. _c and _v */
+static switch_status_t config_callback_separate_string(switch_xml_config_item_t *data, const char *newvalue,
+  switch_config_callback_type_t callback_type, switch_bool_t changed)
+{
+  if ((callback_type == CONFIG_LOAD || callback_type == CONFIG_RELOAD) && changed) {
+    if (!strcmp(data->key, "directory-attrs")) {
+      globals.directory_attrs_c = switch_separate_string(globals.directory_attrs, ',', globals.directory_attrs_v,
+                               (sizeof(globals.directory_attrs_v) / sizeof(globals.directory_attrs_v[0])));
+    } else if (!strcmp(data->key, "directory-params")) {
+      globals.directory_params_c = switch_separate_string(globals.directory_params, ',', globals.directory_params_v,
+                               (sizeof(globals.directory_params_v) / sizeof(globals.directory_params_v[0])));
+    } else if (!strcmp(data->key, "directory-variables")) {
+      globals.directory_variables_c = switch_separate_string(globals.directory_variables, ',', globals.directory_variables_v,
+                               (sizeof(globals.directory_variables_v) / sizeof(globals.directory_variables_v[0])));
+    } else {
+      return SWITCH_STATUS_FALSE;
+    }
+  }
+  return SWITCH_STATUS_SUCCESS;
+}
+
+
 /* Config item validations */
-/* static switch_xml_config_string_options_t config_opt_valid_anything = { NULL, 0, NULL }; */
+static switch_xml_config_string_options_t config_opt_valid_anything = { NULL, 0, NULL };
 static switch_xml_config_string_options_t config_opt_valid_odbc_dsn = { NULL, 0, "^.+:.+:.+$" };
+static switch_xml_config_string_options_t config_opt_valid_bindings = { NULL, 0, "^(|directory)$" };
 
 
 /* Config items */
 static switch_xml_config_item_t instructions[] = {
   SWITCH_CONFIG_ITEM_CALLBACK("odbc-dsn", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
-    &globals.odbc_dsn, "db:user:password", config_callback_dsn, &config_opt_valid_odbc_dsn, "db:user:password", "ODBC DSN to use"),
+    &globals.odbc_dsn, "db:user:password", config_callback_set_odbc_dsn, &config_opt_valid_odbc_dsn, "db:user:password", "ODBC DSN to use"),
+  SWITCH_CONFIG_ITEM_CALLBACK("bindings", SWITCH_CONFIG_STRING, CONFIG_REQUIRED | CONFIG_RELOADABLE,
+    &globals.bindings, "directory", config_callback_set_bindings, &config_opt_valid_bindings, "directory", "Currently only directory"),
+  SWITCH_CONFIG_ITEM_CALLBACK("directory-attrs", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
+    &globals.directory_attrs, "id,mailbox,cidr,number-alias", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
+  SWITCH_CONFIG_ITEM_CALLBACK("directory-params", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
+    &globals.directory_params, "password", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
+  SWITCH_CONFIG_ITEM_CALLBACK("directory-variables", SWITCH_CONFIG_STRING, CONFIG_RELOADABLE,
+    &globals.directory_variables, "user_context", config_callback_separate_string, &config_opt_valid_anything, NULL, NULL),
   SWITCH_CONFIG_ITEM_END()
 };
 
@@ -388,14 +442,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_tools_load)
   globals.pool = pool;
   switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
 
-  /* allocate the queries- and tag_indicators hash */
+  /* allocate the queries hash */
   if (switch_core_hash_init(&globals.queries, globals.pool) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
-    return SWITCH_STATUS_GENERR;
-  }
-
-  if (switch_core_hash_init(&globals.tag_indicators, globals.pool) != SWITCH_STATUS_SUCCESS) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the tag_indicators hash\n");
     return SWITCH_STATUS_GENERR;
   }
 
@@ -443,12 +492,6 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_tools_shutdown)
     switch_safe_free(query->odbc_dsn);
     switch_safe_free(query->value);
     switch_safe_free(query);
-  }
-
-  /* cleanup globals.tag_indicators hash */
-  for (hi = switch_hash_first(NULL, globals.tag_indicators); hi;) {
-    switch_hash_this(hi, NULL, NULL, &val);
-    // iterate through all tag_indicators and free each element
   }
 
   switch_mutex_unlock(globals.mutex);
