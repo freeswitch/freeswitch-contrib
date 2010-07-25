@@ -349,10 +349,18 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
+#define ODBC_QUERY_API_FUNCTION_SYNTAX "[pretty|xml|lua] <query-name|[db:user:pass] SELECT * FROM foo WHERE true;>"
+SWITCH_STANDARD_API(odbc_query_api_function)
+{
+  return SWITCH_STATUS_SUCCESS;
+}
+
+
 /* Macro expands to: switch_status_t mod_odbc_query_load(switch_loadable_module_interface_t **module_interface, switch_memory_pool_t *pool) */
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 {
   switch_application_interface_t *app_interface;
+  switch_api_interface_t *api_interface;
 
   switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "ODBC Query module loading...\n");
 
@@ -387,6 +395,8 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   }
 
   SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query|query-name>", SAF_SUPPORT_NOMEDIA | SAF_ROUTING_EXEC);
+  SWITCH_ADD_API(api_interface, "odbc_query", "Perform an ODBC query", odbc_query_api_function, ODBC_QUERY_API_FUNCTION_SYNTAX);
+
 
   /* indicate that the module should continue to be loaded */
   return SWITCH_STATUS_SUCCESS;
@@ -402,7 +412,6 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
   switch_hash_index_t *hi;
   void *val;
 
-  // TODO: CHECK WHETHER THIS WORKS: !!!
   switch_event_unbind_callback(reload_event_handler);
 
   switch_mutex_lock(globals.mutex);
