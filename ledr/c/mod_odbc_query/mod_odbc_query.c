@@ -349,6 +349,29 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
+static switch_status_t list_queries(const char *line, const char *cursor, switch_console_callback_match_t **matches)
+{
+  switch_hash_index_t *hi;
+  const void *query_name;
+  switch_console_callback_match_t *my_matches = NULL;
+  switch_status_t status = SWITCH_STATUS_FALSE;
+
+  switch_mutex_lock(globals.mutex);
+  for (hi = switch_hash_first(NULL, globals.queries); hi; hi = switch_hash_next(hi)) {
+    switch_hash_this(hi, &query_name, NULL, NULL);
+    switch_console_push_match(&my_matches, (const char *) query_name);
+  }
+  switch_mutex_unlock(globals.mutex);
+
+  if (my_matches) {
+    *matches = my_matches;
+    status = SWITCH_STATUS_SUCCESS;
+  }
+
+  return status;
+}
+
+
 #define ODBC_QUERY_API_FUNCTION_SYNTAX "[pretty|xml|lua] <query-name|[db:user:pass] SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
@@ -397,6 +420,12 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   SWITCH_ADD_APP(app_interface, "odbc_query", "Perform an ODBC query", "Perform an ODBC query", odbc_query_app_function, "<query|query-name>", SAF_SUPPORT_NOMEDIA | SAF_ROUTING_EXEC);
   SWITCH_ADD_API(api_interface, "odbc_query", "Perform an ODBC query", odbc_query_api_function, ODBC_QUERY_API_FUNCTION_SYNTAX);
 
+  switch_console_add_complete_func("::odbc_query::list_queries", list_queries);
+
+  switch_console_set_complete("add odbc_query");
+  switch_console_set_complete("add odbc_query pretty");
+  switch_console_set_complete("add odbc_query pretty ::odbc_query::list_queries");
+
 
   /* indicate that the module should continue to be loaded */
   return SWITCH_STATUS_SUCCESS;
@@ -412,10 +441,12 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
   switch_hash_index_t *hi;
   void *val;
 
+  switch_console_del_complete_func("::odbc_query::list_queries");
+  switch_console_set_complete("del odbc_query");
+
   switch_event_unbind_callback(reload_event_handler);
 
   switch_mutex_lock(globals.mutex);
-
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, NULL, NULL, &val);
     query = (query_t *) val;
@@ -426,7 +457,6 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
     switch_safe_free(query->value);
     switch_safe_free(query);
   }
-
   switch_mutex_unlock(globals.mutex);
 
   return SWITCH_STATUS_SUCCESS;
