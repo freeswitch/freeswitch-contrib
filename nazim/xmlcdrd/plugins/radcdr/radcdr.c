@@ -13,7 +13,7 @@
 #include <string.h>
 #include <libconfig.h>
 #include <glib.h>
-
+#include <apreq2/apreq_util.h>
 
 #define PLUGIN_NAME "rad cdr"
 #define PLUGIN_DESC "Rad cdr logger"
@@ -89,6 +89,8 @@ typedef struct radcdr_local_vars
     char my_retries [XCDR_PLUGIN_STRMAXLEN];	  /* 3 */
     char my_servers [SERVER_MAX][XCDR_PLUGIN_STRMAXLEN];
     char cf [XCDR_PLUGIN_STRMAXLEN];// = "mod_radius_cdr.conf";
+
+    GString *decoded;
 
     RADVSAS *vsas;
     int vsas_count;
@@ -412,7 +414,9 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
 
         return PLUG_STATUS_ERROR;
     }
-    
+
+    vars->decoded = g_string_sized_new (XCDR_PLUGIN_STRMAXLEN * 2);
+
     plugin_config (options);
 
     fprintf (stderr, "%s plugin_init (%s) \n", PLUGIN_NAME, options);
@@ -425,7 +429,7 @@ int plugin_init (const char* filename, const char *options, XCDR_PLUGSTATE *stat
 int plugin_free (XCDR_PLUGSTATE *state)
 {
     vars = state->local_vars;
-
+    g_string_free (vars->decoded, TRUE);
 
     free (vars->vsas);
     free (vars);
@@ -453,7 +457,7 @@ int plugin_main (STMTEXP_TAB *vex, XCDR_PLUGSTATE *state)
 
     int retval;
 
-	char buffer[32] = "";
+
 
 
     vars = state->local_vars;
@@ -502,6 +506,15 @@ int plugin_main (STMTEXP_TAB *vex, XCDR_PLUGSTATE *state)
         
         if (NULL != t)
         {
+
+            /* urldecode value  */
+            apr_size_t len = strlen(t);
+
+            g_string_set_size (vars->decoded, len);
+            
+            apreq_decode (vars->decoded->str, &len, t, strlen(t));
+
+            t = vars->decoded->str;
             
             syslog (LOG_DEBUG, 
                     "radcdr adding rad vsa '%s': '%s' pec:%d\n",
