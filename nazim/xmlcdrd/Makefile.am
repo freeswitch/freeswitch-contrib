@@ -39,6 +39,10 @@ if BUILDLUAEXEC
 	$(MAKE) -C plugins/luaexec
 endif
 
+if BUILDRADCDR
+	$(MAKE) -C plugins/radcdr
+endif
+
 	$(CC) $(CFLAGS) \
  `@with_apreq2_config@  --libs --includes` \
  `@with_apr_config@ --libs --includes  --cppflags --link-ld ` \
