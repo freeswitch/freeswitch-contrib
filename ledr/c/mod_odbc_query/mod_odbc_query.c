@@ -372,9 +372,16 @@ static switch_status_t list_queries(const char *line, const char *cursor, switch
 }
 
 
-#define ODBC_QUERY_API_FUNCTION_SYNTAX "[pretty|xml|lua] <query-name|[db:user:pass] SELECT * FROM foo WHERE true;>"
+#define ODBC_QUERY_API_FUNCTION_SYNTAX "<txt|xml|lua> [var1=val1,var2=\"val 2\"] <query-name|[db:user:pass ]SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
+  if (zstr(cmd)) {
+    stream->write_function(stream, "-USAGE: %s\n", ODBC_QUERY_API_FUNCTION_SYNTAX);
+    return SWITCH_STATUS_SUCCESS;
+  }
+
+  switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_NOTICE, "Executing command: %s\n", cmd);
+
   return SWITCH_STATUS_SUCCESS;
 }
 
@@ -423,9 +430,13 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   switch_console_add_complete_func("::odbc_query::list_queries", list_queries);
 
   switch_console_set_complete("add odbc_query");
-  switch_console_set_complete("add odbc_query pretty");
-  switch_console_set_complete("add odbc_query pretty ::odbc_query::list_queries");
 
+  switch_console_set_complete("add odbc_query text");
+  switch_console_set_complete("add odbc_query xml");
+  switch_console_set_complete("add odbc_query lua");
+  switch_console_set_complete("add odbc_query text ::odbc_query::list_queries");
+  switch_console_set_complete("add odbc_query xml ::odbc_query::list_queries");
+  switch_console_set_complete("add odbc_query lua ::odbc_query::list_queries");
 
   /* indicate that the module should continue to be loaded */
   return SWITCH_STATUS_SUCCESS;
