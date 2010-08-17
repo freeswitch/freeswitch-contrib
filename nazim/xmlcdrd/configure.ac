@@ -29,6 +29,8 @@ AC_CHECK_LIB([glib-2.0], [main])
 
 AC_CHECK_LIB([xml2], [main])
 
+AC_CHECK_LIB([freeradius-client], [main])
+
 # Checks for header files.
 AC_CHECK_HEADERS([malloc.h stdlib.h string.h syslog.h])
 
@@ -75,6 +77,18 @@ AC_ARG_WITH(lua_lib,
     [with_lua_lib="$withval"],[with_lua_lib="-llua5.1"])
 AC_SUBST(with_lua_lib)
 
+AC_MSG_CHECKING(for radius includes)
+AC_ARG_WITH(radius_includes,
+    AC_HELP_STRING([--with-radius-includes],[--with-radius-includes@<:@=PATH@:>@]),
+    [with_radius_includes="$withval"],[with_radius_includes="-I/usr/include"])
+AC_SUBST(with_radius_includes)
+
+AC_MSG_CHECKING(for radius lib)
+AC_ARG_WITH(radius_lib,
+    AC_HELP_STRING([--with-radius-lib],[--with-radius-lib@<:@=-lfreeradius-client@:>@]),
+    [with_radius_lib="$withval"],[with_radius_lib="-lfreeradius-client"])
+AC_SUBST(with_radius_lib)
+
 
 
 
@@ -92,6 +106,20 @@ domysqlcdr=yes
 )
 
 AM_CONDITIONAL(BUILDMYSQLCDR, test x$domysqlcdr = xyes)
+
+
+#radcdr
+doradcdr=yes
+
+AC_ARG_ENABLE(radcdr,
+AS_HELP_STRING([--disable-radcdr], [Disable building of radcdr plugin]),
+[if test "$enableval" = "no"; then doradcdr="no"; fi],
+[
+doradcdr=yes
+]
+)
+
+AM_CONDITIONAL(BUILDRADCDR, test x$doradcdr = xyes)
 
 
 #luaexec
@@ -118,6 +146,7 @@ AC_CHECK_FUNCS([memset strchr strdup strstr])
 
 AC_CONFIG_FILES([Makefile
                  plugins/mysqlcdr/Makefile
+                 plugins/radcdr/Makefile
                  plugins/luaexec/Makefile])
 AC_OUTPUT
 

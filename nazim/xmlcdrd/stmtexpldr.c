@@ -140,67 +140,6 @@ int stmtexpldr_load_config (stmtexp_tab_t *vex, const char* config_file)
 
     return fret;
 
-/*
-    cfg_t *cfg;
-
-
-    int res;
-    int fret = 0;
-    
-    cfg = cfg_init(opts, 0);
-    res = cfg_parse(cfg, config_file);
-    
-    printf("Parsing result == %d\n", res);
-    if(res == CFG_FILE_ERROR)
-    {
-        perror(config_file);
-        return -1;
-    } else if(res == CFG_PARSE_ERROR)
-    {
-        fprintf(stderr, "'%s' parse error\n", config_file);
-        return -1;
-    }
-
-    int n = cfg_size(cfg, "var");
-    printf("%d configured variables:\n", n);
-
-    int i;
-    for(i = 0; i < n; i++)
-    {
-        stmtexp_key_t* sk = calloc (1, sizeof(stmtexp_key_t) );
-        if (NULL != sk)
-        {
-            cfg_t *vars = cfg_getnsec(cfg, "var", i);
-
-            printf("  Variable [%d] %s:\n", i, cfg_title(vars) );
-            snprintf (sk->stmt_var, STMTEXPAND_STRLEN_MAX - 1,
-                      "%s", cfg_getstr(vars, "var_placeholder") );
-            printf("    Var. Placeholder = %s\n", sk->stmt_var);
-
-
-            snprintf (sk->xpath, STMTEXPAND_STRLEN_MAX - 1,
-                      "%s", cfg_getstr(vars, "xpath") );
-            printf("    Var. XPATH = %s\n", sk->xpath);
-
-
-            //add index and value
-            stmtexp_val_t *sv = calloc (1, sizeof(stmtexp_val_t) );
-            g_hash_table_replace (vex->ght, sk, sv);
-        } else
-        {
-            perror ("stmtexpldr_load_config() malloc error\n");
-            fret = -1;
-            break;
-        }
-    }
-    
-    
-
-    cfg_free(cfg);
-
-    
-    return fret;
-*/
 }
 
 
