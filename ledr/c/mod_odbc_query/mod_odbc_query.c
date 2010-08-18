@@ -421,29 +421,6 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
-static switch_status_t list_queries(const char *line, const char *cursor, switch_console_callback_match_t **matches)
-{
-  switch_hash_index_t *hi;
-  const void *query_name;
-  switch_console_callback_match_t *my_matches = NULL;
-  switch_status_t status = SWITCH_STATUS_FALSE;
-
-  switch_mutex_lock(globals.mutex);
-  for (hi = switch_hash_first(NULL, globals.queries); hi; hi = switch_hash_next(hi)) {
-    switch_hash_this(hi, &query_name, NULL, NULL);
-    switch_console_push_match(&my_matches, (const char *) query_name);
-  }
-  switch_mutex_unlock(globals.mutex);
-
-  if (my_matches) {
-    *matches = my_matches;
-    status = SWITCH_STATUS_SUCCESS;
-  }
-
-  return status;
-}
-
-
 #define ODBC_QUERY_API_FUNCTION_SYNTAX "[txt|tab|xml|lua] [db:user:pass] <SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
@@ -494,7 +471,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     callback = odbc_query_callback_txt;
   }
 
-  /* this shouldn't be static ! */
+  /* TODO this shouldn't be static ! */
   query->odbc_dsn = "voip";
   query->odbc_user = "voip";
   query->odbc_pass = "voip";
@@ -507,6 +484,9 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   if (!execute_sql_callback(query, callback, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
   }
+
+/* TODO FIX IT SO THAT err HAS THE " ESCAPED BY \ IN CASE OF LUA
+   AND " < > REPLACED BY &quot; &lt; &gt; IN CASE OF XML !!!! */
 
   /* generate trailer with meta data */
   if (!strcmp(format, "txt") || !strcmp(format, "tab")) {
@@ -529,12 +509,34 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "};\n");
   }
 
-  //if (!strcmp(format, "txt")) {
-
   switch_safe_free(query->value);
   switch_safe_free(query);
 
   return SWITCH_STATUS_SUCCESS;
+}
+
+
+/* TODO keep this ? */
+static switch_status_t list_queries(const char *line, const char *cursor, switch_console_callback_match_t **matches)
+{
+  switch_hash_index_t *hi;
+  const void *query_name;
+  switch_console_callback_match_t *my_matches = NULL;
+  switch_status_t status = SWITCH_STATUS_FALSE;
+
+  switch_mutex_lock(globals.mutex);
+  for (hi = switch_hash_first(NULL, globals.queries); hi; hi = switch_hash_next(hi)) {
+    switch_hash_this(hi, &query_name, NULL, NULL);
+    switch_console_push_match(&my_matches, (const char *) query_name);
+  }
+  switch_mutex_unlock(globals.mutex);
+
+  if (my_matches) {
+    *matches = my_matches;
+    status = SWITCH_STATUS_SUCCESS;
+  }
+
+  return status;
 }
 
 
@@ -583,7 +585,8 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 
   switch_console_set_complete("add odbc_query");
 
-  switch_console_set_complete("add odbc_query text");
+  switch_console_set_complete("add odbc_query txt");
+  switch_console_set_complete("add odbc_query tab");
   switch_console_set_complete("add odbc_query xml");
   switch_console_set_complete("add odbc_query lua");
   switch_console_set_complete("add odbc_query text ::odbc_query::list_queries");
