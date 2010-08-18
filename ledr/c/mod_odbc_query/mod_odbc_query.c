@@ -233,6 +233,8 @@ static switch_event_node_t *reload_xml_event = NULL;
 typedef struct callback_obj {
   switch_channel_t *channel;
   switch_memory_pool_t *pool;
+  switch_xml_t *xml;
+  switch_stream_handle_t *stream;
   int rowcount;
 } callback_t;
 
@@ -242,6 +244,8 @@ static switch_bool_t execute_sql_callback(query_t *query, switch_core_db_callbac
 {
   switch_bool_t retval = SWITCH_FALSE;
   switch_cache_db_handle_t *dbh = NULL;
+
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Performing query name [%s] value [%s]\n", query->name, query->value);
 
   if (globals.odbc_dsn && (dbh = get_db_handle(query))) {
     if (switch_cache_db_execute_sql_callback(dbh, query->value, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
@@ -258,8 +262,8 @@ static switch_bool_t execute_sql_callback(query_t *query, switch_core_db_callbac
 }
 
 
-/* Called for each row returned by query */
-static int odbc_query_callback(void *pArg, int argc, char **argv, char **columnName)
+/* Called for each row returned by query - when storing result in channel variables*/
+static int odbc_query_callback_channel(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
   cbt->rowcount++;
@@ -275,6 +279,72 @@ static int odbc_query_callback(void *pArg, int argc, char **argv, char **columnN
       }
     }
   }
+
+  return 0;
+}
+
+/* Generate a text string */
+static int odbc_query_callback_txt(void *pArg, int argc, char **argv, char **columnName)
+{
+  callback_t *cbt = (callback_t *) pArg;
+  cbt->rowcount++;
+
+  for (int i = 0; i < argc; i++) {
+    cbt->stream->write_function(cbt->stream, "%25s : ", columnName[i]);
+    cbt->stream->write_function(cbt->stream, "%s\n", argv[i]);
+  }
+  cbt->stream->write_function(cbt->stream, "\n");
+
+  return 0;
+}
+
+/* Generate a tab string */
+static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **columnName)
+{
+  callback_t *cbt = (callback_t *) pArg;
+
+  /* column names and a nice horizontal line */
+  if (cbt->rowcount == 0) {
+    for (int i = 0; i < argc; i++) {
+      cbt->stream->write_function(cbt->stream, "%-20s", columnName[i]);
+    }
+    cbt->stream->write_function(cbt->stream, "\n");
+    for (int i = 0; i < argc; i++) {
+      cbt->stream->write_function(cbt->stream, "===================="); /* 20x = */
+    }
+    cbt->stream->write_function(cbt->stream, "\n");
+  }
+
+  cbt->rowcount++;
+
+  for (int i = 0; i < argc; i++) {
+    cbt->stream->write_function(cbt->stream, "%-20s", argv[i]);
+  }
+  cbt->stream->write_function(cbt->stream, "\n");
+
+  return 0;
+}
+
+/* Generate an xml */
+static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **columnName)
+{
+  callback_t *cbt = (callback_t *) pArg;
+  cbt->rowcount++;
+
+  return 0;
+}
+
+/* Generate a lua table */
+static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **columnName)
+{
+  callback_t *cbt = (callback_t *) pArg;
+  cbt->rowcount++;
+
+  cbt->stream->write_function(cbt->stream,   "    [%d] = {\n", cbt->rowcount);
+  for (int i = 0; i < argc; i++) {
+    cbt->stream->write_function(cbt->stream, "      [\"%s\"] = \"%s\";\n", columnName[i], argv[i]);
+  }
+  cbt->stream->write_function(cbt->stream,   "    };\n");
 
   return 0;
 }
@@ -330,11 +400,9 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
   }
 
   query->value = switch_channel_expand_variables(switch_core_session_get_channel(session), t_value);
-  
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Expanded query name [%s] value [%s]\n", query->name, query->value);
 
   /* Execute expanded_query */
-  if (!execute_sql_callback(query, odbc_query_callback, &cbt, &err)) {
+  if (!execute_sql_callback(query, odbc_query_callback_channel, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to lookup cid: %s\n", err ? err : "(null)");
   }
 
@@ -372,15 +440,70 @@ static switch_status_t list_queries(const char *line, const char *cursor, switch
 }
 
 
-#define ODBC_QUERY_API_FUNCTION_SYNTAX "<txt|xml|lua> [var1=val1,var2=\"val 2\"] <query-name|[db:user:pass ]SELECT * FROM foo WHERE true;>"
+#define ODBC_QUERY_API_FUNCTION_SYNTAX "[txt|tab|xml|lua] [db:user:pass] <SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
+  switch_core_db_callback_func_t callback;
+  callback_t cbt = { 0 };
+  query_t *query;
+  char *format;
+  char *err = NULL;
+
   if (zstr(cmd)) {
     stream->write_function(stream, "-USAGE: %s\n", ODBC_QUERY_API_FUNCTION_SYNTAX);
     return SWITCH_STATUS_SUCCESS;
   }
 
-  switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_NOTICE, "Executing command: %s\n", cmd);
+  /* initialize memory pool */
+  if (switch_core_new_memory_pool(&cbt.pool) != SWITCH_STATUS_SUCCESS) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not initialize memory pool\n");
+    return SWITCH_STATUS_FALSE;
+  }
+
+  cbt.rowcount = 0;
+
+  /* initialize query */
+  switch_zmalloc(query, sizeof(*query));
+  query->name = "anonymous";
+
+  /* check format */
+  if (strstr(cmd, "txt ") == cmd) {
+    format = "txt";
+    callback = odbc_query_callback_txt;
+    cmd += 4;
+  } else if (strstr(cmd, "tab ") == cmd) {
+    format = "tab";
+    callback = odbc_query_callback_tab;
+    cmd += 4;
+  } else if (strstr(cmd, "xml ") == cmd) {
+    format = "xml";
+    callback = odbc_query_callback_xml;
+    cmd += 4;
+  } else if (strstr(cmd, "lua ") == cmd) {
+    format = "lua";
+    callback = odbc_query_callback_lua;
+    cmd += 4;
+  } else {
+    format = "txt";
+    callback = odbc_query_callback_txt;
+  }
+
+  query->odbc_dsn = "voip";
+  query->odbc_user = "voip";
+  query->odbc_pass = "voip";
+
+  query->value = strdup(cmd);
+
+  cbt.stream = stream;
+
+  if (!execute_sql_callback(query, callback, &cbt, &err)) {
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
+  }
+
+  //if (!strcmp(format, "txt")) {
+
+  switch_safe_free(query->value);
+  switch_safe_free(query);
 
   return SWITCH_STATUS_SUCCESS;
 }
