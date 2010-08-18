@@ -51,23 +51,6 @@ static struct {
 } globals;
 
 
-/* Per query DSN */
-/*
-typedef struct query_obj {
-  char *name;
-  char *odbc_dsn;
-  char *odbc_user;
-  char *odbc_pass;
-  char *value;
-} query_t;
-*/
-
-
-/* Get odbc_dsn, odbc_user and odbc_pass from first 'word' of *char (before first space) or else return global settings */
-static switch_status_t get_odbc_options(char *odbc_dsn, char *odbc_user, char *odbc_pass) {
-}
-
-
 /* Config callback - save odbc_dsn, _user and _pass in globals */
 static switch_status_t config_callback_dsn(switch_xml_config_item_t *data, const char *newvalue,
   switch_config_callback_type_t callback_type, switch_bool_t changed)
@@ -110,8 +93,9 @@ static switch_status_t do_config(switch_bool_t reload)
   switch_xml_t cfg, xml = NULL, x_queries, x_query;
   switch_status_t status = SWITCH_STATUS_FALSE;
   switch_hash_index_t *hi;
-  void *val;
 
+  const void *key;
+  void *val;
   char *t_name, *t_value;
   char *query;
 
@@ -133,11 +117,10 @@ static switch_status_t do_config(switch_bool_t reload)
   /* empty the globals.queries hash */
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, &key, NULL, &val);
-    name = (char *) key;
     query = (char *) val;
     hi = switch_hash_next(hi);
     switch_safe_free(query);
-    switch_core_hash_delete(globals.queries, key);
+    switch_core_hash_delete(globals.queries, (char *) key);
   }
 
   /* get queries and insert them in globals.queries */
@@ -196,16 +179,15 @@ typedef struct callback_obj {
 /* Execute SQL callback -- char *query WILL be modified !! */
 static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
 {
-  switch_bool_t retval = SWITCH_FALSE;
   switch_cache_db_connection_options_t options = { {0} };
   switch_cache_db_handle_t *dbh = NULL;
 
   /* does the first 'word' (before the first space) of char *query have syntax db:user:pass ? */
   char *first_space, *first_colon, *second_colon;
-  if ( first_space = strchr(query, " ")
-    && first_colon = strchr(query, ":")
+  if ( ((first_space = strchr(query, ' ')))
+    && ((first_colon = strchr(query, ':')))
     && first_colon > query + 1
-    && second_colon = strchr(first_colon + 1, ":")
+    && ((second_colon = strchr(first_colon + 1, ':')))
     && second_colon > first_colon + 1
     && second_colon < first_space - 1 ) { /* yea, what can I say.. */
     first_colon = '\0';
@@ -232,7 +214,7 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
   }
 
   /* perform the query */
-  if (switch_cache_db_execute_sql_callback(dbh, query->value, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
+  if (switch_cache_db_execute_sql_callback(dbh, query, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
     switch_cache_db_release_db_handle(&dbh);
     return SWITCH_FALSE;
   }
@@ -359,7 +341,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
   }
 
   /* if data contains no space then it must be the name of a query */
-  if (!strchr(data, " ")) {
+  if (!strchr(data, ' ')) {
     switch_mutex_lock(globals.mutex);
     if ((query = switch_core_hash_find(globals.queries, data))) {
       t_query = switch_core_session_strdup(session, query);
@@ -391,9 +373,9 @@ SWITCH_STANDARD_API(odbc_query_api_function)
 {
   switch_core_db_callback_func_t callback;
   callback_t cbt = { 0 };
-  query_t *query;
   char *format;
   char *err = NULL;
+  char *query;
 
   if (zstr(cmd)) {
     stream->write_function(stream, "-USAGE: %s\n", ODBC_QUERY_API_FUNCTION_SYNTAX);
@@ -407,10 +389,6 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   }
 
   cbt.rowcount = 0;
-
-  /* initialize query */
-  switch_zmalloc(query, sizeof(*query));
-  query->name = "anonymous";
 
   /* set format, callback, optionally (xml/lua) generate the header of the response (in stream) and point cmd to the start of the query */
   if (strstr(cmd, "txt ") == cmd) {
@@ -436,14 +414,9 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     callback = odbc_query_callback_txt;
   }
 
-  /* TODO this shouldn't be static ! */
-  query->odbc_dsn = "voip";
-  query->odbc_user = "voip";
-  query->odbc_pass = "voip";
-
-  query->value = strdup(cmd);
-
   cbt.stream = stream;
+
+  query = strdup(cmd);
 
   /* perform the query with the correct callback */
   if (!execute_sql_callback(query, callback, &cbt, &err)) {
@@ -474,7 +447,6 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "};\n");
   }
 
-  switch_safe_free(query->value);
   switch_safe_free(query);
 
   return SWITCH_STATUS_SUCCESS;
@@ -539,8 +511,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
 {
   switch_hash_index_t *hi;
-  void *key, *val;
-  char *name, *query;
+  const void *key;
+  void *val;
+  char *query;
 
   switch_console_set_complete("del odbc_query");
 
@@ -549,11 +522,10 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
   switch_mutex_lock(globals.mutex);
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
     switch_hash_this(hi, &key, NULL, &val);
-    name = (char *) key;
     query = (char *) val;
     hi = switch_hash_next(hi);
     switch_safe_free(query);
-    switch_core_hash_delete(globals.queries, key);
+    switch_core_hash_delete(globals.queries, (char *) key);
   }
   switch_mutex_unlock(globals.mutex);
 
