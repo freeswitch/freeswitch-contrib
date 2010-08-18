@@ -233,7 +233,6 @@ static switch_event_node_t *reload_xml_event = NULL;
 typedef struct callback_obj {
   switch_channel_t *channel;
   switch_memory_pool_t *pool;
-  switch_xml_t *xml;
   switch_stream_handle_t *stream;
   int rowcount;
 } callback_t;
@@ -302,9 +301,10 @@ static int odbc_query_callback_txt(void *pArg, int argc, char **argv, char **col
 static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
+  cbt->rowcount++;
 
   /* column names and a nice horizontal line */
-  if (cbt->rowcount == 0) {
+  if (cbt->rowcount == 1) {
     for (int i = 0; i < argc; i++) {
       cbt->stream->write_function(cbt->stream, "%-20s", columnName[i]);
     }
@@ -314,8 +314,6 @@ static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **col
     }
     cbt->stream->write_function(cbt->stream, "\n");
   }
-
-  cbt->rowcount++;
 
   for (int i = 0; i < argc; i++) {
     cbt->stream->write_function(cbt->stream, "%-20s", argv[i]);
@@ -472,7 +470,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   switch_zmalloc(query, sizeof(*query));
   query->name = "anonymous";
 
-  /* check format */
+  /* set format, callback, optionally (xml/lua) generate the header of the response (in stream) and point cmd to the start of the query */
   if (strstr(cmd, "txt ") == cmd) {
     format = "txt";
     callback = odbc_query_callback_txt;
@@ -484,16 +482,19 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   } else if (strstr(cmd, "xml ") == cmd) {
     format = "xml";
     callback = odbc_query_callback_xml;
+    stream->write_function(stream, "<response>\n  <result>\n");
     cmd += 4;
   } else if (strstr(cmd, "lua ") == cmd) {
     format = "lua";
     callback = odbc_query_callback_lua;
+    stream->write_function(stream, "response = {\n  [\"result\"] = {\n");
     cmd += 4;
   } else {
     format = "txt";
     callback = odbc_query_callback_txt;
   }
 
+  /* this shouldn't be static ! */
   query->odbc_dsn = "voip";
   query->odbc_user = "voip";
   query->odbc_pass = "voip";
@@ -502,8 +503,30 @@ SWITCH_STANDARD_API(odbc_query_api_function)
 
   cbt.stream = stream;
 
+  /* perform the query with the correct callback */
   if (!execute_sql_callback(query, callback, &cbt, &err)) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
+  }
+
+  /* generate trailer with meta data */
+  if (!strcmp(format, "txt") || !strcmp(format, "tab")) {
+    stream->write_function(stream, "\nGot %d rows returned in %d ms.", cbt.rowcount, cbt.rowcount);
+  } else if (!strcmp(format, "xml")) {
+    stream->write_function(stream, "  </result>\n");
+    stream->write_function(stream, "  <meta>\n");
+    stream->write_function(stream, "    <error>%s</error>\n", err);
+    stream->write_function(stream, "    <rowcount>%d</rowcount>\n", cbt.rowcount);
+    stream->write_function(stream, "    <elapsed_ms>%d</elapsed_ms>\n", cbt.rowcount);
+    stream->write_function(stream, "  </meta>\n");
+    stream->write_function(stream, "</response>\n");
+  } else if (!strcmp(format, "lua")) {
+    stream->write_function(stream, "  };\n");
+    stream->write_function(stream, "  [\"meta\"] = {\n");
+    stream->write_function(stream, "    [\"error\"] = \"%s\";\n", err);
+    stream->write_function(stream, "    [\"rowcount\"] = %d;\n", cbt.rowcount);
+    stream->write_function(stream, "    [\"elapsed_ms\"] = %d;\n", cbt.rowcount);
+    stream->write_function(stream, "  };\n");
+    stream->write_function(stream, "};\n");
   }
 
   //if (!strcmp(format, "txt")) {
