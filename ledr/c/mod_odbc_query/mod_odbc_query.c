@@ -331,6 +331,12 @@ static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **col
   callback_t *cbt = (callback_t *) pArg;
   cbt->rowcount++;
 
+  cbt->stream->write_function(cbt->stream,   "    <row>\n", cbt->rowcount);
+  for (int i = 0; i < argc; i++) {
+    cbt->stream->write_function(cbt->stream, "      <column name=\"%s\" value=\"%s\"/>\n", columnName[i], argv[i]);
+  }
+  cbt->stream->write_function(cbt->stream,   "    </row>\n");
+
   return 0;
 }
 
