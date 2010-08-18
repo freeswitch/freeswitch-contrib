@@ -52,6 +52,7 @@ static struct {
 
 
 /* Per query DSN */
+/*
 typedef struct query_obj {
   char *name;
   char *odbc_dsn;
@@ -59,22 +60,11 @@ typedef struct query_obj {
   char *odbc_pass;
   char *value;
 } query_t;
+*/
 
 
-/* Get database handle */
-static switch_cache_db_handle_t *get_db_handle(query_t *query)
-{
-  switch_cache_db_connection_options_t options = { {0} };
-  switch_cache_db_handle_t *dbh = NULL;
-
-  options.odbc_options.dsn  = query->odbc_dsn;
-  options.odbc_options.user = query->odbc_user;
-  options.odbc_options.pass = query->odbc_pass;
-
-  if (switch_cache_db_get_db_handle(&dbh, SCDB_TYPE_ODBC, &options) != SWITCH_STATUS_SUCCESS)
-    dbh = NULL;
-
-  return dbh;
+/* Get odbc_dsn, odbc_user and odbc_pass from first 'word' of *char (before first space) or else return global settings */
+static switch_status_t get_odbc_options(char *odbc_dsn, char *odbc_user, char *odbc_pass) {
 }
 
 
@@ -122,11 +112,13 @@ static switch_status_t do_config(switch_bool_t reload)
   switch_hash_index_t *hi;
   void *val;
 
-  query_t *query;
-  char *t_name, *t_odbc_dsn, *t_odbc_dsn_2, *t_odbc_user, *t_odbc_pass, *t_value;
+  char *t_name, *t_value;
+  char *query;
 
+  /* no one may access globals.queries for a moment */
   switch_mutex_lock(globals.mutex);
 
+  /* general settings */
   if (switch_xml_config_parse_module_settings(cf, reload, instructions) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not open %s\n", cf);
     goto done;
@@ -138,12 +130,21 @@ static switch_status_t do_config(switch_bool_t reload)
     goto done;
   }
 
-  /* get queries and insert (or over-write) them in globals.queries */
+  /* empty the globals.queries hash */
+  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
+    switch_hash_this(hi, &key, NULL, &val);
+    name = (char *) key;
+    query = (char *) val;
+    hi = switch_hash_next(hi);
+    switch_safe_free(query);
+    switch_core_hash_delete(globals.queries, key);
+  }
+
+  /* get queries and insert them in globals.queries */
   if ((x_queries = switch_xml_child(cfg, "queries"))) {
     for (x_query = switch_xml_child(x_queries, "query"); x_query; x_query = x_query->next) {
       t_name = (char *) switch_xml_attr_soft(x_query, "name");
       t_value = (char *) switch_xml_attr_soft(x_query, "value");
-      t_odbc_dsn = (char *) switch_xml_attr_soft(x_query, "odbc-dsn");
 
       if (zstr(t_name)) {
         switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "query defined without a name\n");
@@ -155,55 +156,8 @@ static switch_status_t do_config(switch_bool_t reload)
         continue;
       }
 
-      if ((query = switch_core_hash_find(globals.queries, t_name))) {
-        switch_safe_free(query->odbc_dsn);
-        switch_safe_free(query->value);
-      } else {
-        switch_zmalloc(query, sizeof(*query));
-        switch_core_hash_insert(globals.queries, t_name, query);
-        query->name = strdup(t_name);
-      }
-
-      query->value = strdup(t_value);
-
-      if (!zstr(t_odbc_dsn)) {
-        t_odbc_dsn_2 = strdup(t_odbc_dsn);
-        if ((t_odbc_user = strchr(t_odbc_dsn_2, ':'))) {
-          *t_odbc_user++ = '\0';
-          if ((t_odbc_pass = strchr(t_odbc_user, ':'))) {
-            *t_odbc_pass++ = '\0';
-            query->odbc_dsn = strdup(t_odbc_dsn_2);
-            query->odbc_user = strdup(t_odbc_user);
-            query->odbc_pass = strdup(t_odbc_pass);
-          } else {
-            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "invalid odbc-dsn, using global one\n");
-          }
-        } else {
-          switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "invalid odbc-dsn, using global one\n");
-        }
-        switch_safe_free(t_odbc_dsn_2);
-      }
-
-      if (!query->odbc_dsn) {
-        query->odbc_dsn = strdup(globals.odbc_dsn);
-        query->odbc_user = strdup(globals.odbc_user);
-        query->odbc_pass = strdup(globals.odbc_pass);
-      }
-
-    }
-  }
-
-  /* remove entries from globals.queries that are not in current configuration */
-  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
-    switch_hash_this(hi, NULL, NULL, &val);
-    query = (query_t *) val;
-    hi = switch_hash_next(hi);
-    if (!switch_xml_find_child(x_queries, "query", "name", query->name)) {
-      switch_core_hash_delete(globals.queries, query->name);
-      switch_safe_free(query->name);
-      switch_safe_free(query->odbc_dsn);
-      switch_safe_free(query->value);
-      switch_safe_free(query);
+      query = strdup(t_value);
+      switch_core_hash_insert(globals.queries, t_name, query);
     }
   }
 
@@ -239,26 +193,52 @@ typedef struct callback_obj {
 } callback_t;
 
 
-/* Execute SQL callback */
-static switch_bool_t execute_sql_callback(query_t *query, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
+/* Execute SQL callback -- char *query WILL be modified !! */
+static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_func_t callback, callback_t *cbt, char **err)
 {
   switch_bool_t retval = SWITCH_FALSE;
+  switch_cache_db_connection_options_t options = { {0} };
   switch_cache_db_handle_t *dbh = NULL;
 
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Performing query name [%s] value [%s]\n", query->name, query->value);
-
-  if (globals.odbc_dsn && (dbh = get_db_handle(query))) {
-    if (switch_cache_db_execute_sql_callback(dbh, query->value, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
-      retval = SWITCH_FALSE;
-    } else {
-      retval = SWITCH_TRUE;
-    }
+  /* does the first 'word' (before the first space) of char *query have syntax db:user:pass ? */
+  char *first_space, *first_colon, *second_colon;
+  if ( first_space = strchr(query, " ")
+    && first_colon = strchr(query, ":")
+    && first_colon > query + 1
+    && second_colon = strchr(first_colon + 1, ":")
+    && second_colon > first_colon + 1
+    && second_colon < first_space - 1 ) { /* yea, what can I say.. */
+    first_colon = '\0';
+    second_colon = '\0';
+    first_space = '\0';
+    options.odbc_options.dsn = query;
+    options.odbc_options.user = first_colon + 1;
+    options.odbc_options.pass = second_colon + 1;
+    query = first_space + 1;
   } else {
-    *err = switch_core_sprintf(cbt->pool, "Unable to get ODBC handle.  dsn: %s, dbh is %s\n", globals.odbc_dsn, dbh ? "not null" : "null");
+    /* copy the global dsn options */
+    switch_mutex_lock(globals.mutex);
+    options.odbc_options.dsn = switch_core_strdup(cbt->pool, globals.odbc_dsn);
+    options.odbc_options.user = switch_core_strdup(cbt->pool, globals.odbc_user);
+    options.odbc_options.pass = switch_core_strdup(cbt->pool, globals.odbc_pass);
+    switch_mutex_unlock(globals.mutex);
+  }
+
+  /* get database handle */
+  if (switch_cache_db_get_db_handle(&dbh, SCDB_TYPE_ODBC, &options) != SWITCH_STATUS_SUCCESS) {
+    *err = switch_core_sprintf(cbt->pool, "Unable to get ODBC handle.  dsn: %s:%s:%s, dbh is %s\n", 
+      options.odbc_options.dsn, options.odbc_options.user, options.odbc_options.pass, dbh ? "not null" : "null");
+    return SWITCH_FALSE;
+  }
+
+  /* perform the query */
+  if (switch_cache_db_execute_sql_callback(dbh, query->value, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
+    switch_cache_db_release_db_handle(&dbh);
+    return SWITCH_FALSE;
   }
 
   switch_cache_db_release_db_handle(&dbh);
-  return retval;
+  return SWITCH_TRUE;
 }
 
 
@@ -330,7 +310,7 @@ static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **col
   callback_t *cbt = (callback_t *) pArg;
   cbt->rowcount++;
 
-  cbt->stream->write_function(cbt->stream,   "    <row>\n", cbt->rowcount);
+  cbt->stream->write_function(cbt->stream,   "    <row>\n");
   for (int i = 0; i < argc; i++) {
     cbt->stream->write_function(cbt->stream, "      <column name=\"%s\" value=\"%s\"/>\n", columnName[i], argv[i]);
   }
@@ -360,15 +340,13 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
   switch_time_t start = switch_micro_time_now();
   switch_time_t stop;
   callback_t cbt = { 0 };
-  query_t *query, *t_query;
+  char *query = NULL;
+  char *t_query = NULL;
   char *err = NULL;
-  char *t_value = NULL;
 
   cbt.pool = switch_core_session_get_pool(session);
   cbt.channel = switch_core_session_get_channel(session);
   cbt.rowcount = 0;
-
-  switch_zmalloc(query, sizeof(*query));
 
   if (!cbt.channel) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "How can there be no channel ?!\n");
@@ -380,45 +358,31 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
     goto done;
   }
 
-  if (strchr(data, ' ')) {
+  /* if data contains no space then it must be the name of a query */
+  if (!strchr(data, " ")) {
     switch_mutex_lock(globals.mutex);
-    query->odbc_dsn  = switch_core_session_strdup(session, globals.odbc_dsn);
-    query->odbc_user = switch_core_session_strdup(session, globals.odbc_user);
-    query->odbc_pass = switch_core_session_strdup(session, globals.odbc_pass);
-    t_value          = switch_core_session_strdup(session, data);
+    if ((query = switch_core_hash_find(globals.queries, data))) {
+      t_query = switch_core_session_strdup(session, query);
+    } else {
+      switch_mutex_unlock(globals.mutex);
+      switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not find a query named: [%s]\n", data);
+      goto done;
+    }
     switch_mutex_unlock(globals.mutex);
   }
 
-  else if ((t_query = switch_core_hash_find(globals.queries, data))) {
-    switch_mutex_lock(globals.mutex);
-    query->name      = switch_core_session_strdup(session, t_query->name);
-    query->odbc_dsn  = switch_core_session_strdup(session, t_query->odbc_dsn);
-    query->odbc_user = switch_core_session_strdup(session, t_query->odbc_user);
-    query->odbc_pass = switch_core_session_strdup(session, t_query->odbc_pass);
-    t_value          = switch_core_session_strdup(session, t_query->value);
-    switch_mutex_unlock(globals.mutex);
-  }
+  query = switch_channel_expand_variables(switch_core_session_get_channel(session), t_query);
 
-  else {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Could not find a query named: [%s]\n", data);
-    goto done;
-  }
-
-  query->value = switch_channel_expand_variables(switch_core_session_get_channel(session), t_value);
-
-  /* Execute expanded_query */
+  /* Execute expanded query */
   if (!execute_sql_callback(query, odbc_query_callback_channel, &cbt, &err)) {
-    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to lookup cid: %s\n", err ? err : "(null)");
+    switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
   }
-
-  /* cleanup */
-  switch_safe_free(query);
 
  done:
 
   /* How long did it take ? */
   stop = switch_micro_time_now();
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %u ms\n", (uint32_t) (stop - start)/1000 );
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Got %d rows in %u ms\n", cbt.rowcount, (uint32_t) (stop - start)/1000 );
 }
 
 
@@ -574,9 +538,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   Macro expands to: switch_status_t mod_odbc_query_shutdown() */
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
 {
-  query_t *query;
   switch_hash_index_t *hi;
-  void *val;
+  void *key, *val;
+  char *name, *query;
 
   switch_console_set_complete("del odbc_query");
 
@@ -584,14 +548,12 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
 
   switch_mutex_lock(globals.mutex);
   for (hi = switch_hash_first(NULL, globals.queries); hi;) {
-    switch_hash_this(hi, NULL, NULL, &val);
-    query = (query_t *) val;
+    switch_hash_this(hi, &key, NULL, &val);
+    name = (char *) key;
+    query = (char *) val;
     hi = switch_hash_next(hi);
-    switch_core_hash_delete(globals.queries, query->name);
-    switch_safe_free(query->name);
-    switch_safe_free(query->odbc_dsn);
-    switch_safe_free(query->value);
     switch_safe_free(query);
+    switch_core_hash_delete(globals.queries, key);
   }
   switch_mutex_unlock(globals.mutex);
 
