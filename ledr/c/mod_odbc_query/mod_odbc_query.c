@@ -29,6 +29,7 @@
  * mod_odbc_query.c -- ODBC Query
  *
  * Do ODBC queries from the dialplan and store all returned values as channel variables.
+ * Do ODBC queries through API.
  *
  */
 #include <switch.h>
@@ -261,7 +262,7 @@ static switch_bool_t execute_sql_callback(query_t *query, switch_core_db_callbac
 }
 
 
-/* Called for each row returned by query - when storing result in channel variables*/
+/* Called for each row returned by query - when storing result in channel variables */
 static int odbc_query_callback_channel(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
@@ -282,7 +283,7 @@ static int odbc_query_callback_channel(void *pArg, int argc, char **argv, char *
   return 0;
 }
 
-/* Generate a text string */
+/* Generate a txt string */
 static int odbc_query_callback_txt(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
@@ -323,7 +324,7 @@ static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **col
   return 0;
 }
 
-/* Generate an xml */
+/* Generate an xml string */
 static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
@@ -338,7 +339,7 @@ static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **col
   return 0;
 }
 
-/* Generate a lua table */
+/* Generate a lua table string */
 static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
