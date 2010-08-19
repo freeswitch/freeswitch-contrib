@@ -1,7 +1,7 @@
 <configuration name="odbc_query.conf" description="ODBC Query Module">
 
   <settings>
-    <param name="odbc-dsn" value="freeswitch:freeswitch:secret"/>
+    <param name="odbc-dsn" value="db:user:password"/>
   </settings>
 
   <queries>
