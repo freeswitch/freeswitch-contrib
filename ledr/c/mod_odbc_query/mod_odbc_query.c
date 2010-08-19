@@ -190,6 +190,7 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
     && (first_colon  > query)
     && (second_colon < first_space - 1) ) /* yea, what can I say.. */
   {
+    /* copy the dsn options from the first 'word' of the query, then move *query a few chars to the right so it points to the query itself */
     *first_colon++  = '\0';
     *second_colon++ = '\0';
     *first_space++  = '\0';
@@ -447,7 +448,9 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "};\n");
   }
 
+  /* cleanup time */
   switch_safe_free(query);
+  switch_core_destroy_memory_pool(&cbt.pool);
 
   return SWITCH_STATUS_SUCCESS;
 }
@@ -528,6 +531,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
     switch_core_hash_delete(globals.queries, (char *) key);
   }
   switch_mutex_unlock(globals.mutex);
+
+  /* is it safe to free globals.odbc_dsn here ? */
 
   return SWITCH_STATUS_SUCCESS;
 }
