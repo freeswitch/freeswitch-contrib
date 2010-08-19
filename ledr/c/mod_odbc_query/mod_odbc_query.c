@@ -181,26 +181,26 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
 {
   switch_cache_db_connection_options_t options = { {0} };
   switch_cache_db_handle_t *dbh = NULL;
+  char *first_space, *first_colon, *second_colon;
 
   /* does the first 'word' (before the first space) of char *query have syntax db:user:pass ? */
-  char *first_space, *first_colon, *second_colon;
-  if ( ((first_space = strchr(query, ' ')))
-    && ((first_colon = strchr(query, ':')))
-    && first_colon > query + 1
+  if ( ((first_space  = strchr(query, ' ')))
+    && ((first_colon  = strchr(query, ':')))
     && ((second_colon = strchr(first_colon + 1, ':')))
-    && second_colon > first_colon + 1
-    && second_colon < first_space - 1 ) { /* yea, what can I say.. */
-    first_colon = '\0';
-    second_colon = '\0';
-    first_space = '\0';
-    options.odbc_options.dsn = query;
-    options.odbc_options.user = first_colon + 1;
-    options.odbc_options.pass = second_colon + 1;
-    query = first_space + 1;
+    && (first_colon  > query)
+    && (second_colon < first_space - 1) ) /* yea, what can I say.. */
+  {
+    *first_colon++  = '\0';
+    *second_colon++ = '\0';
+    *first_space++  = '\0';
+    options.odbc_options.dsn  = query;
+    options.odbc_options.user = first_colon;
+    options.odbc_options.pass = second_colon;
+    query = first_space;
   } else {
     /* copy the global dsn options */
     switch_mutex_lock(globals.mutex);
-    options.odbc_options.dsn = switch_core_strdup(cbt->pool, globals.odbc_dsn);
+    options.odbc_options.dsn  = switch_core_strdup(cbt->pool, globals.odbc_dsn);
     options.odbc_options.user = switch_core_strdup(cbt->pool, globals.odbc_user);
     options.odbc_options.pass = switch_core_strdup(cbt->pool, globals.odbc_pass);
     switch_mutex_unlock(globals.mutex);
