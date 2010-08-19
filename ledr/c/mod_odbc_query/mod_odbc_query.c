@@ -308,11 +308,11 @@ static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **col
   callback_t *cbt = (callback_t *) pArg;
   cbt->rowcount++;
 
-  cbt->stream->write_function(cbt->stream,   "    [%d] = {\n", cbt->rowcount);
+  cbt->stream->write_function(cbt->stream,   "  [%d] = {\n", cbt->rowcount);
   for (int i = 0; i < argc; i++) {
-    cbt->stream->write_function(cbt->stream, "      [\"%s\"] = \"%s\";\n", columnName[i], argv[i]);
+    cbt->stream->write_function(cbt->stream, "    [\"%s\"] = \"%s\";\n", columnName[i], argv[i]);
   }
-  cbt->stream->write_function(cbt->stream,   "    };\n");
+  cbt->stream->write_function(cbt->stream,   "  };\n");
 
   return 0;
 }
@@ -408,7 +408,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   } else if (strstr(cmd, "lua ") == cmd) {
     format = "lua";
     callback = odbc_query_callback_lua;
-    stream->write_function(stream, "response = {\n  [\"result\"] = {\n");
+    stream->write_function(stream, "result = {\n");
     cmd += 4;
   } else {
     format = "txt";
@@ -439,12 +439,11 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "  </meta>\n");
     stream->write_function(stream, "</response>\n");
   } else if (!strcmp(format, "lua")) {
-    stream->write_function(stream, "  };\n");
-    stream->write_function(stream, "  [\"meta\"] = {\n");
-    stream->write_function(stream, "    [\"error\"] = \"%s\";\n", err);
-    stream->write_function(stream, "    [\"rowcount\"] = %d;\n", cbt.rowcount);
-    stream->write_function(stream, "    [\"elapsed_ms\"] = %d;\n", cbt.rowcount);
-    stream->write_function(stream, "  };\n");
+    stream->write_function(stream, "};\n");
+    stream->write_function(stream, "meta = {\n");
+    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", err);
+    stream->write_function(stream, "  [\"rowcount\"] = %d;\n", cbt.rowcount);
+    stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", cbt.rowcount);
     stream->write_function(stream, "};\n");
   }
 
