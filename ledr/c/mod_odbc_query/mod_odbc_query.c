@@ -310,7 +310,9 @@ static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **col
 
   cbt->stream->write_function(cbt->stream,   "  [%d] = {\n", cbt->rowcount);
   for (int i = 0; i < argc; i++) {
-    cbt->stream->write_function(cbt->stream, "    [\"%s\"] = \"%s\";\n", columnName[i], argv[i]);
+    cbt->stream->write_function(cbt->stream, "    [\"%s\"] = \"%s\";\n", 
+      switch_escape_char(cbt->pool, columnName[i], "\"\\", '\\'),
+      switch_escape_char(cbt->pool, argv[i], "\"\\", '\\'));
   }
   cbt->stream->write_function(cbt->stream,   "  };\n");
 
@@ -441,7 +443,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   } else if (!strcmp(format, "lua")) {
     stream->write_function(stream, "};\n");
     stream->write_function(stream, "meta = {\n");
-    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", err);
+    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", switch_escape_char(cbt.pool, err, "\"\\", '\\'));
     stream->write_function(stream, "  [\"rowcount\"] = %d;\n", cbt.rowcount);
     stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", cbt.rowcount);
     stream->write_function(stream, "};\n");

@@ -2,7 +2,9 @@ mod_odbc_query readme
 
 by: Leon de Rooij <leon@toyos.nl>
 
-This module can be used for doing odbc queries from the dialplan.
+This module can be used for doing odbc queries as an APP from the dialplan or through the API interface.
+
+=== APP ===
 
 Usage:
 
@@ -80,3 +82,108 @@ rows will be returned.
 
 If zero rows are returned (in either foo/bar or name/value case) then
 no channel variables will be set, overwritten or deleted.
+
+
+=== API ===
+
+The API interface is accessable from several places, for easy testing
+use it from your fs_cli console.
+
+
+Usage:
+
+odbc_query [txt|tab|xml|lua] [db:user:pass] <SELECT * FROM foo WHERE true;>
+
+If you omit the first argument (formatting) then the default 'txt' will be used.
+
+If you omit the second argument (odbc dsn) then the default odbc_dsn as
+set in the odbc_query.conf.xml will be used.
+
+The third argument (the query itself) is mandatory.
+
+
+As stated above, the formatting can be txt, tab, xml or lua.
+Here are examples of their output:
+
+
+==== format txt ====
+
+ fscli> odbc_query txt select 1 as foo, 2 as bar
+ 
+                       foo : 1
+                       bar : 2
+ 
+ Got 1 rows returned in 1 ms.
+
+
+==== format tab ====
+
+ fscli> odbc_query tab select 1 as foo, 2 as bar
+ 
+ foo                 bar                 
+ ========================================
+ 1                   2                   
+ 
+ Got 1 rows returned in 1 ms.
+
+
+==== format xml ====
+
+ fscli> odbc_query xml select 1 as foo, 2 as bar
+ 
+ <response>
+   <result>
+     <row>
+       <column name="foo" value="1"/>
+       <column name="bar" value="2"/>
+     </row>
+   </result>
+   <meta>
+     <error></error>
+     <rowcount>1</rowcount>
+     <elapsed_ms>1</elapsed_ms>
+   </meta>
+ </response>
+
+
+==== format lua ====
+
+ fscli> odbc_query lua select 1 as foo, 2 as bar
+ 
+ result = {
+   [1] = {
+    ["foo"] = "1";
+     ["bar"] = "2";
+   };
+ };
+ meta = {
+   ["error"] = "";
+   ["rowcount"] = 1;
+   ["elapsed_ms"] = 1;
+ };
+
+So now you can also call this API function from LUA itself.
+
+For example, if you save the following in scripts/ in your fs install dir:
+
+ api = freeswitch.API();
+ 
+ local r = {}
+ 
+ setfenv (
+   assert (
+     loadstring (
+       api:execute( "odbc_query", "lua select 1 as foo, 2 as bar" )
+     )
+   ), r
+ ) ()
+ 
+ freeswitch.consoleLog( "notice", "foo = [" .. r.result[1].foo .. "]\n" )
+
+And then call the script from your cli:
+
+ luarun test_odbc_query.lua
+
+Then should an output comparable to:
+
+ 2010-08-19 15:45:05.301664 [NOTICE] switch_cpp.cpp:1177 foo = [1]
