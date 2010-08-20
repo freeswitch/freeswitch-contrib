@@ -322,8 +322,8 @@ static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **col
 
 SWITCH_STANDARD_APP(odbc_query_app_function)
 {
-  switch_time_t start = switch_micro_time_now();
-  switch_time_t stop;
+  switch_time_t start_time = switch_micro_time_now();
+  int elapsed_ms;
   callback_t cbt = { 0 };
   char *query = NULL;
   char *t_query = NULL;
@@ -366,14 +366,16 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
  done:
 
   /* How long did it take ? */
-  stop = switch_micro_time_now();
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Got %d rows in %u ms\n", cbt.rowcount, (uint32_t) (stop - start)/1000 );
+  elapsed_ms = (int) (switch_micro_time_now() - start_time) / 1000;
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Got %d rows in %d ms\n", cbt.rowcount, elapsed_ms);
 }
 
 
 #define ODBC_QUERY_API_FUNCTION_SYNTAX "[txt|tab|xml|lua] [db:user:pass] <SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
+  switch_time_t start_time = switch_micro_time_now();
+  int elapsed_ms;
   switch_core_db_callback_func_t callback;
   callback_t cbt = { 0 };
   char *format;
@@ -426,18 +428,19 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
   }
 
-/* TODO FIX IT SO THAT err HAS THE " ESCAPED BY \ IN CASE OF LUA
-   AND " < > REPLACED BY &quot; &lt; &gt; IN CASE OF XML !!!! */
+  elapsed_ms = (int) (switch_micro_time_now() - start_time) / 1000;
+
+/* TODO FIX IT SO THAT err HAS THE " < > REPLACED BY &quot; &lt; &gt; IN CASE OF XML !!!! */
 
   /* generate trailer with meta data */
   if (!strcmp(format, "txt") || !strcmp(format, "tab")) {
-    stream->write_function(stream, "\nGot %d rows returned in %d ms.", cbt.rowcount, cbt.rowcount);
+    stream->write_function(stream, "\nGot %d rows returned in %d ms.", cbt.rowcount, elapsed_ms);
   } else if (!strcmp(format, "xml")) {
     stream->write_function(stream, "  </result>\n");
     stream->write_function(stream, "  <meta>\n");
     stream->write_function(stream, "    <error>%s</error>\n", err);
     stream->write_function(stream, "    <rowcount>%d</rowcount>\n", cbt.rowcount);
-    stream->write_function(stream, "    <elapsed_ms>%d</elapsed_ms>\n", cbt.rowcount);
+    stream->write_function(stream, "    <elapsed_ms>%d</elapsed_ms>\n", elapsed_ms);
     stream->write_function(stream, "  </meta>\n");
     stream->write_function(stream, "</response>\n");
   } else if (!strcmp(format, "lua")) {
@@ -445,7 +448,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "meta = {\n");
     stream->write_function(stream, "  [\"error\"] = \"%s\";\n", switch_escape_char(cbt.pool, err, "\"\\", '\\'));
     stream->write_function(stream, "  [\"rowcount\"] = %d;\n", cbt.rowcount);
-    stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", cbt.rowcount);
+    stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", elapsed_ms);
     stream->write_function(stream, "};\n");
   }
 
