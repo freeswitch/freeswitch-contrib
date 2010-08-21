@@ -34,6 +34,8 @@
  */
 #include <switch.h>
 
+#define dbg(str) switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, str)
+
 
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown);
 SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load);
@@ -355,6 +357,8 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
       goto done;
     }
     switch_mutex_unlock(globals.mutex);
+  } else {
+    t_query = switch_core_session_strdup(session, data);
   }
 
   query = switch_channel_expand_variables(switch_core_session_get_channel(session), t_query);
