@@ -203,6 +203,10 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
   } else {
     /* copy the global dsn options */
     switch_mutex_lock(globals.mutex);
+    if (!globals.odbc_dsn) { /* in case the module was unloaded while in this function */
+      switch_mutex_unlock(globals.mutex);
+      return SWITCH_FALSE;
+    }
     options.odbc_options.dsn  = switch_core_strdup(cbt->pool, globals.odbc_dsn);
     options.odbc_options.user = switch_core_strdup(cbt->pool, globals.odbc_user);
     options.odbc_options.pass = switch_core_strdup(cbt->pool, globals.odbc_pass);
@@ -541,9 +545,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
     switch_safe_free(query);
     switch_core_hash_delete(globals.queries, (char *) key);
   }
+  switch_safe_free(globals.odbc_dsn);
   switch_mutex_unlock(globals.mutex);
-
-  /* is it safe to free globals.odbc_dsn here ? */
 
   return SWITCH_STATUS_SUCCESS;
 }
