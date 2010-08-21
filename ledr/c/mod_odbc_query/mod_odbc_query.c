@@ -288,6 +288,7 @@ static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **col
 }
 
 /* Generate an xml string */
+/* TODO There is no proper rewriting of < to &lt;, > to &gt;, etc FIXIT! */
 static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **columnName)
 {
   callback_t *cbt = (callback_t *) pArg;
