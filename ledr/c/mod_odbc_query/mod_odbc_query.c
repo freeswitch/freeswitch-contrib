@@ -233,7 +233,7 @@ static int odbc_query_callback_channel(void *pArg, int argc, char **argv, char *
 
   if ((argc == 2) && (!strcmp(columnName[0], "name")) && (!strcmp(columnName[1], "value"))) {
     if (!zstr(argv[1])) {
-      switch_channel_set_variable(cbt->channel, argv[0], switch_str_nil(argv[1]));
+      switch_channel_set_variable(cbt->channel, switch_str_nil(argv[0]), switch_str_nil(argv[1]));
     }
   } else {
     for (int i = 0; i < argc; i++) {
