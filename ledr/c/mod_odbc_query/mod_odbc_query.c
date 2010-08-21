@@ -363,6 +363,8 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Unable to perform query: %s\n", err ? err : "(null)");
   }
 
+  if (query != t_query) free(query);
+
  done:
 
   /* How long did it take ? */
