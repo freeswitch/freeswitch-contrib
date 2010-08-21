@@ -233,12 +233,12 @@ static int odbc_query_callback_channel(void *pArg, int argc, char **argv, char *
 
   if ((argc == 2) && (!strcmp(columnName[0], "name")) && (!strcmp(columnName[1], "value"))) {
     if (!zstr(argv[1])) {
-      switch_channel_set_variable(cbt->channel, argv[0], argv[1]);
+      switch_channel_set_variable(cbt->channel, argv[0], switch_str_nil(argv[1]));
     }
   } else {
     for (int i = 0; i < argc; i++) {
       if (!zstr(argv[i])) {
-        switch_channel_set_variable(cbt->channel, columnName[i], argv[i]);
+        switch_channel_set_variable(cbt->channel, columnName[i], switch_str_nil(argv[i]));
       }
     }
   }
@@ -254,7 +254,7 @@ static int odbc_query_callback_txt(void *pArg, int argc, char **argv, char **col
 
   for (int i = 0; i < argc; i++) {
     cbt->stream->write_function(cbt->stream, "%25s : ", columnName[i]);
-    cbt->stream->write_function(cbt->stream, "%s\n", argv[i]);
+    cbt->stream->write_function(cbt->stream, "%s\n", switch_str_nil(argv[i]));
   }
   cbt->stream->write_function(cbt->stream, "\n");
 
@@ -280,7 +280,7 @@ static int odbc_query_callback_tab(void *pArg, int argc, char **argv, char **col
   }
 
   for (int i = 0; i < argc; i++) {
-    cbt->stream->write_function(cbt->stream, "%-20s", argv[i]);
+    cbt->stream->write_function(cbt->stream, "%-20s", switch_str_nil(argv[i]));
   }
   cbt->stream->write_function(cbt->stream, "\n");
 
@@ -296,7 +296,7 @@ static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **col
 
   cbt->stream->write_function(cbt->stream,   "    <row>\n");
   for (int i = 0; i < argc; i++) {
-    cbt->stream->write_function(cbt->stream, "      <column name=\"%s\" value=\"%s\"/>\n", columnName[i], argv[i]);
+    cbt->stream->write_function(cbt->stream, "      <column name=\"%s\" value=\"%s\"/>\n", columnName[i], switch_str_nil(argv[i]));
   }
   cbt->stream->write_function(cbt->stream,   "    </row>\n");
 
@@ -312,8 +312,8 @@ static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **col
   cbt->stream->write_function(cbt->stream,   "  [%d] = {\n", cbt->rowcount);
   for (int i = 0; i < argc; i++) {
     cbt->stream->write_function(cbt->stream, "    [\"%s\"] = \"%s\";\n", 
-      columnName[i] ? switch_escape_char(cbt->pool, columnName[i], "\"\\", '\\') : "",
-      argv[i] ? switch_escape_char(cbt->pool, argv[i], "\"\\", '\\') : "");
+      switch_escape_char(cbt->pool, switch_str_nil(columnName[i]), "\"\\", '\\'),
+      switch_escape_char(cbt->pool, switch_str_nil(argv[i]), "\"\\", '\\'));
   }
   cbt->stream->write_function(cbt->stream,   "  };\n");
 
@@ -449,7 +449,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   } else if (!strcmp(format, "lua")) {
     stream->write_function(stream, "};\n");
     stream->write_function(stream, "meta = {\n");
-    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", err ? switch_escape_char(cbt.pool, err, "\"\\", '\\') : "");
+    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", switch_escape_char(cbt.pool, switch_str_nil(err), "\"\\", '\\'));
     stream->write_function(stream, "  [\"rowcount\"] = %d;\n", cbt.rowcount);
     stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", elapsed_ms);
     stream->write_function(stream, "};\n");
