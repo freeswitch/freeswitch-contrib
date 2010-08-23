@@ -184,6 +184,7 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
   switch_cache_db_connection_options_t options = { {0} };
   switch_cache_db_handle_t *dbh = NULL;
   char *first_space, *first_colon, *second_colon;
+  char *sql_err = NULL;
 
   /* does the first 'word' (before the first space) of char *query have syntax db:user:pass ? */
   if ( ((first_space  = strchr(query, ' ')))
@@ -221,8 +222,12 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
   }
 
   /* perform the query */
-  if (switch_cache_db_execute_sql_callback(dbh, query, callback, (void *) cbt, err) == SWITCH_ODBC_FAIL) {
+  if (switch_cache_db_execute_sql_callback(dbh, query, callback, (void *) cbt, &sql_err) == SWITCH_ODBC_FAIL) {
     switch_cache_db_release_db_handle(&dbh);
+    if (sql_err) { /* strdup via pool, so err doesn't need to be freed in calling function */
+      *err = switch_core_strdup(cbt->pool, sql_err);
+      free(sql_err);
+    }
     return SWITCH_FALSE;
   }
 
