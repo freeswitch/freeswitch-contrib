@@ -418,12 +418,12 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   } else if (strstr(cmd, "xml ") == cmd) {
     format = "xml";
     callback = odbc_query_callback_xml;
-    stream->write_function(stream, "<response>\n  <result>\n");
+    stream->write_function(stream, "<result>\n  <rows>\n");
     cmd += 4;
   } else if (strstr(cmd, "lua ") == cmd) {
     format = "lua";
     callback = odbc_query_callback_lua;
-    stream->write_function(stream, "result = {\n");
+    stream->write_function(stream, "rows = {\n");
     cmd += 4;
   } else {
     format = "txt";
@@ -447,13 +447,13 @@ SWITCH_STANDARD_API(odbc_query_api_function)
   if (!strcmp(format, "txt") || !strcmp(format, "tab")) {
     stream->write_function(stream, "\nGot %d rows returned in %d ms.", cbt.rowcount, elapsed_ms);
   } else if (!strcmp(format, "xml")) {
-    stream->write_function(stream, "  </result>\n");
+    stream->write_function(stream, "  </rows>\n");
     stream->write_function(stream, "  <meta>\n");
     stream->write_function(stream, "    <error>%s</error>\n", err);
     stream->write_function(stream, "    <rowcount>%d</rowcount>\n", cbt.rowcount);
     stream->write_function(stream, "    <elapsed_ms>%d</elapsed_ms>\n", elapsed_ms);
     stream->write_function(stream, "  </meta>\n");
-    stream->write_function(stream, "</response>\n");
+    stream->write_function(stream, "</result>\n");
   } else if (!strcmp(format, "lua")) {
     stream->write_function(stream, "};\n");
     stream->write_function(stream, "meta = {\n");
