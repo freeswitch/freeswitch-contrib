@@ -26,7 +26,7 @@
  * Leon de Rooij <leon@toyos.nl>
  *
  *
- * mod_benchmark.c
+ * mod_hammer.c
  *
  * Run an API n times and print how long it took to finish it
  *
@@ -34,13 +34,13 @@
 #include <switch.h>
 
 
-SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_benchmark_shutdown);
-SWITCH_MODULE_LOAD_FUNCTION(mod_benchmark_load);
-SWITCH_MODULE_DEFINITION(mod_benchmark, mod_benchmark_load, mod_benchmark_shutdown, NULL);
+SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_hammer_shutdown);
+SWITCH_MODULE_LOAD_FUNCTION(mod_hammer_load);
+SWITCH_MODULE_DEFINITION(mod_hammer, mod_hammer_load, mod_hammer_shutdown, NULL);
 
 
-#define BENCHMARK_API_FUNCTION_SYNTAX "<repetition> <child_api_cmd_with_optional_arguments>"
-SWITCH_STANDARD_API(benchmark_api_function)
+#define HAMMER_API_FUNCTION_SYNTAX "<repetition> <child_api_cmd_with_optional_arguments>"
+SWITCH_STANDARD_API(hammer_api_function)
 {
   int repetition = 1;
   char *s_repetition;
@@ -53,7 +53,7 @@ SWITCH_STANDARD_API(benchmark_api_function)
 
   /* did we get any cmd ? */
   if (zstr(cmd)) {
-    stream->write_function(stream, "No paramaters supplied !\n\n-USAGE: %s\n", BENCHMARK_API_FUNCTION_SYNTAX);
+    stream->write_function(stream, "No paramaters supplied !\n\n-USAGE: %s\n", HAMMER_API_FUNCTION_SYNTAX);
     return SWITCH_STATUS_SUCCESS;
   }
 
@@ -62,7 +62,7 @@ SWITCH_STANDARD_API(benchmark_api_function)
 
   /* get the child cmd */
   if (!((childcmd = strchr(mycmd, ' ')))) {
-    stream->write_function(stream, "No child api cmd supplied !\n\n-USAGE: %s\n", BENCHMARK_API_FUNCTION_SYNTAX);
+    stream->write_function(stream, "No child api cmd supplied !\n\n-USAGE: %s\n", HAMMER_API_FUNCTION_SYNTAX);
     switch_safe_free(mycmd);
     return SWITCH_STATUS_SUCCESS;
   }
@@ -109,20 +109,20 @@ SWITCH_STANDARD_API(benchmark_api_function)
 }
 
 
-SWITCH_MODULE_LOAD_FUNCTION(mod_benchmark_load)
+SWITCH_MODULE_LOAD_FUNCTION(mod_hammer_load)
 {
   switch_api_interface_t *api_interface;
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Benchmark module loading...\n");
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_INFO, "Hammer module loading...\n");
   *module_interface = switch_loadable_module_create_module_interface(pool, modname);
-  SWITCH_ADD_API(api_interface, "benchmark", "Perform an ODBC query", benchmark_api_function, BENCHMARK_API_FUNCTION_SYNTAX);
-  switch_console_set_complete("add benchmark");
+  SWITCH_ADD_API(api_interface, "hammer", "Run an API n times", hammer_api_function, HAMMER_API_FUNCTION_SYNTAX);
+  switch_console_set_complete("add hammer");
   return SWITCH_STATUS_SUCCESS;
 }
 
 
-SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_benchmark_shutdown)
+SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_hammer_shutdown)
 {
-  switch_console_set_complete("del benchmark");
+  switch_console_set_complete("del hammer");
   return SWITCH_STATUS_SUCCESS;
 }
 
