@@ -18,8 +18,8 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.freeswitch.esl.client</groupId>
-    <artifactId>esl-client-parent</artifactId>
-    <version>0.9.1-SNAPSHOT</version>
+    <artifactId>java-esl-client</artifactId>
+    <version>0.9.3-SNAPSHOT</version>
   </parent>
   <artifactId>org.freeswitch.esl.client</artifactId>
   <name>FreeSWITCH Event Socket Library - Java Client</name>
@@ -40,17 +40,11 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Bundle-DocURL>http://www.freeswitch.org</Bundle-DocURL>
-<!--            <Import-Package>*</Import-Package>-->
             <Export-Package>
-              org.freeswitch.esl.client,
-              org.freeswitch.esl.client.transport.event,
-              org.freeswitch.esl.client.transport.message,
+              !org.freeswitch.esl.client.internal,
+              !org.freeswitch.esl.client.internal.debug,
+              org.freeswitch.esl.client.*
             </Export-Package>
-            <!--  the debug package is a temporary hack  -->
-            <Private-Package>
-              org.freeswitch.esl.client.internal,
-              org.freeswitch.esl.client.debug
-            </Private-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -70,18 +64,20 @@
   </build>
   <dependencies>
 
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.6.1</version>
-    </dependency>
-    
+    <!--  tcp socket and codec library see   http://jboss.org/netty  -->
     <dependency>
       <groupId>org.jboss.netty</groupId>
       <artifactId>netty</artifactId>
       <version>3.2.1.Final</version>
     </dependency>
 
+    <!--  logging library see   http://slf4j.org  -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.1</version>
+    </dependency>
+    
     <!--  test dependencies -->
     
     <dependency>

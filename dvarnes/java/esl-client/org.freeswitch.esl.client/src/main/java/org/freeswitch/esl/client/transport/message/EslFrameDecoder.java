@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
  * </pre>
  * 
  * @author  david varnes
- * @version $Id$
  */
 public class EslFrameDecoder extends ReplayingDecoder<EslFrameDecoder.State>
 {
@@ -63,6 +62,7 @@ public class EslFrameDecoder extends ReplayingDecoder<EslFrameDecoder.State>
     private final Logger log = LoggerFactory.getLogger( this.getClass() );
     private final int maxHeaderSize;
     private EslMessage currentMessage;
+    private boolean treatUnknownHeadersAsBody = false;
     
     public EslFrameDecoder( int maxHeaderSize )
     {
@@ -74,6 +74,12 @@ public class EslFrameDecoder extends ReplayingDecoder<EslFrameDecoder.State>
                     maxHeaderSize);
         }
         this.maxHeaderSize = maxHeaderSize;
+    }
+    
+    public EslFrameDecoder( int maxHeaderSize, boolean treatUnknownHeadersAsBody )
+    {
+        this( maxHeaderSize );
+        this.treatUnknownHeadersAsBody = treatUnknownHeadersAsBody;
     }
     
     @Override
@@ -104,7 +110,15 @@ public class EslFrameDecoder extends ReplayingDecoder<EslFrameDecoder.State>
                     Name headerName = Name.fromLiteral( headerParts[0] );
                     if ( headerName == null )
                     {
-                        throw new IllegalStateException( "Unhandled ESL header [" + headerParts[0] + ']' );
+                        if ( treatUnknownHeadersAsBody )
+                        {
+                            // cache this 'header' as a body line <-- useful for Outbound client mode
+                            currentMessage.addBodyLine( headerLine );
+                        }
+                        else
+                        {
+                            throw new IllegalStateException( "Unhandled ESL header [" + headerParts[0] + ']' );
+                        }
                     }
                     currentMessage.addHeader( headerName, headerParts[1] );
                 }
