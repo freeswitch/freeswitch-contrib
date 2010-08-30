@@ -1,12 +1,12 @@
 ENVIRONMENT_NAME= luamod
-DRIVER_NAME= test
-
-FS_SRCDIR = ../../../..
+DRIVER_NAME= template
 
 PREFIX= /usr/local
+
+FS_ROOT = ../../../..
+
 LUA_LIBDIR= $(PREFIX)/lib/lua/5.1
 LUA_DIR= $(PREFIX)/share/lua/5.1
-LUA_INC= $(FS_SRCDIR)/src/mod/languages/mod_lua/lua
 
 LIB_OPTION= -shared #for Linux
 #LIB_OPTION= -bundle -undefined dynamic_lookup #for MacOS X
@@ -14,14 +14,13 @@ LIB_OPTION= -shared #for Linux
 LIBNAME= $(DRIVER_NAME).so
 
 DRIVER_LIBS= -L/usr/lib64
-DRIVER_INCS= -I/usr/include
 
-WARN= -fPIC -Wall -Wmissing-prototypes -Wmissing-declarations -ansi -pedantic
-INCS= -I$(LUA_INC)
-CFLAGS= -O2 $(WARN) -I$(COMPAT_DIR) $(DRIVER_INCS) $(INCS) $(DEFS)
+WARN= -O2 -fPIC -Wall -x c++ -ansi -pedantic
+INCS= -I/usr/include -I$(FS_ROOT)/src/mod/languages/mod_lua/lua -I $(FS_ROOT)/src/include -I$(FS_ROOT)/libs/libteletone/src
+CFLAGS= -O2 $(WARN) $(INCS)
 CC= gcc
 
-OBJS= luamod.o driver.o
+OBJS= luamod.o $(DRIVER_NAME).o
 SRCS= luamod.h luamod.c $(DRIVER_NAME).c
 AR= ar rcu
 RANLIB= ranlib

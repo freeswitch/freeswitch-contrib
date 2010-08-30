@@ -3,6 +3,8 @@
 ** LuaSQL Credits: http://www.keplerproject.org/luasql/index.html#credits
 */
 
+#include <switch.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
