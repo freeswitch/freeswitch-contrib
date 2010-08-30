@@ -15,9 +15,9 @@ LIBNAME= $(DRIVER_NAME).so
 
 DRIVER_LIBS= -L/usr/lib64
 
-WARN= -O2 -fPIC -Wall -x c++ -ansi -pedantic
 INCS= -I/usr/include -I$(FS_ROOT)/src/mod/languages/mod_lua/lua -I $(FS_ROOT)/src/include -I$(FS_ROOT)/libs/libteletone/src
-CFLAGS= -O2 $(WARN) $(INCS)
+CFLAGS= -O2 -fPIC -Wall -ansi -pedantic $(INCS)
+CPPFLAGS= -O2 -x c++ -fPIC -Wall -ansi -pedantic $(INCS)
 CC= gcc
 
 OBJS= luamod.o $(DRIVER_NAME).o
@@ -27,10 +27,13 @@ RANLIB= ranlib
 
 #--
 
-lib: $(LIBNAME)
+#lib: $(LIBNAME)
 
 $(LIBNAME): $(OBJS)
-	export MACOSX_DEPLOYMENT_TARGET="10.3"; $(CC) $(CFLAGS) -o $@ $(LIB_OPTION) $(OBJS) $(DRIVER_LIBS)
+	$(CC) $(CPPFLAGS) -o $@ $(LIB_OPTION) $(OBJS) $(DRIVER_LIBS)
+
+$(LIBNAME):
+	$(CC) $(CFLAGS) -o $@ $(LIB_OPTION) $(OBJS) $(DRIVER_LIBS)
 
 install:
 	mkdir -p $(LUA_LIBDIR)/$(ENVIRONMENT_NAME)
