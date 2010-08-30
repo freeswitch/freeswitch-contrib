@@ -210,7 +210,7 @@ static int create_env (lua_State *L)
 ** Creates the metatables for the objects and registers the
 ** driver open method.
 */
-LUAMOD_API int luaopen_luamod_test (lua_State *L)
+LUAMOD_API int luaopen_luamod_template (lua_State *L)
 {
 	struct luaL_reg driver[] = {
 		{"my_env", create_env},

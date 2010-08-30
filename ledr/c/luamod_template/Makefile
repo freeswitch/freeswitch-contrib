@@ -1,9 +1,9 @@
 ENVIRONMENT_NAME= luamod
 DRIVER_NAME= template
 
-PREFIX= /usr/local
-
 FS_ROOT = ../../../..
+
+PREFIX= /usr/local
 
 LUA_LIBDIR= $(PREFIX)/lib/lua/5.1
 LUA_DIR= $(PREFIX)/share/lua/5.1
@@ -13,6 +13,7 @@ LIB_OPTION= -shared #for Linux
 
 LIBNAME= $(DRIVER_NAME).so
 
+#DRIVER_LIBS= -L/usr/lib64 -L/opt/freeswitch/lib
 DRIVER_LIBS= -L/usr/lib64
 
 INCS= -I/usr/include -I$(FS_ROOT)/src/mod/languages/mod_lua/lua -I $(FS_ROOT)/src/include -I$(FS_ROOT)/libs/libteletone/src
@@ -37,7 +38,7 @@ $(LIBNAME):
 
 install:
 	mkdir -p $(LUA_LIBDIR)/$(ENVIRONMENT_NAME)
-	cp src/$(LIBNAME) $(LUA_LIBDIR)/$(ENVIRONMENT_NAME)
+	cp $(LIBNAME) $(LUA_LIBDIR)/$(ENVIRONMENT_NAME)
 
 clean:
 	rm -f $(LIBNAME) *.o $(COMPAT_O)
