@@ -1,0 +1,78 @@
+This patch includes LuaSQL with an 'scdb' driver into the mod_lua FreeSWITCH module.
+
+Result is that it can make use of the connection pooling facilities provided by switch_core_sqldb.
+
+
+Note that this version of the scdb driver does not have the following functions implemented: execute, commit, rollback, setautocommit.
+This is because there is currently no support in switch_core_sqldb to get a single row from a cursor (hstmt).
+I hope I can still implement this functionality soon(ish).
+
+However, there is a new function available called exec2table, that takes an SQL statement
+as argument and returns a table containing the entire result set.
+
+
+To try it out, patch FreeSWITCH from the root of the source tree like this:
+
+cd /usr/src/freeswitch
+patch -p1 < contrib/ledr/c/mod_lua_luasql/mod_lua_luasql_20100828_1912.patch
+
+The patch applies cleanly to git rev 540ee0123de4119b1df10ce752a5891248215a8b - Fri Aug 27 14:04:45 2010 -0500
+
+Then re-build and install your mod_lua module:
+
+make mod_lua-install
+
+
+You can use it almost as how you'd use LuaSQL with ODBC driver, but you don't have to 'require' it as it's compiled into mod_lua:
+
+
+-- DataDumper from here: http://lua-users.org/wiki/DataDumper --
+require "DataDumper"
+
+local env = assert(luasql.scdb())
+local con = assert(env:connect("dsn", "user", "pass"))
+local res = assert(con:exec2table("select * from routes"))
+
+con:close() -- optional, connection (dbh) is automatically released
+env:close() -- optional, environment is automatically closed
+
+stream:write(DataDumper(res))
+-- end of script --
+
+
+And execute the script from your cli:
+
+freeswitch@fs-dev> lua test.lua
+return {
+  {
+    account_id="1",
+    date_end="2030-12-31 00:00:00",
+    date_start="1970-01-01 00:00:00",
+    digits="31320",
+    enabled="1",
+    id="4",
+    lead_strip="0",
+    prefix="",
+    quality="0.000000",
+    rate="0.000000",
+    reliability="0.000000",
+    suffix="",
+    trail_strip="0"
+  },
+  {
+    account_id="999",
+    date_end="2030-12-31 00:00:00",
+    date_start="1970-01-01 00:00:00",
+    digits="31321",
+    enabled="1",
+    id="6",
+    lead_strip="0",
+    prefix="",
+    quality="0.000000",
+    rate="0.000000",
+    reliability="0.000000",
+    suffix="",
+    trail_strip="0"
+  }
+}
+
