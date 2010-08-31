@@ -1,35 +1,36 @@
 --[[
-gen_dir_user_xml_single_table_mysql.lua - by Leon de Rooij <leon@toyos.nl>
+dir_user_xml_single_table_pgsql.lua - by Leon de Rooij <leon@toyos.nl>
 Makes use of luasql.scdb (experimental) which you can find in contrib/ledr/c/mod_lua_luasql
 
 A single table structure is expected containing all user attrs, params and variables:
 
-CREATE TABLE `users` (
-  `domain`       VARCHAR(255) NOT NULL,
-  `id`           VARCHAR(255) NOT NULL,
-  `mailbox`      VARCHAR(255),
-  `cidr`         VARCHAR(255),
-  `number-alias` VARCHAR(255),
-  `password`     VARCHAR(255),
-  `dial-string`  VARCHAR(255),
-  `user_context` VARCHAR(255),
-  PRIMARY KEY (`domain`, `id`),
-  KEY `users_mailbox` (`mailbox`),
-  KEY `users_cidr` (`cidr`),
-  KEY `users_number-alias` (`number-alias`)
+CREATE TABLE users (
+  "domain"       VARCHAR(255) NOT NULL,
+  "id"           VARCHAR(255) NOT NULL,
+  "mailbox"      VARCHAR(255),
+  "cidr"         VARCHAR(255),
+  "number-alias" VARCHAR(255),
+  "password"     VARCHAR(255),
+  "dial-string"  VARCHAR(255),
+  "user_context" VARCHAR(255),
+  PRIMARY KEY (domain, id)
 );
 
-INSERT INTO `users` (`domain`, `id`, `mailbox`, `cidr`, `number-alias`, `password`, `dial-string`, `user_context`)
+CREATE INDEX "users_mailbox" ON users (mailbox);
+CREATE INDEX "users_cidr" ON users (mailbox);
+CREATE INDEX "users_number-alias" ON users ("number-alias");
+
+INSERT INTO users (domain, id, mailbox, cidr, number-alias, password, dial-string, user_context)
        VALUES ('test.com', 'testuser', '1234', NULL, NULL, 'topsecret', NULL, NULL);
 
 To make FreeSWITCH do directory searches through a Lua script, add the following to lua.conf.xml:
 
-    <param name="xml-handler-script" value="gen_dir_user_xml_single_table_mysql.lua"/>
+    <param name="xml-handler-script" value="dir_user_xml_single_table_pgsql.lua"/>
     <param name="xml-handler-bindings" value="directory"/>
 ]]
 
 -- it's probably wise to sanitize input to avoid SQL injections !
-local query = string.format("select * from users where domain = '%s' and `%s`='%s' limit 1",
+local query = string.format("select * from users where domain = '%s' and \"%s\" = '%s'",
   req_domain, req_key, req_user)
 
 local req_domain = params:getHeader("domain")
