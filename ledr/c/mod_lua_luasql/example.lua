@@ -8,9 +8,9 @@ local res = assert(con:exec2table("select 1 as foo, 2 as bar")) -- all your rows
   [1] = {
     ["foo"] = "1";
     ["bar"] = "2";
-  }
+  };
 }
---]]
+]]
  
 for i = 1, table.getn(res) do -- loop through rows
   for key, val in pairs(res[i]) do -- loop through columns
