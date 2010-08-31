@@ -1,4 +1,4 @@
--- this script expects a telephone number as argv[1] in interntional format
+-- this script expects a telephone number as argv[1] in international format
 -- without any 00 or + prefix, splits out the country code and returns that
 -- if country code is not valid then return the string "INVALID"
 
