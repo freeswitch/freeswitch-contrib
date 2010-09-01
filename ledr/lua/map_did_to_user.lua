@@ -37,7 +37,7 @@ end
 <extension name="if_user_then_">
   <condition field="${user}" expression="....
 
-When found, a channel variable named user will be set with the value "1234"
+When found, a channel variable named user will be set with the value "someuser"
 (you can only use the channel variable in the next condition when using inline, otherwise a transfer is needed)
 
 ]]
