@@ -28,7 +28,7 @@ end
 
 --[[ You can call it from the dialplan, like this:
 
-<extension name="map_did_to_user">
+<extension name="map_did_to_user" continue="true">
   <condition field="destination_number" expression="^(\+|00)?(\d+)$">
     <action appliction="lua" data="map_did_to_user.lua $2" inline="true"/>
   </condition>
