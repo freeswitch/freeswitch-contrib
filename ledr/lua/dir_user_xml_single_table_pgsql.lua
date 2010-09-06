@@ -66,7 +66,7 @@ assert (dbh:query(query, function(u) -- there will be only 0 or 1 iteration (lim
   freeswitch.consoleLog("notice", "Debug from dir_user_xml_single_table_pgsql.lua, generated XML:\n" .. XML_STRING)
 end))
 
---[[ When searched, should return:
+--[[ When searched (user_exists id testuser test.com), should return:
 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="freeswitch/xml">
