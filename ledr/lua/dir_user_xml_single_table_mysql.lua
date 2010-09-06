@@ -42,7 +42,7 @@ local query = string.format("select * from users where domain = '%s' and `%s`='%
   req_domain, req_key, req_user)
 
 assert (dbh:query(query, function(u) -- there will be only 0 or 1 iteration (limit 1)
-XML_STRING =
+  XML_STRING =
 [[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="freeswitch/xml">
   <section name="directory">
@@ -60,10 +60,10 @@ XML_STRING =
     </domain>
   </section>
 </document>]]
-end))
 
--- remove the following line for production
-freeswitch.consoleLog("notice", "Debug from dir_user_xml_single_table_mysql.lua, generated XML:\n" .. XML_STRING)
+  -- remove the following line for production
+  freeswitch.consoleLog("notice", "Debug from dir_user_xml_single_table_mysql.lua, generated XML:\n" .. XML_STRING)
+end))
 
 --[[ When searched, should return:
 
