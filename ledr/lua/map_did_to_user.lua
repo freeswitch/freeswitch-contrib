@@ -1,7 +1,7 @@
 --[[
 map_did_to_user.lua - by Leon de Rooij <leon@toyos.nl>
 Looks up did in database and sets a channel variable - this essentially makes mod_odbc_query redundant
-Makes use of luasql.scdb (experimental) which you can find in contrib/ledr/c/mod_lua_luasql
+Makes use of freeswitch_hdb (experimental) which you can find in contrib/ledr/c/mod_lua_hdb
 
 CREATE TABLE did_users (
   did  VARCHAR(255) NOT NULL,
@@ -13,18 +13,20 @@ CREATE TABLE did_users (
 INSERT INTO users (did, user) VALUES ("1234", "someuser");
 ]]
 
-local env = assert(luasql.scdb()) 
-local con = assert(env:connect("dsn","user","pass")) 
+local dbh = freeswitch.Dbh("dsn","user","pass") 
 
 local did = argv[1]
 
 local query = "select user from did_users where did = " .. did
 
-local res = assert(con:exec2table(query)) 
-
-if table.getn(res) == 1 then
-  session.setVariable("user", res[1]["user"])
+assert(dbh:query(query, function(r)
+  for key, val in pairs(r) do
+    session.setVariable(k, v)
+  end
 end
+
+-- or just set the single value like this:
+-- dbh:query(query, function(r) session.setVariable("user", r.user) end)
 
 --[[ You can call it from the dialplan, like this:
 
