@@ -63,6 +63,9 @@ XML_STRING =
 </document>]]
 end))
 
+-- remove the following line for production
+freeswitch.consoleLog("notice", "Debug from dir_user_xml_single_table_pgsql.lua, generated XML:\n" .. XML_STRING)
+
 --[[ When searched, should return:
 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
