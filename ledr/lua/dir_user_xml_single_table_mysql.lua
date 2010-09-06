@@ -28,10 +28,6 @@ To make FreeSWITCH do directory searches through a Lua script, add the following
     <param name="xml-handler-bindings" value="directory"/>
 ]]
 
--- it's probably wise to sanitize input to avoid SQL injections !
-local query = string.format("select * from users where domain = '%s' and `%s`='%s' limit 1",
-  req_domain, req_key, req_user)
-
 local req_domain = params:getHeader("domain")
 local req_key    = params:getHeader("key")
 local req_user   = params:getHeader("user")
@@ -40,6 +36,10 @@ assert (req_domain and req_key and req_user,
   "This example script only supports generating directory xml for a single user !\n")
 
 local dbh = assert(freeswitch.Dbh("dsn","user","pass")) 
+
+-- it's probably wise to sanitize input to avoid SQL injections !
+local query = string.format("select * from users where domain = '%s' and `%s`='%s' limit 1",
+  req_domain, req_key, req_user)
 
 assert (dbh:query(query, function(u) -- there will be only 0 or 1 iteration (limit 1)
 XML_STRING =
