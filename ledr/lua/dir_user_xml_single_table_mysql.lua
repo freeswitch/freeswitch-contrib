@@ -1,6 +1,6 @@
 --[[
 dir_user_xml_single_table_mysql.lua - by Leon de Rooij <leon@toyos.nl>
-Makes use of luasql.scdb (experimental) which you can find in contrib/ledr/c/mod_lua_luasql
+Makes use of freeswitch.Dbh (experimental) which you can find in contrib/ledr/c/mod_lua_dbh
 
 A single table structure is expected containing all user attrs, params and variables:
 
@@ -39,14 +39,10 @@ local req_user   = params:getHeader("user")
 assert (req_domain and req_key and req_user,
   "This example script only supports generating directory xml for a single user !\n")
 
-local env = assert(luasql.scdb()) 
-local con = assert(env:connect("dsn","user","pass")) 
+local dbh = assert(freeswitch.Dbh("dsn","user","pass")) 
 
-local res = assert(con:exec2table(query)) 
-
-if table.getn(res) == 1 then
-  local u = res[1]
-  XML_STRING =
+assert (dbh:query(query, function(u) -- there will be only 0 or 1 iteration (limit 1)
+XML_STRING =
 [[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="freeswitch/xml">
   <section name="directory">
@@ -64,7 +60,7 @@ if table.getn(res) == 1 then
     </domain>
   </section>
 </document>]]
-end
+end))
 
 --[[ When searched, should return:
 
