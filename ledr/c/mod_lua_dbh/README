@@ -14,7 +14,7 @@ dbh:query("select 1 as foo", function(row) stream:write("Foo = " .. row.foo) end
 -- to get previous (mod_odbc_query or mod_lua_luasql) functionality, you can do this:
 
 local res = {}
-dbh:query("select 1 as foo", function(row), table.insert(res, row) end)
+dbh:query("select 1 as foo", function(row) table.insert(res, row) end)
 
 
 --
