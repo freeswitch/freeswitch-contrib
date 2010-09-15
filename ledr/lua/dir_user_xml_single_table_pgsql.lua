@@ -52,9 +52,9 @@ assert (dbh:query(query, function(u) -- there will be only 0 or 1 iteration (lim
            .. u.cidr .. [[" number-alias="]] .. u["number-alias"] .. [[">
         <params>
           <param name="password" value="]] .. u.password .. [["/>
+          <param name="dial-string" value="]] .. u["dial-string"] .. [["/>
         </params>
         <variables>
-          <variable name="dial-string" value="]] .. u["dial-string"] .. [["/>
           <variable name="user_context" value="]] .. u.user_context .. [["/>
         </variables>
       </user>
