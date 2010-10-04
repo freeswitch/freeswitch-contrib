@@ -1,0 +1,14 @@
+# This file should be identical on both hosts
+
+logfile /var/log/ha-log
+logfacility local0
+keepalive 1
+warntime 2
+deadtime 3
+initdead 5
+bcast eth0          # The ethernet interface for doing VRRP
+udpport 694
+auto_failback off
+
+node foo1.bar.com   # This should be the same as
+node foo2.bar.com   #   returned by uname -n
