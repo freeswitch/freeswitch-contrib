@@ -74,7 +74,7 @@ my $headerfile = $tmpdir . "/header-defs.txt";
 my $datafile   = $tmpdir . "/get-set-vars.txt";
 my $htmlfile   = $htmldir . "/chanvars.html";
 
-my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH';
+my $site = 'http://fisheye.freeswitch.org/browse/freeswitch.git';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
 $obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
@@ -200,7 +200,7 @@ foreach my $chanvar ( sort {lc $a cmp lc $b} keys %channel_vars ) {
             #$row[2] .= "@{ $_ }" . "<br/>";
             my $linkname = "@{ $_ }";
             my $linenum = @{ $_ }[0];
-            my $url = $source_files{$sourcename} . '?r=9999999#l' . $linenum;
+            my $url = $source_files{$sourcename};
             $row[2] .= $h->a( { href => $url, target => '_blank' },
                 $linkname
             ) . '<br/>';
