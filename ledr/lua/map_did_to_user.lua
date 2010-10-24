@@ -13,17 +13,26 @@ CREATE TABLE did_users (
 INSERT INTO users (did, user) VALUES ("1234", "someuser");
 ]]
 
-local dbh = freeswitch.Dbh("dsn","user","pass") 
-
 local did = argv[1]
 
-local query = "select user from did_users where did = " .. did
+local dbh = assert(freeswitch.Dbh("dsn", "user", "pass"))
 
-assert(dbh:query(query, function(r)
-  for key, val in pairs(r) do
-    session.setVariable(k, v)
+local my_query = "select user from did_users where did = " .. did
+
+-- set variable - or print to console if no session is available
+local function sv(key, val)
+  if session then
+    session:setVariable(key, val)
+  else
+    stream:write(string.format("%25s : %s\n", key, val))
   end
 end
+
+assert(dbh:query(my_query, function(row)
+  for key, val in pairs(row) do     -- in this example only one row with one column will be returned
+    sv(key, val)                    -- so here key = 'user'
+  end
+end))
 
 -- or just set the single value like this:
 -- dbh:query(query, function(r) session.setVariable("user", r.user) end)
