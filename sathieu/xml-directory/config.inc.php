@@ -40,7 +40,7 @@ $directories = Array(
 		'base_filter'      => 
 			'(&(objectClass=person)'. // personne
 			'(!(cn=*$))'. // no winstations
-			'(!(objectClass=gosaUserTemplate))'. // no GOsa templates
+			//'(!(objectClass=gosaUserTemplate))'. // no GOsa templates
 			'(!(uid=nobody))(!(uid=root))(!(uid=admin))(!(uid=joindom)))', // no nobody,root,admin,joindom
 		'sizelimit'        => 20,
 		'search_fields'    => Array(
