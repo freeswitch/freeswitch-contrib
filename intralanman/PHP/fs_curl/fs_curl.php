@@ -108,7 +108,10 @@ class fs_curl {
      */
     private function generate_request_array() {
         while (list($req_key, $req_val) = each($_REQUEST)) {
-        //$this -> comment("$req_key => $req_val");
+			if (!defined('FS_CURL_DEBUG') && $req_key == 'fs_curl_debug') {
+				define('FS_CURL_DEBUG', $req_val);
+			}
+			//$this -> comment("$req_key => $req_val");
             $this -> request[$req_key] = $req_val;
         }
     }
@@ -122,7 +125,7 @@ class fs_curl {
         $this -> xmlw = new XMLWriter();
         $this -> xmlw -> openMemory();
         if (array_key_exists('fs_curl_debug', $this -> request)
-            && $this -> request['fs_curl_debug'] == true) {
+            && $this -> request['fs_curl_debug'] > 0) {
             $this -> xmlw -> setIndent(true);
             $this -> xmlw -> setIndentString('  ');
         } else {
@@ -311,7 +314,7 @@ class fs_curl {
      * @param integer $debug_level debug if $debug_level <= FS_CURL_DEBUG
      * @param integer $spaces
      */
-    public function debug($input, $debug_level=0, $spaces=0) {
+    public function debug($input, $debug_level=-1, $spaces=0) {
         if (defined('FS_CURL_DEBUG') && $debug_level <= FS_CURL_DEBUG ) {
             if (is_array($input)) {
                 $this -> debug('Array (', $debug_level, $spaces);

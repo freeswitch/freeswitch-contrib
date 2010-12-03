@@ -102,8 +102,13 @@ class FS_PDOStatement extends PDOStatement {
 	}
 	
 	public function numRows() {
-		
-		return $this->rowCount();
+		if (preg_match('/^select/i', $this->queryString)) {
+			$results = $this->fetchAll();
+			$this->execute();
+			return count($results);
+		} else {
+			return $this->rowCount();
+		}
 	}
 }
 ?>

@@ -32,8 +32,9 @@ class fs_dialplan extends fs_curl {
      */
     public function main() {
         $this -> comment($this -> request);
-        $context = $this -> request['Caller-Context'];
+        $context = $this -> request['Hunt-Context'];
         if ($this -> is_specialized_dialplan($context)) {
+			$this->debug("$context should be handled in a specialized dialplan class file");
             if (!include_once($this -> special_class_file)) {
                 $this -> file_not_found();
             }
@@ -58,14 +59,18 @@ class fs_dialplan extends fs_curl {
         $query = sprintf(
             "SELECT * FROM dialplan_special WHERE context='%s'", $context
         );
+		$this -> debug($query);
         $res = $this -> db -> query($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
+	   
         if ($res -> numRows() == 1) {
+			$this -> debug("numRows() == 1");
             $row = $res -> fetchRow();
+			$this->debug($row);
             $this -> special_class_file = sprintf('dialplans/%s', $row['class_file']);
             return true;
         } else {
@@ -108,6 +113,10 @@ class fs_dialplan extends fs_curl {
             $this -> comment($this -> db -> getMessage());
             $this -> file_not_found();
         }
+		if ($res -> numRows() < 1) { 
+			$this -> debug("nothing to do, let's just return not found");
+			$this -> file_not_found();
+		}
         $condition_number = 0;
         while ($row = $res -> fetchRow()) {
             $ct = $row['context'];
