@@ -6,12 +6,15 @@
     FreeSWITCH install or modify it as you see fit.
 
     These are "on hook" agents, i.e. the phone rings when a call comes in; agents don't sit and wait on the phone.
-    Dial 6* plus the FIFO number to log in.  Example: 61* to log into "ACD1"
-    Dial 6# plus the FIFO number to log out. Example: 61# to log out of "ACD1"
+    Dial 6* plus the FIFO number to log in.  Example: 61* to log into "FIFO1"
+    Dial 6# plus the FIFO number to log out. Example: 61# to log out of "FIFO1"
+    NOTE: I added 6** as an alternative to logging out b/c some phone dialplans don't like 6#...
+
     By default there are ten slots. You can mix, match, add, etc. as you see fit.
     NOTE: There isn't any error checking, so the the system will say that the user is logged in or out no matter what!
+    NOTE: I have added an option to use group_confirm so that your agents have to press 1 to accept. This is useful in the case where an agent is a cell phone or other phone that has voicemail.
 
-    Send a caller to the queue by transferring to 610[0-9]; 6101 corresponds to ACD1, 6102 to ACD2, etc.
+    Send a caller to the queue by transferring to 610[0-9]; 6101 corresponds to FIFO1, 6102 to FIFO2, etc.
 
     To see that your user did indeed login go to the FS CLI and type "fifo list" and it will show you everything.
     Use "fifo list_verbose" to see LOTS of information about the FIFO queues.
@@ -22,9 +25,13 @@
   <extension name="Agent Login">
     <condition field="destination_number" expression="^6\*(\d)">
       <action application="answer"/>
-      <action application="set" data="result=${fifo_member(add ACD$1 {fifo_member_wait=nowait}user/${user_name} )"/>
+      <action application="set" data="result=${fifo_member(add FIFO$1 {fifo_member_wait=nowait}user/${user_name} )"/>
+      <!-- use the following line instead if you want to have group_confirm for the agent 
+	<action application="set" data="result=${fifo_member(add FIFO$1 {fifo_member_wait=nowait,group_confirm_file=ivr/ivr-accept_reject_voicemail.wav,group_confirm_key=1}user/${user_name} )"/>   
+      -->
+
       <action application="log" data="INFO Add FIFO agent result: ${result}"/>
-      <action application="log" data="INFO User Login: ACD$1 User: ${user_name}"/>
+      <action application="log" data="INFO User Login: FIFO$1 User: ${user_name}"/>
       <!-- No error checking, just assuming login went well... -->
       <action application="playback" data="ivr/ivr-you_are_now_logged_in.wav"/>
     </condition>
@@ -32,24 +39,28 @@
 
   <!-- Agent logout extension: 6#[0-9] -->
   <extension name="Agent Logout">
-    <condition field="destination_number" expression="^6#(\d)">
+    <condition field="destination_number" expression="^6#|6\*\*(\d)">
       <action application="answer"/>
-      <action application="set" data="result=${fifo_member(del ACD$1 {fifo_member_wait=nowait}user/${user_name})}"/>
+      <action application="set" data="result=${fifo_member(del FIFO$1 {fifo_member_wait=nowait}user/${user_name})}"/>
+      <!-- Use this line instead if you are using group_group confirm
+	   <action application="set" data="result=${fifo_member(del FIFO$1 {fifo_member_wait=nowait,group_confirm_file=ivr/ivr-accept_reject_voicemail.wav,group_confirm_key=1}user/${user_name} )"/>
+       -->
+
       <action application="log" data="INFO Del FIFO agent result: ${result}"/>
-      <action application="log" data="INFO User Logout: ACD$1 User: ${user_name}"/>
+      <action application="log" data="INFO User Logout: FIFO$1 User: ${user_name}"/>
       <!-- No error checking, just assuming logout went well... -->
       <action application="playback" data="ivr/ivr-you_are_now_logged_out.wav"/>
     </condition>
   </extension>
 
 
-  <!-- Send a call to ACD[0-9] -->
-  <extension name="send caller to ACD">
+  <!-- Send a call to FIFO[0-9] -->
+  <extension name="send caller to FIFO">
     <condition field="destination_number" expression="^610(\d)$">
       <action application="answer"/>
       <action application="set" data="fifo_music=$${hold_music}"/>
       <action application="playback" data="ivr/ivr-hold_connect_call.wav"/>
-      <action application="fifo" data="ACD$1 in"/>
+      <action application="fifo" data="FIFO$1 in"/>
     </condition>
   </extension>
 </include>

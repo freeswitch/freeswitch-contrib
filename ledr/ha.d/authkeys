@@ -1,0 +1,4 @@
+# This file should be identical on both hosts
+
+auth 2
+2 sha1 your_shared_secret_string_here

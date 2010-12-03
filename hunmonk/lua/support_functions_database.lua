@@ -26,3 +26,14 @@ function pgsql_escape(string_to_escape)
   return escaped_string
 end
 
+--[[
+  Escapes special characters for the SQLite database.
+]]
+function sqlite_escape(string)
+  -- Single quote.
+  string = string.gsub(string, "'", "''")
+  -- Null byte.
+  string = string.gsub(string, "%z", "")
+  return string
+end
+

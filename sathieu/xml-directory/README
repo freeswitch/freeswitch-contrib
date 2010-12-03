@@ -1,0 +1,35 @@
+== CREDITS ==
+Copyright 2007-2010 Mairie de Paris, Service technique de l'eau et de l'assainissement
+Copyright 2010 Mathieu Parent <math.parent@gmail.com> 
+
+	XML Directory for Cisco IP Phones is free software: you can
+	redistribute it and/or modify it under the terms of the GNU General
+	Public License as published by the Free Software Foundation, either
+	version 3 of the License, or (at your option) any later version.
+
+	XML Directory for Cisco IP Phones is distributed in the hope that it
+	will be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+	the GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with XML Directory for Cisco IP Phones. If not, see
+	<http://www.gnu.org/licenses/>.
+
+== AUTHOR AND CONTRIBUTORS ==
+Author: Mathieu Parent
+
+== INSTALLATION ==
+* Web server (Apache2 tested)
+* php5 with ldap
+* put it in, so that URL is http://<your host>/xml-directory
+* edit config.inc.php
+* Change Cisco Call Manager Directory IP to http://<your host>/CCMCIP/
+* Check
+* Enjoy !
+
+== INSPIRATIONS ==
+* http://www.voip-info.org/wiki/view/Asterisk+Cisco+79XX+XML+Services
+* http://www-rocq.inria.fr/who/Philippe.Sultan/iptelJavaCisco.html
+* http://www.cisco.com/univercd/cc/td/doc/product/voice/vpdd/cdd/3_3/3_3_2/ipphs332.htm
+

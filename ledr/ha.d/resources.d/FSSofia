@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# Description:  Starting / stopping FreeSWITCH Sofia SIP profiles
+#                 and send a 'sofia recover' after all profiles are started
+#
+# Author:       Leon de Rooij <leon@scarlet-internet.nl>
+# License:      BSD
+# Copyright:    (C) 2010 Leon de Rooij
+
+FS_CLI_PROG='/usr/local/freeswitch/bin/fs_cli'
+FS_CLI_HOST='127.0.0.1'
+FS_CLI_PORT='8021'
+FS_CLI_PASS='ClueCon'
+
+usage() {
+  echo "Usage: $0 profile1[,profile2[,etc]] {start|stop|status}"
+  exit 1
+}
+
+fs_cli() {
+  $FS_CLI_PROG -H $FS_CLI_HOST -P $FS_CLI_PORT -p $FS_CLI_PASS -x "$1"
+}
+
+sofia_profile_started() {
+  fs_cli "sofia xmlstatus" | grep "<name>$1</name>" | wc -l
+}
+
+if [ $# != 2 ]; then
+  usage
+fi
+
+PROFILES=`echo $1 | tr ',' ' '`
+CMD=$2
+
+case "$CMD" in
+  'start')
+     for p in $PROFILES; do
+       fs_cli "sofia profile $p start"
+     done
+     fs_cli "sofia recover"
+     ;;
+  'stop')
+     for p in $PROFILES; do
+       fs_cli "sofia profile $p stop"
+     done
+     ;;
+  'status')
+     for p in $PROFILES; do
+       if [ `sofia_profile_started "$p"` == 0 ]; then
+         echo "DOWN"
+         exit 1
+       fi
+     done
+     echo "OK"
+     ;;
+  *)
+     usage
+     ;;
+esac
+

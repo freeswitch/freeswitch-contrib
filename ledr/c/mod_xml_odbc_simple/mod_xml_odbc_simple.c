@@ -448,7 +448,7 @@ static switch_xml_t xml_odbc_simple_search(const char *section, const char *tag_
 
   /* How long did it take ? */
   done = switch_micro_time_now();
-  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %lu ms\n", (done - start)/1000 );
+  switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG10, "Elapsed Time %u ms\n", (uint32_t) (done - start)/1000 );
 
  done:
 

@@ -1,0 +1,9 @@
+# This file should be identical on both hosts
+
+# In the following example, 1.2.3.4 is your floating IP.
+# The Sofia SIP profiles that are stopped / started are
+# named profile_1 and profile_2 in this example.
+
+foo1.bar.com IPaddr::1.2.3.4 FSSofia::profile_1,profile_2
+
+# Note, only the master host should be defined here, not the slave !

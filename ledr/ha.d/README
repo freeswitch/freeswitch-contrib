@@ -1,0 +1,31 @@
+NOTE: THIS HA CONFIG IS STILL UNDER DEVELOPMENT !!
+
+That said, here's a little howto to get heartbeat going (assuming you're using CentOS).
+
+Follow the following steps on both your master- and slave servers:
+
+* Install some dependencies:
+
+yum install heartbeat heartbeat-pils heartbeat-stonith
+
+* Copy the files in this directory to /etc/ha.d:
+
+for i in authkeys ha.cf haresources resources.d; do cp -avr $i /etc/ha.d; done
+
+* Edit ha.cf and haresources on both hosts so the hostnames are correct (equal to uname -n).
+
+* Make sure your Sofia SIP profile(s) are correctly defined in haresources.
+
+* Set the correct configuration parameters for fs_cli in resources.d/FSSofia
+
+* Configure the floating IP in your FS Sofia SIP profile itself.
+
+* Make sure heartbeat starts at startup:
+
+chkconfig heartbeat on
+
+* Start heartbeat:
+
+service heartbeat start
+
+* Enjoy ! :)
