@@ -13,7 +13,7 @@ end
 function init_module_help()
   local help_file
   -- Create a map of all module help that can be called.
-  jester.help = {}
+  jester.help_map = {}
   for _, mod in ipairs(jester.conf.modules) do
     help_file = "jester.modules." .. mod .. ".help"
     if require(help_file) then
@@ -51,7 +51,7 @@ function get_help(...)
       output = string.format("No %s help available for '%s'", help_type, arg_string)
     end
   else
-    jester.help = {}
+    jester.help_map = {}
     require "lfs"
     local error_message = {}
     local path = script_path .. jester.conf.help_path
@@ -78,7 +78,7 @@ function get_help(...)
     end
 
     if #error_message == 0 then
-      help_path = jester.help
+      help_path = jester.help_map
       if #arguments > 0 then
         for a = 1, #arguments do
           help_path = help_path[arguments[a]]
@@ -86,7 +86,7 @@ function get_help(...)
         end
       end
       if #arguments == 0 then
-        output = topic_help(jester.help, true)
+        output = topic_help(jester.help_map, true)
       elseif help_path then
         output = topic_help(help_path)
       else
@@ -137,12 +137,34 @@ function topic_help(topic, main)
   return table.concat(output, "\n\n")
 end
 
+function welcome()
+  return [[Welcome to Jester help!
+
+Here you'll find extensive information on all the important areas of Jester.  Start by reviewing the topic list below for an area of interest.  The general format for accessing help is 'help [sub-topic] [sub-sub-topic] [...]', and this is how you'll see it referenced internally.
+
+The exact way help is called depends on where you're calling it from.  'help module data' would be called in the following ways depending on where/how you're accessing help:
+  From the command line:
+    cd /path/to/freeswitch/scripts
+    lua jester.lua help module data
+  From the FreeSWITCH console:
+    luarun jester.lua help module data
+  Using the jhelp script (find this in the jester/scripts directory):
+    jhelp module data]]
+end
+
+function get_modules()
+  local module_list = {}
+  for _, module_name in ipairs(table.ordervalues(jester.conf.modules)) do
+    module_list[module_name] = jester.help_map[module_name]
+  end
+  return module_list
+end
+
 function module_help()
   local module_list = {}
   local help, description
-  table.sort(jester.conf.modules)
-  for _, name in ipairs(jester.conf.modules) do
-    help = jester.help[name]
+  for _, name in ipairs(table.ordervalues(jester.conf.modules)) do
+    help = jester.help_map[name]
     table.insert(module_list, name .. ":")
     if help.description_short then
       description = help.description_short:wrap(79, "  ")
@@ -156,7 +178,7 @@ end
 
 function module_help_detail(module_name)
   local description, actions
-  for name_to_check, data in pairs(jester.help) do
+  for name_to_check, data in pairs(jester.help_map) do
     if name_to_check == module_name then
       if data.description_long then
         description = data.description_long:wrap(79)
@@ -168,8 +190,8 @@ function module_help_detail(module_name)
   end
   if description then
     local list = {}
-    module_data = jester.help[module_name]
-    action_data = jester.help[module_name].actions
+    module_data = jester.help_map[module_name]
+    action_data = jester.help_map[module_name].actions
     table.insert(list, description)
     if action_data then
       table.insert(list, "\nACTIONS:")
@@ -200,27 +222,23 @@ function build_handlers(module_data, list)
   return list
 end
 
-function welcome()
-  return [[Welcome to Jester help!
-
-Here you'll find extensive information on all the important areas of Jester.  Start by reviewing the topic list below for an area of interest.  The general format for accessing help is 'help [sub-topic] [sub-sub-topic] [...]', and this is how you'll see it referenced internally.
-
-The exact way help is called depends on where you're calling it from.  'help module data' would be called in the following ways depending on where/how you're accessing help:
-  From the command line:
-    cd /path/to/freeswitch/scripts
-    lua jester.lua help module data
-  From the FreeSWITCH console:
-    luarun jester.lua help module data
-  Using the jhelp script (find this in the jester/scripts directory):
-    jhelp module data]]
+function get_actions()
+  local action_list = {}
+  local actions
+  for _, module_name in ipairs(table.ordervalues(jester.conf.modules)) do
+    actions = jester.help_map[module_name].actions
+    for action, data in pairs(actions) do
+      action_list[action] = data
+    end
+  end
+  return action_list
 end
 
 function action_help()
   local action_list = {}
   local actions, description
-  table.sort(jester.conf.modules)
-  for _, module_name in ipairs(jester.conf.modules) do
-    actions = jester.help[module_name].actions
+  for _, module_name in ipairs(table.ordervalues(jester.conf.modules)) do
+    actions = jester.help_map[module_name].actions
     table.insert(action_list, "\nModule: " .. module_name)
     for _, action in ipairs(table.orderkeys(actions)) do
       table.insert(action_list, "  " .. action .. ":")
@@ -236,7 +254,7 @@ function action_help()
 end
 
 function action_help_detail(action)
-  for _, module_data in pairs(jester.help) do
+  for _, module_data in pairs(jester.help_map) do
     for action_to_check, action_data in pairs(module_data.actions) do
       if action_to_check == action then
         local list = {}
