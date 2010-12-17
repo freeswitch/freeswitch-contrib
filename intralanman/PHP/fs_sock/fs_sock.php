@@ -228,19 +228,7 @@ class fs_sock {
             $len += strlen($orig_line);
             $trim_line = trim($orig_line);
             $this -> debug("$trim_line - $len");
-            if (strstr($orig_line, ":")) {
-                $split = split(":", $orig_line);
-                $attribute = trim($split[0]);
-                $value = trim($split[1]);
-                $content[$attribute] = urldecode($value);
-            } elseif (empty($trim_line) && is_array($content)
-                && array_key_exists('Content-Length', $content)) {
-                $content['Body'] = $this -> sock_get_body($content['Content-Length']);
-                $len += $content['Content-Length'];
-                break;
-            } elseif (!empty($trim_line)) {
-                $content .= $trim_line;
-            }
+			$content .= $orig_line;
             if ($len >= $content_len) {
                 break;
             }
@@ -332,6 +320,7 @@ class fs_sock {
             }
             $reply = $this -> sock_get();
         }
+		$this -> debug($reply);
         return $reply;
     }
 
