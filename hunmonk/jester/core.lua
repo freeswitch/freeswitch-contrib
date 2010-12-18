@@ -3,11 +3,14 @@ module("jester", package.seeall)
 --[[
   Initialize the specified modules.
 ]]
-function init_modules()
+function init_modules(modules)
   local conf_file
   -- Create a lightweight map of all actions that can be called.
-  action_map = {}
-  for _, mod in ipairs(conf.modules) do
+  -- Modules and custom scripts can call this function to load
+  -- additional modules, so make sure that any existing action_map
+  -- is preserved.
+  action_map = action_map or {}
+  for _, mod in ipairs(modules) do
     conf_file = "jester.modules." .. mod .. ".conf"
     if require(conf_file) then
       debug_log("Loaded module configuration '%s'", conf_file)
@@ -390,7 +393,7 @@ function key_handler(session, input_type, data)
     else
       -- Check to see if the key map wants us to take some action on the
       -- invalid key.
-      if keys.invalid or keys.invalid_sound then
+      if keys.invalid or keys.invalid_sound or keys.invalid_sequence then
         key_pressed.invalid = key_pressed.digit
         debug_log("Key pressed: %s, invalid!", key_pressed.invalid)
         -- By default, replay the current action, but give the option
@@ -528,7 +531,7 @@ end
 --[[
   Trims whitespace from either end of a string.
 ]]
-function trim (s)
+function trim(s)
   return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
