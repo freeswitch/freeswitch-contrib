@@ -20,10 +20,15 @@ if args[1] == "help" then
   return jester.help.get_help(args[2], args[3], args[4], args[5])
 end
 
+-- Run normally.
 if args[1] and args[2] then
 
   -- Initialize the channel object.
   jester.init_channel()
+
+  -- Initialize sequence loop stacks.  Sequence stacks are initialized just
+  -- prior to each sequence loop run.
+  jester.init_stacks({"active", "exit", "hangup"})
 
   -- Add profile configuration here so it can leverage access to channel
   -- variables.
