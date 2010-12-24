@@ -13,7 +13,8 @@ assume you already have Jester installed correctly:
    'help module data' for more information.
 
 4. If necessary, edit the database configuration settings in
-   'profiles/voicemail/conf.lua
+   'profiles/voicemail_admin/conf.lua' and
+   'profiles/voicemail_message/conf.lua'
 
 5. Download the Asterisk core sounds and place them in the FreeSWITCH 'sounds'
    directory.
@@ -32,7 +33,7 @@ assume you already have Jester installed correctly:
 
    <include>
      <language name="en" sound-path="$${sounds_dir}/asterisk">
-       <X-PRE-PROCESS cmd="include" data="$${base_dir}/scripts/jester/profiles/voicemail/phrases.xml"/>
+       <X-PRE-PROCESS cmd="include" data="$${base_dir}/scripts/jester/profiles/voicemail_phrases.xml"/>
      </language>
    </include>
 
@@ -49,12 +50,10 @@ assume you already have Jester installed correctly:
     </extension>
     <!-- Jester voicemail. -->
     <extension name="jester_voicemail">
-      <condition field="destination_number" expression="^(\+1|1)?(\d{10})$" break="on-true">
-        <action application="set" data="voicemail_mailbox=$2"/>
-        <action application="execute_extension" data="jester_voicemail_setup"/>
+      <condition field="destination_number" expression="^(\d+)$" break="on-true">
         <action application="answer"/>
         <action application="sleep" data="1000"/>
-        <action application="lua" data="jester/jester.lua voicemail main_greeting"/>
+        <action application="lua" data="jester/jester.lua voicemail_message main_greeting $1"/>
         <action application="hangup"/>
       </condition>
     </extension>
@@ -64,7 +63,7 @@ assume you already have Jester installed correctly:
         <action application="execute_extension" data="jester_voicemail_setup"/>
         <action application="answer"/>
         <action application="sleep" data="1000"/>
-        <action application="lua" data="jester/jester.lua voicemail login_missing_mailbox."/>
+        <action application="lua" data="jester/jester.lua voicemail_admin login_missing_mailbox."/>
         <action application="hangup"/>
       </condition>
     </extension>

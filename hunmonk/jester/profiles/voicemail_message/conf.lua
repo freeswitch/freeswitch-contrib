@@ -25,31 +25,26 @@ debug = true
 -- Overrides the global debug configuration for this profile only.
 modules = {
   "core_actions",
-  "navigation",
   "play",
-  "get_digits",
   "record",
   "file",
-  "log",
   "data",
-  "tracker",
-  "hangup",
 }
+
+-- Set this to true to allow a caller to press * to access the voicemail
+-- administration area for the mailbox.
+check_messages = true
+
 -- Overrides the global debug configuration for this profile only.
-sequence_path = jester.conf.profile_path .. "/voicemail/sequences"
+sequence_path = jester.conf.profile_path .. "/voicemail_message/sequences"
 
 voicemail_dir = jester.conf.base_dir .. "/storage/voicemail"
 temp_recording_dir = "/tmp"
-context = jester.get_variable("voicemail_context")
+mailbox = jester.initial_args[1]
+context = jester.initial_args[2] or "default"
 domain = jester.get_variable("domain")
 
-mailbox_dir = voicemail_dir .. "/" .. context .. "/" .. domain
-
-db_config_mailboxes = {
-  database_type = "mysql",
-  database = "jester",
-  table = "voicemail",
-}
+mailbox_dir = voicemail_dir .. "/" .. context .. "/" .. domain .. "/" .. mailbox
 
 db_config_messages = {
   database_type = "mysql",
