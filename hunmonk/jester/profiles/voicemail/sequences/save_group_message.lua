@@ -2,11 +2,11 @@ count = storage("counter", "voicemail_group_row")
 total_mailboxes = storage("voicemail_group", "__count")
 row_count = storage("counter", "voicemail_group_row")
 mailbox = storage("voicemail_group", "mailbox_" .. row_count)
-context = storage("voicemail_group", "context_" .. row_count)
 domain = storage("voicemail_group", "domain_" .. row_count)
-mailbox_dir = profile.voicemail_dir .. "/" .. context .. "/" .. domain .. "/" .. mailbox
+mailbox_dir = profile.voicemail_dir .. "/" .. domain .. "/" .. mailbox
 loaded_mailbox = storage("mailbox_settings_message", "mailbox")
 email_messages = storage("mailbox_settings_message", "email_messages")
+mailbox_provisioned = storage("mailbox_settings_message", "mailbox_provisioned")
 
 return
 {
@@ -19,7 +19,7 @@ return
   },
   {
     action = "call_sequence",
-    sequence = "sub:load_mailbox_settings " .. mailbox .. "," .. context .. ",mailbox_settings_message",
+    sequence = "sub:load_mailbox_settings " .. mailbox .. "," .. domain .. ",mailbox_settings_message",
   },
   {
     action = "conditional",
@@ -29,8 +29,11 @@ return
     if_true = "save_group_message",
   },
   {
-    action = "create_directory",
-    directory = mailbox_dir,
+    action = "conditional",
+    value = mailbox_provisioned,
+    compare_to = "no",
+    comparison = "equal",
+    if_true = "sub:provision_mailbox " .. mailbox .. "," .. domain,
   },
   {
     action = "conditional",
@@ -44,7 +47,7 @@ return
     value = email_messages,
     compare_to = "email_only",
     comparison = "equal",
-    if_false = "sub:save_recorded_message " .. mailbox .. "," .. context .. "," .. domain .. ",copy",
+    if_false = "sub:save_recorded_message " .. mailbox .. "," .. domain .. ",copy",
   },
   {
     action = "call_sequence",
