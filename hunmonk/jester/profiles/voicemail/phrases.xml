@@ -664,4 +664,83 @@
     </input>
   </macro>
 
+  <!-- Accept recording or hold. -->
+  <macro name="accept_recording_or_hold">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-saveoper.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Transfer announcement. -->
+  <macro name="transfer_announcement">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="transfer.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Call outside number. -->
+  <macro name="collect_outside_number">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-enter-num-to-call.wav"/> 
+        <action function="play-file" data="vm-then-pound.wav"/> 
+        <action function="play-file" data="vm-star-cancel.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Callback. -->
+  <macro name="callback">
+    <input pattern="^(\d+)$">
+      <match>
+        <action function="play-file" data="vm-num-i-have.wav"/> 
+        <action function="say" data="$1" method="iterated" type="number"/>
+        <action function="play-file" data="vm-tocallnum.wav"/> 
+        <action function="play-file" data="vm-calldiffnum.wav"/> 
+        <action function="play-file" data="vm-star-cancel.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Transfer announcement. -->
+  <macro name="please_wait_while_connecting">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-dialout.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Forward message main menu. -->
+  <macro name="forward_message_choose_method">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-forward.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Collect extension. -->
+  <macro name="extension">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-extension.wav"/> 
+      </match>
+    </input>
+  </macro>
+
+  <!-- Forward options. -->
+  <macro name="forward_options">
+    <input pattern="^(.*)$">
+      <match>
+        <action function="play-file" data="vm-forwardoptions.wav"/> 
+        <action function="play-file" data="vm-starmain.wav"/>
+      </match>
+    </input>
+  </macro>
+
 </include><!--This line will be ignored it's here to validate the xml and is optional -->

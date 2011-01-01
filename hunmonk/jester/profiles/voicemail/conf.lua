@@ -63,6 +63,15 @@ if domain == "" then
   domain = variable("domain")
 end
 
+-- To specify the caller is from another domain, set the channel variable
+-- 'voicemail_caller_domain' to the domain before calling Jester.  Otherwise
+-- the caller is assumed to be calling from the same domain that the voicemail
+-- is in.
+caller_domain = variable("voicemail_caller_domain")
+if caller_domain == "" then
+  caller_domain = domain
+end
+
 -- Voicemail group (if provided).
 voicemail_group = args(3)
 
@@ -84,6 +93,10 @@ review_messages = true
 -- operator (must be in the same context).
 -- Set this to false to disable the operator extension.
 operator_extension = "operator"
+
+-- Name of the extension to transfer to when a request to dial an outside
+-- number is made.
+call_outside_number_extension = "call_outside_number"
 
 -- ODBC configuration for the table that stores mailbox configurations.
 db_config_mailboxes = {
