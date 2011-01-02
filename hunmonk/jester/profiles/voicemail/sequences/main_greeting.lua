@@ -6,8 +6,10 @@ if profile.check_messages then
   greeting_keys["*"] = "login " .. profile.mailbox .. "," .. profile.domain
 end
 
+operator_on_record = ""
 if profile.operator_extension then
   greeting_keys["0"] = "transfer_to_operator"
+  operator_on_record = "operator"
 end
 
 return
@@ -23,11 +25,11 @@ return
   },
   {
     action = "exit_sequence",
-    sequence = "check_for_recorded_message",
+    sequence = "main_greeting_prepare_message",
   },
   {
     action = "call_sequence",
-    sequence = "record_message",
+    sequence = "record_message " .. operator_on_record,
   },
 }
 
