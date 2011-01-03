@@ -21,38 +21,13 @@
   args(<argnum>) function.
 ]]
 
+--[[
+  Everything in this section should not be edited unless you know what you are
+  doing!
+]]
+
 -- Overrides the global debug configuration for this profile only.
 debug = true
-
--- Modules to load.
--- Overrides the global debug configuration for this profile only.
-modules = {
-  "core_actions",
-  "play",
-  "record",
-  "file",
-  "data",
-  "email",
-  "format",
-  "navigation",
-  "get_digits",
-  "log",
-  "tracker",
-  "hangup",
-  "dialplan_tools",
-  "event",
-}
-
--- Overrides the global debug configuration for this profile only.
-sequence_path = global.profile_path .. "/voicemail/sequences"
-
--- Main directory that stores voicemail messages.
--- NOTE: This directory must already be created and writable by the FreeSWITCH
--- user.
-voicemail_dir = global.base_dir .. "/storage/voicemail/default"
-
--- The directory where recordings are stored temporarily while recording.
-temp_recording_dir = "/tmp"
 
 -- Mailbox being accessed.
 mailbox = args(1)
@@ -76,19 +51,53 @@ end
 -- Voicemail group (if provided).
 voicemail_group = args(3)
 
+-- Main directory that stores voicemail messages.
+-- NOTE: This directory must already be created and writable by the FreeSWITCH
+-- user.
+voicemail_dir = global.base_dir .. "/storage/voicemail/default"
+
 -- The directory containing the mailboxes for the domain.
 mailboxes_dir = voicemail_dir .. "/" .. domain
 
 -- The mailbox directory being accessed.
 mailbox_dir = mailboxes_dir .. "/" .. mailbox
 
--- Set this to true to allow a caller to press * to access the voicemail
--- administration area for the mailbox.
-check_messages = true
+-- Modules to load.
+-- Overrides the global module configuration for this profile only.
+modules = {
+  "core_actions",
+  "play",
+  "record",
+  "file",
+  "data",
+  "email",
+  "format",
+  "navigation",
+  "get_digits",
+  "log",
+  "tracker",
+  "hangup",
+  "dialplan_tools",
+  "event",
+}
 
--- Set this to true to allow a caller to press # to review their message after
--- recording it, or false to disable.
-review_messages = true
+-- Overrides the global sequence path for this profile only.
+sequence_path = global.profile_path .. "/voicemail/sequences"
+
+--[[
+  The sections below can be customized safely.
+]]
+
+--[[
+  Directory paths.
+]]
+
+-- The directory where recordings are stored temporarily while recording.
+temp_recording_dir = "/tmp"
+
+--[[
+  Custom extensions.
+]]
 
 -- Name of the extension to transfer to when a key is press to reach the
 -- operator (must be in the same context).
@@ -99,21 +108,68 @@ operator_extension = "operator"
 -- number is made.
 call_outside_number_extension = "call_outside_number"
 
--- ODBC configuration for the table that stores mailbox configurations.
+--[[
+  Menu options.
+]]
+
+-- Number of milliseconds to wait before replaying a menu.
+menu_replay_wait = 3000
+
+-- Number of times to play a menu before giving up if no user response.
+menu_repetitions = 3
+
+--[[
+  Message email options.
+  The following token replacements are available:
+    :mailbox - Mailbox where the message is being left.
+    :datetime - Formatted date/time when the message was left.
+    :caller_id_number
+    :caller_id_name
+]]
+
+email_subject = "New voicemail message for :mailbox"
+email_message = [[
+Mailbox number: :mailbox
+Date/time: :datetime
+CallerID number: :caller_id_number
+CallerID name: :caller_id_name]]
+email_from_address = "noreply@" .. domain
+email_server = "localhost"
+email_port = 25
+-- Format timestamps to this format string -- tokens are same as strftime.
+email_date_format = "%Y-%m-%d %H:%M:%S"
+
+--[[
+  Other settings.
+]]
+
+-- Set this to true to allow a caller to press * to access the voicemail
+-- administration area for the mailbox.
+check_messages = true
+
+-- Set this to true to allow a caller to press # to review their message after
+-- recording it, or false to disable.
+review_messages = true
+
+--[[
+  ODBC database table configurations.
+]]
+
+-- Table that stores mailbox configurations.
 db_config_mailboxes = {
   database_type = "mysql",
   database = "jester",
   table = "voicemail",
 }
 
--- ODBC configuration for the table that stores messages.
+-- Table that stores messages.
 db_config_messages = {
   database_type = "mysql",
   database = "jester",
   table = "messages",
 }
 
--- ODBC configuration for the table that stores messages.
+-- Table that stores messages.
 db_config_voicemail_groups = {
   database_type = "mysql",
   database = "jester",

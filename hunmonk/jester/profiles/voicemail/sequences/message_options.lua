@@ -1,7 +1,7 @@
 -- Message data.
 message_number = storage("counter", "message_number")
-total_messages = storage("message", "__count")
 deleted = storage("message", "deleted_" .. message_number)
+total_messages = storage("message", "__count")
 prev_message = ""
 next_message = ""
 delete_undelete_message = "delete"
@@ -58,8 +58,8 @@ return
       "9",
       "*",
     },
-    repetitions = 3,
-    wait = 3000,
+    repetitions = profile.menu_repititions,
+    wait = profile.menu_replay_wait,
   },
   {
     action = "call_sequence",

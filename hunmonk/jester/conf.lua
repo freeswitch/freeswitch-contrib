@@ -1,3 +1,10 @@
+--[[
+  This is the global configuration file for Jester.
+
+  Probably not a good idea to change any of these settings unless you know
+  what you're doing.
+]]
+
 module(..., package.seeall)
 
 -- Enable this setting to turn on debuggging.
@@ -9,9 +16,9 @@ debug_output = {
   -- Ongoing progress.
   log = true,
   -- These are output right before Jester exits.
-  jester_object = true,
+  jester_object = false,
   executed_sequences = true,
-  run_actions = true,
+  run_actions = false,
 }
 
 -- This file can be loaded from the shell, so only build session-based
