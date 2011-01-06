@@ -1,6 +1,9 @@
 --[[
-  Cleans messages marked as deleted.
+  Cleans messages from a mailbox marked as deleted.
 ]]
+
+mailbox = args(1)
+domain = args(2)
 
 return
 {
@@ -10,11 +13,11 @@ return
     handler = "odbc",
     config = profile.db_config_message,
     fields = {
-      "mailbox",
-      "domain",
       "recording",
     },
     filters = {
+      mailbox = mailbox,
+      domain = domain,
       __deleted = 1,
     },
     multiple = true,
@@ -26,13 +29,15 @@ return
     handler = "odbc",
     config = profile.db_config_message,
     filters = {
+      mailbox = mailbox,
+      domain = domain,
       __deleted = 1,
     },
   },
   -- Clean up the message files.
   {
     action = "call_sequence",
-    sequence = "remove_deleted_message_files",
+    sequence = "remove_mailbox_deleted_message_files " .. mailbox .. "," .. domain,
   },
 }
 

@@ -186,28 +186,33 @@ check_messages = true
 -- recording it, or false to disable.
 review_messages = true
 
+-- Set this to true to automatically remove deleted messages from a mailbox
+-- after messages have been checked.  Otherwise, messages are only marked as
+-- deleted, and will need to be removed be another means.
+auto_delete_messages = true
+
 --[[
   ODBC database table configurations.
 ]]
 
 -- Table that stores mailbox configurations.
-db_config_mailboxes = {
+db_config_mailbox = {
   database_type = "mysql",
   database = "jester",
-  table = "voicemail",
+  table = "mailbox",
 }
 
 -- Table that stores messages.
-db_config_messages = {
+db_config_message = {
   database_type = "mysql",
   database = "jester",
-  table = "messages",
+  table = "message",
 }
 
 -- Table that stores messages.
-db_config_message_groups = {
+db_config_message_group = {
   database_type = "mysql",
   database = "jester",
-  table = "message_groups",
+  table = "message_group",
 }
 
