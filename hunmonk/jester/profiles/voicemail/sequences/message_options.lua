@@ -55,7 +55,7 @@ return
       ["8"] = "top:forward_message_menu",
       ["9"] = "top:save_message",
       ["*"] = "top:help",
-      ["#"] = "top:exit",
+      ["#"] = "top:exit exit_extension",
     },
     order = {
       "4",
@@ -67,7 +67,7 @@ return
       "9",
       "*",
     },
-    repetitions = profile.menu_repititions,
+    repetitions = profile.menu_repetitions,
     wait = profile.menu_replay_wait,
   },
   {

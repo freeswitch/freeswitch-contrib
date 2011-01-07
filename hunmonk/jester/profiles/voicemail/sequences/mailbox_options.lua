@@ -5,8 +5,15 @@
 -- Mailbox info.
 mailbox = storage("login_settings", "mailbox_number")
 mailbox_directory = profile.mailboxes_dir .. "/" .. mailbox
+
 -- Result of the check for the temporary greeting.
 file_exists = storage("file", "file_exists")
+-- Are we supposed to warn about a temporary greeting?
+temp_greeting_warn = storage("mailbox_settings", "temp_greeting_warn")
+warn = ""
+if temp_greeting_warn == "yes" and file_exists == "true" then
+  warn = "true"
+end
 
 return
 {
@@ -19,8 +26,8 @@ return
   {
     action = "play_phrase",
     phrase = "mailbox_options",
-    phrase_arguments = file_exists,
-    repetitions = profile.menu_repititions,
+    phrase_arguments = warn,
+    repetitions = profile.menu_repetitions,
     wait = profile.menu_replay_wait,
     keys = {
       ["1"] = "record_greeting unavail",

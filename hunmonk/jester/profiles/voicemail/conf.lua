@@ -96,19 +96,6 @@ sequence_path = global.profile_path .. "/voicemail/sequences"
 temp_recording_dir = "/tmp"
 
 --[[
-  Custom extensions.
-]]
-
--- Name of the extension to transfer to when a key is press to reach the
--- operator (must be in the same context).
--- Set this to false to disable the operator extension.
-operator_extension = "operator"
-
--- Name of the extension to transfer to when a request to dial an outside
--- number is made.
-call_outside_number_extension = "call_outside_number"
-
---[[
   Menu options.
 ]]
 
@@ -174,6 +161,27 @@ password_min_digits = 4
 -- The maximum number of digits in a valid password.
 password_max_digits = 10
 
+-- Maximum number of login attempts before disconnecting the user.
+max_login_attempts = 3
+
+--[[
+  Recordings.
+]]
+
+-- The maximum length, in seconds, of a recorded greeting.
+max_greeting_length = 180
+
+-- The maximum length, in seconds, of a recorded message.
+max_message_length = 300
+
+-- Number of consecutive seconds of silence before automatically ending a
+-- recording.
+recording_silence_end = 5
+
+-- The threshold of sound below which is considered silence.  Only adjust
+-- this for problems with auto ending recordings.
+recording_silence_threshold = 20
+
 --[[
   Other settings.
 ]]
@@ -181,10 +189,6 @@ password_max_digits = 10
 -- Set this to true to allow a caller to press * to access the voicemail
 -- administration area for the mailbox.
 check_messages = true
-
--- Set this to true to allow a caller to press # to review their message after
--- recording it, or false to disable.
-review_messages = true
 
 -- Set this to true to automatically remove deleted messages from a mailbox
 -- after messages have been checked.  Otherwise, messages are only marked as
