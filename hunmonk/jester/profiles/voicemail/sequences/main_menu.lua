@@ -22,6 +22,9 @@ end
 -- Set up the initial key press options.
 main_menu_keys = {
   ["2"] = "change_folders",
+  ["4"] = "prev_message",
+  ["5"] = "repeat_message",
+  ["6"] = "next_message",
   ["0"] = "mailbox_options",
   ["*"] = "help skip_folder_announcement",
   ["#"] = "exit exit_extension",
