@@ -1,0 +1,50 @@
+<include>
+  <!-- Wake-up call extensions -->
+
+  <extension name="Set wake-up call">
+    <condition field="destination_number" expression="^(\*55)$">
+      <action application="log" data="INFO Wake-up call set"/>
+      <action application="lua" data="wakeup-call.lua"/>
+    </condition>
+  </extension>
+
+  <extension name="Cancel wake-up call">
+    <condition field="destination_number" expression="^(#55)$">
+      <action application="answer"/>
+      <action application="log" data="INFO Wake-up call cancel [ ${caller_id_number} ]"/>
+      <action application="set" data="wuc_time=${db(select/wuc/${caller_id_number})}"/>
+      <action application="transfer" data="wuc_${caller_id_number} XML default"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+
+  <extension name="Deliver wake-up call">
+    <condition field="destination_number" expression="^(wake_up_sleepy_head)$">
+      <action application="answer"/>
+      <action application="playback" data="phrase:This_is_your_wakeup_call"/>
+      <action application="sleep" data="4000"/>
+      <action application="playback" data="phrase:This_is_your_wakeup_call"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+
+  <extension name="Cancel if he have one" continue="true">
+    <condition field="destination_number" expression="^wuc_(\d+)$">
+      <action application="log" data="INFO wuc_user is ${wuc_time}"/>
+    </condition>
+    <condition field="${wuc_time}" expression="(\d+)">
+      <action application="set" data="data=${sched_del(wuc${caller_id_number})}"/>
+      <action application="set" data="data=${db(delete/wuc/${caller_id_number})}"/>
+      <action application="playback" data="phrase:Wakeup_call_has_been_cancelled"/>
+      <anti-action application="playback" data="phrase:No_wakeup_call"/>
+    </condition>
+  </extension>
+  <extension name="vm_forwarding">
+    <condition field="destination_number" expression="^${sip_auth_username}$">
+      <action application="info"/>
+      <action application="answer"/>
+      <action application="sleep" data="1000"/>
+      <action application="bridge" data="loopback/app=voicemail:default ${domain_name} ${"/>
+    </condition>
+  </extension>
+</include>
