@@ -34,9 +34,13 @@ class conference_conf extends fs_configuration {
      * @return void
     */
     public function main() {
+		$this -> xmlw -> startElement('configuration');
+		$this -> xmlw -> writeAttribute('name', 'conference.conf');
+		$this -> xmlw -> writeAttribute('description', 'Audio Conference');
         $this -> write_advertises();
-        $this -> write_controls();
-        $this -> write_profiles();
+		if($this -> request['Controls']) {$this -> write_controls();}
+        if($this -> request['profile_name']) {$this -> write_profiles();}
+		$this -> xmlw -> endElement();
     }
 
     /**
@@ -76,10 +80,9 @@ class conference_conf extends fs_configuration {
      * @return array
     */
     private function get_profiles_array() {
-        $query = sprintf('%s %s;'
-        , "SELECT * FROM conference_profiles"
-        , "ORDER BY profile_name"
-        );
+	
+	$prof = $this -> request['profile_name'];
+        $query = "SELECT * FROM conference_profiles where profile_name='$prof'";
         $res = $this -> db -> query($query);
         if (FS_PDO::isError($res)) {
             $this -> comment($query);
@@ -130,8 +133,9 @@ class conference_conf extends fs_configuration {
      * @return array
     */
     private function get_controls_array() {
-        $query = sprintf(
-        "SELECT * FROM conference_controls ORDER BY conf_group"
+        $cont = $this -> request['Controls'];
+		$query = sprintf(
+		  "SELECT * FROM conference_controls where conf_group = '$cont'"
         );
         $res = $this -> db -> query($query);
         if (FS_PDO::isError($res)) {
@@ -174,6 +178,7 @@ class conference_conf extends fs_configuration {
                 $this -> xmlw -> startElement('control');
                 $this -> xmlw -> writeAttribute('action', $controls['action']);
                 $this -> xmlw -> writeAttribute('digits', $controls['digits']);
+				if($controls['data']) {$this -> xmlw -> writeAttribute('data', $controls['data']);}
                 $this -> xmlw -> endElement();
 
             }
