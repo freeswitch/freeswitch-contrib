@@ -34,13 +34,13 @@ class conference_conf extends fs_configuration {
      * @return void
     */
     public function main() {
-		$this -> xmlw -> startElement('configuration');
-		$this -> xmlw -> writeAttribute('name', 'conference.conf');
-		$this -> xmlw -> writeAttribute('description', 'Audio Conference');
-        $this -> write_advertises();
-		if($this -> request['Controls']) {$this -> write_controls();}
+	$this -> xmlw -> startElement('configuration');
+	$this -> xmlw -> writeAttribute('name', 'conference.conf');
+	$this -> xmlw -> writeAttribute('description', 'Audio Conference');
+	$this -> write_advertises();
+	if($this -> request['Controls']) {$this -> write_controls();}
         if($this -> request['profile_name']) {$this -> write_profiles();}
-		$this -> xmlw -> endElement();
+	$this -> xmlw -> endElement();
     }
 
     /**
