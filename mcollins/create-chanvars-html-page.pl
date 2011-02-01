@@ -65,7 +65,7 @@ my $htmldir = '/usr/local/freeswitch/htdocs';
 ## Use these as defaults unless command line args are supplied
 GetOptions( 'srcdir=s' => \$srcdir,
             'tmpdir=s' => \$tmpdir,
-            'htmldir=s' => \$htmldir,
+	    'htmldir=s' => \$htmldir,
 );
 
 my $srcdirlen = length $srcdir;  # calculate this once since it doesn't change
@@ -74,7 +74,7 @@ my $headerfile = $tmpdir . "/header-defs.txt";
 my $datafile   = $tmpdir . "/get-set-vars.txt";
 my $htmlfile   = $htmldir . "/chanvars.html";
 
-my $site = 'http://fisheye.freeswitch.org/browse/freeswitch.git';
+my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
 $obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
@@ -105,9 +105,11 @@ open(FILEIN,"<",$datafile) or die "$datafile - $!\n";
 while(<FILEIN>) {
     chomp;
     next if m/switch_channel_get_variables/;  # get variables != what we want
-    next unless m/switch_channel_(s|g)et_variable\s?\(/;
+    next unless ( m/switch_channel_(s|g)et_variable\s?\(/ or m/switch_channel_(s|g)et_variable_partner\s?\(/ );
+
     next if m/#define|SWITCH_DECLARE/;
     next unless m/\.c(pp)?:/;    # only c and cpp files for now
+
     ## Extract source file name
     my @RECIN = split /(\.c(pp)?)/,$_;  # split on file name.c or name.cpp
     my ($filename,$dir,$ext) = fileparse($RECIN[0]);
@@ -118,7 +120,7 @@ while(<FILEIN>) {
     my $reldir = substr $dir, $srcdirlen;
     #print "$filename $dir $ext ($reldir)\n";
     if ( ! exists( $source_files{$filename} ) ) {
-        $source_files{ $filename } = $site . $reldir . $filename;
+        $source_files{ $filename } = $site . $reldir . $filename . '?r=HEAD';
     }
     
     ## Extract line number for this occurrence in this source file
@@ -159,10 +161,56 @@ while(<FILEIN>) {
     ## Skip obvious exceptions...
     next if $channel_variable_name =~ m/$obvious_exceptions/;
     
-    ## populate the hash for this variable, filename and line num & get/set val
+    ## populate the hash for this variable, filename and line num & set/get
     push @{ $channel_vars{$channel_variable_name}{$filename} }, [$linenum, $setget]; 
     push @{ $source_idx{$filename}{$channel_variable_name} }, [$linenum, $setget];
 }
+
+close(FILEIN);
+
+## Handle the event header vars...
+$datafile   = $tmpdir . "/event-vars.txt";
+open(FILEIN,'<',$datafile) or die "$datafile - $!\n";
+while(<FILEIN>){
+    chomp;
+    next unless m/\.c(pp)?:/;    # only c and cpp files for now
+    my @RECIN = split /(\.c(pp)?)/,$_;  # split on file name.c or name.cpp
+    my ($filename,$dir,$ext) = fileparse($RECIN[0]);
+    $filename .= $RECIN[1];    # append .c or .cpp
+
+    # debug 
+    #print "$filename\n";
+    # trim off the srcdir from beginning of string
+    my $reldir = substr $dir, $srcdirlen;
+    #print "$filename $dir $ext ($reldir)\n";
+    if ( ! exists( $source_files{$filename} ) ) {
+        $source_files{ $filename } = $site . $reldir . $filename . '?r=HEAD';
+    }
+    
+    ## Extract line number for this occurrence in this source file
+    my $linenum = 0;
+    if ( $RECIN[3] =~ m/:(\d+):/ ) {
+        $linenum = $1;
+    }
+
+    ## Extract variable name
+    ## if ((var = switch_event_get_header(var_event, "freetdm_outbound_ton")) || (var = switch_core_get_variable("freetdm_outbound_ton")))
+    ## Need a little loop, in case there are more than one per line...
+    while ( m/switch_event_get_header\(var_event,\s+"(.*?)"/g ) {
+	## $1 *should* have the name of the variable...
+	#print "Var name is $1...\n";
+	my $channel_variable_name = $1;
+
+	## Skip obvious exceptions...
+	next if $channel_variable_name =~ m/$obvious_exceptions/;
+	
+	## populate the hash for this variable, filename and line num & 'event_var'
+	push @{ $channel_vars{$channel_variable_name}{$filename} }, [$linenum, 'event_var']; 
+	push @{ $source_idx{$filename}{$channel_variable_name} }, [$linenum, 'event_var'];
+	
+    }
+}
+
 close(FILEIN);
 
 #debug
@@ -200,7 +248,7 @@ foreach my $chanvar ( sort {lc $a cmp lc $b} keys %channel_vars ) {
             #$row[2] .= "@{ $_ }" . "<br/>";
             my $linkname = "@{ $_ }";
             my $linenum = @{ $_ }[0];
-            my $url = $source_files{$sourcename};
+            my $url = $source_files{$sourcename} . '#to' . $linenum;
             $row[2] .= $h->a( { href => $url, target => '_blank' },
                 $linkname
             ) . '<br/>';

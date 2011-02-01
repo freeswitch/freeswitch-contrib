@@ -21,13 +21,19 @@ use File::Copy;
 
 $|++;
 
+## 'CHARACTERS' contains punctuation marks
 use constant CHARACTERS => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=+?></.,!@#$%^&*();:';
 my $numchars = length(CHARACTERS);
+
+## 'ALPHACHARS' contains upper and lower case letters and digits but no punctuation
+use constant ALPHACHARS => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+my $numalphas = length(ALPHACHARS);
 
 my $vmlen = 4;         # Length of VM password
 my $authlen = 10;      # Length of auth password
 my $filespec;          # File specification 
 my $delbak;            # Flag - delete backups (default = keep backups)
+my $nopunct;           # Flag - set to true to disable punction marks (i.e. alphanumerics only) in auth passwords
 
 my $opts_ok = GetOptions ("h"         => \&usage,
                           "help"      => \&usage,
@@ -35,6 +41,7 @@ my $opts_ok = GetOptions ("h"         => \&usage,
                           "authlen=i" => \$authlen,
                           "files=s"   => \$filespec,
                           "D"         => \$delbak,
+			  "nopunct"   => \$nopunct,
 			  );
 
 ## Confirm that a file spec was provided
@@ -110,9 +117,18 @@ sub get_random_chars () {
     my $length = shift;
     if ( ! $length ) { $length = $authlen; }
     my $chars;
-    foreach my $i (1 .. $length) {
-	my $nextchar = substr( CHARACTERS,int(rand $numchars),1);
-        $chars .= $nextchar;
+
+    if ( $nopunct ) {
+	foreach my $i (1 .. $length) {
+	    my $nextchar = substr( ALPHACHARS,int(rand $numalphas),1 );
+	    $chars .= $nextchar;
+	}
+
+    } else {
+	foreach my $i (1 .. $length) {
+	    my $nextchar = substr( CHARACTERS,int(rand $numchars),1 );
+	    $chars .= $nextchar;
+	}
     }
     return $chars;
 }
@@ -149,6 +165,8 @@ Options:
   --vmlen          Set length of voice mail password. (Default is 4 digits)
 
   --authlen        Set length of auth password. (Default is 10 characters)
+
+  --nopunct        Disable punction marks in auth passwords, i.e. alphanumerics only
 
 Example:
   To randomize all the passwords for a default Linux install, with 6 digit VM passwords, use this command:
