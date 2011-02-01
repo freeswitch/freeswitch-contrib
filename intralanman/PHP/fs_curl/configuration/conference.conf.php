@@ -178,7 +178,7 @@ class conference_conf extends fs_configuration {
                 $this -> xmlw -> startElement('control');
                 $this -> xmlw -> writeAttribute('action', $controls['action']);
                 $this -> xmlw -> writeAttribute('digits', $controls['digits']);
-				if($controls['data']) {$this -> xmlw -> writeAttribute('data', $controls['data']);}
+		if($controls['data']) {$this -> xmlw -> writeAttribute('data', $controls['data']);}
                 $this -> xmlw -> endElement();
 
             }
