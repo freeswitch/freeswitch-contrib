@@ -125,7 +125,11 @@ namespace FSClient {
 			account.guid = "";
 			account.guid = old_guid;
 		}
-
+		public static void RemoveAccount(Account account){
+			account.KillGateway();
+			accounts.Remove(account);
+			ReloadSofia();
+		}
 
 		public static void create_gateway_nodes(XmlNode gateways_node) {
 			foreach (Account account in accounts) {
@@ -161,18 +165,19 @@ namespace FSClient {
 		}
 		public Account() {
 			_server = FieldValue.GetByName(values, "server");
-			_server.PropertyChanged += (s, e) => { RaisePropertyChanged("server"); };
+			_server.PropertyChanged += (s, e) => RaisePropertyChanged("server");
 			_username = FieldValue.GetByName(values, "username");
-			_username.PropertyChanged += (s, e) => { RaisePropertyChanged("username"); };
+			_username.PropertyChanged += (s, e) => RaisePropertyChanged("username");
 			_name = FieldValue.GetByName(values, "name");
-			_name.PropertyChanged += (s, e) => { RaisePropertyChanged("name"); };
+			_name.PropertyChanged += (s, e) => RaisePropertyChanged("name");
 			_guid = FieldValue.GetByName(values, "guid");
 			_guid.PropertyChanged += (s, e) => {
 
 				if (!guid_ok(this, _guid.value) || String.IsNullOrEmpty(_guid.value)) {
-					for (int i = 0; i < 10; i++) {
-						if (guid_ok(this, i.ToString())) {
-							_guid.value = i.ToString();
+					for (int i = 1; i <= 10; i++){
+						int val = i == 10 ? 0 : i; // want 0 checked last.
+						if (guid_ok(this, val.ToString())) {
+							_guid.value = val.ToString();
 							return;
 						}
 					}
@@ -181,9 +186,9 @@ namespace FSClient {
 				RaisePropertyChanged("gateway_id");
 			};
 			_caller_id_name = FieldValue.GetByName(values, "caller_id_name");
-			_caller_id_name.PropertyChanged += (s, e) => { RaisePropertyChanged("caller_id_name"); };
+			_caller_id_name.PropertyChanged += (s, e) => RaisePropertyChanged("caller_id_name");
 			_caller_id_number = FieldValue.GetByName(values, "caller_id_number");
-			_caller_id_number.PropertyChanged += (s, e) => { RaisePropertyChanged("caller_id_number"); };
+			_caller_id_number.PropertyChanged += (s, e) => RaisePropertyChanged("caller_id_number");
 			_guid.value = "1";
 			PropertyChanged += Account_PropertyChanged;
 			state = "NOREG";
@@ -329,13 +334,16 @@ namespace FSClient {
 			KillGateway();
 			ReloadSofia();
 		}
-		public void edit() {
+		public bool edit() {
 			current_editing_account = this;
 			GenericEditor editor = new GenericEditor();
 			editor.Init("Editing Account", values);
 			editor.ShowDialog();
 			if (editor.DialogResult == true)
 				ReloadAccount();
+			else
+				return false;
+			return true;
 		}
 	}
 }
