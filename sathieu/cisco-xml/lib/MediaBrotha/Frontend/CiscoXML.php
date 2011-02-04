@@ -52,9 +52,9 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend {
 		$this->_xml->setCiscoElement('SoftKeyItem',
 			Array('Name' => 'Enqueue', 'URL' => 'QueryStringParam:action=pl_enqueue', 'Position' => '5'));
 		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Enqueue', 'URL' => 'QueryStringParam:action=pl_next', 'Position' => '6'));
+			Array('Name' => 'Next', 'URL' => 'QueryStringParam:action=pl_next', 'Position' => '6'));
 		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Enqueue', 'URL' => 'QueryStringParam:action=pl_previous', 'Position' => '7'));
+			Array('Name' => 'Previous', 'URL' => 'QueryStringParam:action=pl_previous', 'Position' => '7'));
 		$this->_xml->setCiscoElement('SoftKeyItem',
 			Array('Name' => 'Quit', 'URL' => 'SoftKey:Exit', 'Position' => '8'));
 	}
