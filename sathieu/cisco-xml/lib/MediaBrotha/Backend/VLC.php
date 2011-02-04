@@ -28,6 +28,7 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 	public function register() {
 		parent::register();
 		MediaBrotha_Core::registerMimeType($this, 'audio/mpeg');
+		MediaBrotha_Core::registerMimeType($this, 'video/x-msvideo');
 	}
 
 	public function fetch($uri) {
