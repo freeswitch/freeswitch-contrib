@@ -11,8 +11,9 @@
 <?endif ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+	 xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
               xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
-	<Product Id="f20f4348-01f9-457f-9112-60edb77761f4" Name="$(var.ProductName)" Language="1033" Version="1.0.0.0" Manufacturer="FreeSWITCH" UpgradeCode="7668faef-2ab3-4079-a986-07a33739b42e">
+	<Product Id="*" Name="$(var.ProductName)" Language="1033" Version="1.0.1.0" Manufacturer="FreeSWITCH" UpgradeCode="7668FAEF-2AB3-4079-A986-07A33739B42E">
 		<Package InstallerVersion="300" Compressed="yes" />
 
 		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
@@ -61,6 +62,15 @@
 							 Description="FreeSWITCH Windows Phone"
 							 Target="[INSTALLLOCATION]FSClient.exe"
 							 WorkingDirectory="INSTALLLOCATION"/>
+				<util:InternetShortcut Id="OnlineDocumentationShortcut"
+									Name="Online Documentation"
+									Target="http://wiki.freeswitch.com/wiki/FSClient"/>
+				<Shortcut Id="UninstallProduct"
+									  Name="Uninstall FSClient"
+									  Target="[SystemFolder]msiexec.exe"
+									  Arguments="/x [ProductCode]"
+									  Description="Uninstalls FSClient" />
+
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
         <RegistryValue Root="HKCU" Key="Software\FreeSWITCH\FSClient" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
@@ -86,5 +96,17 @@
 		</Feature>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
     <UIRef Id="WixUI_InstallDir" />
+		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch FSClient" />
+		<Property Id="WixShellExecTarget" Value="[INSTALLLOCATION]FSClient.exe" />
+		<CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+		<UI>
+			<Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+		</UI>
+		<WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+		<WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
+		<Icon Id="icon.ico" SourceFile="../phone.ico"/>
+		<Property Id="ARPPRODUCTICON" Value="icon.ico" />
+		<MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." AllowSameVersionUpgrades="yes"  />
+
 	</Product>
 </Wix>
