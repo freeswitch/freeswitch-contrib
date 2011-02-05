@@ -31,28 +31,32 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 		MediaBrotha_Core::registerMimeType($this, 'video/x-msvideo');
 	}
 
-	public function fetch($uri) {
-		$this->_buffer[] = new MediaBrotha_Media();
-		return true;
-	}
 	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
 		return Array(
 			'play',
 			'playlist',
 		);
 	}
-	private function send_command($command, $args = Array()) {
+	private function send_command($command, array $args = Array()) {
 		$url = $this->getMetadata('http_intf').
 			'/requests/status.xml'.
 			'?command='.$command;
 		foreach ($args as $k => $v) {
 			$url.= '&'.$k.'='.rawurlencode($v);
 		}
-		return fopen($url, 'r');
+		$output = file_get_contents($url);
+		Header('Content-Type: text/xml');
+		print $output.'<!--'.$url."-->\n";
+	}
+
+	// Capability browse
+	public function fetch($uri) {
+		$this->_buffer[] = new MediaBrotha_Media();
+		return true;
 	}
 
 	// Capability play
-	public function play($media) {
+	public function play(MediaBrotha_Media $media) {
 		return $this->send_command('in_play', Array('input' => $media->getURI()));
 	}
 	public function pause() {
@@ -62,13 +66,13 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 		return $this->send_command('pl_stop');
 	}
 	// Capability playlist
-	public function playlistEnqueue($media) {
+	public function playlistEnqueue(MediaBrotha_Media $media) {
 		return $this->send_command('in_enqueue', Array('input' => $media->getURI()));
 	}
-	public function playlistNext($media) {
+	public function playlistNext(MediaBrotha_Media $media) {
 		return $this->send_command('pl_next');
 	}
-	public function playlistPrevious($media) {
+	public function playlistPrevious(MediaBrotha_Media $media) {
 		return $this->send_command('pl_previous');
 	}
 }

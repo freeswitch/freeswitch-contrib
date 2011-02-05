@@ -28,7 +28,7 @@ require_once('MediaBrotha/Media.php');
 
 class MediaBrotha_Backend extends MediaBrotha_Media implements Iterator {
 	protected $_buffer = Array();
-	public function __construct($args = Array()) {
+	public function __construct(array $args = Array()) {
 		parent::__construct($args);
 		$this->register();
 		$this->setMimeType('application/x-mediabrotha-backend-'.strtolower($this->getName()));
@@ -54,34 +54,36 @@ class MediaBrotha_Backend extends MediaBrotha_Media implements Iterator {
 	}
 
 	// Capability browse
+	protected function _mediaFromBufferItem($item) {
+		return $item;
+	}
+
 	public function fetch($uri) {
 		return false;
 	}
 
 	public function rewind() {
-		reset($this->_buffer);
+		$this->_buffer->rewind();
 	}
 
 	public function current() {
-		return current($this->_buffer);
+		return $this->_mediaFromBufferItem($this->_buffer->current());
 	}
 
 	public function key() {
-		return key($this->_buffer);
+		return $this->_buffer->key();
 	}
 
 	public function next() {
-		return next($this->_buffer);
+		return $this->_mediaFromBufferItem($this->_buffer->next());
 	}
 
 	public function valid() {
-		$key = key($this->_buffer);
-		$var = ($key !== NULL && $key !== FALSE);
-		return $var;
+		return $this->_buffer->valid();
 	}
 
 	// Capability play
-	public function play($media) {
+	public function play(MediaBrotha_Media $media) {
 		return false;
 	}
 	public function pause() {
@@ -91,13 +93,13 @@ class MediaBrotha_Backend extends MediaBrotha_Media implements Iterator {
 		return false;
 	}
 	// Capability playlist
-	public function playlistEnqueue($media) {
+	public function playlistEnqueue(MediaBrotha_Media $media) {
 		return false;
 	}
-	public function playlistNext($media) {
+	public function playlistNext(MediaBrotha_Media $media) {
 		return false;
 	}
-	public function playlistPrevious($media) {
+	public function playlistPrevious(MediaBrotha_Media $media) {
 		return false;
 	}
 }

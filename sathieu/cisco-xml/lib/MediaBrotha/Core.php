@@ -60,7 +60,8 @@ class MediaBrotha_Core {
 				break;
 			case 'browse':
 			default:
-				$current_backend->fetch(MediaBrotha_Core::getCurrentURI());
+				$current_uri = MediaBrotha_Core::getCurrentURI();
+				$current_backend->fetch((string) $current_uri);
 				MediaBrotha_Core::$_frontend->begin($current_backend);
 				foreach($current_backend as $item) {
 					if ($item->isHidden()) {
@@ -126,7 +127,7 @@ class MediaBrotha_Core {
 
 	public static function getCurrentURI() {
 		if (!empty($_GET['uri'])) {
-			return $_GET['uri'];
+			return (string) $_GET['uri'];
 		}
 	}
 	public static function getCurrentMedia() {
@@ -136,5 +137,6 @@ class MediaBrotha_Core {
 		}
 		return MediaBrotha_Core::$_media;
 	}
+
 }
 

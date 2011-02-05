@@ -41,20 +41,13 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		return false;
 	}
 
-	public function fetch($uri) {
-		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
-			$uri = 'file://'.$this->getMetadata('base_path');
-		}
-		$this->_buffer = new DirectoryIterator(parse_url($uri, PHP_URL_PATH));
-		return true;
-	}
 	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
 		return Array(
 			'browse',
 		);
 	}
-	// Iterator
-	public function mediaFromFile($file) {
+	// Capability browse
+	protected function _mediaFromBufferItem($file) {
 		if ($file) {
 			$media = new MediaBrotha_Media(Array(
 				'uri' => 'file://'.realpath($file->getPathname()),
@@ -72,16 +65,12 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		}
 	}
 
-	public function current() {
-		return $this->mediaFromFile($this->_buffer->current());
-	}
-
-	public function next() {
-		return $this->mediaFromFile($this->_buffer->next());
-	}
-
-	public function valid() {
-		return $this->_buffer->valid();
+	public function fetch($uri) {
+		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
+			$uri = 'file://'.$this->getMetadata('base_path');
+		}
+		$this->_buffer = new DirectoryIterator(parse_url($uri, PHP_URL_PATH));
+		return true;
 	}
 }
 

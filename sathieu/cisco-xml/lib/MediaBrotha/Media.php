@@ -28,7 +28,7 @@ class MediaBrotha_Media {
 	private $_metadata = Array();
 	private $_mimeType = NULL;
 	private $_mimeEncoding = NULL;
-	public function __construct($metadata = Array()) {
+	public function __construct(array $metadata = Array()) {
 		 $this->_metadata = $metadata;
 	}
 	public function setMimeType($mime_type) {
@@ -63,7 +63,7 @@ class MediaBrotha_Media {
 		}
 	}
 	/* Most used metadata */
-	public function getDisplayName() {
+	public function getDisplayName($max_length = 0) {
 		return $this->getMetadata('name');
 	}
 	public function getURI() {

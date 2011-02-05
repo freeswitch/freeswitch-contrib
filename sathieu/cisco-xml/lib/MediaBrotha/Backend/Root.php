@@ -25,13 +25,6 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
-	public function fetch($uri) {
-		$this->_buffer = Array();
-		foreach(MediaBrotha_Core::getBackends() as $id => $backend) {
-			$this->_buffer[] = $backend;
-		}
-		return true;
-	}
 	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
 		return Array(
 			'browse',
@@ -40,6 +33,16 @@ class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
 	public function isHidden() {
 		return true;
 	}
+
+	// Capability browse
+	public function fetch($uri) {
+		$this->_buffer = new ArrayIterator();
+		foreach(MediaBrotha_Core::getBackends() as $id => $backend) {
+			$this->_buffer[] = $backend;
+		}
+		return true;
+	}
+
 }
 
 

@@ -25,10 +25,8 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Frontend {
-	protected $_browser = NULL;
 	protected $_infos = NULL;
-	public function __construct($browser, $args = Array()) {
-		$this->_browser = $browser;
+	public function __construct(array $args = Array()) {
 		$this->_infos = $args;
 	}
 }
