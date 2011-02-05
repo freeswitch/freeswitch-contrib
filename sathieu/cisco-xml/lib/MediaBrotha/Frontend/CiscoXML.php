@@ -24,44 +24,51 @@ This file is part of MediaBrotha.
  * @author Mathieu Parent
  */
 
-class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend {
+require_once('HTTP.php');
+
+class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 	private $_xml = NULL;
 	public function begin($item) {
 		$this->_xml = new CiscoIPPhoneMenu();
-		$this->_xml->setCiscoElement('Title', $item->getDisplayName());
-		//$this->_xml->setCiscoElement('Prompt', 'kk');
+		$this->_xml->setCiscoElement('Title', $item->getDisplayName(32));
+		$this->_xml->setCiscoElement('Prompt', substr($item->getURI(), -32));
+		if ($parent = $item->getParent()) {
+			$this->addItem($parent);
+		}
 	}
 	public function addItem($item) {
-		$url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'].'?'.
-			'mime_type='.urlencode($item->getMimeType()).'&'.
-			($item->getMimeEncoding() ? ('mime_encoding='.urlencode($item->getMimeEncoding()).'&') : '').
-			'uri='.urlencode($item->getURI());
-		//$url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
+		$url = $this->rootURL().'?'.
+			MediaBrotha_Core::value2hash(
+				'mime_type='.urlencode($item->getMimeType()).'&'.
+				($item->getMimeEncoding() ? ('mime_encoding='.urlencode($item->getMimeEncoding()).'&') : '').
+				'uri='.urlencode($item->getURI()));
 		$this->_xml->setCiscoElement('MenuItem',
 			Array('Name' => $item->getDisplayName(), 'URL' => $url));
 	}
-	public function finish() {
+	public function finish($item) {
+		$pos = 1;
 		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Select', 'URL' => 'SoftKey:Select', 'Position' => '1'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Play', 'URL' => 'QueryStringParam:action=play', 'Position' => '2'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Pause', 'URL' => 'QueryStringParam:action=pause', 'Position' => '3'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Stop', 'URL' => 'QueryStringParam:action=stop', 'Position' => '4'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Enqueue', 'URL' => 'QueryStringParam:action=pl_enqueue', 'Position' => '5'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Next', 'URL' => 'QueryStringParam:action=pl_next', 'Position' => '6'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Previous', 'URL' => 'QueryStringParam:action=pl_previous', 'Position' => '7'));
-		$this->_xml->setCiscoElement('SoftKeyItem',
-			Array('Name' => 'Quit', 'URL' => 'SoftKey:Exit', 'Position' => '8'));
+			Array('Name' => 'Select',
+			'URL' => 'SoftKey:Select',
+			'Position' => $pos++));
+		foreach (MediaBrotha_Core::getBackends() as $backend) {
+			foreach ($backend->getMediaActions(MediaBrotha_Core::getCurrentMedia()) as $action) {
+				$this->_xml->setCiscoElement('SoftKeyItem',
+					Array('Name' => $action,
+					'URL' => 'QueryStringParam:'.MediaBrotha_Core::value2hash('action='.$action.'&backend='.$backend->getBackendName()),
+					'Position' => $pos++));
+			}
+		}
 	}
 	public function render() {
-		CiscoXMLObject::HttpHeader();
-		print $this->_xml;
-		//$this->_xml->execute($this->_infos['push_url']);
+		if (true) {
+			CiscoXMLObject::HttpHeader();
+			print $this->_xml;
+			//print "\n<!--".strlen($this->_xml).'-->';
+		} else {
+			print strlen($this->_xml)."\n";
+			print $this->_xml->execute($this->_infos['push_url']);
+		}
 	}
 }
 

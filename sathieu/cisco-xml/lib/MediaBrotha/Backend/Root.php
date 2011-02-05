@@ -25,20 +25,29 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
-	public function fetch($uri) {
-		$this->_buffer = Array();
-		foreach(MediaBrotha_Core::getBackends() as $id => $backend) {
-			$this->_buffer[] = $backend;
-		}
-		return true;
-	}
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array(
-			'browse',
+	private $_media = NULL;
+	private $_media_iterator = NULL;
+
+	public function __construct($params = NULL) {
+		parent::__construct($params);
+		$this->_media = new MediaBrotha_Media('MediaBrotha:///',
+			Array(
+				'display_name' => 'Root',
+			)
 		);
+		$this->_media_iterator = new MediaBrotha_MediaIterator($this, $this->_media);
 	}
-	public function isHidden() {
-		return true;
+
+	public function addRootMedia($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
+		$this->addRootMediaObj(new MediaBrotha_Media($URI, $metadata, $mime_type,$mime_encoding));
+	}
+	public function addRootMediaObj($media) {
+		$this->_media_iterator->bufferAdd($media);
+	}
+
+	// Browsing
+	public function fetch(MediaBrotha_Media $media) {
+		return $this->_media_iterator;
 	}
 }
 

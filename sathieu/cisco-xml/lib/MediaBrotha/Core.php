@@ -27,50 +27,47 @@ This file is part of MediaBrotha.
 require_once('MediaBrotha/Backend.php');
 require_once('MediaBrotha/Frontend.php');
 require_once('MediaBrotha/Media.php');
+require_once('MediaBrotha/MediaIterator.php');
 
 class MediaBrotha_Core {
 	private static $_frontend = NULL;
 	private static $_backends = Array();
-	private static $_mime_types = Array();
 	private static $_media = NULL;
 	
+	/*
+	 * Core
+	 */
 	public static function init() {
+		if (!session_start()) {
+			die('Unable to start session');
+		}
+		MediaBrotha_Core::_unhashRequest();
 		MediaBrotha_Core::loadBackend('Root');
 	}
+
 	public static function go() {
 		$current_backend = MediaBrotha_Core::getCurrentBackend();
-		switch(MediaBrotha_Core::getAction()) {
-			case 'play':
-				$current_backend->play(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'pause':
-				$current_backend->pause(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'stop':
-				$current_backend->stop(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'pl_enqueue':
-				$current_backend->playlistEnqueue(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'pl_next':
-				$current_backend->playlistNext(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'pl_previous':
-				$current_backend->playlistPrevious(MediaBrotha_Core::getCurrentMedia());
-				break;
-			case 'browse':
-			default:
-				$current_backend->fetch(MediaBrotha_Core::getCurrentURI());
-				MediaBrotha_Core::$_frontend->begin($current_backend);
-				foreach($current_backend as $item) {
-					if ($item->isHidden()) {
+		$current_media = MediaBrotha_Core::getCurrentMedia();
+		if (MediaBrotha_Core::getAction() == 'browse') {
+			if ($media_iterator = $current_backend->fetch($current_media)) {
+				MediaBrotha_Core::$_frontend->begin($current_media);
+				foreach ($media_iterator as $item) {
+					if (($item === NULL) || $item->isHidden()) {
 						continue;
 					}
 					MediaBrotha_Core::$_frontend->addItem($item);
 				}
-				MediaBrotha_Core::$_frontend->finish($current_backend);
-				MediaBrotha_Core::$_frontend->render();
+				MediaBrotha_Core::$_frontend->finish($current_media);
+				MediaBrotha_Core::$_frontend->render($current_media);
+			} else {
+			}
+		} else {
+			$current_backend->doMediaAction(MediaBrotha_Core::getAction(), $current_media);
 		}
+	}
+
+	public function addRootMedia($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
+		MediaBrotha_Core::$_backends['Root']->addRootMedia($URI, $metadata, $mime_type, $mime_encoding);
 	}
 
 	/*
@@ -84,21 +81,15 @@ class MediaBrotha_Core {
 		return new $class_name($args);
 	}
 	public static function registerBackend($backend) {
-		MediaBrotha_Core::$_backends[] = $backend;
+		MediaBrotha_Core::$_backends[$backend->getBackendName()] = $backend;
 	}
-	public static function registerMimeType($backend, $mime_type) {
-		MediaBrotha_Core::$_mime_types[$mime_type][] = $backend;
+	public static function getBackend($name) {
+		return MediaBrotha_Core::$_backends[$name];
 	}
 	public static function getBackends() {
 		return MediaBrotha_Core::$_backends;
 	}
-	public static function getCurrentBackend() {
-		if (!empty($_GET['mime_type']) && !empty(MediaBrotha_Core::$_mime_types[$_GET['mime_type']])) {
-			return MediaBrotha_Core::$_mime_types[$_GET['mime_type']][0];
-		} else {
-			return MediaBrotha_Core::$_backends[0];
-		}
-	}
+
 	/*
 	 * Frontend
 	 */
@@ -114,8 +105,26 @@ class MediaBrotha_Core {
 		MediaBrotha_Core::$_frontend = new $class_name($args);
 	}
 	/*
-	 * ...
+	 * Current *
 	 */
+	public static function getCurrentBackend() {
+		if (!empty($_GET['backend']) && !empty(MediaBrotha_Core::$_backends[$_GET['backend']])) {
+			return MediaBrotha_Core::$_backends[$_GET['backend']];
+		}
+		$current_media = MediaBrotha_Core::getCurrentMedia();
+		foreach (MediaBrotha_Core::getBackends() as $backend) {
+			foreach ($backend->getMediaActions($current_media) as $action) {
+				if ($backend->getBackendName() == 'Root') {
+					continue;
+				}
+				if ($action === MediaBrotha_Core::getAction()) {
+					return $backend;
+				}
+			}
+		}
+		return MediaBrotha_Core::$_backends['Root'];
+	}
+
 	public static function getAction() {
 		if (!empty($_GET['action'])) {
 			return $_GET['action'];
@@ -124,17 +133,63 @@ class MediaBrotha_Core {
 		}
 	}
 
-	public static function getCurrentURI() {
-		if (!empty($_GET['uri'])) {
-			return $_GET['uri'];
-		}
-	}
 	public static function getCurrentMedia() {
 		if (empty(MediaBrotha_Core::$_media)) {
-			MediaBrotha_Core::$_media = new MediaBrotha_Media();
-			MediaBrotha_Core::$_media->setURI(MediaBrotha_Core::getCurrentURI());
+			if (!empty($_GET['uri'])) {
+				MediaBrotha_Core::$_media = new MediaBrotha_Media($_GET['uri']);
+			} else {
+				MediaBrotha_Core::$_media = new MediaBrotha_Media('MediaBrotha:///');
+			}
+			foreach (MediaBrotha_Core::getBackends() as $backend) {
+				$backend->populateMedia(MediaBrotha_Core::$_media);
+			}
 		}
 		return MediaBrotha_Core::$_media;
 	}
+
+	/*
+	 * helper functions
+	 */
+	/* hashes */
+	public static function hash2value($h) {
+		if (isset($_SESSION['HASHES'][$h])) {
+			return $_SESSION['HASHES'][$h];
+		} else {
+			return NULL;
+		}
+	}
+
+	public static function value2hash($v) {
+		for($hash_length = 1 ; $hash_length <=41 ; $hash_length++) {
+			$h = substr(sha1($v), 0, $hash_length);
+			if (!isset($_SESSION['HASHES'][$h]) || ($_SESSION['HASHES'][$h] === $v)) {
+				break;
+			}
+		}
+		$_SESSION['HASHES'][$h] = $v;
+		return $h;
+	}
+
+	public static function hash2array($h) {
+		if ($v = MediaBrotha_Core::hash2value($h)) {
+			parse_str($v, $output);
+			return $output;
+		}
+	}
+
+	private static function _unhashRequest() {
+		if (!isset($_SESSION['HASHES'])) {
+			$_SESSION['HASHES'] = Array();
+		}
+		if (isset($_SERVER["QUERY_STRING"])) {
+			$tmp = explode('&', $_SERVER["QUERY_STRING"]);
+			foreach ($tmp as $h) {
+				if (preg_match('/^[a-z0-9]+$/', $h)) {
+					$_GET = array_merge($_GET, MediaBrotha_Core::hash2array($h));
+				}
+			}
+		}
+	}
+
 }
 

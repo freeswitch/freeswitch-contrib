@@ -25,68 +25,100 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Media {
+	private $_URI = NULL;
 	private $_metadata = Array();
 	private $_mimeType = NULL;
 	private $_mimeEncoding = NULL;
-	public function __construct($metadata = Array()) {
-		 $this->_metadata = $metadata;
+
+	private $_parent = NULL;
+
+	public function __construct($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
+		 $this->_URI = $URI;
+		 $this->setMetadata($metadata);
+		 $this->setMimeType($mime_type);
+		 $this->setMimeEncoding($mime_encoding);
 	}
-	public function setMimeType($mime_type) {
-		$this->_mimeType = $mime_type;
+
+	/* URI */
+	public function getURI() {
+		return $this->_URI;
 	}
-	public function getMimeType() {
-		// TODO
-		return $this->_mimeType;
-	}
-	public function setMimeEncoding($mime_encoding) {
-		$this->_mimeEncoding = $mime_encoding;
-	}
-	public function getMimeEncoding() {
-		// TODO
-		return $this->_mimeEncoding;
-	}
-	public function getMetadata($name = NULL) {
+
+	/* metadata */
+	public function getMetadata($name = NULL, $max_length = NULL) {
 		if ($name === NULL) {
 			return $this->_metadata;
 		} elseif (isset($this->_metadata[$name])) {
-			return $this->_metadata[$name];
+			if ($max_length) {
+				return substr($this->_metadata[$name], 0, $max_length);
+			} else {
+				return $this->_metadata[$name];
+			}
 		} else {
 			return NULL;
 		}
 	}
-	public function setMetadata($name, $value) {
+	public function setMetadata($name, $value = NULL) {
 		if (is_array($name)) {
 			$this->_metadata = $name;
 		} else {
+			switch($name) {
+				case 'hidden':
+				case 'display_name':
+				case 'Array':
+				//music
+				case 'artist':
+				case 'album':
+					break;
+				default:
+					print "Unusual metadata '$name'.\n";
+			}
 			$this->_metadata[$name] = $value;
 
 		}
 	}
+
+	/* mimeType */
+	public function getMimeType() {
+		return $this->_mimeType;
+	}
+	public function setMimeType($mime_type) {
+		$this->_mimeType = $mime_type;
+	}
+
+	/* mimeEncoding */
+	public function getMimeEncoding() {
+		return $this->_mimeEncoding;
+	}
+	public function setMimeEncoding($mime_encoding) {
+		$this->_mimeEncoding = $mime_encoding;
+	}
+
+	/* parent */
+	public function getParent() {
+		return $this->_parent;
+	}
+	public function setParent($parent) {
+		$this->_parent = $parent;
+	}
+
 	/* Most used metadata */
-	public function getDisplayName() {
-		return $this->getMetadata('name');
-	}
-	public function getURI() {
-		return $this->getMetadata('uri');
-	}
-	public function setURI($value) {
-		return $this->setMetadata('uri', $value);
+	public function getDisplayName($max_length = NULL) {
+		if ($name = $this->getMetadata('display_name')) {
+			if ($max_length) {
+				return substr($name, 0, $max_length);
+			} else {
+				return $name;
+			}
+		} else {
+			return '?';
+		}
 	}
 	public function getURIComponent($component) {
 		return parse_url($this->getURI($component));
 	}
 	public function isHidden() {
-		return isset($this->_metadata['hidden']) && $this->_metadata['hidden'];
+		return (bool) $this->getMetadata('hidden');
 	}
 }
 
-/*
-
-Mandatory metadata:
-uri
-name
-
-Usual metadata:
-artist
-album
-*/

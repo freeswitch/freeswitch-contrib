@@ -25,14 +25,10 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
-	public function register() {
-		parent::register();
-		MediaBrotha_Core::registerMimeType($this, 'application/x-directory');
-	}
-
+	// Helper functions
 	public function isURISafe($uri) {
 		$real_path = realpath(parse_url($uri, PHP_URL_PATH));
-		$real_base_path = realpath($this->getMetadata('base_path'));
+		$real_base_path = realpath($this->getParam('base_path'));
 		do {
 			if ($real_path === $real_base_path) {
 				return true;
@@ -41,26 +37,19 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		return false;
 	}
 
-	public function fetch($uri) {
-		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
-			$uri = 'file://'.$this->getMetadata('base_path');
-		}
-		$this->_buffer = new DirectoryIterator(parse_url($uri, PHP_URL_PATH));
-		return true;
-	}
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array(
-			'browse',
-		);
-	}
-	// Iterator
-	public function mediaFromFile($file) {
+	// Browsing
+	public function mediaFromBufferItem($file) {
 		if ($file) {
-			$media = new MediaBrotha_Media(Array(
-				'uri' => 'file://'.realpath($file->getPathname()),
-				'name' => $file->getFilename(),
-				'hidden' => !$file->isReadable() || preg_match('/^\.([^.]|$)/', $file->getFilename()),
-			));
+			if ($file->getFilename() === '..') {
+				return NULL;
+			}
+			$media = new MediaBrotha_Media(
+				'file://'.realpath($file->getPathname()),
+				Array(
+					'display_name' => $file->getFilename(),
+					'hidden' => !$file->isReadable() || preg_match('/^\.([^.]|$)/', $file->getFilename()),
+				)
+			);
 			if ($file->isDir()) {
 				$media->setMimeType('application/x-directory');
 			} else {
@@ -72,16 +61,50 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		}
 	}
 
-	public function current() {
-		return $this->mediaFromFile($this->_buffer->current());
+	public function fetch(MediaBrotha_Media $media) {
+		$uri = $media->getURI();
+		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
+			$uri = 'file://'.$this->getParam('base_path');
+		}
+		$path = parse_url($uri, PHP_URL_PATH);
+		if (is_dir($path)) {
+			return new MediaBrotha_MediaIterator($this, $media, new DirectoryIterator($path));
+		} else {
+			return false;
+		}
 	}
 
-	public function next() {
-		return $this->mediaFromFile($this->_buffer->next());
+	// Actions
+	protected function _isHandled(MediaBrotha_Media $media) {
+		return ($media->getMimeType() === 'application/x-directory')
+			|| (substr($media->getURI(), 0, 7) === 'file://');
 	}
 
-	public function valid() {
-		return $this->_buffer->valid();
+	public function getMediaActions(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
+			return Array(
+				'browse',
+			);
+		} else {
+			return parent::getMediaActions($media);
+		}
 	}
+
+	// Populate
+	public function populateMedia(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
+			$parent_path = 'file://'.dirname(parse_url($media->getURI(), PHP_URL_PATH));
+			if ($this->isURISafe($parent_path)) {
+				$media->setParent(
+					new MediaBrotha_Media($parent_path,
+						Array(
+							'display_name' => '..',
+						)
+					)
+				);
+			}
+		}
+	}
+
 }
 
