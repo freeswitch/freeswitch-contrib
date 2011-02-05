@@ -71,12 +71,17 @@ class MediaBrotha_Backend {
 	}
 
 	// Actions
-	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
+	public function getMediaActions(MediaBrotha_Media $media) {
 		return Array();
 	}
 
 	public function doMediaAction($action, MediaBrotha_Media $media) {
 		return false;
 	}
+
+	// Populate
+	public function populateMedia(MediaBrotha_Media $media) {
+	}
+
 }
 

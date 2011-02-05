@@ -35,7 +35,11 @@ require_once('MediaBrotha/Core.php');
 
 // Init
 MediaBrotha_Core::init();
-MediaBrotha_Core::connectFrontend('CiscoXML', Array('push_url' => 'http://cisco:cisco@192.168.0.220/CGI/Execute'));
+if (CiscoIPPhone::userAgentIsCiscoIPPhone()) {
+	MediaBrotha_Core::connectFrontend('CiscoXML', Array('push_url' => 'http://cisco:cisco@192.168.0.220/CGI/Execute'));
+} else {
+	MediaBrotha_Core::connectFrontend('HTML');
+}
 
 // Backends
 MediaBrotha_Core::loadBackend('FileSystem', Array('base_path' => '/home/share/music/'));
@@ -51,10 +55,9 @@ $ldap_connect_config = Array(
 MediaBrotha_Core::loadBackend('LDAP', Array('ldap_connect_config' => $ldap_connect_config));
 
 // Roots
-MediaBrotha_Core::addRootMedia('file:///home/share/music/', Array('name'=> 'Fichiers'));
-MediaBrotha_Core::addRootMedia('ldap:///', Array('name'=> 'Annuaire'));
+MediaBrotha_Core::addRootMedia('file:///home/share/music/', Array('display_name'=> 'Fichiers'));
+MediaBrotha_Core::addRootMedia('ldap:///', Array('display_name'=> 'Annuaire'));
 
 MediaBrotha_Core::go();
-
 
 

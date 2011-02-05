@@ -54,7 +54,7 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 			$media = new MediaBrotha_Media(
 				'ldap:///'.$entry->dn(),
 				Array(
-					'name' => $entry->dn(), //$entry->getValue('sn', 'single'),
+					'display_name' => $entry->dn(), //$entry->getValue('sn', 'single'),
 				),
 				'text/directory'
 				//$finfo->file($file->getPathname(), FILEINFO_MIME_ENCODING);
@@ -79,17 +79,18 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 		return true;
 	}
 	// Actions
-	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		if ($mime_type === 'text/directory') {
-			return Array(
-				'browse',
-			);
-		} elseif ($uri && (substr($uri, 0, 7) === 'ldap://')) {
+	protected function _isHandled(MediaBrotha_Media $media) {
+		return ($media->getMimeType() === 'text/directory')
+			|| (substr($media->getURI(), 0, 7) === 'ldap://');
+	}
+
+	public function getMediaActions(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
 			return Array(
 				'browse',
 			);
 		} else {
-			return parent::getMediaActions($uri, $mime_type, $mime_encoding);
+			return parent::getMediaActions($media);
 		}
 	}
 

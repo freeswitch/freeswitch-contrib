@@ -25,14 +25,15 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Media {
-	private $_metadata = Array();
-
 	private $_URI = NULL;
+	private $_metadata = Array();
 	private $_mimeType = NULL;
 	private $_mimeEncoding = NULL;
 
+	private $_parent = NULL;
+
 	public function __construct($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
-		 $this->setURI($URI);
+		 $this->_URI = $URI;
 		 $this->setMetadata($metadata);
 		 $this->setMimeType($mime_type);
 		 $this->setMimeEncoding($mime_encoding);
@@ -42,16 +43,17 @@ class MediaBrotha_Media {
 	public function getURI() {
 		return $this->_URI;
 	}
-	public function setURI($URI) {
-		$this->_URI = $URI;
-	}
 
 	/* metadata */
-	public function getMetadata($name = NULL) {
+	public function getMetadata($name = NULL, $max_length = NULL) {
 		if ($name === NULL) {
 			return $this->_metadata;
 		} elseif (isset($this->_metadata[$name])) {
-			return $this->_metadata[$name];
+			if ($max_length) {
+				return substr($this->_metadata[$name], 0, $max_length);
+			} else {
+				return $this->_metadata[$name];
+			}
 		} else {
 			return NULL;
 		}
@@ -60,6 +62,17 @@ class MediaBrotha_Media {
 		if (is_array($name)) {
 			$this->_metadata = $name;
 		} else {
+			switch($name) {
+				case 'hidden':
+				case 'display_name':
+				case 'Array':
+				//music
+				case 'artist':
+				case 'album':
+					break;
+				default:
+					print "Unusual metadata '$name'.\n";
+			}
 			$this->_metadata[$name] = $value;
 
 		}
@@ -81,10 +94,22 @@ class MediaBrotha_Media {
 		$this->_mimeEncoding = $mime_encoding;
 	}
 
+	/* parent */
+	public function getParent() {
+		return $this->_parent;
+	}
+	public function setParent($parent) {
+		$this->_parent = $parent;
+	}
+
 	/* Most used metadata */
-	public function getDisplayName($max_length = 0) {
-		if ($name = $this->getMetadata('name')) {
-			return $name;
+	public function getDisplayName($max_length = NULL) {
+		if ($name = $this->getMetadata('display_name')) {
+			if ($max_length) {
+				return substr($name, 0, $max_length);
+			} else {
+				return $name;
+			}
 		} else {
 			return '?';
 		}
@@ -97,13 +122,3 @@ class MediaBrotha_Media {
 	}
 }
 
-/*
-
-Mandatory metadata:
-uri
-name
-
-Usual metadata:
-artist
-album
-*/

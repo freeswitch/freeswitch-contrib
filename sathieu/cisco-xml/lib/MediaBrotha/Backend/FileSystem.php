@@ -40,10 +40,13 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 	// Browsing
 	public function mediaFromBufferItem($file) {
 		if ($file) {
+			if ($file->getFilename() === '..') {
+				return NULL;
+			}
 			$media = new MediaBrotha_Media(
 				'file://'.realpath($file->getPathname()),
 				Array(
-					'name' => $file->getFilename(),
+					'display_name' => $file->getFilename(),
 					'hidden' => !$file->isReadable() || preg_match('/^\.([^.]|$)/', $file->getFilename()),
 				)
 			);
@@ -59,31 +62,47 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 	}
 
 	public function fetch(MediaBrotha_Media $media) {
-		$uri =$media->getURI();
+		$uri = $media->getURI();
 		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
-			$uri = 'file://'.$this->getMetadata('base_path');
+			$uri = 'file://'.$this->getParam('base_path');
 		}
 		$path = parse_url($uri, PHP_URL_PATH);
 		if (is_dir($path)) {
 			return new MediaBrotha_MediaIterator($this, $media, new DirectoryIterator($path));
 		} else {
-			$this->setURI(NULL);
 			return false;
 		}
 	}
 
 	// Actions
-	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		if ($mime_type === 'application/x-directory') {
-			return Array(
-				'browse',
-			);
-		} elseif ($uri && (substr($uri, 0, 7) === 'file://')) {
+	protected function _isHandled(MediaBrotha_Media $media) {
+		return ($media->getMimeType() === 'application/x-directory')
+			|| (substr($media->getURI(), 0, 7) === 'file://');
+	}
+
+	public function getMediaActions(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
 			return Array(
 				'browse',
 			);
 		} else {
-			return parent::getMediaActions($uri, $mime_type, $mime_encoding);
+			return parent::getMediaActions($media);
+		}
+	}
+
+	// Populate
+	public function populateMedia(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
+			$parent_path = 'file://'.dirname(parse_url($media->getURI(), PHP_URL_PATH));
+			if ($this->isURISafe($parent_path)) {
+				$media->setParent(
+					new MediaBrotha_Media($parent_path,
+						Array(
+							'display_name' => '..',
+						)
+					)
+				);
+			}
 		}
 	}
 

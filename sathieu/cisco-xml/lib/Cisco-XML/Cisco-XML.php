@@ -23,6 +23,12 @@ This file is part of XML services for Cisco IP Phones.
 /**
  * @author Mathieu Parent
  */
+class CiscoIPPhone {
+	static public function userAgentIsCiscoIPPhone() {
+		return preg_match('/^Allegro-Software-WebClient\//', $_SERVER['HTTP_USER_AGENT']);
+
+	}
+}
 
 class CiscoXMLField {
 	private $_allowed_fields = NULL;

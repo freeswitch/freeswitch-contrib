@@ -50,17 +50,13 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 	}
 
 	// Actions
-	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		if (in_array($mime_type, Array($this::$_supported_mime_types))) {
-			return Array(
-				'play_media',
-				'pause_media',
-				'stop_media',
-				'enqueue_media',
-				'next_media',
-				'previous_media',
-			);
-		} elseif ($uri && (substr($uri, 0, 7) === 'file://')) {
+	protected function _isHandled(MediaBrotha_Media $media) {
+		return in_array($media->getMimeType(), Array($this::$_supported_mime_types))
+			|| (substr($media->getURI(), 0, 7) === 'file://');
+	}
+
+	public function getMediaActions(MediaBrotha_Media $media) {
+		if ($this->_isHandled($media)) {
 			return Array(
 				'play_media',
 				'pause_media',
@@ -70,7 +66,7 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 				'previous_media',
 			);
 		} else {
-			return parent::getMediaActions($uri, $mime_type, $mime_encoding);
+			return parent::getMediaActions($media);
 		}
 	}
 	public function doMediaAction($action, MediaBrotha_Media $media) {
