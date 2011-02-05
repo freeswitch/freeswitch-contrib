@@ -33,10 +33,26 @@ ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.'../lib');
 require('Cisco-XML/Cisco-XML.php');
 require_once('MediaBrotha/Core.php');
 
+// Init
 MediaBrotha_Core::init();
 MediaBrotha_Core::connectFrontend('CiscoXML', Array('push_url' => 'http://cisco:cisco@192.168.0.220/CGI/Execute'));
+
+// Backends
 MediaBrotha_Core::loadBackend('FileSystem', Array('base_path' => '/home/share/music/'));
 MediaBrotha_Core::loadBackend('VLC', Array('http_intf' => 'http://127.0.0.1:8080'));
+$ldap_connect_config = Array(
+	'host' => '127.0.0.1',
+	//'binddn' => 'cn=nobody,cn=internal,dc=example,dc=org',
+	//'bindpw' => 'not24get',
+	'basedn' => 'dc=sathieu,dc=net',
+	'filter' => '(objectClass=*)',
+	'scope' => 'one',
+);
+MediaBrotha_Core::loadBackend('LDAP', Array('ldap_connect_config' => $ldap_connect_config));
+
+// Roots
+MediaBrotha_Core::addRootMedia('file:///home/share/music/', Array('name'=> 'Fichiers'));
+MediaBrotha_Core::addRootMedia('ldap:///', Array('name'=> 'Annuaire'));
 
 MediaBrotha_Core::go();
 

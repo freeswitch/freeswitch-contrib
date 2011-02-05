@@ -25,14 +25,10 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
-	public function register() {
-		parent::register();
-		MediaBrotha_Core::registerMimeType($this, 'application/x-directory');
-	}
-
+	// Helper functions
 	public function isURISafe($uri) {
 		$real_path = realpath(parse_url($uri, PHP_URL_PATH));
-		$real_base_path = realpath($this->getMetadata('base_path'));
+		$real_base_path = realpath($this->getParam('base_path'));
 		do {
 			if ($real_path === $real_base_path) {
 				return true;
@@ -41,19 +37,16 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		return false;
 	}
 
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array(
-			'browse',
-		);
-	}
-	// Capability browse
-	protected function _mediaFromBufferItem($file) {
+	// Browsing
+	public function mediaFromBufferItem($file) {
 		if ($file) {
-			$media = new MediaBrotha_Media(Array(
-				'uri' => 'file://'.realpath($file->getPathname()),
-				'name' => $file->getFilename(),
-				'hidden' => !$file->isReadable() || preg_match('/^\.([^.]|$)/', $file->getFilename()),
-			));
+			$media = new MediaBrotha_Media(
+				'file://'.realpath($file->getPathname()),
+				Array(
+					'name' => $file->getFilename(),
+					'hidden' => !$file->isReadable() || preg_match('/^\.([^.]|$)/', $file->getFilename()),
+				)
+			);
 			if ($file->isDir()) {
 				$media->setMimeType('application/x-directory');
 			} else {
@@ -65,12 +58,34 @@ class MediaBrotha_Backend_FileSystem extends MediaBrotha_Backend {
 		}
 	}
 
-	public function fetch($uri) {
+	public function fetch(MediaBrotha_Media $media) {
+		$uri =$media->getURI();
 		if ((parse_url($uri, PHP_URL_SCHEME) != 'file') || !$this->isURISafe($uri)) {
 			$uri = 'file://'.$this->getMetadata('base_path');
 		}
-		$this->_buffer = new DirectoryIterator(parse_url($uri, PHP_URL_PATH));
-		return true;
+		$path = parse_url($uri, PHP_URL_PATH);
+		if (is_dir($path)) {
+			return new MediaBrotha_MediaIterator($this, $media, new DirectoryIterator($path));
+		} else {
+			$this->setURI(NULL);
+			return false;
+		}
 	}
+
+	// Actions
+	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
+		if ($mime_type === 'application/x-directory') {
+			return Array(
+				'browse',
+			);
+		} elseif ($uri && (substr($uri, 0, 7) === 'file://')) {
+			return Array(
+				'browse',
+			);
+		} else {
+			return parent::getMediaActions($uri, $mime_type, $mime_encoding);
+		}
+	}
+
 }
 

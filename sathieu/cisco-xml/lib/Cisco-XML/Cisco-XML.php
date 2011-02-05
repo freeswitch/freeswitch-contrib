@@ -125,7 +125,10 @@ class CiscoXMLObject {
 			);
 
 		$context  = stream_context_create($opts);
-		return file_get_contents($url, false, $context);
+		$stream = fopen($url, 'r', false, $context);
+		if ($stream !== false) {
+			return stream_get_contents($stream);
+		}
 	}
 
 }

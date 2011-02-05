@@ -24,11 +24,10 @@ This file is part of MediaBrotha.
  * @author Mathieu Parent
  */
 
-class MediaBrotha_Frontend {
-	protected $_infos = NULL;
-
-	public function __construct(array $args = Array()) {
-		$this->_infos = $args;
+class MediaBrotha_Frontend_HTTP extends MediaBrotha_Frontend {
+	public function rootURL() {
+		$url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
+		$url = preg_replace('/index\.php$/', '', $url);
+		return $url;
 	}
 }
-

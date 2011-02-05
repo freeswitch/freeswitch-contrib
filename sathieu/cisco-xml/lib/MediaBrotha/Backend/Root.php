@@ -25,22 +25,28 @@ This file is part of MediaBrotha.
  */
 
 class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array(
-			'browse',
-		);
-	}
-	public function isHidden() {
-		return true;
+	private $_media = NULL;
+	private $_media_iterator = NULL;
+
+	public function __construct($params = NULL) {
+		parent::__construct($params);
+		$this->_media = new MediaBrotha_Media('MediaBrotha:///');
+		$this->_media_iterator = new MediaBrotha_MediaIterator($this, $this->_media);
 	}
 
-	// Capability browse
-	public function fetch($uri) {
-		$this->_buffer = new ArrayIterator();
-		foreach(MediaBrotha_Core::getBackends() as $id => $backend) {
-			$this->_buffer[] = $backend;
-		}
-		return true;
+	public function addRootMedia($media) {
+		$this->_media_iterator->bufferAdd($media);
+	}
+
+	// Browsing
+	public function fetch(MediaBrotha_Media $media) {
+		return $this->_media_iterator;
+	}
+
+	// Actions
+	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
+		return Array(
+		);
 	}
 
 }

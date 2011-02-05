@@ -26,25 +26,27 @@ This file is part of MediaBrotha.
 
 class MediaBrotha_Media {
 	private $_metadata = Array();
+
+	private $_URI = NULL;
 	private $_mimeType = NULL;
 	private $_mimeEncoding = NULL;
-	public function __construct(array $metadata = Array()) {
-		 $this->_metadata = $metadata;
+
+	public function __construct($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
+		 $this->setURI($URI);
+		 $this->setMetadata($metadata);
+		 $this->setMimeType($mime_type);
+		 $this->setMimeEncoding($mime_encoding);
 	}
-	public function setMimeType($mime_type) {
-		$this->_mimeType = $mime_type;
+
+	/* URI */
+	public function getURI() {
+		return $this->_URI;
 	}
-	public function getMimeType() {
-		// TODO
-		return $this->_mimeType;
+	public function setURI($URI) {
+		$this->_URI = $URI;
 	}
-	public function setMimeEncoding($mime_encoding) {
-		$this->_mimeEncoding = $mime_encoding;
-	}
-	public function getMimeEncoding() {
-		// TODO
-		return $this->_mimeEncoding;
-	}
+
+	/* metadata */
 	public function getMetadata($name = NULL) {
 		if ($name === NULL) {
 			return $this->_metadata;
@@ -54,7 +56,7 @@ class MediaBrotha_Media {
 			return NULL;
 		}
 	}
-	public function setMetadata($name, $value) {
+	public function setMetadata($name, $value = NULL) {
 		if (is_array($name)) {
 			$this->_metadata = $name;
 		} else {
@@ -62,21 +64,36 @@ class MediaBrotha_Media {
 
 		}
 	}
+
+	/* mimeType */
+	public function getMimeType() {
+		return $this->_mimeType;
+	}
+	public function setMimeType($mime_type) {
+		$this->_mimeType = $mime_type;
+	}
+
+	/* mimeEncoding */
+	public function getMimeEncoding() {
+		return $this->_mimeEncoding;
+	}
+	public function setMimeEncoding($mime_encoding) {
+		$this->_mimeEncoding = $mime_encoding;
+	}
+
 	/* Most used metadata */
 	public function getDisplayName($max_length = 0) {
-		return $this->getMetadata('name');
-	}
-	public function getURI() {
-		return $this->getMetadata('uri');
-	}
-	public function setURI($value) {
-		return $this->setMetadata('uri', $value);
+		if ($name = $this->getMetadata('name')) {
+			return $name;
+		} else {
+			return '?';
+		}
 	}
 	public function getURIComponent($component) {
 		return parse_url($this->getURI($component));
 	}
 	public function isHidden() {
-		return isset($this->_metadata['hidden']) && $this->_metadata['hidden'];
+		return (bool) $this->getMetadata('hidden');
 	}
 }
 

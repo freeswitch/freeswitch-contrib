@@ -26,80 +26,56 @@ This file is part of MediaBrotha.
 
 require_once('MediaBrotha/Media.php');
 
-class MediaBrotha_Backend extends MediaBrotha_Media implements Iterator {
-	protected $_buffer = Array();
-	public function __construct(array $args = Array()) {
-		parent::__construct($args);
+class MediaBrotha_Backend {
+	protected $_params = NULL;
+
+	public function __construct($params = NULL) {
+		$this->setParam($params);
 		$this->register();
-		$this->setMimeType('application/x-mediabrotha-backend-'.strtolower($this->getName()));
-		MediaBrotha_Core::registerMimeType($this, 'application/x-mediabrotha-backend-'.strtolower($this->getName()));
-		$this->setMetadata('name', $this->getName());
-		$this->setMetadata('uri', 'MediaBrotha_Backend://'.$this->getName());
+	}
+
+	/* params */
+	public function getParam($name = NULL) {
+		if ($name === NULL) {
+			return $this->_params;
+		} elseif (isset($this->_params[$name])) {
+			return $this->_params[$name];
+		} else {
+			return NULL;
+		}
+	}
+	public function setParam($name, $value = NULL) {
+		if (is_array($name)) {
+			$this->_params = $name;
+		} else {
+			$this->_params[$name] = $value;
+
+		}
 	}
 
 	public function register() {
 		MediaBrotha_Core::registerBackend($this);
 	}
 
-	public function getName() {
+	public function getBackendName() {
 		return preg_replace('/^MediaBrotha_Backend_(.*)$/', '$1', get_class($this));
 	}
 
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array();
-	}
-
-	public function isHidden() {
-		return parent::isHidden() || !in_array('browse', $this->capabilities());
-	}
-
-	// Capability browse
-	protected function _mediaFromBufferItem($item) {
+	// Browsing
+	public function mediaFromBufferItem($item) {
 		return $item;
 	}
 
-	public function fetch($uri) {
+	public function fetch(MediaBrotha_Media $media) {
 		return false;
 	}
 
-	public function rewind() {
-		$this->_buffer->rewind();
+	// Actions
+	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
+		return Array();
 	}
 
-	public function current() {
-		return $this->_mediaFromBufferItem($this->_buffer->current());
-	}
-
-	public function key() {
-		return $this->_buffer->key();
-	}
-
-	public function next() {
-		return $this->_mediaFromBufferItem($this->_buffer->next());
-	}
-
-	public function valid() {
-		return $this->_buffer->valid();
-	}
-
-	// Capability play
-	public function play(MediaBrotha_Media $media) {
-		return false;
-	}
-	public function pause() {
-		return false;
-	}
-	public function stop() {
-		return false;
-	}
-	// Capability playlist
-	public function playlistEnqueue(MediaBrotha_Media $media) {
-		return false;
-	}
-	public function playlistNext(MediaBrotha_Media $media) {
-		return false;
-	}
-	public function playlistPrevious(MediaBrotha_Media $media) {
+	public function doMediaAction($action, MediaBrotha_Media $media) {
 		return false;
 	}
 }

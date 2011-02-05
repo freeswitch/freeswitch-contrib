@@ -29,27 +29,16 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 	private $_ldap;
 	public function __construct(array $args = Array()) {
 		parent::__construct($args);
-		$this->_ldap = Net_LDAP2::connect($this->getMetadata('ldap_connect_config'));
+		$this->_ldap = Net_LDAP2::connect($this->getParam('ldap_connect_config'));
 		if (Net_LDAP2::isError($this->_ldap)) {
 			die('Could not fetch entry: '.$this->_ldap->getMessage());
 		}
 	}
-	public function register() {
-		parent::register();
-		MediaBrotha_Core::registerMimeType($this, 'text/directory');
-	}
-
-	public function capabilities($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
-		return Array(
-			'browse',
-		);
-	}
-
+	// Helper functions
 	public function isURISafe($uri) {
 		return true;
 	}
-	
-	
+
 	public static function parseLDAPURI($uri, $component = NULL) {
 		$uri = preg_replace('@^ldap:///@', 'ldap://fake_host/', $uri);
 		$components = parse_url($uri, $component);
@@ -59,30 +48,50 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 		return $components;
 	}
 
-	// Capability browse
-	public function fetch($uri) {
+	// Browsing
+	public function mediaFromBufferItem($entry) {
+		if ($entry) {
+			$media = new MediaBrotha_Media(
+				'ldap:///'.$entry->dn(),
+				Array(
+					'name' => $entry->dn(), //$entry->getValue('sn', 'single'),
+				),
+				'text/directory'
+				//$finfo->file($file->getPathname(), FILEINFO_MIME_ENCODING);
+			);
+			return $media;
+		}
+	}
+
+	public function fetch(MediaBrotha_Media $media) {
+		$uri = $media->getURI();
 		if (($this::parseLDAPURI($uri, PHP_URL_SCHEME) != 'ldap') || !$this->isURISafe($uri)) {
-			$ldap_connect_config = $this->getMetadata('ldap_connect_config');
+			$ldap_connect_config = $this->getParam('ldap_connect_config');
 			$uri = 'ldap:///'.$ldap_connect_config['basedn'];
 		}
 		$basedn = $this::parseLDAPURI($uri, PHP_URL_PATH);
 		if ($basedn && ($basedn{0} = '/')) {
-			$basedn = substr($basedn, 1);	
+			$basedn = substr($basedn, 1);
 		}
-		$this->_buffer = $this->_ldap->search($basedn, NULL,
+		$ldap_search = $this->_ldap->search($basedn, NULL,
 			Array());
+		return new MediaBrotha_MediaIterator($this, $media, $ldap_search);
 		return true;
 	}
-	protected function _mediaFromBufferItem($entry) {
-		if ($entry) {
-			$media = new MediaBrotha_Media(Array(
-				'uri' => 'ldap:///'.$entry->dn(),
-				'name' => $entry->dn(), //$entry->getValue('sn', 'single'),
-			));
-			$media->setMimeType('text/directory');
-			//	$media->setMimeEncoding($finfo->file($file->getPathname(), FILEINFO_MIME_ENCODING));
-			return $media;
+	// Actions
+	public function getMediaActions($uri = NULL, $mime_type = NULL, $mime_encoding = NULL) {
+		if ($mime_type === 'text/directory') {
+			return Array(
+				'browse',
+			);
+		} elseif ($uri && (substr($uri, 0, 7) === 'ldap://')) {
+			return Array(
+				'browse',
+			);
+		} else {
+			return parent::getMediaActions($uri, $mime_type, $mime_encoding);
 		}
 	}
+
 }
 
