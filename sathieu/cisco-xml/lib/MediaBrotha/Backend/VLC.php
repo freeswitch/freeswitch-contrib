@@ -43,12 +43,6 @@ class MediaBrotha_Backend_VLC extends MediaBrotha_Backend {
 		print $output.'<!--'.$url."-->\n";
 	}
 
-	// Browsing
-	public function fetch(MediaBrotha_Media $media) {
-		$this->_buffer[] = $media;
-		return true;
-	}
-
 	// Actions
 	protected function _isHandled(MediaBrotha_Media $media) {
 		return in_array($media->getMimeType(), Array($this::$_supported_mime_types))

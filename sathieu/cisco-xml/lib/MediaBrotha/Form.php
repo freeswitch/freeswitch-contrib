@@ -24,19 +24,31 @@ This file is part of MediaBrotha.
  * @author Mathieu Parent
  */
 
-abstract class MediaBrotha_Frontend {
-	protected $_infos = NULL;
+class MediaBrotha_Field {
+	private $_attrs;
 
-	public function __construct(array $args = Array()) {
-		$this->_infos = $args;
+	public function __construct(array $attrs) {
+		$this->_attrs = $attrs;
 	}
 
-	public function renderException(Exception $e) {
-		print $e;
-	}
-
-	public function renderForm(MediaBrotha_Form $form) {
-		throw new Exception(__FUNCTION__ .' not implemented in class "'.get_class($this).'"');
+	public function get($name) {
+		if (isset($this->_attrs[$name])) {
+			return $this->_attrs[$name];
+		}	
 	}
 }
 
+class MediaBrotha_Form extends ArrayIterator {
+	private $_title;
+	public function getTitle() {
+		return $this->_title;
+	}
+
+	public function setTitle($title) {
+		$this->_title = $title;
+	}
+
+	public function addField(array $args) {
+		$this[] = new MediaBrotha_Field($args);
+	}
+}

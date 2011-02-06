@@ -25,7 +25,9 @@ This file is part of XML services for Cisco IP Phones.
  */
 class CiscoIPPhone {
 	static public function userAgentIsCiscoIPPhone() {
-		return preg_match('/^Allegro-Software-WebClient\//', $_SERVER['HTTP_USER_AGENT']);
+		if (isset($_SERVER['HTTP_USER_AGENT'])) {
+			return preg_match('/^Allegro-Software-WebClient\//', $_SERVER['HTTP_USER_AGENT']);
+		}
 
 	}
 }

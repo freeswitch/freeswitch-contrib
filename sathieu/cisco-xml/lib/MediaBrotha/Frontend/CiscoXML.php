@@ -52,7 +52,7 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 			'URL' => 'SoftKey:Select',
 			'Position' => $pos++));
 		foreach (MediaBrotha_Core::getBackends() as $backend) {
-			foreach ($backend->getMediaActions(MediaBrotha_Core::getCurrentMedia()) as $action) {
+			foreach ($backend->getMediaActions($item) as $action) {
 				$this->_xml->setCiscoElement('SoftKeyItem',
 					Array('Name' => $action,
 					'URL' => 'QueryStringParam:'.MediaBrotha_Core::value2hash('action='.$action.'&backend='.$backend->getBackendName()),
@@ -69,6 +69,26 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 			print strlen($this->_xml)."\n";
 			print $this->_xml->execute($this->_infos['push_url']);
 		}
+	}
+
+	public function renderForm(MediaBrotha_Form $form) {
+		$xml = new CiscoIPPhoneInput();
+		$xml->setCiscoElement('Title', $form->getTitle());
+		//$xml->setCiscoElement('Prompt', ...);
+		$xml->setCiscoElement('URL', $this->rootURL());
+		foreach($form as $field) {
+			$xml->setCiscoElement('InputItem',
+				Array(
+					'DisplayName' => $field->get('display_name'),
+					'QueryStringParam' => $field->get('name'),
+					'DefaultValue' => $field->get('value'),
+					'InputFlags' => '',
+				)
+			);
+			
+		}
+		CiscoXMLObject::HttpHeader();
+		print $xml;
 	}
 }
 

@@ -24,7 +24,7 @@ This file is part of MediaBrotha.
  * @author Mathieu Parent
  */
 
-class MediaBrotha_Media {
+final class MediaBrotha_Media {
 	private $_URI = NULL;
 	private $_metadata = Array();
 	private $_mimeType = NULL;

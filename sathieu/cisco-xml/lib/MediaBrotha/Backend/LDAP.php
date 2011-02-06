@@ -63,21 +63,6 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 		}
 	}
 
-	public function fetch(MediaBrotha_Media $media) {
-		$uri = $media->getURI();
-		if (($this::parseLDAPURI($uri, PHP_URL_SCHEME) != 'ldap') || !$this->isURISafe($uri)) {
-			$ldap_connect_config = $this->getParam('ldap_connect_config');
-			$uri = 'ldap:///'.$ldap_connect_config['basedn'];
-		}
-		$basedn = $this::parseLDAPURI($uri, PHP_URL_PATH);
-		if ($basedn && ($basedn{0} = '/')) {
-			$basedn = substr($basedn, 1);
-		}
-		$ldap_search = $this->_ldap->search($basedn, NULL,
-			Array());
-		return new MediaBrotha_MediaIterator($this, $media, $ldap_search);
-		return true;
-	}
 	// Actions
 	protected function _isHandled(MediaBrotha_Media $media) {
 		return ($media->getMimeType() === 'text/directory')
@@ -87,12 +72,74 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 	public function getMediaActions(MediaBrotha_Media $media) {
 		if ($this->_isHandled($media)) {
 			return Array(
+				'_default',
 				'browse',
+				'search',
 			);
 		} else {
 			return parent::getMediaActions($media);
 		}
 	}
-
+	public function doMediaAction($action, MediaBrotha_Media $media) {
+		switch($action) {
+			case 'browse':
+				$uri = $media->getURI();
+				if (($this::parseLDAPURI($uri, PHP_URL_SCHEME) != 'ldap') || !$this->isURISafe($uri)) {
+					$ldap_connect_config = $this->getParam('ldap_connect_config');
+					$uri = 'ldap:///'.$ldap_connect_config['basedn'];
+				}
+				$basedn = $this::parseLDAPURI($uri, PHP_URL_PATH);
+				if ($basedn && ($basedn{0} = '/')) {
+					$basedn = substr($basedn, 1);
+				}
+				$ldap_search = $this->_ldap->search($basedn, NULL,
+					Array());
+				return new MediaBrotha_MediaIterator($this, $ldap_search);
+			case '_default':
+			case 'search':
+				$form =  new MediaBrotha_Form();
+				$form->setTitle('search');
+				$search_fields = Array(
+					'sn'              => Array('display_name' => 'last name'),
+					'givenName'       => Array('display_name' => 'first name'),
+					'telephoneNumber' => Array('display_name' => 'phone', 'filter' => '(telephoneNumber=*%s*)'),
+					//'o'               => Array('display_name' => 'organization'),
+					//'mobile'          => Array('display_name' => 'mobile'),
+					//'facsimileTelephoneNumber' => Array('display_name' => 'fax'),
+					//'l'               => Array('display_name' => 'location'),
+					//'st'              => Array('display_name' => 'department'),
+					//'roomNumber'      => Array('display_name' => 'room number'),
+				);
+				$ldap_connect_config = $this->getParam('ldap_connect_config');
+				$filter = $ldap_connect_config['filter'];
+				foreach ($search_fields as $attribute_name => $field) {
+					$field['name'] = $attribute_name;
+					if (!empty($_GET[$attribute_name])) {
+						$field['value'] = $_GET[$attribute_name];
+						if(empty($infos['filter'])) {
+							$filter="(&$filter($attribute_name=".$_GET[$attribute_name]."*))";
+						} else {
+							$filter="(&$filter".sprintf($infos['filter'], $_GET[$attribute_name]).")";
+						}
+					}
+					$form->addField($field);
+				}
+				if (empty($_GET['ldap_search'])) {
+					MediaBrotha_Core::addCallback('MediaBrotha_Backend_LDAP::searchCallback');
+					return $form;
+				} else {
+					$ldap_search = $this->_ldap->search(NULL, $filter,
+						Array('scope' => 'sub'));
+					return new MediaBrotha_MediaIterator($this, $ldap_search);
+				}
+			default:
+				return parent::doMediaAction($action, $media);
+		}
+	}
+	static public function searchCallback() {
+		$_GET['backend'] = 'LDAP';
+		$_GET['action'] = 'search';
+		$_GET['ldap_search'] = '1';
+	}
 }
 
