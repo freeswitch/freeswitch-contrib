@@ -43,7 +43,7 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 				($item->getMimeEncoding() ? ('mime_encoding='.urlencode($item->getMimeEncoding()).'&') : '').
 				'uri='.urlencode($item->getURI()));
 		$this->_xml->setCiscoElement('MenuItem',
-			Array('Name' => $item->getDisplayName(), 'URL' => $url));
+			Array('Name' => $item->getDisplayName(64), 'URL' => $url));
 	}
 	public function finish($item) {
 		$pos = 1;
@@ -52,7 +52,7 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 			'URL' => 'SoftKey:Select',
 			'Position' => $pos++));
 		foreach (MediaBrotha_Core::getBackends() as $backend) {
-			foreach ($backend->getMediaActions($item) as $action) {
+			foreach ($backend->getVisibleMediaActions($item) as $action) {
 				$this->_xml->setCiscoElement('SoftKeyItem',
 					Array('Name' => $action,
 					'URL' => 'QueryStringParam:'.MediaBrotha_Core::value2hash('action='.$action.'&backend='.$backend->getBackendName()),
@@ -77,12 +77,13 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 		//$xml->setCiscoElement('Prompt', ...);
 		$xml->setCiscoElement('URL', $this->rootURL());
 		foreach($form as $field) {
+			$flags = 'A';
 			$xml->setCiscoElement('InputItem',
 				Array(
 					'DisplayName' => $field->get('display_name'),
 					'QueryStringParam' => $field->get('name'),
 					'DefaultValue' => $field->get('value'),
-					'InputFlags' => '',
+					'InputFlags' => $flags,
 				)
 			);
 			

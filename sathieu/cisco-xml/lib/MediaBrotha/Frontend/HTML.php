@@ -40,7 +40,7 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 				'uri='.urlencode($media->getURI()));
 
 		foreach (MediaBrotha_Core::getBackends() as $backend) {
-			foreach ($backend->getMediaActions($media) as $action) {
+			foreach ($backend->getVisibleMediaActions($media) as $action) {
 				$tag = $this->_xml->createElement($tag_name);
 				$tag = $parent->appendChild($tag);
 
