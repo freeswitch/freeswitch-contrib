@@ -28,6 +28,7 @@ require_once('MediaBrotha/Backend.php');
 require_once('MediaBrotha/Frontend.php');
 require_once('MediaBrotha/Media.php');
 require_once('MediaBrotha/MediaIterator.php');
+require_once('MediaBrotha/Form.php');
 
 class MediaBrotha_Core {
 	private static $_frontend = NULL;
@@ -38,20 +39,26 @@ class MediaBrotha_Core {
 	 * Core
 	 */
 	public static function init() {
-		if (!session_start()) {
-			die('Unable to start session');
+		try {
+			if (!session_start()) {
+				throw new Exception('Unable to start session');
+			}
+			MediaBrotha_Core::_unhashRequest();
+			MediaBrotha_Core::loadBackend('Root');
+		} catch (Exception $e) {
+			die($e);
 		}
-		MediaBrotha_Core::_unhashRequest();
-		MediaBrotha_Core::loadBackend('Root');
 	}
 
 	public static function go() {
-		$current_backend = MediaBrotha_Core::getCurrentBackend();
-		$current_media = MediaBrotha_Core::getCurrentMedia();
-		if (MediaBrotha_Core::getAction() == 'browse') {
-			if ($media_iterator = $current_backend->fetch($current_media)) {
+		try {
+			MediaBrotha_Core::runCallback();
+			$current_backend = MediaBrotha_Core::getCurrentBackend();
+			$current_media = MediaBrotha_Core::getCurrentMedia();
+			$result = $current_backend->doMediaAction(MediaBrotha_Core::getAction(), $current_media);
+			if (is_a($result, 'MediaBrotha_MediaIterator')) {
 				MediaBrotha_Core::$_frontend->begin($current_media);
-				foreach ($media_iterator as $item) {
+				foreach ($result as $item) {
 					if (($item === NULL) || $item->isHidden()) {
 						continue;
 					}
@@ -59,15 +66,30 @@ class MediaBrotha_Core {
 				}
 				MediaBrotha_Core::$_frontend->finish($current_media);
 				MediaBrotha_Core::$_frontend->render($current_media);
+			} elseif (is_a($result, 'MediaBrotha_Form')) {
+				MediaBrotha_Core::$_frontend->renderForm($result);
+			} elseif (is_a($result, 'Exception')) {
+				throw $result;
 			} else {
+				throw new Exception("Got unexpected result '$result'.");
 			}
-		} else {
-			$current_backend->doMediaAction(MediaBrotha_Core::getAction(), $current_media);
+		} catch (Exception $e) {
+			MediaBrotha_Core::$_frontend->renderException($e);
 		}
 	}
 
-	public function addRootMedia($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
+	public static function addRootMedia($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
 		MediaBrotha_Core::$_backends['Root']->addRootMedia($URI, $metadata, $mime_type, $mime_encoding);
+	}
+
+	public static function addCallback($callback, $arg = NULL) {
+		$_SESSION['CALLBACK'][] = Array($callback, $arg);
+	}
+
+	public static function runCallback() {
+		while($callback_info = array_shift($_SESSION['CALLBACK'])) {
+			call_user_func($callback_info[0],$callback_info[1]);
+		}
 	}
 
 	/*
@@ -129,7 +151,7 @@ class MediaBrotha_Core {
 		if (!empty($_GET['action'])) {
 			return $_GET['action'];
 		} else {
-			return 'browse';
+			return '_default';
 		}
 	}
 

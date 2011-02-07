@@ -35,7 +35,7 @@ class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
 				'display_name' => 'Root',
 			)
 		);
-		$this->_media_iterator = new MediaBrotha_MediaIterator($this, $this->_media);
+		$this->_media_iterator = new MediaBrotha_MediaIterator($this);
 	}
 
 	public function addRootMedia($URI, array $metadata = Array(), $mime_type = NULL, $mime_encoding = NULL) {
@@ -45,9 +45,15 @@ class MediaBrotha_Backend_Root extends MediaBrotha_Backend {
 		$this->_media_iterator->bufferAdd($media);
 	}
 
-	// Browsing
-	public function fetch(MediaBrotha_Media $media) {
-		return $this->_media_iterator;
+	// Actions
+	public function doMediaAction($action, MediaBrotha_Media $media) {
+		switch($action) {
+			case '_default':
+			case 'browse':
+				return $this->_media_iterator;
+			default:
+				return parent::doMediaAction($action, $media);
+		}
 	}
 }
 

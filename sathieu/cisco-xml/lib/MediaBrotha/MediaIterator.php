@@ -28,13 +28,11 @@ require_once('MediaBrotha/Media.php');
 
 class MediaBrotha_MediaIterator implements Iterator {
 	private $_backend = NULL;
-	private $_media = NULL;
 	private $_handle = NULL;
 	protected $_buffer = NULL;
 
-	public function __construct(MediaBrotha_Backend $backend, MediaBrotha_Media $media, $buffer = NULL) {
+	public function __construct(MediaBrotha_Backend $backend, $buffer = NULL) {
 		$this->_backend = $backend;
-		$this->_media = $media;
 		if ($buffer) {
 			$this->_buffer = $buffer;
 		} else {

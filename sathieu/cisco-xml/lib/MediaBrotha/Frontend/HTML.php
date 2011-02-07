@@ -54,7 +54,7 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 		}
 	}
 
-	public function begin($item) {
+	private function _createHTMLDocument($title) {
 		$this->_xml = new DOMDocument('1.0');
 		$root = $this->_xml->createElement('html');
 		$root = $this->_xml->appendChild($root);
@@ -62,11 +62,10 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 		$head = $this->_xml->createElement('head');
 		$head = $root->appendChild($head);
 
-		$title = $this->_xml->createElement('title');
-		$title = $head->appendChild($title);
-
-		$text = $this->_xml->createTextNode($item->getDisplayName());
-		$text = $title->appendChild($text);
+		$titleElement = $this->_xml->createElement('title');
+		$titleElement = $head->appendChild($titleElement);
+		$text = $this->_xml->createTextNode($title);
+		$text = $titleElement->appendChild($text);
 
 		$style = $this->_xml->createElement('link');
 		$style = $head->appendChild($style);
@@ -82,7 +81,10 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 		$this->_body = $this->_xml->createElement('body');
 		$this->_body = $root->appendChild($this->_body);
 		$this->_body->setAttribute('onload', 'bodyLoaded();');
+	}
 
+	public function begin($item) {
+		$this->_createHTMLDocument($item->getDisplayName());
 		$this->_mediaListElement = $this->_xml->createElement('ul');
 		$this->_mediaListElement = $this->_body->appendChild($this->_mediaListElement);
 		$this->_mediaListElement->setAttribute('id', 'mediaListElement');
@@ -123,5 +125,60 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 	public function render() {
 		print $this->_xml->saveHTML();
 	}
+
+	public function renderForm(MediaBrotha_Form $form) {
+		$this->_createHTMLDocument($form->getTitle());
+		$formElement = $this->_xml->createElement('form');
+		$formElement = $this->_body->appendChild($formElement);
+
+		$tableElement = $this->_xml->createElement('table');
+		$tableElement = $formElement->appendChild($tableElement);
+
+		foreach($form as $field) {
+			$trElement = $this->_xml->createElement('tr');
+			$trElement = $tableElement->appendChild($trElement);
+
+			$tdElement1 = $this->_xml->createElement('th');
+			$tdElement1 = $trElement->appendChild($tdElement1);
+			$text1 = $this->_xml->createTextNode($field->get('display_name'));
+			$text1 = $tdElement1->appendChild($text1);
+
+			$tdElement2 = $this->_xml->createElement('td');
+			$tdElement2 = $trElement->appendChild($tdElement2);
+
+			$inputElement = $this->_xml->createElement('input');
+			$inputElement = $tdElement2->appendChild($inputElement);
+			$inputElement->setAttribute('name', $field->get('name'));
+			$inputElement->setAttribute('value', $field->get('value'));
+		}
+
+		$trElement = $this->_xml->createElement('tr');
+		$trElement = $tableElement->appendChild($trElement);
+
+		$tdElement = $this->_xml->createElement('td');
+		$tdElement = $trElement->appendChild($tdElement);
+		$tdElement->setAttribute('colspan', 2);
+
+		$inputElement = $this->_xml->createElement('input');
+		$inputElement = $tdElement->appendChild($inputElement);
+		$inputElement->setAttribute('type', 'submit');
+
+		print $this->_xml->saveHTML();
+	}
+	public function renderException(Exception $e) {
+		$this->_createHTMLDocument('Error');
+		$divElement = $this->_xml->createElement('pre');
+		$divElement = $this->_body->appendChild($divElement);
+		$text = $this->_xml->createTextNode($e->getMessage());
+		$text = $divElement->appendChild($text);
+
+		$divElement = $this->_xml->createElement('pre');
+		$divElement = $this->_body->appendChild($divElement);
+		$text = $this->_xml->createTextNode($e->getTraceAsString());
+		$text = $divElement->appendChild($text);
+
+		print $this->_xml->saveHTML();
+	}
+
 }
 

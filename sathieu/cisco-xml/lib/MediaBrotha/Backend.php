@@ -26,8 +26,8 @@ This file is part of MediaBrotha.
 
 require_once('MediaBrotha/Media.php');
 
-class MediaBrotha_Backend {
-	protected $_params = NULL;
+abstract class MediaBrotha_Backend {
+	private $_params = NULL;
 
 	public function __construct($params = NULL) {
 		$this->setParam($params);
@@ -35,7 +35,7 @@ class MediaBrotha_Backend {
 	}
 
 	/* params */
-	public function getParam($name = NULL) {
+	final public function getParam($name = NULL) {
 		if ($name === NULL) {
 			return $this->_params;
 		} elseif (isset($this->_params[$name])) {
@@ -44,7 +44,7 @@ class MediaBrotha_Backend {
 			return NULL;
 		}
 	}
-	public function setParam($name, $value = NULL) {
+	final public function setParam($name, $value = NULL) {
 		if (is_array($name)) {
 			$this->_params = $name;
 		} else {
@@ -64,10 +64,6 @@ class MediaBrotha_Backend {
 	// Browsing
 	public function mediaFromBufferItem($item) {
 		return $item;
-	}
-
-	public function fetch(MediaBrotha_Media $media) {
-		return false;
 	}
 
 	// Actions
