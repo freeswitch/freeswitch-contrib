@@ -202,6 +202,8 @@ class MediaBrotha_Core {
 		if ($v = MediaBrotha_Core::hash2value($h)) {
 			parse_str($v, $output);
 			return $output;
+		} else {
+			return Array();
 		}
 	}
 
