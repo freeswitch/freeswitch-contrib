@@ -56,6 +56,7 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 
 	private function _createHTMLDocument($title) {
 		$this->_xml = new DOMDocument('1.0');
+		$this->_xml->formatOutput = true;
 		$root = $this->_xml->createElement('html');
 		$root = $this->_xml->appendChild($root);
 
@@ -135,6 +136,9 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 		$tableElement = $formElement->appendChild($tableElement);
 
 		foreach($form as $field) {
+			if ($field->get('visibility') === 'hidden') {
+				continue;
+			}
 			$trElement = $this->_xml->createElement('tr');
 			$trElement = $tableElement->appendChild($trElement);
 

@@ -40,6 +40,7 @@ class MediaBrotha_Field {
 
 class MediaBrotha_Form extends ArrayIterator {
 	private $_title;
+
 	public function getTitle() {
 		return $this->_title;
 	}

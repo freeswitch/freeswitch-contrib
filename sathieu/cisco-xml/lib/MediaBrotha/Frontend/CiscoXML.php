@@ -72,11 +72,20 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 	}
 
 	public function renderForm(MediaBrotha_Form $form) {
+		foreach($form as $field) {
+			if ($field->get('visibility') === 'hidden') {
+				$params[$field->get('name')] = $field->get('value');
+			}
+		}
 		$xml = new CiscoIPPhoneInput();
 		$xml->setCiscoElement('Title', $form->getTitle());
 		//$xml->setCiscoElement('Prompt', ...);
-		$xml->setCiscoElement('URL', $this->rootURL());
+		$xml->setCiscoElement('URL', $this->rootURL().'?'.MediaBrotha_Core::value2hash(http_build_query($params)));
+		$params = Array();
 		foreach($form as $field) {
+			if ($field->get('visibility') === 'hidden') {
+				continue;
+			}
 			$flags = 'A';
 			$xml->setCiscoElement('InputItem',
 				Array(
@@ -88,6 +97,19 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 			);
 			
 		}
+
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => 'Search',
+			'URL' => 'SoftKey:Submit',
+			'Position' => 1));
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => '<<',
+			'URL' => 'SoftKey:<<',
+			'Position' => 2));
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => 'Exit',
+			'URL' => 'SoftKey:Exit',
+			'Position' => 3));
 		CiscoXMLObject::HttpHeader();
 		print $xml;
 	}
