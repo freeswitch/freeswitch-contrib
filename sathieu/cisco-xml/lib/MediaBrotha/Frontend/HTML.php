@@ -137,23 +137,28 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 
 		foreach($form as $field) {
 			if ($field->get('visibility') === 'hidden') {
-				continue;
+				$inputElement = $this->_xml->createElement('input');
+				$inputElement = $formElement->appendChild($inputElement);
+				$inputElement->setAttribute('name', $field->get('name'));
+				$inputElement->setAttribute('value', $field->get('value'));
+				$inputElement->setAttribute('type', 'hidden');
+			} else {
+				$trElement = $this->_xml->createElement('tr');
+				$trElement = $tableElement->appendChild($trElement);
+
+				$tdElement1 = $this->_xml->createElement('th');
+				$tdElement1 = $trElement->appendChild($tdElement1);
+				$text1 = $this->_xml->createTextNode($field->get('display_name'));
+				$text1 = $tdElement1->appendChild($text1);
+
+				$tdElement2 = $this->_xml->createElement('td');
+				$tdElement2 = $trElement->appendChild($tdElement2);
+
+				$inputElement = $this->_xml->createElement('input');
+				$inputElement = $tdElement2->appendChild($inputElement);
+				$inputElement->setAttribute('name', $field->get('name'));
+				$inputElement->setAttribute('value', $field->get('value'));
 			}
-			$trElement = $this->_xml->createElement('tr');
-			$trElement = $tableElement->appendChild($trElement);
-
-			$tdElement1 = $this->_xml->createElement('th');
-			$tdElement1 = $trElement->appendChild($tdElement1);
-			$text1 = $this->_xml->createTextNode($field->get('display_name'));
-			$text1 = $tdElement1->appendChild($text1);
-
-			$tdElement2 = $this->_xml->createElement('td');
-			$tdElement2 = $trElement->appendChild($tdElement2);
-
-			$inputElement = $this->_xml->createElement('input');
-			$inputElement = $tdElement2->appendChild($inputElement);
-			$inputElement->setAttribute('name', $field->get('name'));
-			$inputElement->setAttribute('value', $field->get('value'));
 		}
 
 		$trElement = $this->_xml->createElement('tr');
