@@ -50,16 +50,22 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 
 	// Browsing
 	public function mediaFromBufferItem($entry) {
-		if ($entry) {
-			$media = new MediaBrotha_Media(
+		if (is_a($entry, 'Net_LDAP2_Entry')) {
+			return new MediaBrotha_Media(
 				'ldap:///'.$entry->dn(),
 				Array(
 					'display_name' => $entry->dn(), //$entry->getValue('sn', 'single'),
 				),
 				'text/directory'
-				//$finfo->file($file->getPathname(), FILEINFO_MIME_ENCODING);
 			);
-			return $media;
+		} else {
+			return new MediaBrotha_Media(
+				'ldap:///',
+				Array(
+					'display_name' => $entry[0].': '.$entry[1],
+				),
+				'text/directory'
+			);
 		}
 	}
 
@@ -73,8 +79,10 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 		if ($this->_isHandled($media)) {
 			return Array(
 				'_default',
+				'detail',
 				'browse',
 				'search',
+				'_search-result',
 			);
 		} else {
 			return parent::getMediaActions($media);
@@ -92,13 +100,48 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 				if ($basedn && ($basedn{0} = '/')) {
 					$basedn = substr($basedn, 1);
 				}
-				$ldap_search = $this->_ldap->search($basedn, NULL,
-					Array());
+				$ldap_search = $this->_ldap->search($basedn, NULL, Array());
 				return new MediaBrotha_MediaIterator($this, $ldap_search);
+			case 'detail':
+				$uri = $media->getURI();
+				if (($this::parseLDAPURI($uri, PHP_URL_SCHEME) != 'ldap') || !$this->isURISafe($uri)) {
+					return false;
+				}
+				$basedn = $this::parseLDAPURI($uri, PHP_URL_PATH);
+				if ($basedn && ($basedn{0} = '/')) {
+					$basedn = substr($basedn, 1);
+				}
+				$ldap_entry = $this->_ldap->getEntry($basedn);
+				$it = new ArrayIterator();
+				foreach ($ldap_entry->attributes() as $attr) {
+					foreach($ldap_entry->getValue($attr, 'all') as $value) {
+						$it[] = Array($attr, $value);
+					}
+				}
+				return new MediaBrotha_MediaIterator($this, $it);
 			case '_default':
 			case 'search':
+			case '_search-result':
 				$form =  new MediaBrotha_Form();
 				$form->setTitle('search');
+				$form->addField(Array(
+					'name' => 'backend',
+					'value' => 'LDAP',
+					'visibility' => 'hidden',
+					)
+				);
+				$form->addField(Array(
+					'name' => 'action',
+					'value' => '_search-result',
+					'visibility' => 'hidden',
+					)
+				);
+				$form->addField(Array(
+					'name' => 'uri',
+					'value' => 'ldap://',
+					'visibility' => 'hidden',
+					)
+				);
 				$search_fields = Array(
 					'sn'              => Array('display_name' => 'last name'),
 					'givenName'       => Array('display_name' => 'first name'),
@@ -124,22 +167,15 @@ class MediaBrotha_Backend_LDAP extends MediaBrotha_Backend {
 					}
 					$form->addField($field);
 				}
-				if (empty($_GET['ldap_search'])) {
-					MediaBrotha_Core::addCallback('MediaBrotha_Backend_LDAP::searchCallback');
+				if ($action !== '_search-result') {
 					return $form;
 				} else {
-					$ldap_search = $this->_ldap->search(NULL, $filter,
-						Array('scope' => 'sub'));
+					$ldap_search = $this->_ldap->search(NULL, $filter, Array('scope' => 'sub'));
 					return new MediaBrotha_MediaIterator($this, $ldap_search);
 				}
 			default:
 				return parent::doMediaAction($action, $media);
 		}
-	}
-	static public function searchCallback() {
-		$_GET['backend'] = 'LDAP';
-		$_GET['action'] = 'search';
-		$_GET['ldap_search'] = '1';
 	}
 }
 
