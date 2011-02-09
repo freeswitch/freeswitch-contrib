@@ -43,7 +43,7 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 				($item->getMimeEncoding() ? ('mime_encoding='.urlencode($item->getMimeEncoding()).'&') : '').
 				'uri='.urlencode($item->getURI()));
 		$this->_xml->setCiscoElement('MenuItem',
-			Array('Name' => $item->getDisplayName(), 'URL' => $url));
+			Array('Name' => $item->getDisplayName(64), 'URL' => $url));
 	}
 	public function finish($item) {
 		$pos = 1;
@@ -52,7 +52,7 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 			'URL' => 'SoftKey:Select',
 			'Position' => $pos++));
 		foreach (MediaBrotha_Core::getBackends() as $backend) {
-			foreach ($backend->getMediaActions($item) as $action) {
+			foreach ($backend->getVisibleMediaActions($item) as $action) {
 				$this->_xml->setCiscoElement('SoftKeyItem',
 					Array('Name' => $action,
 					'URL' => 'QueryStringParam:'.MediaBrotha_Core::value2hash('action='.$action.'&backend='.$backend->getBackendName()),
@@ -72,21 +72,44 @@ class MediaBrotha_Frontend_CiscoXML extends MediaBrotha_Frontend_HTTP {
 	}
 
 	public function renderForm(MediaBrotha_Form $form) {
+		foreach($form as $field) {
+			if ($field->get('visibility') === 'hidden') {
+				$params[$field->get('name')] = $field->get('value');
+			}
+		}
 		$xml = new CiscoIPPhoneInput();
 		$xml->setCiscoElement('Title', $form->getTitle());
 		//$xml->setCiscoElement('Prompt', ...);
-		$xml->setCiscoElement('URL', $this->rootURL());
+		$xml->setCiscoElement('URL', $this->rootURL().'?'.MediaBrotha_Core::value2hash(http_build_query($params)));
+		$params = Array();
 		foreach($form as $field) {
+			if ($field->get('visibility') === 'hidden') {
+				continue;
+			}
+			$flags = 'A';
 			$xml->setCiscoElement('InputItem',
 				Array(
 					'DisplayName' => $field->get('display_name'),
 					'QueryStringParam' => $field->get('name'),
 					'DefaultValue' => $field->get('value'),
-					'InputFlags' => '',
+					'InputFlags' => $flags,
 				)
 			);
 			
 		}
+
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => 'Search',
+			'URL' => 'SoftKey:Submit',
+			'Position' => 1));
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => '<<',
+			'URL' => 'SoftKey:<<',
+			'Position' => 2));
+		$xml->setCiscoElement('SoftKeyItem',
+			Array('Name' => 'Exit',
+			'URL' => 'SoftKey:Exit',
+			'Position' => 3));
 		CiscoXMLObject::HttpHeader();
 		print $xml;
 	}

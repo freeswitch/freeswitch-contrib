@@ -67,6 +67,16 @@ abstract class MediaBrotha_Backend {
 	}
 
 	// Actions
+	final public function getVisibleMediaActions(MediaBrotha_Media $media) {
+		$actions = Array();
+		foreach ($this->getMediaActions($media) as $action) {
+			if ($action{0} !== '_') {
+				$actions[] = $action;
+			}
+		}
+		return $actions;
+	}
+
 	public function getMediaActions(MediaBrotha_Media $media) {
 		return Array();
 	}

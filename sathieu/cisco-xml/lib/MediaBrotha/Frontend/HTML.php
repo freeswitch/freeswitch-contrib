@@ -40,7 +40,7 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 				'uri='.urlencode($media->getURI()));
 
 		foreach (MediaBrotha_Core::getBackends() as $backend) {
-			foreach ($backend->getMediaActions($media) as $action) {
+			foreach ($backend->getVisibleMediaActions($media) as $action) {
 				$tag = $this->_xml->createElement($tag_name);
 				$tag = $parent->appendChild($tag);
 
@@ -56,6 +56,7 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 
 	private function _createHTMLDocument($title) {
 		$this->_xml = new DOMDocument('1.0');
+		$this->_xml->formatOutput = true;
 		$root = $this->_xml->createElement('html');
 		$root = $this->_xml->appendChild($root);
 
@@ -135,21 +136,29 @@ class MediaBrotha_Frontend_HTML extends MediaBrotha_Frontend_HTTP {
 		$tableElement = $formElement->appendChild($tableElement);
 
 		foreach($form as $field) {
-			$trElement = $this->_xml->createElement('tr');
-			$trElement = $tableElement->appendChild($trElement);
+			if ($field->get('visibility') === 'hidden') {
+				$inputElement = $this->_xml->createElement('input');
+				$inputElement = $formElement->appendChild($inputElement);
+				$inputElement->setAttribute('name', $field->get('name'));
+				$inputElement->setAttribute('value', $field->get('value'));
+				$inputElement->setAttribute('type', 'hidden');
+			} else {
+				$trElement = $this->_xml->createElement('tr');
+				$trElement = $tableElement->appendChild($trElement);
 
-			$tdElement1 = $this->_xml->createElement('th');
-			$tdElement1 = $trElement->appendChild($tdElement1);
-			$text1 = $this->_xml->createTextNode($field->get('display_name'));
-			$text1 = $tdElement1->appendChild($text1);
+				$tdElement1 = $this->_xml->createElement('th');
+				$tdElement1 = $trElement->appendChild($tdElement1);
+				$text1 = $this->_xml->createTextNode($field->get('display_name'));
+				$text1 = $tdElement1->appendChild($text1);
 
-			$tdElement2 = $this->_xml->createElement('td');
-			$tdElement2 = $trElement->appendChild($tdElement2);
+				$tdElement2 = $this->_xml->createElement('td');
+				$tdElement2 = $trElement->appendChild($tdElement2);
 
-			$inputElement = $this->_xml->createElement('input');
-			$inputElement = $tdElement2->appendChild($inputElement);
-			$inputElement->setAttribute('name', $field->get('name'));
-			$inputElement->setAttribute('value', $field->get('value'));
+				$inputElement = $this->_xml->createElement('input');
+				$inputElement = $tdElement2->appendChild($inputElement);
+				$inputElement->setAttribute('name', $field->get('name'));
+				$inputElement->setAttribute('value', $field->get('value'));
+			}
 		}
 
 		$trElement = $this->_xml->createElement('tr');

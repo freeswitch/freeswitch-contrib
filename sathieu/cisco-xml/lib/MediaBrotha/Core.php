@@ -43,6 +43,12 @@ class MediaBrotha_Core {
 			if (!session_start()) {
 				throw new Exception('Unable to start session');
 			}
+			if (!isset($_SESSION['HASHES'])) {
+				$_SESSION['HASHES'] = Array();
+			}
+			if (!isset($_SESSION['CALLBACK'])) {
+				$_SESSION['CALLBACK'] = Array();
+			}
 			MediaBrotha_Core::_unhashRequest();
 			MediaBrotha_Core::loadBackend('Root');
 		} catch (Exception $e) {
@@ -196,13 +202,12 @@ class MediaBrotha_Core {
 		if ($v = MediaBrotha_Core::hash2value($h)) {
 			parse_str($v, $output);
 			return $output;
+		} else {
+			return Array();
 		}
 	}
 
 	private static function _unhashRequest() {
-		if (!isset($_SESSION['HASHES'])) {
-			$_SESSION['HASHES'] = Array();
-		}
 		if (isset($_SERVER["QUERY_STRING"])) {
 			$tmp = explode('&', $_SERVER["QUERY_STRING"]);
 			foreach ($tmp as $h) {
