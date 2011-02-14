@@ -1,0 +1,12 @@
+files_needed_here.txt
+mod_commands.dll
+mod_console.dll
+mod_dialplan_xml.dll
+mod_dptools.dll
+mod_event_socket.dll
+mod_logfile.dll
+mod_loopback.dll
+mod_PortAudio.dll
+mod_sndfile.dll
+mod_sofia.dll
+mod_spandsp.dll

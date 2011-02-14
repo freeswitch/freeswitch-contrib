@@ -1,0 +1,1 @@
+See http://wiki.freeswitch.com/wiki/FSClient

@@ -1,0 +1,11 @@
+FreeSwitch.dll
+FreeSWITCH.Managed.dll (will be copied by VS automatically)
+libapr.dll
+libaprutil.dll
+libbroadvoice.dll
+libeay32.dll
+libspandsp.dll
+libteletone.dll
+mod_managed.dll
+pthread.dll
+ssleay32.dll

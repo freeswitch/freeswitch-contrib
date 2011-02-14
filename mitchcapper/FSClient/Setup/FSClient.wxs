@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+      <ComponentGroup Id="FSClientComp">
+        <ComponentRef Id="cmp32DB946E4669A895FAC4826678D1CE7A"/>
+        <ComponentRef Id="cmpD17CBE22A3B94CCE9CF46B849289D40D"/>
+      </ComponentGroup>
+        <DirectoryRef Id="INSTALLLOCATION">
+          <Component Id="cmp32DB946E4669A895FAC4826678D1CE7A" Guid="*">
+            <File Id="filE4CB78ABCF2AE91B89FB0446A607E70C" KeyPath="yes" Source="$(var.FSClient.TargetDir)\WPFToolkit.dll" />
+          </Component>
+          <Component Id="cmpD17CBE22A3B94CCE9CF46B849289D40D" Guid="*">
+            <File Id="fil00037BE15D6A4893973045263EA4B117" KeyPath="yes" Source="$(var.FSClient.TargetDir)\System.Windows.Controls.Input.Toolkit.dll" />
+          </Component>
+        </DirectoryRef>
+    </Fragment>
+</Wix>
