@@ -1,4 +1,0 @@
-LuaMod is a simplification of the module / driver loading mechanism as written for LuaSQL.
-
-I will try to see if I can make this template as generic as possible,
-and ready for making use of the facilities provided by FreeSWITCH.
