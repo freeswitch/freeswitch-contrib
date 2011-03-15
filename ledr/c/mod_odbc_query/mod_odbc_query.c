@@ -314,24 +314,6 @@ static int odbc_query_callback_xml(void *pArg, int argc, char **argv, char **col
   return 0;
 }
 
-/* Generate a lua table string */
-static int odbc_query_callback_lua(void *pArg, int argc, char **argv, char **columnName)
-{
-  callback_t *cbt = (callback_t *) pArg;
-  cbt->rowcount++;
-
-  cbt->stream->write_function(cbt->stream,   "  [%d] = {\n", cbt->rowcount);
-  for (int i = 0; i < argc; i++) {
-    cbt->stream->write_function(cbt->stream, "    [\"%s\"] = \"%s\";\n", 
-      switch_escape_char(cbt->pool, switch_str_nil(columnName[i]), "\"\\", '\\'),
-      switch_escape_char(cbt->pool, switch_str_nil(argv[i]), "\"\\", '\\'));
-  }
-  cbt->stream->write_function(cbt->stream,   "  };\n");
-
-  return 0;
-}
-
-
 SWITCH_STANDARD_APP(odbc_query_app_function)
 {
   switch_time_t start_time = switch_micro_time_now();
@@ -387,7 +369,7 @@ SWITCH_STANDARD_APP(odbc_query_app_function)
 }
 
 
-#define ODBC_QUERY_API_FUNCTION_SYNTAX "[txt|tab|xml|lua] [db:user:pass] <SELECT * FROM foo WHERE true;>"
+#define ODBC_QUERY_API_FUNCTION_SYNTAX "[txt|tab|xml] [db:user:pass] <SELECT * FROM foo WHERE true;>"
 SWITCH_STANDARD_API(odbc_query_api_function)
 {
   switch_time_t start_time = switch_micro_time_now();
@@ -411,7 +393,7 @@ SWITCH_STANDARD_API(odbc_query_api_function)
 
   cbt.rowcount = 0;
 
-  /* set format, callback, optionally (xml/lua) generate the header of the response (in stream) and point cmd to the start of the query */
+  /* set format, callback, optionally (xml) generate the header of the response (in stream) and point cmd to the start of the query */
   if (strstr(cmd, "txt ") == cmd) {
     format = "txt";
     callback = odbc_query_callback_txt;
@@ -424,11 +406,6 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     format = "xml";
     callback = odbc_query_callback_xml;
     stream->write_function(stream, "<result>\n  <rows>\n");
-    cmd += 4;
-  } else if (strstr(cmd, "lua ") == cmd) {
-    format = "lua";
-    callback = odbc_query_callback_lua;
-    stream->write_function(stream, "rows = {\n");
     cmd += 4;
   } else {
     format = "txt";
@@ -459,13 +436,6 @@ SWITCH_STANDARD_API(odbc_query_api_function)
     stream->write_function(stream, "    <elapsed_ms>%d</elapsed_ms>\n", elapsed_ms);
     stream->write_function(stream, "  </meta>\n");
     stream->write_function(stream, "</result>\n");
-  } else if (!strcmp(format, "lua")) {
-    stream->write_function(stream, "};\n");
-    stream->write_function(stream, "meta = {\n");
-    stream->write_function(stream, "  [\"error\"] = \"%s\";\n", switch_escape_char(cbt.pool, switch_str_nil(err), "\"\\", '\\'));
-    stream->write_function(stream, "  [\"rowcount\"] = %d;\n", cbt.rowcount);
-    stream->write_function(stream, "  [\"elapsed_ms\"] = %d;\n", elapsed_ms);
-    stream->write_function(stream, "};\n");
   }
 
   /* cleanup time */
@@ -521,7 +491,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   switch_console_set_complete("add odbc_query txt");
   switch_console_set_complete("add odbc_query tab");
   switch_console_set_complete("add odbc_query xml");
-  switch_console_set_complete("add odbc_query lua");
 
   /* indicate that the module should continue to be loaded */
   return SWITCH_STATUS_SUCCESS;
