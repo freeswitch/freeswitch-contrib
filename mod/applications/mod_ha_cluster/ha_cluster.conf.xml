@@ -1,0 +1,131 @@
+<configuration name="ha_cluster.conf" description="High Availability Cluster">
+	<network>
+		<!-- Define some anti-DoS rules for the IP addresses we manage.
+		     To make use of this functionality, you must run:
+
+		     iptables -N ha-cluster-rules
+		     iptables -I INPUT -j ha-cluster-rules
+		     /etc/init.d/iptables save
+
+		     To disable this functionality, you can run:
+
+		     iptables -D INPUT -j ha-cluster-rules
+		     /etc/init.d/iptables save
+		-->
+		<dos-rules>
+			<!-- By default, udp ports 1024 - 65535 and tcp ports
+			     5060 and 5061 are allowed. These rules limit the
+			     number of requests per second which can be sent
+			     to FreeSWITCH, as well as dropping scans from
+			     SIP Vicious. -->
+			<rule-group name="public">
+				<!-- Rules applied in the order listed. When
+				     you hit the end of the list, the default
+				     rules are applied, then everything that
+				     does not match a rule is dropped. -->
+				<rule name="sipvicios" type="drop" string="friendly-scanner"/>
+				<rule name="register" type="limit" string="REGISTER" rate="14/minute" burst="8" mode="srcip"/>
+				<rule name="options" type="limit" string="OPTIONS" rate="5/minute" burst="5" mode="srcip"/>
+				<rule name="notify" type="limit" string="NOTIFY" rate="5/minute" burst="5" mode="srcip"/>
+				<rule name="invite" type="limit" string="INVITE" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="bye" type="limit" string="BYE" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="ack" type="limit" string="ACK" rate="20/sec" burst="40" mode="srcip"/>
+				<rule name="cancel" type="limit" string="CANCEL" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="update" type="limit" string="UPDATE" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="info" type="limit" string="INFO" rate="20/sec" burst="40" mode="srcip"/>
+				<rule name="prack" type="limit" string="PRACK" rate="20/sec" burst="40" mode="srcip"/>
+				<rule name="refer" type="limit" string="REFER" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="subscribe" type="limit" string="SUBSCRIBE" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="publish" type="limit" string="PUBLISH" rate="5/sec" burst="10" mode="srcip"/>
+				<rule name="message" type="limit" string="MESSAGE" rate="5/sec" burst="10" mode="srcip"/>
+			</rule-group>
+		</dos-rules>
+		<!-- Define interfaces to be controlled by FreeSWITCH. These
+		     interfaces should be entirely under the control of
+		     FreeSWITCH or bad things might happen. -->
+		<interfaces>
+			<interface name="eth1" description="Public Interface">
+			<!-- Define a set of master/slave failover IP addresses
+			     on this interface and assign a variable to them
+			     for use in other configs. -->
+				<failover-ips name="eth1_ms_ips_group1">
+					<ip name="external5-ip" cidr="10.0.1.8/24" var="external5-ip" rule-group="public"/>
+					<ip name="external4-ip" cidr="10.0.1.7/24" var="external4-ip" rule-group="public"/>
+					<ip name="external3-ip" cidr="10.0.1.6/24" var="external3-ip" rule-group="public"/>
+					<ip name="external2-ip" cidr="10.0.1.5/24" var="external2-ip" rule-group="public"/>
+					<ip name="external1-ip" cidr="10.0.1.4/24" var="external1-ip" rule-group="public"/>
+				</failover-ips>
+				<!-- Set the default route to this interface when it comes up. -->
+				<route name="default" destination="0.0.0.0/0" gateway="10.0.1.1" metric="0"/>
+				<!-- Make sure we know where the gateway is when the
+				     interface comes up since we use NOARP flag -->
+				<arp ip="10.0.1.1" mac="00:00:0D:03:DB:13"/>
+			</interface>
+			<interface name="eth2" description="Internal Interface">
+				<failover-ips name="eth2_ms_ips_group1">
+					<ip name="internal-ip" cidr="10.0.0.4/24" var="internal-ip"/>
+				</failover-ips>
+				<arp ip="10.0.0.1" mac="00:00:0D:03:DB:14"/>
+			</interface>
+		</interfaces>
+		<!-- Define failover groups. Each group requires one master
+		     node. If you have two groups and two nodes, you end up
+		     with two masters - one for each group. If you have two
+		     groups and three nodes, you get two masters and one
+		     slave. One group and two nodes gets you one master and
+		     one slave. Two groups and four nodes gets you two masters
+		     and two slaves. Two groups and five nodes gets you two
+		     masters and three slaves.
+
+		     type - can be failover-ips
+		-->
+		<failover-groups>
+			<group name="group1" type="failover-ips">
+				<include name="eth1_ms_ips_group1"/>
+				<include name="eth2_ms_ips_group1"/>
+			</group>
+		</failover-groups>
+	</network>
+	<general>
+		<!-- This node-id must be unique in the cluster -->
+		<nodeid value="0"/>
+		<!-- How many nodes are in the cluster -->
+		<total-nodes value="2"/>
+		<!-- How long to listen and learn of other nodes before
+		     choosing a state and starting -->
+		<timer-a value="60"/>
+		<!-- Maximum time to spend listening in the starting state if
+		     no other nodes can be heard. If set to -1, timer-a is also
+		     the max it can be in starting. -->
+		<timer-b value="-1"/>
+		<!-- Maximum link latency in ms across all multicast groups.
+		     This is used for de-duplicating events. If set too low,
+		     you may process duplicate events if you have more than one
+		     multicast group. -->
+		<max-latency value="50"/>
+		<!-- Define multicast groups and the source IP and port for
+		     each group. To avoid split-brain, you need at least two.
+		     Then, if one fails, the nodes can still talk to each
+		     other, which prevents the nodes from trying to take over
+		     another node's traffic while the other node is still
+		     actually running. Split-brain is VERY BAD. -->
+		<heartbeat interval="100" bind-network="192.168.0.4" multicast-address="224.0.0.51" port="4096" ttl="1"/>
+		<heartbeat interval="100" bind-network="192.168.1.4" multicast-address="224.0.0.51" port="4096" ttl="1"/>
+		<!-- How long in ms to wait for a heartbeat before declaring
+		     a node dead and commencing failover. -->
+		<failure-threshold value="3000"/>
+		<!-- Define a set of events on which to consider this node
+		     dead and force a restart of FreeSWITCH. -->
+		<failover>
+			<condition event="SWITCH_EVENT_FAILURE">
+				<match name="module" value="mod_sofia"/>
+				<match name="class" value="PROFILE_START_FAILURE"/>
+			</condition>
+			<condition event="SWITCH_EVENT_FAILURE">
+				<match name="module" value="mod_sofia"/>
+				<match name="class" value="CONFIGURATION_LOAD_FAILURE"/>
+			</condition>
+		</failover>
+	</general>
+</configuration>
+
