@@ -1,0 +1,12 @@
+diff --git a/configure.in b/configure.in
+index 7978d04..2e4b1e9 100644
+--- a/configure.in
++++ b/configure.in
+@@ -925,6 +925,7 @@ AC_CONFIG_FILES([Makefile
+ 		src/mod/applications/mod_enum/Makefile
+ 		src/mod/applications/mod_expr/Makefile
+ 		src/mod/applications/mod_fax/Makefile
++		src/mod/applications/mod_ha_cluster/Makefile
+ 		src/mod/applications/mod_spandsp/Makefile
+ 		src/mod/applications/mod_osp/Makefile
+ 		src/mod/applications/mod_stress/Makefile
