@@ -35,26 +35,25 @@ my @EXEC_ON_CONNECT;
 sub usage(){
 	my $auto_str = join " ", @AUTOS;
 	my $usage = qq~
-	Usage: fs_logger.pl options
-
-	  -A  --auto						Auto mode, equiv of $auto_str
-	  -h  --help						Usage Information
-	  -H, --host=hostname				Host to connect
-	  -P, --port=port					Port to connect (1 - 65535)
-	  -u, --user=user\@domain			user\@domain
-	  -p, --password=password			Password
-	  -x, --execute=command				Execute Command on connect (can be used multiple times)
-	  -l, --loglevel=command			Log Level
-	  -d, --debug=level					Debug Level (0 - 7)
-	  -f --file=<file>					Output file
-	  -pb --paste-bin[=<name>]			Post to FreeSWITCH Paste Bin (optional name to post as)
-	  -st --sip-trace[=<profile>]		Sip trace (optional profile to trace on, can be used multiple times)
-	  -sd --sip-debug=<level>			Set SIP debug level
-	  -oa --obfuscate-auto				Auto obfuscate sensitive information (ips/usernames/passwords)
-	  -of --obfuscate-file=<file>		Obfuscate the strings in the log found in file (one per line, can use regexp if start with ^)
-	  -do --display-output				Display output on stdout
-	  -ia --input-accept				Pass input to the freeswitch console
-	  fs_logger.pl will run until fs_cli ends or control+c
+    Usage: fs_logger.pl options
+      -A  --auto                     Auto mode, equiv of $auto_str
+      -h  --help                     Usage Information
+      -H, --host=hostname            Host to connect
+      -P, --port=port                Port to connect (1 - 65535)
+      -u, --user=user\@domain        user\@domain
+      -p, --password=password        Password
+      -x, --execute=command          Execute Command on connect (can be used multiple times)
+      -l, --loglevel=command         Log Level
+      -d, --debug=level              Debug Level (0 - 7)
+      -f --file=<file>               Output file
+      -pb --paste-bin[=<name>]       Post to FreeSWITCH Paste Bin (optional name to post as)
+      -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on, can be used multiple times)
+      -sd --sip-debug=<level>        Set SIP debug level
+      -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/usernames/passwords)
+      -of --obfuscate-file=<file>    Obfuscate the strings in the log found in file (one per line, can use regexp if start with ^)
+      -do --display-output           Display output on stdout
+      -ia --input-accept             Pass input to the freeswitch console
+      fs_logger.pl will run until fs_cli ends or control+c
 ~;
 	print STDERR $usage;
 	exit;
@@ -105,6 +104,10 @@ sub main(){
 			}
 			if ($ACCEPT_INPUT && vec($vin, $fn_stdin, 1)) {
 				sysread($stdin_socket, my $read_buffer, 2048);
+				if ($read_buffer =~ /^\.\.\.$/m){ #lets intercept quit so we can cleanup properly
+					cleanup(0);
+					return;
+				}
 				$to_write_fs_cli .= $read_buffer;
 				$vo_now = $vo;
 			}
@@ -130,7 +133,7 @@ sub cleanup{
 	}
 	kill 9, $pid if ($pid);
 	obfuscate_buffer();
-	print "\nGoodbye!\n";
+	print "\n" . ($unexpected ? "OK" : "Good")  . " Bye!\n";
 	print "\n" . pastebin_post($PASTEBIN_USER,$output_buffer) . "\n" if ($PASTEBIN_USER);
 	puke($FILE,$output_buffer) if ($FILE);
 	exit;
