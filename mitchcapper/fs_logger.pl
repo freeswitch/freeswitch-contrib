@@ -19,33 +19,37 @@ use IO::Socket;
 use Time::HiRes qw( sleep );
 use POSIX ":sys_wait_h";
 my ($pid,$output_buffer,$in_cleanup,$proc_stdin);
-my @AUTOS = qw/-pb -do -oa -st internal/;
+my @AUTOS = qw/-pb -do -oa -st internal -d 7/;
 push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 
-my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS);
+my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE);
 
 $SIG{INT} = \&cleanup;
 my $FS_CLI = $IS_WINDOWS ? "fs_cli.exe" : "./fs_cli";
 $FS_CLI =  $IS_WINDOWS ? "c:/program files/Freeswitch/fs_cli.exe" : "/usr/local/freeswitch/bin/fs_cli" if (! -e $FS_CLI);
 die "Unable to find fs_cli in current directory or in default location of: $FS_CLI" if (! -e $FS_CLI);
 my @CMD = qw/-b/;
-my @EXEC_ON_CONNECT;
+my (@EXEC_ON_CONNECT,@EXEC_ON_QUIT);
 
 
 sub usage(){
 	my $auto_str = join " ", @AUTOS;
 	my $usage = qq~
     Usage: fs_logger.pl options
-      -A  --auto                     Auto mode, equiv of $auto_str
-      -h  --help                     Usage Information
+      -A, --auto                     Auto mode, equiv of $auto_str
+      -h, --help                     Usage Information
       -H, --host=hostname            Host to connect
       -P, --port=port                Port to connect (1 - 65535)
       -u, --user=user\@domain         user\@domain
       -p, --password=password        Password
       -x, --execute=command          Execute Command on connect (can be used multiple times)
+      -X, --quit-execute=command     Execute Command when quitting (can be used multiple times)	 
       -l, --loglevel=command         Log Level
       -d, --debug=level              Debug Level (0 - 7)
-      -f --file=<file>               Output file
+      -q, --quiet                    Disable logging
+      -r, --retry                    Retry connection on failure
+      -R, --reconnect                Reconnect if disconnected
+      -f, --file=<file               Output file
       -pb --paste-bin[=<name>]       Post to FreeSWITCH Paste Bin (optional name to post as)
       -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on, can be used multiple times)
       -sd --sip-debug=<level>        Set SIP debug level
@@ -53,11 +57,17 @@ sub usage(){
       -of --obfuscate-file=<file>    Obfuscate the strings in the log found in file (one per line, can use regexp if start with ^)
       -do --display-output           Display output on stdout
       -ia --input-accept             Pass input to the freeswitch console
+      -D, --fslogger-debug           FSLogger debug mode
 
       fs_logger.pl will run until fs_cli ends or control+c
 ~;
 	print STDERR $usage;
 	exit;
+}
+sub dbg_exec_get($){
+	my ($cmds) = @_;
+	$cmds =~ s/\n(?=.)/\n\t\t/gs;
+	return $cmds;
 }
 sub main(){
 	parse_args();
@@ -73,18 +83,24 @@ sub main(){
 	foreach my $cmd (@EXEC_ON_CONNECT){
 		$to_write_fs_cli .= $cmd . "\n";
 	}
+	foreach my $cmd (@EXEC_ON_QUIT){
+		$CLEANUP_COMMANDS .= $cmd . "\n";
+	}
 	unshift @CMD, $FS_CLI;
+	print STDERR "Going to run: \"" . join(",",@CMD) . "\"\n\tand on execute:" . dbg_exec_get("\n" . $to_write_fs_cli) . "\n\tand on quit:" . dbg_exec_get("\n" . $CLEANUP_COMMANDS) . "\n" if ($DEBUG_MODE);
 	my ($proc_stdout,$stdin_socket);
 	($pid,$proc_stdout,$proc_stdin) = exec_with_socket(@CMD);
 	my $vi = '';
 	my $fn_proc_stdout = fileno $proc_stdout;
 	vec($vi, $fn_proc_stdout, 1) = 1;
+	print STDERR "Ran application it has pid: $pid and stdout fn#: " . $fn_proc_stdout . ", will wait to see if it quit right away\n" if ($DEBUG_MODE);
 	if ( select(my $vin=$vi, undef, undef, 0.5) > 0) { #we need to do this right away, if we try to do anything else we won't catch the error output if it terminates instantly
-		sysread($proc_stdout, my $read_buffer, 2048) or last;
+		sysread($proc_stdout, my $read_buffer, 2048);
 		print $read_buffer if ($DISPLAY_OUTPUT);
 		$output_buffer .= $read_buffer;
 	}
 	if ($ACCEPT_INPUT){
+		print STDERR "Going to open stdin to a socket so we can accept input from user\n" if ($DEBUG_MODE);
 		open($stdin_socket, "<&STDIN") if (! $IS_WINDOWS);
 		$stdin_socket = socket_stdin() if ($IS_WINDOWS);
 	}
@@ -95,11 +111,13 @@ sub main(){
 	vec($vo, $fn_proc_stdin, 1) = 1;
 	my $vo_now = $to_write_fs_cli ? $vo : undef;
 	my $true=1;
+	print STDERR "Process stdin fn# $fn_proc_stdin and if we are accepting input from stdin its fn# $fn_stdin, going to check to see if our app already terminated\n" if ($DEBUG_MODE);
 	if (waitpid($pid, WNOHANG) != 0){ #we terminated
 		print $output_buffer if (! $DISPLAY_OUTPUT); #tell them what we got back if they didnt see it before due to not showing output
-		print "fs_cli terminated on start!\n";
+		print STDERR "fs_cli terminated on start!\n";
 		$true=0;
 	}
+	print STDERR "Going to enter main event loop\n" if ($DEBUG_MODE && $true);
 	while ($true) {
 		if ( select(my $vin=$vi, my $von=$vo_now, undef, 0.5) > 0) {
 			last if ( waitpid($pid, WNOHANG) != 0); #application terminated
@@ -112,10 +130,12 @@ sub main(){
 				my $wrote = syswrite ($proc_stdin, $to_write_fs_cli);
 				$to_write_fs_cli = substr($to_write_fs_cli, $wrote);
 				$vo_now = undef if (! length($to_write_fs_cli));
+				print STDERR "Wrote to proc_stdin of length: $wrote\n" if ($DEBUG_MODE);
 			}
 			if ($ACCEPT_INPUT && vec($vin, $fn_stdin, 1)) {
 				sysread($stdin_socket, my $read_buffer, 2048);
-				if ($read_buffer =~ /^\.\.\.$/m){ #lets intercept quit so we can cleanup properly
+				print STDERR "Read input from STDIN of: $read_buffer\n" if ($DEBUG_MODE);
+				if ($read_buffer =~ /^(\.\.\.|\/quit|\/exit|\/bye)$/m){ #lets intercept quit so we can cleanup properly
 					cleanup(0);
 					return;
 				}
@@ -133,6 +153,7 @@ sub main(){
 sub cleanup{
 	my ($unexpected) = @_;
 	$unexpected = "" if ($unexpected ne "1");
+	print STDERR "Going to cleanup fs_cli is most likely " . ($unexpected ? "not " : "") . "still running\n" if ($DEBUG_MODE);
 	return if ($in_cleanup);
 	$in_cleanup = 1;
 	if ($CLEANUP_COMMANDS && ! $unexpected){
@@ -141,6 +162,7 @@ sub cleanup{
 		for (my $x = 0; $x < $max_wait; $x++){
 			last if ( waitpid($pid, WNOHANG) != 0);
 			sleep(0.1);
+			print STDERR "Waiting for fs_cli to finish: $x\n" if ($DEBUG_MODE);
 		}
 	}
 	kill 9, $pid if ($pid);
@@ -339,10 +361,10 @@ sub puke($$){
 		}
 		return (0,"");
 	}
-	sub parse_args_through($$$){
-		my ($short,$long,$through_cmd) = @_;
+	sub parse_args_through{
+		my ($short,$long,$through_cmd,$no_arg) = @_;
 		$through_cmd = $short if (! $through_cmd);
-		my ($matches,$value) = arg_test($short,$long,1,1);
+		my ($matches,$value) = arg_test($short,$long,! $no_arg,! $no_arg);
 		if ($matches){
 			push @CMD, $short, $value;
 			return 1;
@@ -355,18 +377,27 @@ sub puke($$){
 			my ($matches,$value);
 			($matches,$value) = arg_test("-h","--help",0,0);
 			usage() if ($matches);
-			next if (parse_args_through("-H","--host",""));
-			next if (parse_args_through("-P","--port",""));
-			next if (parse_args_through("-u","--user",""));
-			next if (parse_args_through("-p","--password",""));
-			next if (parse_args_through("-l","--loglevel",""));
-			next if (parse_args_through("-d","--debug",""));
+			next if (parse_args_through("-H","--host"));
+			next if (parse_args_through("-P","--port"));
+			next if (parse_args_through("-u","--user"));
+			next if (parse_args_through("-p","--password"));
+			next if (parse_args_through("-l","--loglevel"));
+			next if (parse_args_through("-d","--debug"));
+			next if (parse_args_through("-q","--quiet","",1));
+			next if (parse_args_through("-r","--retry","",1));
+			next if (parse_args_through("-R","--reconnect","",1));
 			($matches,$value) = arg_test("-A","--auto",0,0);
 			$do_auto = 1 and next if ($matches);
 			($matches,$value) = arg_test("-x","--execute",1,1);
 			if ($matches){
 				push @EXEC_ON_CONNECT, $value;
 				$CMDS_DONE{"-x"} = undef;
+				next;
+			}
+			($matches,$value) = arg_test("-X","--quit-execute",1,1);
+			if ($matches){
+				push @EXEC_ON_QUIT, $value;
+				$CMDS_DONE{"-X"} = undef;
 				next;
 			}
 			($matches,$value) = arg_test("-f","--file",1,1);
@@ -387,6 +418,8 @@ sub puke($$){
 			}
 			($matches,$value) = arg_test("-oa","--obfuscate-auto",0,0);
 			$OB_AUTO=1 and next if ($matches);
+			($matches,$value) = arg_test("-D","--fslogger-debug",0,0);
+			$DEBUG_MODE=1 and next if ($matches);
 			($matches,$value) = arg_test("-of","--obfuscate-file",1,1);
 			die "Obfuscate file not found: $value" if ($matches && ! -e $value);
 			$OB_FILE=$value and next if ($matches);
