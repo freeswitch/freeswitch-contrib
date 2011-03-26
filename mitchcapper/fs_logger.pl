@@ -40,7 +40,7 @@ sub usage(){
       -h  --help                     Usage Information
       -H, --host=hostname            Host to connect
       -P, --port=port                Port to connect (1 - 65535)
-      -u, --user=user\@domain        user\@domain
+      -u, --user=user\@domain         user\@domain
       -p, --password=password        Password
       -x, --execute=command          Execute Command on connect (can be used multiple times)
       -l, --loglevel=command         Log Level
@@ -73,23 +73,33 @@ sub main(){
 		$to_write_fs_cli .= $cmd . "\n";
 	}
 	unshift @CMD, $FS_CLI;
-	my ($proc_stdout);
+	my ($proc_stdout,$stdin_socket);
 	($pid,$proc_stdout,$proc_stdin) = exec_with_socket(@CMD);
-	my $stdin_socket;
+	my $vi = '';
+	my $fn_proc_stdout = fileno $proc_stdout;
+	vec($vi, $fn_proc_stdout, 1) = 1;
+	if ( select(my $vin=$vi, undef, undef, 0.5) > 0) { #we need to do this right away, if we try to do anything else we won't catch the error output if it terminates instantly
+		sysread($proc_stdout, my $read_buffer, 2048) or last;
+		print $read_buffer if ($DISPLAY_OUTPUT);
+		$output_buffer .= $read_buffer;
+	}
 	if ($ACCEPT_INPUT){
 		open($stdin_socket, "<&STDIN") if (! $IS_WINDOWS);
 		$stdin_socket = socket_stdin() if ($IS_WINDOWS);
 	}
-	my $fn_proc_stdout = fileno $proc_stdout;
 	my $fn_proc_stdin = fileno $proc_stdin;
 	my $fn_stdin= $ACCEPT_INPUT ? fileno $stdin_socket : 0;
-	my $vi = '';
-	vec($vi, $fn_proc_stdout, 1) = 1;
 	vec($vi, $fn_stdin, 1) = 1 if ($ACCEPT_INPUT);
 	my $vo = '';
 	vec($vo, $fn_proc_stdin, 1) = 1;
 	my $vo_now = $to_write_fs_cli ? $vo : undef;
-	while (1) {
+	my $true=1;
+	if (waitpid($pid, WNOHANG) != 0){ #we terminated
+		print $output_buffer if (! $DISPLAY_OUTPUT); #tell them what we got back if they didnt see it before due to not showing output
+		print "fs_cli terminated on start!\n";
+		$true=0;
+	}
+	while ($true) {
 		if ( select(my $vin=$vi, my $von=$vo_now, undef, 0.5) > 0) {
 			last if ( waitpid($pid, WNOHANG) != 0); #application terminated
 			if (vec($vin, $fn_proc_stdout, 1)) {
@@ -111,7 +121,8 @@ sub main(){
 				$to_write_fs_cli .= $read_buffer;
 				$vo_now = $vo;
 			}
-			
+		} else {
+			last if ( waitpid($pid, WNOHANG) != 0);
 		}
 		#print ".";
 	}
