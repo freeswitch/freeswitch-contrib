@@ -40,7 +40,7 @@ sub usage(){
       -h, --help                     Usage Information
       -H, --host=hostname            Host to connect
       -P, --port=port                Port to connect (1 - 65535)
-      -u, --user=user\@domain         user\@domain
+      -u, --user=user\@domain        user\@domain
       -p, --password=password        Password
       -x, --execute=command          Execute Command on connect (can be used multiple times)
       -X, --quit-execute=command     Execute Command when quitting (can be used multiple times)	 
@@ -49,12 +49,13 @@ sub usage(){
       -q, --quiet                    Disable logging
       -r, --retry                    Retry connection on failure
       -R, --reconnect                Reconnect if disconnected
-      -f, --file=<file               Output file
+      -f, --file=<file>              Output file
       -pb --paste-bin[=<name>]       Post to FreeSWITCH Paste Bin (optional name to post as)
       -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on, can be used multiple times)
       -sd --sip-debug=<level>        Set SIP debug level
       -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/passwords/hashes/domains)
-      -of --obfuscate-file=<file>    Obfuscate the strings in the log found in file (one per line, can use regexp if start with ^)
+      -of --obfuscate-file=<file>    File containing strings to obfuscate from the log (one per line, can use regexp if line starts with ^)
+                                         if line contains an equals sign(not proceeded by a \\) what is to the right of the equals sign is used as the replacement
       -do --display-output           Display output on stdout
       -ia --input-accept             Pass input to the freeswitch console
       -D, --fslogger-debug           FSLogger debug mode
@@ -523,12 +524,23 @@ sub puke($$){
 			$cont =~ s/\r//gs;
 			my @lines = split("\n",$cont);
 			foreach my $line (@lines){
+				my $replace_with;
+				if ($line =~ /(.+)(?<!\\)=(.+)/){
+					$line = $1;
+					$replace_with=$2;
+				}
 				if ($line =~/^\^(.+)/){
 					my @matches=($output_buffer =~ m|$1|g);
+					if ($replace_with){
+						foreach my $match (@matches){
+							$OB_TO_REPLACE{$match} = $replace_with;
+						}
+						next;
+					}
 					ob_handle_found(@matches);
 					next;
 				}
-				$OB_TO_REPLACE{$line} = ob_get_replacement_str($line);
+				$OB_TO_REPLACE{$line} = $replace_with ? $replace_with : ob_get_replacement_str($line);
 			}
 		}
 		if ($OB_AUTO){
