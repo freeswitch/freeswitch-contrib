@@ -49,10 +49,11 @@ sub usage(){
       -pb --paste-bin[=<name>]       Post to FreeSWITCH Paste Bin (optional name to post as)
       -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on, can be used multiple times)
       -sd --sip-debug=<level>        Set SIP debug level
-      -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/usernames/passwords)
+      -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/passwords/hashes/domains)
       -of --obfuscate-file=<file>    Obfuscate the strings in the log found in file (one per line, can use regexp if start with ^)
       -do --display-output           Display output on stdout
       -ia --input-accept             Pass input to the freeswitch console
+
       fs_logger.pl will run until fs_cli ends or control+c
 ~;
 	print STDERR $usage;
@@ -407,7 +408,7 @@ sub puke($$){
 			parse_args();
 		}
 		if (! $FILE && ! $PASTEBIN_USER){
-			print STDERR "Either -f(--file) or -pb(--paste-bin) or -A (--auto) must be specified\n";
+			print STDERR "One of: -A(--auto) or -f(--file) or -pb(--paste-bin) must be specified\n";
 			usage();
 		}
 	}
