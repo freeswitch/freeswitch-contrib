@@ -537,6 +537,8 @@ switch_status_t config_hb(hac_hb_t** hb, switch_xml_t root)
 	cur->lport = atoi(port);
 	cur->ttl = ttl;
 	cur->next = NULL;
+	switch_thread_rwlock_create(&cur->recv_lock, config.pool);
+	switch_thread_rwlock_create(&cur->send_lock, config.pool);
 	return SWITCH_STATUS_SUCCESS;
 fail:
 	return SWITCH_STATUS_FALSE;
@@ -611,9 +613,7 @@ switch_status_t config_general(switch_xml_t root)
 		value = switch_xml_attr(x_list, "value");
 		if(!switch_strlen_zero(value)) {
 			config.general.nodeid = value;
-			switch_thread_rwlock_wrlock(hac_globals.lock);
-			hac_globals.nodeid = (switch_strlen_zero(value) ? -1 : atoi(value));
-			switch_thread_rwlock_unlock(hac_globals.lock);
+			switch_atomic_set(&hac_globals.nodeid, (switch_strlen_zero(value) ? -1 : atoi(value)));
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: Missing nodeid value in general section.\n");
 			goto fail;
@@ -623,31 +623,12 @@ switch_status_t config_general(switch_xml_t root)
 		goto fail;
 	}
 	
-	if((x_list = switch_xml_child(root, "master-slave-ratio"))) {
-		const char* value = NULL;
-		value = switch_xml_attr(x_list, "value");
-		if(!switch_strlen_zero(value)) {
-			config.general.msr = value;
-			switch_thread_rwlock_wrlock(hac_globals.lock);
-			hac_globals.msr = (switch_strlen_zero(value) ? "4:1" : value);
-			switch_thread_rwlock_unlock(hac_globals.lock);
-		} else {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: Missing master-slave-ratio value in general section.\n");
-			goto fail;
-		}
-	} else {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: Missing master-slave-ratio element in general section.\n");
-		goto fail;
-	}
-	
 	if((x_list = switch_xml_child(root, "timer-a"))) {
 		const char* value = NULL;
 		value = switch_xml_attr(x_list, "value");
 		if(!switch_strlen_zero(value)) {
 			config.general.timer_a = value;
-			switch_thread_rwlock_wrlock(hac_globals.lock);
-			hac_globals.timer_a_dur = (switch_strlen_zero(value) ? 60 : atoi(value));
-			switch_thread_rwlock_unlock(hac_globals.lock);
+			switch_atomic_set(&hac_globals.timer_a_dur, (switch_strlen_zero(value) ? 60 : atoi(value)));
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: Missing timer-a value in general section.\n");
 			goto fail;
@@ -662,9 +643,7 @@ switch_status_t config_general(switch_xml_t root)
 		value = switch_xml_attr(x_list, "value");
 		if(!switch_strlen_zero(value)) {
 			config.general.timer_b = value;
-			switch_thread_rwlock_wrlock(hac_globals.lock);
-			hac_globals.timer_b_dur = (switch_strlen_zero(value) ? 60 : atoi(value));
-			switch_thread_rwlock_unlock(hac_globals.lock);
+			switch_atomic_set(&hac_globals.timer_b_dur, (switch_strlen_zero(value) ? 60 : atoi(value)));
 		}
 	}
 	
@@ -673,17 +652,13 @@ switch_status_t config_general(switch_xml_t root)
 		value = switch_xml_attr(x_list, "value");
 		if(!switch_strlen_zero(value)) {
 			config.general.failure_threshold = value;
-			switch_thread_rwlock_wrlock(hac_globals.lock);
-			hac_globals.failure_threshold = (switch_strlen_zero(value) ? 5000 : atoi(value));
-			switch_thread_rwlock_unlock(hac_globals.lock);
+			switch_atomic_set(&hac_globals.failure_threshold, (switch_strlen_zero(value) ? 5000 : atoi(value)));
 		} else {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "HAC: Missing failure-threshold value in general section; defaulted to 5000ms.\n");
 		}
 	} else {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "HAC: Missing failure-threshold element in general section; defaulting to 5000ms.\n");
-		switch_thread_rwlock_wrlock(hac_globals.lock);
-		hac_globals.failure_threshold = 5000;
-		switch_thread_rwlock_unlock(hac_globals.lock);
+		switch_atomic_set(&hac_globals.failure_threshold, 5000);
 	}
 	
 	config.general.heartbeat = switch_core_alloc(config.pool, sizeof(hac_hb_t));
@@ -692,9 +667,9 @@ switch_status_t config_general(switch_xml_t root)
 		if(config_hb(&cur, x_list) != SWITCH_STATUS_SUCCESS) {
 			goto fail;
 		}
-		switch_thread_rwlock_wrlock(hac_globals.lock);
+		switch_thread_rwlock_wrlock(hac_globals.hb_lock);
 		hac_globals.hb = config.general.heartbeat;
-		switch_thread_rwlock_unlock(hac_globals.lock);
+		switch_thread_rwlock_unlock(hac_globals.hb_lock);
 	}
 	if(switch_strlen_zero(config.general.heartbeat->address)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: Missing heartbeat element in general section.\n");
@@ -743,9 +718,7 @@ switch_status_t do_config(switch_bool_t reload)
 	}
 	switch_xml_free(xml);
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CONSOLE, "HAC: Configuration loaded.\n");
-	switch_thread_rwlock_wrlock(hac_globals.lock);
-	hac_globals.state = HAC_PEER_STARTING;
-	switch_thread_rwlock_unlock(hac_globals.lock);
+	switch_atomic_set(&hac_globals.state, HAC_PEER_STARTING);
 	return SWITCH_STATUS_SUCCESS;
 
 failconfig:
