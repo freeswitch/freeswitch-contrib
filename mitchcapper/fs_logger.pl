@@ -502,7 +502,7 @@ sub puke($$){
 			ob_handle_found($output_buffer =~ m|$MD5AUTH_REGEX|g);
 			ob_handle_found($output_buffer =~ m|$MD5_RESP|g);
 		}
-		foreach my $item (keys %OB_TO_REPLACE){
+		foreach my $item (sort { length($b) <=> length($a) } keys %OB_TO_REPLACE){
 			$output_buffer = str_replace($output_buffer,$item,$OB_TO_REPLACE{$item});
 		}
 	}
