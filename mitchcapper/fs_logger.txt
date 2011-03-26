@@ -1,0 +1,16 @@
+FS Logger is a tool to assist with the collection of logging data from freeswitch.  It runs fs_cli at the core and excepts all the parameters fs_cli takes in addition to its own.  Note the -x behavior is changed.
+The tool will save the log data it collects either to a file or send it to pastebin depending on the command line option and can optionally obfuscate of sensitive information before doing so.  To finish hit control + c.
+FS Logger will try to clean up any changes it made to loglevels of tracing prior to exiting.
+For all parameters see -h
+
+Auto Mode
+Auto mode (or -A) turns on a few different options to some defaults that are generally what developers are looking for when debugging.  All the options it would set are not overwritten if already specified on the command line. To see the exact options it turns on see -h but in short it will enable sip tracing on the internal profile, turn on obfuscation mode, turn up some debug levels and send the results to pastebin.
+
+Obfuscation
+The -oa and -of options.
+The auto obfuscation mode (-oa) will try to randomize any ips/passwords/hashes or domains found in the log file.  It tries to do so in a discrete manor so that it does not interfere with debugging.  IP addresses when randomized have their common subnets preserved relative to each other.  This means 192.168.50.10 may turn into 123.123.123.8  but ensures that 192.168.50.30 will have the same base (123.123.123.) class so networks can be identified.
+The file obfuscation (-of) allows you to manually specify sensitive data you want always obfuscated and optionally what to obfuscate it with.  See -h for details on the syntax of that file.
+
+Interactive Options
+The -ia and -do options allow FS Logger to behave more like you were interacting with fs_cli directly.  The display ouput (-do) option shows you what data is being logged as its being generated (although not obfuscated yet).  The input accept mode (-ia) passes lines you type in FS Logger to fs_cli.  With both these options it is almost exactly as if you were interacting with fs_cli.  There are a few minor differences: tab auto complete does not work, function keys (F1-F12) do not work, up and down for history only work in windows (as its the console that actually does it there) and there is no colorization of lines.
+
