@@ -19,7 +19,7 @@ use IO::Socket;
 use Time::HiRes qw( sleep );
 use POSIX ":sys_wait_h";
 my ($pid,$output_buffer,$in_cleanup,$proc_stdin);
-my @AUTOS = qw/-pb -do -oa -st internal -d 7/;
+my @AUTOS = qw/-pb -do -oa -st internal -l 7/;
 push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 
 my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE);
@@ -45,7 +45,7 @@ sub usage(){
       -x, --execute=command          Execute Command on connect (can be used multiple times)
       -X, --quit-execute=command     Execute Command when quitting (can be used multiple times)	 
       -l, --loglevel=command         Log Level
-      -d, --debug=level              Debug Level (0 - 7)
+      -d, --debug=level              fs_cli Debug Level (0 - 7)
       -q, --quiet                    Disable logging
       -r, --retry                    Retry connection on failure
       -R, --reconnect                Reconnect if disconnected
@@ -103,6 +103,8 @@ sub main(){
 		print STDERR "Going to open stdin to a socket so we can accept input from user\n" if ($DEBUG_MODE);
 		open($stdin_socket, "<&STDIN") if (! $IS_WINDOWS);
 		$stdin_socket = socket_stdin() if ($IS_WINDOWS);
+	} else {
+		close (STDIN);
 	}
 	my $fn_proc_stdin = fileno $proc_stdin;
 	my $fn_stdin= $ACCEPT_INPUT ? fileno $stdin_socket : 0;
