@@ -40,7 +40,7 @@ sub usage(){
       -h, --help                     Usage Information
       -H, --host=hostname            Host to connect
       -P, --port=port                Port to connect (1 - 65535)
-      -u, --user=user\@domain        user\@domain
+      -u, --user=user\@domain         user\@domain
       -p, --password=password        Password
       -x, --execute=command          Execute Command on connect (can be used multiple times)
       -X, --quit-execute=command     Execute Command when quitting (can be used multiple times)	 
@@ -55,7 +55,7 @@ sub usage(){
       -sd --sip-debug=<level>        Set SIP debug level
       -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/passwords/hashes/domains)
       -of --obfuscate-file=<file>    File containing strings to obfuscate from the log (one per line, can use regexp if line starts with ^)
-                                         if line contains an equals sign(not proceeded by a \\) what is to the right of the equals sign is used as the replacement
+                                         if line contains an equals sign(not proceeded by a '\\') what is to the right of the equals sign is used as the replacement
       -do --display-output           Display output on stdout
       -ia --input-accept             Pass input to the freeswitch console
       -D, --fslogger-debug           FSLogger debug mode
@@ -115,12 +115,9 @@ sub main(){
 	my $vo_now = $to_write_fs_cli ? $vo : undef;
 	my $true=1;
 	print STDERR "Process stdin fn# $fn_proc_stdin and if we are accepting input from stdin its fn# $fn_stdin, going to check to see if our app already terminated\n" if ($DEBUG_MODE);
-	if (waitpid($pid, WNOHANG) != 0){ #we terminated
-		print $output_buffer if (! $DISPLAY_OUTPUT); #tell them what we got back if they didnt see it before due to not showing output
-		print STDERR "fs_cli terminated on start!\n";
-		$true=0;
-	}
+	$true = 0 if (waitpid($pid, WNOHANG) != 0); #terminated instantly
 	print STDERR "Going to enter main event loop\n" if ($DEBUG_MODE && $true);
+	my $start_time=time;
 	while ($true) {
 		if ( select(my $vin=$vi, my $von=$vo_now, undef, 0.5) > 0) {
 			last if ( waitpid($pid, WNOHANG) != 0); #application terminated
@@ -150,6 +147,11 @@ sub main(){
 		}
 		#print ".";
 	}
+	my $secs = time - $start_time;
+	if ($secs < 3){
+		print $output_buffer if (! $DISPLAY_OUTPUT); #tell them what we got back if they didnt see it before due to not showing output
+		print STDERR "fs_cli terminated on start!\n";
+	}
 	cleanup(1);
 }
 
@@ -176,10 +178,10 @@ sub cleanup{
 	exit;
 }
 sub udp_socket_pair() {
-	my $in = IO::Socket::INET->new( LocalAddr => 'localhost', Proto     => "udp", LocalPort => 0) or die "Failed to open port";
+	my $in = IO::Socket::INET->new( LocalAddr => 'localhost', Proto => "udp", LocalPort => 0) or die "Failed to open port";
 #    my $true = 1;
-#    ioctl( $in, 0x8004667e, \$true ) or die $!; #not needed atleast in modern windows/linux it seems
-	my $out = IO::Socket::INET->new( PeerAddr => 'localhost', Proto     => "udp", PeerPort => $in->sockport() ) or die "Failed to bind remote port " . $in->sockport();
+#    ioctl( $sock, 0x8004667e, \$true ) or die $!; #not needed atleast in modern windows/linux it seems
+	my $out = IO::Socket::INET->new( PeerAddr => 'localhost', Proto=> "udp", PeerPort => $in->sockport() ) or die "Failed to bind remote port " . $in->sockport();
 	return ($in,$out);
 }
 sub socket_stdin() { #for some reason socketpair doesn't seem to work cross threads properly so use good old sockets.
@@ -344,6 +346,7 @@ sub puke($$){
 			return (1 && ! $force_no_match,"") if (! $has_value);
 			if ($ARGV[$parse_pos+1] eq "" || $ARGV[$parse_pos+1] =~ /^\-/){
 				die "$short must be proceeded by a valid value"  if ($must_have_value);
+				$parse_pos++;
 				return (1 && ! $force_no_match,"");
 			}
 			$parse_pos++;
@@ -357,6 +360,7 @@ sub puke($$){
 			}
 			if ($ARGV[$parse_pos+1] eq "" || $ARGV[$parse_pos+1] =~ /^\-/){
 				die "$long must be proceeded by a valid value"  if ($must_have_value);
+				$parse_pos++;
 				return (1 && ! $force_no_match,"");
 			}
 			$parse_pos++;
@@ -432,7 +436,7 @@ sub puke($$){
 			die "Sorry you perl doesn't threading and its required for input redirection on windows" if ($matches && $IS_WINDOWS && ! $THREADS_SUPPORTED);
 			$ACCEPT_INPUT=1 and next if ($matches);
 
-			
+			next if ($ignore_if_already);			
 			print STDERR "Invalid option: " . $ARGV[$parse_pos] . "\n";
 			usage();
 		}
@@ -442,6 +446,11 @@ sub puke($$){
 			$argc = @ARGV;
 			$CMDS_DONE{"-st"} = 1 if (@SIP_TRACE_ON);
 			parse_args();
+			foreach my $profile (@SIP_TRACE_ON){
+				next if ($profile ne "none");
+				@SIP_TRACE_ON = ();
+				last;
+			}
 		}
 		if (! $FILE && ! $PASTEBIN_USER){
 			print STDERR "One of: -A(--auto) or -f(--file) or -pb(--paste-bin) must be specified\n";
