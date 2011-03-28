@@ -346,7 +346,6 @@ sub puke($$){
 			return (1 && ! $force_no_match,"") if (! $has_value);
 			if ($ARGV[$parse_pos+1] eq "" || $ARGV[$parse_pos+1] =~ /^\-/){
 				die "$short must be proceeded by a valid value"  if ($must_have_value);
-				$parse_pos++;
 				return (1 && ! $force_no_match,"");
 			}
 			$parse_pos++;
@@ -360,7 +359,6 @@ sub puke($$){
 			}
 			if ($ARGV[$parse_pos+1] eq "" || $ARGV[$parse_pos+1] =~ /^\-/){
 				die "$long must be proceeded by a valid value"  if ($must_have_value);
-				$parse_pos++;
 				return (1 && ! $force_no_match,"");
 			}
 			$parse_pos++;
