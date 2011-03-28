@@ -35,31 +35,31 @@ my (@EXEC_ON_CONNECT,@EXEC_ON_QUIT);
 sub usage(){
 	my $auto_str = join " ", @AUTOS;
 	my $usage = qq~
-    Usage: fs_logger.pl options
-      -A, --auto                     Auto mode, equiv of $auto_str
-      -h, --help                     Usage Information
-      -H, --host=hostname            Host to connect
-      -P, --port=port                Port to connect (1 - 65535)
-      -u, --user=user\@domain         user\@domain
-      -p, --password=password        Password
-      -x, --execute=command          Execute Command on connect (can be used multiple times)
-      -X, --quit-execute=command     Execute Command when quitting (can be used multiple times)	 
-      -l, --loglevel=command         Log Level
-      -d, --debug=level              fs_cli Debug Level (0 - 7)
-      -q, --quiet                    Disable logging
-      -r, --retry                    Retry connection on failure
-      -R, --reconnect                Reconnect if disconnected
-      -f, --file=<file>              Output file
-      -pb --paste-bin[=<name>]       Post to FreeSWITCH Paste Bin (optional name to post as)
-      -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on, can be used multiple times)
-      -sd --sip-debug=<level>        Set SIP debug level
-      -oa --obfuscate-auto           Auto obfuscate sensitive information (ips/passwords/hashes/domains)
-      -of --obfuscate-file=<file>    File containing strings to obfuscate from the log (one per line, can use regexp if line starts with ^)
-                                         if line contains an equals sign(not proceeded by a '\\') what is to the right of the equals sign is used as the replacement
-      -do --display-output           Display output on stdout
-      -ia --input-accept             Pass input to the freeswitch console
-      -D, --fslogger-debug           FSLogger debug mode
+ Usage: fs_logger.pl options
+   -A, --auto                     Auto mode, equiv of $auto_str
+   -h, --help                     Usage Information
+   -H, --host=hostname            Host to connect
+   -P, --port=port                Port to connect (1 - 65535)
+   -u, --user=user\@domain         user\@domain
+   -p, --password=password        Password
+   -x, --execute=command          Execute Command on connect
+   -X, --quit-execute=command     Execute Command when quitting
+   -l, --loglevel=command         Log Level
+   -d, --debug=level              fs_cli Debug Level (0 - 7)
+   -q, --quiet                    Disable logging
+   -r, --retry                    Retry connection on failure
+   -R, --reconnect                Reconnect if disconnected
+   -f, --file=<file>              Output file
+   -pb --paste-bin[=<name>]       Post to FS Pastebin (optional post as)
+   -st --sip-trace[=<profile>]    Sip trace (optional profile to trace on)
+   -sd --sip-debug=<level>        Set SIP debug level
+   -oa --obfuscate-auto           Auto obfuscate sensitive information
+   -of --obfuscate-file=<file>    File containing strings to obfuscate
+   -do --display-output           Display output on stdout
+   -ia --input-accept             Pass input to the freeswitch console
+   -D, --fslogger-debug           FSLogger debug mode
 
+      The -st, -X, -x options can be used multiple times
       fs_logger.pl will run until fs_cli ends or control+c
 ~;
 	print STDERR $usage;
