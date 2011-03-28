@@ -23,16 +23,22 @@
 extern unsigned char MAGIC[];
 /*static char *MARKER = "1"; */
 
-typedef enum {
-	HAC_PEER_UNKNOWN = 0,
-	HAC_PEER_STARTING = 1,
-	HAC_PEER_MASTER = 2,
-	HAC_PEER_SLAVE = 3,
-	HAC_PEER_FAILED_MASTER = 4,
-	HAC_PEER_FAILED_SLAVE = 5,
-	HAC_PEER_STOPPING_MASTER = 6,
-	HAC_PEER_STOPPING_SLAVE = 7
-} hac_peer_state_t;
+/* Atomic state type so we don't need rwlocks */
+#define HAC_PEER_UNKNOWN         0
+#define HAC_PEER_STARTING        1
+#define HAC_PEER_MASTER          2
+#define HAC_PEER_SLAVE           3
+#define HAC_PEER_FAILED_MASTER   4
+#define HAC_PEER_FAILED_SLAVE    5
+#define HAC_PEER_STOPPING_MASTER 6
+#define HAC_PEER_STOPPING_SLAVE  7
+typedef switch_atomic_t hac_peer_state_t;
+
+/* Atomic state type so we don't need rwlocks */
+#define HAC_LOOPING          0
+#define HAC_SHUTDOWN_RUNTIME 1
+#define HAC_UNLOAD           2
+typedef switch_atomic_t hac_state_t;
 
 struct s_hac_rule {
 	const char* name;
@@ -157,6 +163,8 @@ struct s_hac_hb {
 	switch_socket_t *udp_sock;
 	struct timeval last_hb;
 	struct s_hac_hb* next;
+	switch_thread_rwlock_t *recv_lock;
+	switch_thread_rwlock_t *send_lock;
 };
 typedef struct s_hac_hb hac_hb_t;
 
@@ -193,18 +201,14 @@ struct s_hac_config {
 };
 typedef struct s_hac_config hac_config_t;
 
-typedef enum {
-	HAC_LOOPING = 0,
-	HAC_SHUTDOWN_RUNTIME = 1,
-	HAC_UNLOAD = 2
-} hac_state_t;
-
 
 extern hac_config_t config;
 
 struct s_hac_event {
 	switch_event_t *event;
 	switch_bool_t processed;
+	switch_atomic_t refcount;
+	const char *uuid;
 	struct timeval arrived;
 };
 typedef struct s_hac_event hac_event_t;
@@ -227,31 +231,36 @@ struct s_hac_peer {
 	struct timeval last_seen;
 	hac_peer_state_t state;
 	uint64_t missed_beats;
+	switch_atomic_t refcount;
+	switch_thread_rwlock_t *lock;
 };
 typedef struct s_hac_peer hac_peer_t;
 
 struct s_global {
 	switch_memory_pool_t* pool;
 	char hostname[256];
-	uint64_t host_hash;
+	switch_atomic_t host_hash;
 	switch_memory_pool_t* event_pool;
 	switch_hash_t *event_hash;
 	switch_hash_t *peer_hash;
 	hac_peer_state_t state;
 	hac_state_t mod_state;
 	hac_hb_t* hb;
-	int nodeid;
-	uint64_t rand_val;
-	const char* msr;
-	int req_masters;
-	int masters;
-	int slaves;
-	int timer_a_dur;
-	int timer_b_dur;
+	switch_atomic_t nodeid;
+	switch_atomic_t rand_val;
+	switch_atomic_t req_masters;
+	switch_atomic_t masters;
+	switch_atomic_t slaves;
+	switch_atomic_t timer_a_dur;
+	switch_atomic_t timer_b_dur;
 	struct timeval timer_a;
 	struct timeval timer_b;
-	int failure_threshold;
+	switch_atomic_t failure_threshold;
+	switch_atomic_t max_latency;
 	switch_thread_rwlock_t *lock;
+	switch_thread_rwlock_t *hb_lock;
+	switch_thread_rwlock_t *event_hash_lock;
+	switch_thread_rwlock_t *peer_hash_lock;
 };
 extern struct s_global hac_globals;
 

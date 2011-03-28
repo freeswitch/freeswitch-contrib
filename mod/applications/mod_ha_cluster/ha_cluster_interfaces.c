@@ -50,23 +50,57 @@ switch_status_t initialize_interfaces()
 	/* First, make sure all interfaces exist. */
 	cur_int = config.network.interfaces;
 	while(cur_int != NULL) {
-		memset(cmd, 0, 256);
-		sprintf(cmd, "ip link list %s", cur_int->name);
-		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result) {
-			return SWITCH_STATUS_FALSE;
-		}
-		if(strstr(cmd_result, "does not exist")) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' does not exist\n", cur_int->name);
-			fprintf(stderr, "HAC: interface '%s' does not exist\n", cur_int->name);
+		/* We cannot list a vlan if it is not up */
+		if(!strcasestr(cur_int->name, "vlan") && !strchr(cur_int->name, '.')) {
+			memset(cmd, 0, 256);
+			snprintf(cmd, 256, "ip link list %s", cur_int->name);
+			if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result) {
+				return SWITCH_STATUS_FALSE;
+			}
+			if(strstr(cmd_result, "does not exist")) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' does not exist\n", cur_int->name);
+				fprintf(stderr, "HAC: interface '%s' does not exist\n", cur_int->name);
+				switch_safe_free(cmd_result);
+				return SWITCH_STATUS_FALSE;
+			}
 			switch_safe_free(cmd_result);
-			return SWITCH_STATUS_FALSE;
 		}
-		switch_safe_free(cmd_result);
 		cur_int = cur_int->next;
 	}
-	/* After we know they exist, then take controll over them. */
+	/* After we know they exist, then take control over them. */
 	cur_int = config.network.interfaces;
 	while(cur_int != NULL) {
+		switch_bool_t bridge_device = SWITCH_FALSE;
+		switch_bool_t vlan_device = SWITCH_FALSE;
+		/* Check to see if it is a VLAN device */
+		FILE * fp = NULL;
+		memset(cmd, 0, 256);
+		snprintf(cmd, 256, "/proc/net/vlan/%s", cur_int->name);
+		if((fp = fopen(cmd, "r")) != NULL) {
+			fclose(fp);
+			vlan_device = SWITCH_TRUE;
+		} else if(strcasestr(cur_int->name, "vlan")) {
+			vlan_device = SWITCH_TRUE;
+		} else if(strchr(cur_int->name, '.')) {
+			vlan_device = SWITCH_TRUE;
+		}
+		/* Cannot get driver of vlan interface which is down, and
+		   regardless, it will always match underlying device. */
+		if(vlan_device == SWITCH_FALSE) {
+			/* Get the driver of the device to see if it is a bridge */
+			memset(cmd, 0, 256);
+			snprintf(cmd, 256, "ethtool -i %s 2>&1", cur_int->name);
+			if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "does not exist"))) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to determine driver of interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				fprintf(stderr, "HAC: unable to determine driver of interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				switch_safe_free(cmd_result);
+				return SWITCH_STATUS_FALSE;
+			}
+			if(strcasestr(cmd_result, "bridge")) {
+				bridge_device = SWITCH_TRUE;
+			}
+			switch_safe_free(cmd_result);
+		}
 		/* This clears routes and puts the interface in a DOWN state
 		   which then requires us to bring it back up. This helps to
 		   check for issues to make sure we can actually bring it back
@@ -74,67 +108,79 @@ switch_status_t initialize_interfaces()
 		   is wrong, but not bring it back up. This helps us check
 		   that condition. */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ifdown %s 2>&1", cur_int->name);
+		snprintf(cmd, 256, "ifdown %s 2>&1", cur_int->name);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "does not exist"))) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			fprintf(stderr, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			switch_safe_free(cmd_result);
-			return SWITCH_STATUS_FALSE;
+			if(vlan_device == SWITCH_FALSE) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				fprintf(stderr, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				switch_safe_free(cmd_result);
+				return SWITCH_STATUS_FALSE;
+			}
 		}
 		switch_safe_free(cmd_result);
-		/* We do not want to have an IP address conflict while starting
-		   this node, so we flush the addresses. */
-		memset(cmd, 0, 256);
-		sprintf(cmd, "ip addr flush %s 2>&1", cur_int->name);
-		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "does not exist"))) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			fprintf(stderr, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			switch_safe_free(cmd_result);
-			return SWITCH_STATUS_FALSE;
-		}
-		switch_safe_free(cmd_result);
-		/* If speed and duplex are specified, set them and disable autoneg */
-		if(!switch_strlen_zero(cur_int->speed) && !switch_strlen_zero(cur_int->duplex)) {
+		if(vlan_device == SWITCH_FALSE) {
+			/* We do not want to have an IP address conflict while starting
+			   this node, so we flush the addresses. If this is a vlan, we
+			   will not be able to reference the dev if it is down. We
+			   expect the act of taking it down to remove the IPs. */
 			memset(cmd, 0, 256);
-			sprintf(cmd, "ethtool -s %s speed %s duplex %s autoneg off 2>&1", cur_int->name, cur_int->speed, cur_int->duplex);
-			if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "Cannot set new settings"))) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set speed and duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-				fprintf(stderr, "HAC: unable to set speed and duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+			snprintf(cmd, 256, "ip addr flush %s 2>&1", cur_int->name);
+			if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "does not exist"))) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				fprintf(stderr, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
 				switch_safe_free(cmd_result);
 				return SWITCH_STATUS_FALSE;
 			}
 			switch_safe_free(cmd_result);
-		} else {
-			if(!switch_strlen_zero(cur_int->duplex)) {
-				/* Set the duplex on the interface if specified */
+		}
+		if(vlan_device == SWITCH_FALSE && bridge_device == SWITCH_FALSE) {
+			/* If speed and duplex are specified, set them and disable autoneg */
+			if(!switch_strlen_zero(cur_int->speed) && !switch_strlen_zero(cur_int->duplex)) {
 				memset(cmd, 0, 256);
-				sprintf(cmd, "ethtool -s %s duplex %s 2>&1", cur_int->name, cur_int->duplex);
+				snprintf(cmd, 256, "ethtool -s %s speed %s duplex %s autoneg off 2>&1", cur_int->name, cur_int->speed, cur_int->duplex);
 				if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "Cannot set new settings"))) {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-					fprintf(stderr, "HAC: unable to set duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set speed and duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					fprintf(stderr, "HAC: unable to set speed and duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
 					switch_safe_free(cmd_result);
 					return SWITCH_STATUS_FALSE;
 				}
 				switch_safe_free(cmd_result);
-			}
-			if(!switch_strlen_zero(cur_int->speed)) {
-				/* Set the speed on the interface if specified */
-				memset(cmd, 0, 256);
-				sprintf(cmd, "ethtool -s %s speed %s 2>&1", cur_int->name, cur_int->speed);
-				if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "Cannot set new settings"))) {
-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set speed on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-					fprintf(stderr, "HAC: unable to set speed on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+			} else {
+				if(!switch_strlen_zero(cur_int->duplex)) {
+					/* Set the duplex on the interface if specified */
+					memset(cmd, 0, 256);
+					snprintf(cmd, 256, "ethtool -s %s duplex %s 2>&1", cur_int->name, cur_int->duplex);
+					if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "Cannot set new settings"))) {
+						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+						fprintf(stderr, "HAC: unable to set duplex on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+						switch_safe_free(cmd_result);
+						return SWITCH_STATUS_FALSE;
+					}
 					switch_safe_free(cmd_result);
-					return SWITCH_STATUS_FALSE;
 				}
-				switch_safe_free(cmd_result);
+				if(!switch_strlen_zero(cur_int->speed)) {
+					/* Set the speed on the interface if specified */
+					memset(cmd, 0, 256);
+					snprintf(cmd, 256, "ethtool -s %s speed %s 2>&1", cur_int->name, cur_int->speed);
+					if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "Cannot set new settings"))) {
+						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to set speed on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+						fprintf(stderr, "HAC: unable to set speed on interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+						switch_safe_free(cmd_result);
+						return SWITCH_STATUS_FALSE;
+					}
+					switch_safe_free(cmd_result);
+				}
 			}
 		}
 		/* Now we bring the interface back up to ensure we *can* bring
 		   it up. We turn off ARP so that when we assign IPs to it, we
 		   do not immediately start talking over it. */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip link set %s up arp off 2>&1", cur_int->name);
+		if(vlan_device == SWITCH_TRUE) {
+			snprintf(cmd, 256, "ifup %s && sleep 1 && ip link set %s arp off 2>&1", cur_int->name, cur_int->name);
+		} else {
+			snprintf(cmd, 256, "ip link set %s up arp off 2>&1", cur_int->name);
+		}
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && strstr(cmd_result, "does not exist"))) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
 			fprintf(stderr, "HAC: unable to control interface '%s': %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
@@ -142,25 +188,27 @@ switch_status_t initialize_interfaces()
 			return SWITCH_STATUS_FALSE;
 		}
 		switch_safe_free(cmd_result);
-		/* Run an internal test on the interface to help check to see
-		   if it is good. */
-		memset(cmd, 0, 256);
-		sprintf(cmd, "sleep 1 && ethtool -t %s online 2>&1", cur_int->name);
-		count = 0;
-		while(((status = execute_command(cmd, &cmd_result)) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && !strstr(cmd_result, "PASS"))) && count < 30) {
-			switch_yield(1000);
-			count++;
-		}
-		if(status != SWITCH_STATUS_SUCCESS || count > 30) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			fprintf(stderr, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+		if(bridge_device == SWITCH_FALSE && vlan_device == SWITCH_FALSE) {
+			/* Run an internal test on the interface to help check to see
+			   if it is good. */
+			memset(cmd, 0, 256);
+			snprintf(cmd, 256, "sleep 1 && ethtool -t %s online 2>&1", cur_int->name);
+			count = 0;
+			while(((status = execute_command(cmd, &cmd_result)) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && !strstr(cmd_result, "PASS"))) && count < 30) {
+				switch_yield(1000);
+				count++;
+			}
+			if(status != SWITCH_STATUS_SUCCESS || count > 30) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				fprintf(stderr, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				switch_safe_free(cmd_result);
+				return SWITCH_STATUS_FALSE;
+			}
 			switch_safe_free(cmd_result);
-			return SWITCH_STATUS_FALSE;
 		}
-		switch_safe_free(cmd_result);
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip link list dev %s 2>&1", cur_int->name);
+		snprintf(cmd, 256, "ip link list dev %s 2>&1", cur_int->name);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && (strstr(cmd_result, "NO-CARRIER") || strstr(cmd_result, "DOWN")))) {
 			if(cmd_result && strstr(cmd_result, "NO-CARRIER")) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' loss of carrier detected\n", cur_int->name);
@@ -176,34 +224,36 @@ switch_status_t initialize_interfaces()
 			return SWITCH_STATUS_FALSE;
 		}
 		switch_safe_free(cmd_result);
-		/* Set the duplex on the interface if specified */
-		memset(cmd, 0, 256);
-		sprintf(cmd, "ethtool %s 2>&1", cur_int->name);
-		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result) {
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to query interface '%s' for duplex and speed: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-			fprintf(stderr, "HAC: unable to query interface '%s' for duplex and speed: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+		if(vlan_device == SWITCH_FALSE && bridge_device == SWITCH_FALSE) {
+			/* Check the duplex and speed on the interface if specified */
+			memset(cmd, 0, 256);
+			snprintf(cmd, 256, "ethtool %s 2>&1", cur_int->name);
+			if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result) {
+				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: unable to query interface '%s' for duplex and speed: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				fprintf(stderr, "HAC: unable to query interface '%s' for duplex and speed: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+				switch_safe_free(cmd_result);
+				return SWITCH_STATUS_FALSE;
+			}
+			if(!switch_strlen_zero(cur_int->duplex)) {
+				snprintf(expected_duplex, 16, "Duplex: %s", cur_int->duplex);
+				if(!strcasestr(cmd_result, expected_duplex)) {
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' duplex not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					fprintf(stderr, "HAC: interface '%s' duplex not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					switch_safe_free(cmd_result);
+					return SWITCH_STATUS_FALSE;
+				}
+			}
+			if(!switch_strlen_zero(cur_int->speed)) {
+				snprintf(expected_speed, 16, "Speed: %sMb/s", cur_int->speed);
+				if(!strcasestr(cmd_result, expected_speed)) {
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' speed not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					fprintf(stderr, "HAC: interface '%s' speed not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
+					switch_safe_free(cmd_result);
+					return SWITCH_STATUS_FALSE;
+				}
+			}
 			switch_safe_free(cmd_result);
-			return SWITCH_STATUS_FALSE;
 		}
-		if(!switch_strlen_zero(cur_int->duplex)) {
-			sprintf(expected_duplex, "Duplex: %s", cur_int->duplex);
-			if(!strcasestr(cmd_result, expected_duplex)) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' duplex not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-				fprintf(stderr, "HAC: interface '%s' duplex not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-				switch_safe_free(cmd_result);
-				return SWITCH_STATUS_FALSE;
-			}
-		}
-		if(!switch_strlen_zero(cur_int->speed)) {
-			sprintf(expected_speed, "Speed: %sMb/s", cur_int->speed);
-			if(!strcasestr(cmd_result, expected_speed)) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' speed not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-				fprintf(stderr, "HAC: interface '%s' speed not set correctly: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
-				switch_safe_free(cmd_result);
-				return SWITCH_STATUS_FALSE;
-			}
-		}
-		switch_safe_free(cmd_result);
 		cur_int = cur_int->next;
 	}
 	/* If we get here, we are fairly confident all the interfaces are
@@ -336,7 +386,7 @@ switch_status_t verify_interfaces()
 	while(cur_int != NULL) {
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip link list dev %s 2>&1", cur_int->name);
+		snprintf(cmd, 256, "ip link list dev %s 2>&1", cur_int->name);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && (strstr(cmd_result, "NO-CARRIER") || strstr(cmd_result, "DOWN")))) {
 			if(cmd_result && strstr(cmd_result, "NO-CARRIER")) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' loss of carrier detected\n", cur_int->name);
@@ -355,7 +405,7 @@ switch_status_t verify_interfaces()
 		/* Run an internal test on the interface to help check to see
 		   if it is good. */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ethtool -t %s 2>&1", cur_int->name);
+		snprintf(cmd, 256, "ethtool -t %s 2>&1", cur_int->name);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS || !cmd_result || (cmd_result && !strstr(cmd_result, "PASS"))) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
 			fprintf(stderr, "HAC: interface '%s' failed test: %s\n", cur_int->name, (switch_strlen_zero(cmd_result) ? "unkown error" : cmd_result));
@@ -377,7 +427,7 @@ switch_status_t routes_up(const hac_route_t *routes)
 	while(cur != NULL) {
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip route add %s via %s dev %s metric %s 2>&1", cur->destination, cur->gateway, cur->dev, (switch_strlen_zero(cur->metric) ? "0" : cur->metric));
+		snprintf(cmd, 256, "ip route add %s via %s dev %s metric %s 2>&1", cur->destination, cur->gateway, cur->dev, (switch_strlen_zero(cur->metric) ? "0" : cur->metric));
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: error bringing up route '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
 			fprintf(stderr, "HAC: error bringing up route '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
@@ -399,7 +449,7 @@ switch_status_t routes_down(const hac_route_t *routes)
 	while(cur != NULL) {
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip route del %s via %s dev %s metric %s 2>&1", cur->destination, cur->gateway, cur->dev, (switch_strlen_zero(cur->metric) ? "0" : cur->metric));
+		snprintf(cmd, 256, "ip route del %s via %s dev %s metric %s 2>&1", cur->destination, cur->gateway, cur->dev, (switch_strlen_zero(cur->metric) ? "0" : cur->metric));
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: error bringing down route '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
 			fprintf(stderr, "HAC: error bringing down route '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
@@ -421,7 +471,7 @@ switch_status_t ips_up(const hac_ip_t *ips)
 	while(cur != NULL) {
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip addr add %s dev %s 2>&1", cur->cidr, cur->dev);
+		snprintf(cmd, 256, "ip addr add %s dev %s 2>&1", cur->cidr, cur->dev);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: error adding IP address '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
 			fprintf(stderr, "HAC: error adding IP address '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
@@ -443,7 +493,7 @@ switch_status_t ips_down(const hac_ip_t *ips)
 	while(cur != NULL) {
 		/* Check for carrier signal on interface */
 		memset(cmd, 0, 256);
-		sprintf(cmd, "ip addr del %s dev %s 2>&1", cur->cidr, cur->dev);
+		snprintf(cmd, 256, "ip addr del %s dev %s 2>&1", cur->cidr, cur->dev);
 		if(execute_command(cmd, &cmd_result) != SWITCH_STATUS_SUCCESS) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "HAC: error removing IP address '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
 			fprintf(stderr, "HAC: error removing IP address '%s': %s\n", cmd, (switch_strlen_zero(cmd_result) ? "unknown error" : cmd_result));
