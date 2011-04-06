@@ -65,11 +65,7 @@ sub usage(){
 	print STDERR $usage;
 	exit;
 }
-sub dbg_exec_get($){
-	my ($cmds) = @_;
-	$cmds =~ s/\n(?=.)/\n\t\t/gs;
-	return $cmds;
-}
+
 sub main(){
 	parse_args();
 	my $to_write_fs_cli="";
@@ -145,7 +141,6 @@ sub main(){
 		} else {
 			last if ( waitpid($pid, WNOHANG) != 0);
 		}
-		#print ".";
 	}
 	my $secs = time - $start_time;
 	if ($secs < 3){
@@ -250,7 +245,7 @@ sub pastebin_post($$){
 	my $post_len = length($post_body);
 	$pb_post =~ s/CONT_LEN/$post_len/;
 	$pb_post .= $post_body;
-	my $sock = new IO::Socket::INET ( PeerAddr => 'pastebin.freeswitch.org', PeerPort => '80', Proto => 'tcp', );
+	my $sock = new IO::Socket::INET ( PeerAddr => 'pastebin.freeswitch.com', PeerPort => '80', Proto => 'tcp', );
 	print $sock $pb_post;
 	my $url="";
 	while (my $line = <$sock>){
@@ -261,6 +256,11 @@ sub pastebin_post($$){
 	}
 	close $sock;
 	return $url;
+}
+sub dbg_exec_get($){
+	my ($cmds) = @_;
+	$cmds =~ s/\n(?=.)/\n\t\t/gs;
+	return $cmds;
 }
 sub strip_quotes($){
 	my ($str) = @_;
