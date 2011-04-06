@@ -19,7 +19,7 @@ use IO::Socket;
 use Time::HiRes qw( sleep );
 use POSIX ":sys_wait_h";
 my ($pid,$output_buffer,$in_cleanup,$proc_stdin);
-my @AUTOS = qw/-pb -do -oa -st internal -l 7/;
+my @AUTOS = qw/-pb -do -st internal -l 7/;
 push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 
 my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE);
