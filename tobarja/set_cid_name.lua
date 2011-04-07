@@ -1,3 +1,16 @@
+--[[
+set_cid_name.lua
+
+Call like this:
+  <action application="lua" data="set_cid_name.lua /path/to/file.csv"/>
+
+Notes:
+The script currently expects the csv file to be laid out as: 
+1NPANXXXXXX,Caller Name
+
+I export contacts from my Google account for this. That script will be available soon.
+]]
+
 require "split" -- I'm using the python-like example from http://lua-users.org/wiki/SplitJoin
 require "trim" -- I'm using trim9 example from http://lua-users.org/wiki/StringTrim
 
