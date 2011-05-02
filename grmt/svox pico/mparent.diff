@@ -1,0 +1,199 @@
+diff --git a/pico/Makefile.am b/pico/Makefile.am
+index a19c42a..afeb4be 100644
+--- a/pico/Makefile.am
++++ b/pico/Makefile.am
+@@ -83,6 +83,6 @@ bin_PROGRAMS = pico2wave
+ pico2wave_SOURCES = \
+ 	bin/pico2wave.c
+ pico2wave_LDADD = \
+-	libttspico.la
++	libttspico.la -lpopt -lm
+ pico2wave_CFLAGS = -Wall -Dpicolangdir=\"$(picolangdir)\" -I lib -lm -lpopt
+ 
+diff --git a/pico/lib/picoapi.c b/pico/lib/picoapi.c
+index affd780..f2494ec 100644
+--- a/pico/lib/picoapi.c
++++ b/pico/lib/picoapi.c
+@@ -41,10 +41,10 @@ extern "C" {
+ #define MAGIC_MASK 0x5069636F  /* Pico */
+ 
+ #define SET_MAGIC_NUMBER(sys) \
+-    (sys)->magic = ((picoos_uint32) (sys)) ^ MAGIC_MASK
++    (sys)->magic = ((picoos_uintptr_t) (sys)) ^ MAGIC_MASK
+ 
+ #define CHECK_MAGIC_NUMBER(sys) \
+-    ((sys)->magic == (((picoos_uint32) (sys)) ^ MAGIC_MASK))
++    ((sys)->magic == (((picoos_uintptr_t) (sys)) ^ MAGIC_MASK))
+ 
+ 
+ 
+@@ -90,7 +90,7 @@ pico_Status pico_initialize_priv(
+         status = PICO_ERR_NULLPTR_ACCESS;
+     } else {
+         byte_ptr_t rest_mem;
+-        picoos_uint32 rest_mem_size;
++        picoos_uintptr_t rest_mem_size;
+         pico_System sys;
+         picoos_MemoryManager sysMM;
+         picoos_ExceptionManager sysEM;
+diff --git a/pico/lib/picoapi.h b/pico/lib/picoapi.h
+index 8a5725b..6299116 100644
+--- a/pico/lib/picoapi.h
++++ b/pico/lib/picoapi.h
+@@ -176,7 +176,6 @@ typedef unsigned int pico_Uint32;
+ #error "platform not supported"
+ #endif
+ 
+-
+ /* Char data type *****************************************************/
+ 
+ typedef unsigned char pico_Char;
+diff --git a/pico/lib/picoapid.h b/pico/lib/picoapid.h
+index ef62701..b38bc86 100644
+--- a/pico/lib/picoapid.h
++++ b/pico/lib/picoapid.h
+@@ -48,7 +48,7 @@ extern "C" {
+ 
+ /* Pico system descriptor */
+ typedef struct pico_system {
+-    picoos_uint32 magic;        /* magic number used to validate handles */
++    picoos_uintptr_t magic;        /* magic number used to validate handles */
+     picoos_Common common;
+     picorsrc_ResourceManager rm;
+     picoctrl_Engine engine;
+diff --git a/pico/lib/picoctrl.c b/pico/lib/picoctrl.c
+index 25550f2..4891be9 100644
+--- a/pico/lib/picoctrl.c
++++ b/pico/lib/picoctrl.c
+@@ -496,7 +496,7 @@ void picoctrl_disposeControl(picoos_MemoryManager mm,
+  *  shortcut     : eng
+  */
+ typedef struct picoctrl_engine {
+-    picoos_uint32 magic;        /* magic number used to validate handles */
++    picoos_uintptr_t magic;        /* magic number used to validate handles */
+     void *raw_mem;
+     picoos_Common common;
+     picorsrc_Voice voice;
+@@ -508,10 +508,10 @@ typedef struct picoctrl_engine {
+ #define MAGIC_MASK 0x5069436F  /* PiCo */
+ 
+ #define SET_MAGIC_NUMBER(eng) \
+-    (eng)->magic = ((picoos_uint32) (eng)) ^ MAGIC_MASK
++    (eng)->magic = ((picoos_uintptr_t) (eng)) ^ MAGIC_MASK
+ 
+ #define CHECK_MAGIC_NUMBER(eng) \
+-    ((eng)->magic == (((picoos_uint32) (eng)) ^ MAGIC_MASK))
++    ((eng)->magic == (((picoos_uintptr_t) (eng)) ^ MAGIC_MASK))
+ 
+ /**
+  * performs an engine reset
+diff --git a/pico/lib/picoos.c b/pico/lib/picoos.c
+index 4e2b439..e8a7f1e 100644
+--- a/pico/lib/picoos.c
++++ b/pico/lib/picoos.c
+@@ -573,19 +573,8 @@ void picoos_deallocate(picoos_MemoryManager this, void * * adr)
+         /* statistics */
+         this->usedSize -= c->size;
+ 
+-        cr = (MemCellHdr)((picoos_objsize_t)c + c->size);
+         cl = c->leftCell;
+         if (cl->size > 0) {
+-            if (cr->size > 0) {
+-                crr = (MemCellHdr)((picoos_objsize_t)cr + cr->size);
+-                crr->leftCell = cl;
+-                cl->size = ((cl->size + c->size) + cr->size);
+-                cr->nextFree->prevFree = cr->prevFree;
+-                cr->prevFree->nextFree = cr->nextFree;
+-            } else {
+-                cl->size = (cl->size + c->size);
+-                cr->leftCell = cl;
+-            }
+         } else {
+             if ((cr->size > 0)) {
+                 crr = (MemCellHdr)((picoos_objsize_t)cr + cr->size);
+diff --git a/pico/lib/picoos.h b/pico/lib/picoos.h
+index 859e176..fe5afba 100644
+--- a/pico/lib/picoos.h
++++ b/pico/lib/picoos.h
+@@ -70,6 +70,8 @@ typedef picopal_uint8   picoos_bool;
+ typedef picopal_objsize_t picoos_objsize_t;
+ typedef picopal_ptrdiff_t picoos_ptrdiff_t;
+ 
++typedef picopal_uintptr_t picoos_uintptr_t;
++
+ /* *************************************************/
+ /* functions                                       */
+ /* *************************************************/
+diff --git a/pico/lib/picopal.h b/pico/lib/picopal.h
+index acfc8e0..2e64427 100644
+--- a/pico/lib/picopal.h
++++ b/pico/lib/picopal.h
+@@ -41,6 +41,7 @@
+ #include <stddef.h>
+ #include "picopltf.h"
+ #include "picodefs.h"
++#include <inttypes.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+@@ -117,6 +118,7 @@ typedef unsigned char   picopal_uchar;
+ 
+ typedef size_t    picopal_objsize_t;
+ typedef ptrdiff_t picopal_ptrdiff_t;
++typedef uintptr_t picopal_uintptr_t;
+ 
+ /* *************************************************/
+ /* functions                                       */
+diff --git a/pico/lib/picopr.c b/pico/lib/picopr.c
+index d5371d7..44e815d 100644
+--- a/pico/lib/picopr.c
++++ b/pico/lib/picopr.c
+@@ -3209,11 +3209,11 @@ pico_status_t prReset(register picodata_ProcessingUnit this, picoos_int32 r_mode
+     pr->actCtxChanged = FALSE;
+     pr->prodList = NULL;
+ 
+-    if (((picoos_uint32)pr->pr_WorkMem % PICOOS_ALIGN_SIZE) == 0) {
++    if (((picoos_uintptr_t)pr->pr_WorkMem % PICOOS_ALIGN_SIZE) == 0) {
+         pr->workMemTop = 0;
+     }
+     else {
+-        pr->workMemTop = PICOOS_ALIGN_SIZE - ((picoos_uint32)pr->pr_WorkMem % PICOOS_ALIGN_SIZE);
++        pr->workMemTop = PICOOS_ALIGN_SIZE - ((picoos_uintptr_t)pr->pr_WorkMem % PICOOS_ALIGN_SIZE);
+     }
+     pr->maxWorkMemTop=0;
+     pr->dynMemSize=0;
+diff --git a/pico/lib/picorsrc.c b/pico/lib/picorsrc.c
+index d6e1e51..680b838 100644
+--- a/pico/lib/picorsrc.c
++++ b/pico/lib/picorsrc.c
+@@ -58,7 +58,7 @@ extern "C" {
+  *
+  */
+ typedef struct picorsrc_resource {
+-    picoos_uint32 magic;  /* magic number used to validate handles */
++    picoos_uintptr_t magic;  /* magic number used to validate handles */
+     /* next connects all active resources of a resource manager and the garbaged resources of the manager's free list */
+     picorsrc_Resource next;
+     picorsrc_resource_type_t type;
+@@ -75,10 +75,10 @@ typedef struct picorsrc_resource {
+ #define MAGIC_MASK 0x7049634F  /* pIcO */
+ 
+ #define SET_MAGIC_NUMBER(res) \
+-    (res)->magic = ((picoos_uint32) (res)) ^ MAGIC_MASK
++    (res)->magic = ((picoos_uintptr_t) (res)) ^ MAGIC_MASK
+ 
+ #define CHECK_MAGIC_NUMBER(res) \
+-    ((res)->magic == (((picoos_uint32) (res)) ^ MAGIC_MASK))
++    ((res)->magic == (((picoos_uintptr_t) (res)) ^ MAGIC_MASK))
+ 
+ 
+ 
+@@ -603,7 +603,7 @@ pico_status_t picorsrc_loadResource(picorsrc_ResourceManager this,
+             status = (NULL == res->raw_mem) ? PICO_EXC_OUT_OF_MEM : PICO_OK;
+         }
+         if (PICO_OK == status) {
+-            rem = (picoos_uint32) res->raw_mem % PICOOS_ALIGN_SIZE;
++            rem = (picoos_uintptr_t) res->raw_mem % PICOOS_ALIGN_SIZE;
+             if (rem > 0) {
+                 res->start = res->raw_mem + (PICOOS_ALIGN_SIZE - rem);
+             } else {

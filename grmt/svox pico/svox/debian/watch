@@ -1,0 +1,6 @@
+version=3
+opts=uversionmangle=s/_r/+/ \
+http://android.git.kernel.org/?p=platform/external/svox.git;a=tags \
+/\?p=platform/external/svox.git;a=shortlog;h=refs/tags/android-([\d\.]+_r[\d\.]+) \
+debian echo "Use git"
+

@@ -1,0 +1,10 @@
+Git branches:
+ * upstream (synced from git://android.git.kernel.org/platform/external/svox.git
+ * upstream+patches (from upstream): non-Debian specific patches
+ * debian-sid (from upstream+patches)
+
+To build the package, run:
+ git-buildpackage --git-upstream-branch=upstream --git-debian-branch=debian-sid
+ 
+(you can also follow https://wiki.ubuntu.com/PbuilderHowto and add the following
+option: --git-builder="DIST=sid pdebuild --debbuildopts '-i\.git -I.git'")

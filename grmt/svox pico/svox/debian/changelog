@@ -1,0 +1,36 @@
+svox (1.0+git20100621-1) UNRELEASED; urgency=low
+
+  [ Samuel Thibault ]
+  * debian/patches/0008-64bits.patch: New patch to fix execution on 64bit
+    archs.
+  * debian/control: Bump Standards-Version to 3.9.2 (no change needed).
+
+  [ Mathieu Parent ]
+  * New upstream snapshot, updated symbols 
+  * Maintainer is now Debian Accessibility Team (/me is Uploader)
+  * Fix "package description formating issues" (Closes: #582689)
+  * Add a debian/setup-git.sh script for packagers
+  * debian/control: Breaks+Replaces instead of Conflicts as recommended by
+    lintian 
+  * debian/control, debian/copyright: Allow automatic building
+
+ -- Mathieu Parent <sathieu@debian.org>  Sat, 02 Oct 2010 20:06:09 +0200
+
+svox (1.0+git20100205-2) unstable; urgency=low
+
+  * Switch to dpkg-source 3.0 (quilt) format
+  * Fix "pico2wave should be in a separate package" by creating a
+    libttspico-utils package containing only pico2wave (Closes: #582092)
+
+ -- Mathieu Parent <sathieu@debian.org>  Fri, 21 May 2010 16:03:21 +0200
+
+svox (1.0+git20100205-1) unstable; urgency=low
+
+  * Initial release. (Closes: #552499)
+  * Git snapshot (2010-02-05)
+  * non-free because source for lingware files is not included
+  * debian/rules: make autogen.sh executable before executing it 
+  * debian/control: Build-depends on automake, autoconf, libtool
+  * debian/control: Build-depends on libpopt-dev 
+
+ -- Mathieu Parent <sathieu@debian.org>  Fri, 12 Mar 2010 19:29:55 +0100

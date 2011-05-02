@@ -1,0 +1,25 @@
+From 88d90a50464a09918b01e1142d67f892aafbbe29 Mon Sep 17 00:00:00 2001
+From: Mathieu Parent <math.parent@gmail.com>
+Date: Fri, 30 Oct 2009 12:20:08 +0100
+Subject: [PATCH 7/7] Add "/" to pico lang path
+
+---
+ pico/bin/pico2wave.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/pico/bin/pico2wave.c b/pico/bin/pico2wave.c
+index ec7ab79..1420fe0 100644
+--- a/pico/bin/pico2wave.c
++++ b/pico/bin/pico2wave.c
+@@ -36,7 +36,7 @@
+ /* string constants */
+ #define MAX_OUTBUF_SIZE     128
+ #ifdef picolangdir
+-const char * PICO_LINGWARE_PATH             = picolangdir;
++const char * PICO_LINGWARE_PATH             = picolangdir "/";
+ #else
+ const char * PICO_LINGWARE_PATH             = "./lang/";
+ #endif
+-- 
+1.7.1
+

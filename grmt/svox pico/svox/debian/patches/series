@@ -1,0 +1,8 @@
+0001-autoconf-building-of-library-using-libtool.patch
+0002-gitignore-for-autotools-files.patch
+0003-pico2wave-Convert-text-to-.wav-using-svox-text-to-sp.patch
+0004-add-header-files.patch
+0005-Install-lang-files.patch
+0006-Set-picolangdir.patch
+0007-Add-to-pico-lang-path.patch
+0008-64bits.patch
