@@ -83,6 +83,6 @@ bin_PROGRAMS = pico2wave
 pico2wave_SOURCES = \
 	bin/pico2wave.c
 pico2wave_LDADD = \
-	libttspico.la
+	libttspico.la -lm -lpopt
 pico2wave_CFLAGS = -Wall -Dpicolangdir=\"$(picolangdir)\" -I lib -lm -lpopt
 
