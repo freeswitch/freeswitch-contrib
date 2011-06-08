@@ -114,7 +114,7 @@ class sofia_conf extends fs_configuration {
         $this -> xmlw -> startElement('gateways');
         for ($i=0; $i<$gateway_count; $i++) {
             $this_gateway = $gateway_array[$i]['gateway_name'];
-            if ($this_gateway != $gateway_array[$i-1]['gateway_name']) {
+            if (!array_key_exists($i-1, $gateway_array) || $this_gateway != $gateway_array[$i-1]['gateway_name']) {
                 $this -> xmlw -> startElement('gateway');
                 $this -> xmlw -> writeAttribute('name', $this_gateway);
             }
