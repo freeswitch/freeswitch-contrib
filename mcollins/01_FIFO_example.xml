@@ -6,8 +6,8 @@
     FreeSWITCH install or modify it as you see fit.
 
     These are "on hook" agents, i.e. the phone rings when a call comes in; agents don't sit and wait on the phone.
-    Dial 6* plus the FIFO number to log in.  Example: 61* to log into "FIFO1"
-    Dial 6# plus the FIFO number to log out. Example: 61# to log out of "FIFO1"
+    Dial 6* plus the FIFO number to log in.  Example: 6*1 to log into "FIFO1"
+    Dial 6# plus the FIFO number to log out. Example: 6#1 to log out of "FIFO1"
     NOTE: I added 6** as an alternative to logging out b/c some phone dialplans don't like 6#...
 
     By default there are ten slots. You can mix, match, add, etc. as you see fit.
@@ -39,11 +39,11 @@
 
   <!-- Agent logout extension: 6#[0-9] -->
   <extension name="Agent Logout">
-    <condition field="destination_number" expression="^6#|6\*\*(\d)">
+    <condition field="destination_number" expression="^6(#|\*\*)(\d)">
       <action application="answer"/>
-      <action application="set" data="result=${fifo_member(del FIFO$1 {fifo_member_wait=nowait}user/${user_name})}"/>
+      <action application="set" data="result=${fifo_member(del FIFO$2 {fifo_member_wait=nowait}user/${user_name})}"/>
       <!-- Use this line instead if you are using group_group confirm
-	   <action application="set" data="result=${fifo_member(del FIFO$1 {fifo_member_wait=nowait,group_confirm_file=ivr/ivr-accept_reject_voicemail.wav,group_confirm_key=1}user/${user_name} )"/>
+	   <action application="set" data="result=${fifo_member(del FIFO$2 {fifo_member_wait=nowait,group_confirm_file=ivr/ivr-accept_reject_voicemail.wav,group_confirm_key=1}user/${user_name} )"/>
        -->
 
       <action application="log" data="INFO Del FIFO agent result: ${result}"/>
