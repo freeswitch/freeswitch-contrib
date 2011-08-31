@@ -86,7 +86,7 @@ SWITCH_STANDARD_API(pg_prepare_copy_function)
  	 * -	set stream->alloc_chunk or alloc_len so that it's at least larger than cmd see switch_console.h :46
  	 */
 
-	for (ptr = strpbrk(pptr, chars); ptr; ptr = strpbrk(pptr, chars)) {
+	while ((ptr = strpbrk(pptr, chars))) {
 		if (ptr > pptr) {
 			stream->raw_write_function(stream, (uint8_t *) pptr, ptr - pptr);
 		}
