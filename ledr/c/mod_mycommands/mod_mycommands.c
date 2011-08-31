@@ -52,7 +52,9 @@ SWITCH_MODULE_DEFINITION(mod_mycommands, mod_mycommands_load, mod_mycommands_shu
 
 SWITCH_STANDARD_API(pg_escape_string_function)
 {
-	uint8_t backslash = '\\';
+	const char *ptr, *pptr = cmd;
+	const char chars[2] = { '\'', '\\' }; /* characters that need to be escaped */
+	uint8_t backslash = '\\'; /* escape characters with a backslash */
 
 	if (zstr(cmd)) {
 		return SWITCH_STATUS_FALSE;
@@ -60,16 +62,16 @@ SWITCH_STANDARD_API(pg_escape_string_function)
 
 	/* optimize still:
  	 * -	set stream->alloc_chunk or alloc_len so that it's at least larger than cmd see switch_console.h :46
- 	 * -	don't copy byte-for-byte ?
  	 */
 
-	while (*cmd) {
-		if (*cmd == '\'' || *cmd == '\\') {
-			stream->raw_write_function(stream, &backslash, 1);
+	for (ptr = strpbrk(pptr, chars); ptr; ptr = strpbrk(pptr + 1, chars)) {
+		if (ptr > pptr) {
+			stream->raw_write_function(stream, (uint8_t *) pptr, ptr - pptr);
 		}
-		stream->raw_write_function(stream, (uint8_t *) cmd, 1);
-		cmd++;
+		stream->raw_write_function(stream, &backslash, 1);
+		pptr = ptr;
 	}
+	stream->raw_write_function(stream, (uint8_t *) pptr, strlen(pptr) + 1);
 
 	return SWITCH_STATUS_SUCCESS;
 }
