@@ -31,7 +31,7 @@
  * several commands apis that I need
  *
  * - pg_escape_string	escape all quotes (') and backslashes (\) with a backslash (\)
- * - pg_prepare_copy	remove all carriage return (\r) and replace newlines (\n) by literal\ and n
+ * - pg_prepare_copy	remove all carriage return (\r) and replace newlines (\n) by literal \ and n
  * - generate_xml_cdr	if run on a session, returns an xml cdr
  *
  */
@@ -59,10 +59,6 @@ SWITCH_STANDARD_API(pg_escape_string_function)
 	if (zstr(cmd)) {
 		return SWITCH_STATUS_FALSE;
 	}
-
-	/* optimize still:
- 	 * -	set stream->alloc_chunk or alloc_len so that it's at least larger than cmd see switch_console.h :46
- 	 */
 
 	for (ptr = strpbrk(pptr, chars); ptr; ptr = strpbrk(pptr + 1, chars)) {
 		if (ptr > pptr) {
