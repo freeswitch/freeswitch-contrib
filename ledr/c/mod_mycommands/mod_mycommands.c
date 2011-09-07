@@ -30,7 +30,6 @@
  *
  * several commands apis that I need
  *
- * - pg_escape_string	escape all quotes (') and backslashes (\) with a backslash (\)
  * - pg_prepare_copy	remove all carriage return (\r) and replace newlines (\n) by literal \ and n
  * - generate_xml_cdr	if run on a session, returns an xml cdr
  *
@@ -48,29 +47,6 @@ SWITCH_MODULE_DEFINITION(mod_mycommands, mod_mycommands_load, mod_mycommands_shu
 /*
  *	SWITCH_STANDARD_API
  */
-
-
-SWITCH_STANDARD_API(pg_escape_string_function)
-{
-	const char *ptr, *pptr = cmd;
-	const char chars[2] = { '\'', '\\' }; /* characters that need to be escaped */
-	uint8_t backslash = '\\'; /* escape characters with a backslash */
-
-	if (zstr(cmd)) {
-		return SWITCH_STATUS_FALSE;
-	}
-
-	for (ptr = strpbrk(pptr, chars); ptr; ptr = strpbrk(pptr + 1, chars)) {
-		if (ptr > pptr) {
-			stream->raw_write_function(stream, (uint8_t *) pptr, ptr - pptr);
-		}
-		stream->raw_write_function(stream, &backslash, 1);
-		pptr = ptr;
-	}
-	stream->raw_write_function(stream, (uint8_t *) pptr, strlen(pptr) + 1);
-
-	return SWITCH_STATUS_SUCCESS;
-}
 
 
 SWITCH_STANDARD_API(pg_prepare_copy_function)
@@ -158,11 +134,9 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_mycommands_load)
 
 	*module_interface = switch_loadable_module_create_module_interface(pool, modname);
 
-	SWITCH_ADD_API(api_interface, "pg_escape_string", "mod_mycommands pg_escape_string function", pg_escape_string_function, "<string>");
 	SWITCH_ADD_API(api_interface, "pg_prepare_copy", "mod_mycommands pg_prepare_copy function", pg_prepare_copy_function, "<string>");
 	SWITCH_ADD_API(api_interface, "generate_xml_cdr", "mod_mycommands generate_xml_cdr function", generate_xml_cdr_function, "");
 
-	switch_console_set_complete("add pg_escape_string");
 	switch_console_set_complete("add pg_prepare_copy");
 	switch_console_set_complete("add generate_xml_cdr");
 
@@ -173,7 +147,6 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_mycommands_load)
 SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_mycommands_shutdown)
 {
 	/* remove auto completion */
-	switch_console_set_complete("del pg_escape_string");
 	switch_console_set_complete("del pg_prepare_copy");
 	switch_console_set_complete("del generate_xml_cdr");
 
