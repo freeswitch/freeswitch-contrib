@@ -258,7 +258,7 @@ namespace FSClient {
 		}
 
 		private void StopRecordCall(){
-			Utils.bgapi_exec("uuid_record", leg_b_uuid + " stop \"" + am_recording_file + "\"");
+			Utils.bgapi_exec("uuid_record", leg_b_uuid + " stop '" + am_recording_file + "'");
 			am_recording_file = null;
 		}
 
@@ -276,7 +276,7 @@ namespace FSClient {
 			full_path = full_path.Replace('\\', '/'); //seems freeswitch will selectively escape what it cant otherwise
 			am_recording_file = full_path + ".wav";
 			Utils.bgapi_exec("uuid_setvar", leg_b_uuid + " record_stereo true");
-			Utils.bgapi_exec("uuid_record", leg_b_uuid + " start \"" + am_recording_file  +"\"");
+			Utils.bgapi_exec("uuid_record", leg_b_uuid + " start '" + am_recording_file  +"'");
 		}
 
 		private void Call_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
@@ -416,7 +416,7 @@ namespace FSClient {
 
 		private static void HandleChannelAnswerEvent(FSEvent evt, String uuid) {
 			Call call = (from c in calls where c.leg_b_uuid == uuid select c).SingleOrDefault();
-			if (call == null)
+			if (call == null || call.state == CALL_STATE.Answered)
 				return;
 
 			if (call.state == CALL_STATE.Ringing || (call.state == CALL_STATE.Hold_Ringing && !call.is_outgoing))
@@ -585,7 +585,8 @@ namespace FSClient {
 			PortAudio.SendDTMF(dtmf);
 		}
 		public void switch_to() {
-			PortAudio.SwitchTo(portaudio_id);
+			if (active_call != this)
+				PortAudio.SwitchTo(portaudio_id);
 		}
 		public void create_outgoing_call() {
 			account.CreateCall(other_party_number);
@@ -594,7 +595,7 @@ namespace FSClient {
 			switch (state) {
 				case CALL_STATE.Hold_Ringing:
 				case CALL_STATE.Hold:
-					switch_to();
+						switch_to();
 					break;
 				case CALL_STATE.Ringing:
 					if (is_outgoing)

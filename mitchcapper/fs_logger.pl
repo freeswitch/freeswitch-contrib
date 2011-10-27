@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-##### NOTE: You need: http://jira.freeswitch.org/browse/FS-3188
+##### NOTE: You need an fs_cli patched with: http://jira.freeswitch.org/browse/FS-3188 or FSClient for windows comes bundled with the patched fs_cli
 use strict;
 $| = 1;
 my $THREADS_SUPPORTED; #required for polling support on STDIN in windows...
@@ -46,6 +46,7 @@ sub usage(){
    -X, --quit-execute=command     Execute Command when quitting
    -l, --loglevel=command         Log Level
    -d, --debug=level              fs_cli Debug Level (0 - 7)
+   -t, --timeout                  Timeout for API commands (in miliseconds)
    -q, --quiet                    Disable logging
    -r, --retry                    Retry connection on failure
    -R, --reconnect                Reconnect if disconnected
@@ -391,6 +392,7 @@ sub puke($$){
 			next if (parse_args_through("-q","--quiet","",1));
 			next if (parse_args_through("-r","--retry","",1));
 			next if (parse_args_through("-R","--reconnect","",1));
+			next if (parse_args_through("-t","--timeout"));
 			($matches,$value) = arg_test("-A","--auto",0,0);
 			$do_auto = 1 and next if ($matches);
 			($matches,$value) = arg_test("-x","--execute",1,1);
