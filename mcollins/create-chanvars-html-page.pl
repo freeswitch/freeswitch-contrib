@@ -77,7 +77,7 @@ my $htmlfile   = $htmldir . "/chanvars.html";
 my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
-$obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
+$obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|(const )?char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
 
 my %switch_types;	# key = switch type def, val = chan var name
 my %channel_vars; 	# key = chan var name, val = HoA
