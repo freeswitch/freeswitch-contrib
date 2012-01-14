@@ -118,7 +118,7 @@ void stmtexp_callback (stmtexp_key_t *key, stmtexp_val_t *val, void *userdata)
         {
             if (nodes->nodeTab[0])
             {
-                if(nodes->nodeTab[0]->type == XML_ELEMENT_NODE) 
+                if(nodes->nodeTab[0]->type == XML_ELEMENT_NODE || XML_ATTRIBUTE_NODE) 
                 {
                     cur = nodes->nodeTab[0];   	    
                     if(cur->ns)

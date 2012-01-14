@@ -1,6 +1,7 @@
 #ifndef PLUGLDR_H
 #define PLUGLDR_H
 
+#include <pcre.h>
 #include "plug.h"
 
 

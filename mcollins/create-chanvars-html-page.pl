@@ -77,7 +77,7 @@ my $htmlfile   = $htmldir . "/chanvars.html";
 my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
-$obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
+$obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|(const )?char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
 
 my %switch_types;	# key = switch type def, val = chan var name
 my %channel_vars; 	# key = chan var name, val = HoA
@@ -210,7 +210,54 @@ while(<FILEIN>){
 	
     }
 }
+close(FILEIN);
 
+## Handle the switch_channel_execute_on vars...
+$datafile   = $tmpdir . "/execute-on-vars.txt";
+open(FILEIN,'<',$datafile) or die "$datafile - $!\n";
+while(<FILEIN>){
+    chomp;
+    next unless m/\.c(pp)?:/;    # only c and cpp files for now
+    my @RECIN = split /(\.c(pp)?)/,$_;  # split on file name.c or name.cpp
+    my ($filename,$dir,$ext) = fileparse($RECIN[0]);
+    $filename .= $RECIN[1];    # append .c or .cpp
+
+    # debug 
+    #print "$filename\n";
+    # trim off the srcdir from beginning of string
+    my $reldir = substr $dir, $srcdirlen;
+    #print "$filename $dir $ext ($reldir)\n";
+    if ( ! exists( $source_files{$filename} ) ) {
+        $source_files{ $filename } = $site . $reldir . $filename . '?r=HEAD';
+    }
+    
+    ## Extract line number for this occurrence in this source file
+    my $linenum = 0;
+    if ( $RECIN[3] =~ m/:(\d+):/ ) {
+        $linenum = $1;
+    }
+
+    my @temp = split /,\s*/,$_;
+    my $channel_variable_name = $temp[1];
+    
+    ## Clean off quotes, parens, semicolons...
+    $channel_variable_name =~ s/"|;|\)//g;
+
+    if ( exists( $switch_types{$channel_variable_name} ) ) {
+        ## This isn't actually a channel variable name but rather a def from switch_types.h
+        $channel_variable_name = $switch_types{$channel_variable_name};
+    }
+
+    ## Skip obvious exceptions...
+    next if $channel_variable_name =~ m/$obvious_exceptions/;
+
+    ## populate the hash for this variable, filename and line num & set/get
+    push @{ $channel_vars{$channel_variable_name}{$filename} }, [$linenum, 'execute_on']; 
+    push @{ $source_idx{$filename}{$channel_variable_name} }, [$linenum, 'execute_on'];
+
+    # Debug
+    #print "var: $channel_variable_name\n";
+}
 close(FILEIN);
 
 #debug
