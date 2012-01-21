@@ -34,19 +34,33 @@ class phttapi_xml_blob {
   }
 
   public function raw( $xml ) {
-    $this->xml->writeRaw( "$xml" );
+    $this->xml->writeRaw( $xml );
   }
 }
 
 class phttapi extends phttapi_xml_blob {
+  private $logptr;
 
   public function __construct() {
+    $this->logptr = fopen( '/tmp/phttapi.log', 'a' );
+    $this->dlog( print_r( $_REQUEST, true ) );
+
     parent::__construct();
 
     $this->xml->setIndent( true );
-    $this->xml->setIndentString( '  ' );
+    $this->xml->setIndentString( "  " );
     $this->open( 'document' );
     $this->attr( 'type', 'text/freeswitch-httapi' );
+  }
+
+  public function dlog( $debug = null ) {
+    fwrite( $this->logptr, $debug );
+  }
+
+  public function output() {
+    $xml = parent::output();
+    $this->dlog( $xml );    
+    return $xml;
   }
 
   public function start_work() {
@@ -143,7 +157,7 @@ class phttapi_action_binding extends phttapi_xml_blob{
 
     parent::__construct();
 
-    $this->open( 'binding' );
+    $this->open( 'bind' );
     $this->action_text = $text;
   }
 
@@ -152,9 +166,8 @@ class phttapi_action_binding extends phttapi_xml_blob{
   }
 
   public function output() {
-    $this->raw( $this->action_text );
-    $this->raw('blah WTF');
-    parent::output();
+    $this->text( $this->action_text );
+    return parent::output();
   }
 }
 
@@ -192,10 +205,9 @@ class phttapi_dial       extends phttapi_action {
 }
 
 class phttapi_execute    extends phttapi_action {
-  public function application( $app, $data ) {
-    $this->open( $app );
-    $this->text( $data );
-  }
+  public $attributes = array(
+			     'application' => true,
+			     );
 }
 if ( class_exists( 'PHPUnit_Framework_TestCase' ) ) {
   class phttapi_executeTest extends PHPUnit_Framework_TestCase {
@@ -215,11 +227,19 @@ if ( class_exists( 'PHPUnit_Framework_TestCase' ) ) {
   }
 }
 
-class phttapi_getVar     extends phttapi_action {
+class phttapi_getVariable extends phttapi_action {
   public $attributes = array(
 			     'permanent' => true,
 			     );
-  public function __construct( $text = null ) { if ( !$text ) throw new NullDataException("no data passed"); }
+
+  public function __construct( $var = null ) {
+    if ( !$var ) {
+      throw new NullDataException( "getVariable must be instantiated with a variable name" );
+    } else {
+      parent::__construct();
+      $this->attr( 'name', $var );
+    }
+  }
 }
 
 class phttapi_hangup     extends phttapi_action {
@@ -269,7 +289,7 @@ class phttapi_recordCall extends phttapi_action {
 			     );
 }
 
-class phttapi_say        extends phttapi_action {
+class phttapi_say        extends phttapi_prompt {
   public $attributes = array(
 			     'gender'   => true,
 			     'method'   => true,
@@ -278,10 +298,13 @@ class phttapi_say        extends phttapi_action {
 			     );
 }
 
-class phttapi_speak      extends phttapi_action {
+class phttapi_speak      extends phttapi_prompt {
   public $attributes = array(
-			     'engine' => true,
-			     'voice'  => true,
+			     'engine'        => true,
+			     'voice'         => true,
+			     'digit-timeout' => true,
+			     'input-timeout' => true,
+			     'loops'         => true,
 			     );
 }
 
