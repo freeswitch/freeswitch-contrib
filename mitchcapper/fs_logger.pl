@@ -440,8 +440,6 @@ sub puke($$){
 			$OB_ONLY_FILE=$value and $OB_AUTO=1 and next if ($matches);
 			($matches,$value) = arg_test("-do","--display-output",0,0);
 			$DISPLAY_OUTPUT=1 and next if ($matches);
-			($matches,$value) = arg_test("-do","--display-output",0,0);
-			$DISPLAY_OUTPUT=1 and next if ($matches);
 			($matches,$value) = arg_test("-ia","--input-accept",0,0);
 			die "Sorry you perl doesn't threading and its required for input redirection on windows" if ($matches && $IS_WINDOWS && ! $THREADS_SUPPORTED);
 			$ACCEPT_INPUT=1 and next if ($matches);
