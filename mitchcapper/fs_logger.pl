@@ -22,7 +22,7 @@ my ($pid,$output_buffer,$in_cleanup,$proc_stdin);
 my @AUTOS = qw/-pb -do -st internal -l 7/;
 push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 
-my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE);
+my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE,$OB_ONLY_FILE);
 
 $SIG{INT} = \&cleanup;
 my $FS_CLI = $IS_WINDOWS ? "fs_cli.exe" : "./fs_cli";
@@ -59,6 +59,7 @@ sub usage(){
    -do --display-output           Display output on stdout
    -ia --input-accept             Pass input to the freeswitch console
    -D, --fslogger-debug           FSLogger debug mode
+   -jof --just-obfuscate-file=<file> Just obfuscate text from file and exit
 
       The -st, -X, -x options can be used multiple times
       fs_logger.pl will run until fs_cli ends or control+c
@@ -71,6 +72,10 @@ sub main(){
 	parse_args();
 	my $to_write_fs_cli="";
 	$CLEANUP_COMMANDS="";
+	if ($OB_ONLY_FILE){
+		$output_buffer = slurp($OB_ONLY_FILE);
+		cleanup(0);
+	}
 	foreach my $to_trace (@SIP_TRACE_ON){
 		$to_write_fs_cli .= $to_trace eq "_global_" ? "sofia global siptrace on\n" : "sofia profile " . $to_trace . " siptrace on\n";
 		$CLEANUP_COMMANDS .= $to_trace eq "_global_" ? "sofia global siptrace off\n" : "sofia profile " . $to_trace . " siptrace off\n";
@@ -430,13 +435,18 @@ sub puke($$){
 			($matches,$value) = arg_test("-of","--obfuscate-file",1,1);
 			die "Obfuscate file not found: $value" if ($matches && ! -e $value);
 			$OB_FILE=$value and next if ($matches);
+			($matches,$value) = arg_test("-jof","--just-obfuscate-file",1,1);
+			die "File to just Obfuscate not found: $value" if ($matches && ! -e $value);
+			$OB_ONLY_FILE=$value and $OB_AUTO=1 and next if ($matches);
+			($matches,$value) = arg_test("-do","--display-output",0,0);
+			$DISPLAY_OUTPUT=1 and next if ($matches);
 			($matches,$value) = arg_test("-do","--display-output",0,0);
 			$DISPLAY_OUTPUT=1 and next if ($matches);
 			($matches,$value) = arg_test("-ia","--input-accept",0,0);
 			die "Sorry you perl doesn't threading and its required for input redirection on windows" if ($matches && $IS_WINDOWS && ! $THREADS_SUPPORTED);
 			$ACCEPT_INPUT=1 and next if ($matches);
 
-			next if ($ignore_if_already);			
+			next if ($ignore_if_already);
 			print STDERR "Invalid option: " . $ARGV[$parse_pos] . "\n";
 			usage();
 		}
