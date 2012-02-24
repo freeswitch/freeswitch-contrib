@@ -172,6 +172,7 @@ sub cleanup{
 		}
 	}
 	kill 9, $pid if ($pid);
+	$output_buffer =~ s/\r//gs;
 	obfuscate_buffer();
 	print "\n" . ($unexpected ? "OK" : "Good")  . " Bye!\n";
 	print "\n" . pastebin_post($PASTEBIN_USER,$output_buffer) . "\n" if ($PASTEBIN_USER);
