@@ -25,9 +25,14 @@ push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE,$JUST_READ_FILE);
 
 $SIG{INT} = \&cleanup;
-my $FS_CLI = $IS_WINDOWS ? "fs_cli.exe" : "./fs_cli";
+$0=~/^(.+[\\\/])[^\\\/]+[\\\/]*$/;
+my $base_folder = $1 || "./";
+
+$base_folder =~ s/\\/\//g;
+my $FS_CLI = $IS_WINDOWS ? $base_folder . "fs_cli.exe" : $base_folder . "fs_cli";
+$FS_CLI = $IS_WINDOWS ? "fs_cli.exe" : "./fs_cli" if (! -e $FS_CLI);
 $FS_CLI =  $IS_WINDOWS ? "c:/program files/Freeswitch/fs_cli.exe" : "/usr/local/freeswitch/bin/fs_cli" if (! -e $FS_CLI);
-die "Unable to find fs_cli in current directory or in default location of: $FS_CLI" if (! -e $FS_CLI);
+die "Unable to find fs_cli in the fs_logger.pl directory($base_folder), the current directory or in default location of: $FS_CLI" if (! -e $FS_CLI);
 my @CMD = qw/-b/;
 my (@EXEC_ON_CONNECT,@EXEC_ON_QUIT);
 
