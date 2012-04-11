@@ -138,19 +138,22 @@ while(<FILEIN>) {
     ## Extract variable name
     # Set is easier than get because splitting on comma does all the work
     my @temp;
+    my $var_idx;
     if ( $setget eq 'set' ) {
-        @temp = split /,\s*?/,$RECIN[3]; # second elem is channel variable name
+	$var_idx = 1;
+        @temp = split /,\s*?/,$RECIN[3]; # / second elem is channel variable name
         $temp[1] =~ s/"//g;
     } else {
         # get is trickier - need to stop at first close paren
-        @temp = split /,\s+?/,$RECIN[3]; # second elem is channel variable name
-        $temp[1] =~ s/"//g;
-        $temp[1] =~ m/^([A-Za-z_]+)/;
-        $temp[1] = $1;
+	$var_idx = $#temp;  # last array element contains the chan var name
+        @temp = split /,\s+?/,$RECIN[3]; # / second elem is channel variable name
+        $temp[$var_idx] =~ s/"//g;
+        $temp[$var_idx] =~ m/^([A-Za-z_]+)/;
+        $temp[$var_idx] = $1;
         #debug
         #print "$temp[1]\n";
     }
-    my $channel_variable_name = $temp[1];
+    my $channel_variable_name = $temp[$var_idx];
     $channel_variable_name =~ s/"//g;   # strip quote chars
     $channel_variable_name =~ s/^\s*//; # strip leading whitespace
     if ( exists( $switch_types{$channel_variable_name} ) ) {
