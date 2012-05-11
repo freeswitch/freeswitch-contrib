@@ -1,0 +1,15 @@
+freeswitch-htdocs-slim for Debian
+---------------------------------
+
+This is packaged separately from FreeSWITCH because .swf files cannot
+be built from source .fla files using only free software tools in
+debian/main.
+
+See:
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625773
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=591196
+
+Therefore the binary and source packages for this need to be place
+separately in Debian contrib.
+
+ -- Travis Cross <tc@traviscross.com>, Thu, 10 May 2012 23:52:32 +0000

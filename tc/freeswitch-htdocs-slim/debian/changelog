@@ -1,0 +1,5 @@
+freeswitch-htdocs-slim (0.2.3-1) unstable; urgency=low
+
+  * Initial release (Closes: #[No Debian bug yet])
+
+ -- Travis Cross <tc@traviscross.com>  Thu, 10 May 2012 23:49:08 +0000

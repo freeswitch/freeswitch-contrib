@@ -1,0 +1,14 @@
+Source: freeswitch-htdocs-slim
+Section: comm
+Priority: extra
+Maintainer: Travis Cross <tc@traviscross.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: http://musicplayer.sourceforge.net/
+
+Package: freeswitch-htdocs-slim
+Architecture: all
+Depends: ${misc:Depends}
+Description: FreeSWITCH htdocs slim player
+ This package contains the slim SWF player for FreeSWITCH.
+

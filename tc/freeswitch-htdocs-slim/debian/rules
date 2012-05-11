@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# -*- mode: makefile -*-
+#export DH_VERBOSE=1
+
+binary: binary-indep
+binary-arch:
+binary-indep:
+	dh_testdir -i
+	dh_testroot -i
+	dh_prep -i
+	dh_installdirs -i
+	dh_auto_install -i
+	dh_install -i
+	dh_installdocs -i
+	dh_installchangelogs -i
+	dh_install -i
+	dh_lintian -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+build-arch:
+build-indep:
+build:
+
+clean:
+	dh_testdir
+	dh_clean
+

@@ -1,0 +1,11 @@
+freeswitch-htdocs-slim for Debian
+---------------------------------
+
+This package installs the Flash media player you might want for
+playing voicemail files in desktop web browsers using mod_voicemail
+with mod_xml_rpc.
+
+See:
+  http://wiki.freeswitch.org/wiki/Mod_voicemail
+
+ -- Travis Cross <tc@traviscross.com>, Thu, 10 May 2012 23:53:54 +0000
