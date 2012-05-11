@@ -10,6 +10,7 @@ create_orig () {
   tar -c -C debbuild -vf debbuild/$f.orig.tar $d
   xz -9ev debbuild/$f.orig.tar
   mv debbuild/$f.orig.tar.xz ../
+  rm -rf debbuild
 }
 
 case "$1" in
