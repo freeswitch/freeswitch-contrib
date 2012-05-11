@@ -1,4 +1,6 @@
 #!/bin/sh
+##### -*- mode:shell-script; indent-tabs-mode:nil; sh-basic-offset:2 -*-
+##### Author: Travis Cross <tc@traviscross.com>
 
 set -vxe
 
