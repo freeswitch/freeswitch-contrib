@@ -1,0 +1,5 @@
+# .gitignore
+*.tar.*
+*.dsc
+*.deb
+*.changes
