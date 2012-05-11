@@ -1,4 +1,5 @@
-# makefile
+# -*- mode: makefile -*-
+##### Author: Travis Cross <tc@traviscross.com>
 
 all:
 
