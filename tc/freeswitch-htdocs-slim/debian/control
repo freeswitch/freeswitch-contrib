@@ -1,5 +1,5 @@
 Source: freeswitch-htdocs-slim
-Section: comm
+Section: contrib/comm
 Priority: extra
 Maintainer: Travis Cross <tc@traviscross.com>
 Build-Depends: debhelper (>= 8.0.0)
