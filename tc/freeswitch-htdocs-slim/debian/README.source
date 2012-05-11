@@ -12,4 +12,20 @@ See:
 Therefore the binary and source packages for this need to be place
 separately in Debian contrib.
 
- -- Travis Cross <tc@traviscross.com>, Thu, 10 May 2012 23:52:32 +0000
+If you're looking at this as an example of how to package non-core
+.debs for FreeSWITCH, make sure to change 'Section: contrib/' to
+'Section: non-free/' if your package is actually non-free.  Packages
+should go in contrib/ if they are free software but rely on non-free
+software to build or run.  If the software itself is non-free, then it
+goes in non-free.
+
+To build just the binaries for this package, run:
+
+  dpkg-buildpackage -b -us -uc
+
+To build the source package, run:
+
+  ./debian/util.sh create-orig <version-of-slimplayer>
+  dpkg-buildpackage -us -uc
+
+ -- Travis Cross <tc@traviscross.com>, Fri, 11 May 2012 01:59:46 +0000
