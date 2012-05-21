@@ -148,7 +148,7 @@ while(<FILEIN>) {
 	$var_idx = $#temp;  # last array element contains the chan var name
         @temp = split /,\s+?/,$RECIN[3]; # / second elem is channel variable name
         $temp[$var_idx] =~ s/"//g;
-        $temp[$var_idx] =~ m/^([A-Za-z_]+)/;
+        $temp[$var_idx] =~ m/^([A-Za-z0-9_]+)/;
         $temp[$var_idx] = $1;
         #debug
         #print "$temp[1]\n";
