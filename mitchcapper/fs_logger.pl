@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-##### NOTE: You need an fs_cli patched with: http://jira.freeswitch.org/browse/FS-3188 or FSClient for windows comes bundled with the patched fs_cli
 use strict;
 $| = 1;
 my $THREADS_SUPPORTED; #required for polling support on STDIN in windows...
@@ -22,7 +21,7 @@ my ($pid,$output_buffer,$in_cleanup,$proc_stdin);
 my @AUTOS = qw/-pb -do -st internal -l 7/;
 push @AUTOS, "-ia" if (! $IS_WINDOWS || $THREADS_SUPPORTED);
 
-my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE,$JUST_READ_FILE);
+my ($DISPLAY_OUTPUT,$ACCEPT_INPUT,$PASTEBIN_USER,$FILE,$OB_AUTO,$OB_FILE,@SIP_TRACE_ON,$SOFIA_LOG_LEVEL,$CLEANUP_COMMANDS,$DEBUG_MODE,$JUST_READ_FILE,$PASTEBIN_TIME);
 
 $SIG{INT} = \&cleanup;
 $0=~/^(.+[\\\/])[^\\\/]+[\\\/]*$/;
@@ -65,6 +64,7 @@ sub usage(){
    -ia --input-accept             Pass input to the freeswitch console
    -D, --fslogger-debug           FSLogger debug mode
    -jrf --just-read-file=<file>	  Read file instead of collecting log from fs_cli
+   -pbt --pastebin-time=<time>    Pastebin for day(d) month(m) forever(default)
 
       The -st, -X, -x options can be used multiple times
       fs_logger.pl will run until fs_cli ends or control+c
@@ -258,7 +258,8 @@ sub pastebin_post($$){
 
 	~;
 	$pb_post =~ s/^\t//mg;
-	my $post_body = "parent_pid=&format=$type&poster=" . $post_as . "&paste=Send&expiry=m&code2=";
+	$PASTEBIN_TIME = "f" if ($PASTEBIN_TIME ne "m" && $PASTEBIN_TIME ne "d");
+	my $post_body = "parent_pid=&format=$type&poster=" . $post_as . "&paste=Send&expiry=" . $PASTEBIN_TIME . "&code2=";
 	$post_body .= $to_post;
 	my $post_len = length($post_body);
 	$pb_post =~ s/CONT_LEN/$post_len/;
@@ -450,6 +451,8 @@ sub puke($$){
 			($matches,$value) = arg_test("-jrf","--just-read-file",1,1);
 			die "File to just read not found: $value" if ($matches && ! -e $value);
 			$JUST_READ_FILE=$value and next if ($matches);
+			($matches,$value) = arg_test("-pbt","--pastebin-time",1,1);
+			$PASTEBIN_TIME=$value and next if ($matches);
 			($matches,$value) = arg_test("-do","--display-output",0,0);
 			$DISPLAY_OUTPUT=1 and next if ($matches);
 			($matches,$value) = arg_test("-ia","--input-accept",0,0);
