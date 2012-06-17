@@ -222,7 +222,7 @@ static switch_bool_t execute_sql_callback(char *query, switch_core_db_callback_f
   }
 
   /* perform the query */
-  if (switch_cache_db_execute_sql_callback(dbh, query, callback, (void *) cbt, &sql_err) == SWITCH_ODBC_FAIL) {
+  if (switch_cache_db_execute_sql_callback(dbh, query, callback, (void *) cbt, &sql_err) != SWITCH_STATUS_SUCCESS) {
     switch_cache_db_release_db_handle(&dbh);
     if (sql_err) { /* strdup via pool, so err doesn't need to be freed in calling function */
       *err = switch_core_strdup(cbt->pool, sql_err);
