@@ -258,7 +258,6 @@ sub pastebin_post($$){
 
 	~;
 	$pb_post =~ s/^\t//mg;
-	$PASTEBIN_TIME = "f" if ($PASTEBIN_TIME ne "m" && $PASTEBIN_TIME ne "d");
 	my $post_body = "parent_pid=&format=$type&poster=" . $post_as . "&paste=Send&expiry=" . $PASTEBIN_TIME . "&code2=";
 	$post_body .= $to_post;
 	my $post_len = length($post_body);
@@ -452,7 +451,14 @@ sub puke($$){
 			die "File to just read not found: $value" if ($matches && ! -e $value);
 			$JUST_READ_FILE=$value and next if ($matches);
 			($matches,$value) = arg_test("-pbt","--pastebin-time",1,1);
-			$PASTEBIN_TIME=$value and next if ($matches);
+			$PASTEBIN_TIME=lc($value) if ($matches);
+			$PASTEBIN_TIME = "d" if ($PASTEBIN_TIME eq "day");
+			$PASTEBIN_TIME = "m" if ($PASTEBIN_TIME eq "month");
+			$PASTEBIN_TIME = "f" if ($PASTEBIN_TIME eq "forever" || $PASTEBIN_TIME eq "default" || $PASTEBIN_TIME eq "");
+			die "pastebin-time must be set to one of: d/m/f" if ($PASTEBIN_TIME ne "d" && $PASTEBIN_TIME ne "m" && $PASTEBIN_TIME ne "f");
+			next if ($matches);
+			
+
 			($matches,$value) = arg_test("-do","--display-output",0,0);
 			$DISPLAY_OUTPUT=1 and next if ($matches);
 			($matches,$value) = arg_test("-ia","--input-accept",0,0);
