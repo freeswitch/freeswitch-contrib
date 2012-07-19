@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Xml;
 
 using FreeSWITCH.Native;
@@ -53,6 +54,26 @@ namespace FSClient {
 				contact_plugin_manager = new ContactPluginManager();
 			contact_plugin_manager.LoadPlugins();
 		}
+		private ContextMenu _XFERContextMenu;
+		public ContextMenu XFERContextMenu(){
+			if (_XFERContextMenu == null){
+				_XFERContextMenu = new ContextMenu();
+				_XFERContextMenu.Opened += XFERContextMenuOpened;
+			}
+			return _XFERContextMenu;
+		}
+
+		public delegate void XFERMenuOpeningDel(Call active_call,ContextMenu menu);
+
+		public XFERMenuOpeningDel XFERMenuOpenedHandler;
+
+		private void XFERContextMenuOpened(object sender, RoutedEventArgs e){
+			ContextMenu menu = sender as ContextMenu;
+			menu.Items.Clear();
+			if (XFERMenuOpenedHandler != null)
+				XFERMenuOpenedHandler(Call.active_call, menu);
+		}
+
 		private void init_us() {
 			if (is_inited)
 				return;
@@ -79,8 +100,11 @@ namespace FSClient {
 				IncomingBalloons = Properties.Settings.Default.IncomingBalloons;
 				IncomingTopMost = Properties.Settings.Default.FrontOnIncoming;
 				ClearDTMFS = Properties.Settings.Default.ClearDTMFS;
+				UPNPNAT = Properties.Settings.Default.UPNPNAT;
+				DirectSipDial = Properties.Settings.Default.DirectSipDial;
 				UseNumberOnlyInput = Properties.Settings.Default.UseNumberOnlyInput;
 				CheckForUpdates = Properties.Settings.Default.CheckForUpdates;
+				GUIStartup = Properties.Settings.Default.GuiStartup;
 
 				if (Properties.Settings.Default.Sofia != null)
 					sofia = Properties.Settings.Default.Sofia.GetSofia();
@@ -367,8 +391,11 @@ namespace FSClient {
 				Account.SaveSettings();
 				Properties.Settings.Default.IncomingBalloons = IncomingBalloons;
 				Properties.Settings.Default.CheckForUpdates = CheckForUpdates;
+				Properties.Settings.Default.GuiStartup = GUIStartup;
 				Properties.Settings.Default.FrontOnIncoming = IncomingTopMost;
 				Properties.Settings.Default.ClearDTMFS = ClearDTMFS;
+				Properties.Settings.Default.UPNPNAT = UPNPNAT;
+				Properties.Settings.Default.DirectSipDial = DirectSipDial;
 				Properties.Settings.Default.UseNumberOnlyInput = UseNumberOnlyInput;
 				Properties.Settings.Default.RecordingPath = recordings_folder;
 				Properties.Settings.Default.Sofia = new SettingsSofia(sofia);
@@ -471,6 +498,7 @@ namespace FSClient {
 		public bool IncomingBalloons;
 		public bool IncomingTopMost;
 		public string CheckForUpdates;
+		public string GUIStartup;
 
 		private void VersionCheck() {
 			if (CheckForUpdates == "Never")
@@ -526,6 +554,8 @@ namespace FSClient {
 		private bool _UseNumberOnlyInput;
 		public Utils.ObjectEventHandler<bool> UseNumberOnlyInputChanged;
 
+		public Utils.ObjectEventHandler<bool> ClearDTMFSChanged = null;
+
 		public bool ClearDTMFS {
 			get { return _ClearDTMFS; }
 			set {
@@ -541,7 +571,28 @@ namespace FSClient {
 			}
 		}
 		private bool _ClearDTMFS;
-		public Utils.ObjectEventHandler<bool> ClearDTMFSChanged = null;
+
+
+		public bool DirectSipDial {
+			get { return _DirectSipDial; }
+			set {
+				if (value == _DirectSipDial)
+					return;
+				_DirectSipDial = value;
+			}
+		}
+		private bool _DirectSipDial;
+
+
+		public bool UPNPNAT {
+			get { return _UPNPNAT; }
+			set {
+				if (value == _UPNPNAT)
+					return;
+				_UPNPNAT = value;
+			}
+		}
+		private bool _UPNPNAT;
 
 		public bool SpeakerphoneActive {
 			get { return _SpeakerphoneActive; }
@@ -752,12 +803,12 @@ namespace FSClient {
 		private bool is_inited;
 		private bool fs_inited;
 		private static IDisposable event_bind;
-
+		
 		private void fs_core_init() {
 			fs_inited = true;
 			String err = "";
 			freeswitch.switch_core_set_globals();
-			const uint flags = (uint)(switch_core_flag_enum_t.SCF_USE_SQL | switch_core_flag_enum_t.SCF_USE_AUTO_NAT);
+			uint flags = UPNPNAT ? (uint)(switch_core_flag_enum_t.SCF_USE_AUTO_NAT) : 0;
 			switch_status_t res = freeswitch.switch_core_init(flags, switch_bool_t.SWITCH_FALSE, ref err);
 			search_bind = FreeSWITCH.SwitchXmlSearchBinding.Bind(xml_search, switch_xml_section_enum_t.SWITCH_XML_SECTION_CONFIG);
 			event_bind = FreeSWITCH.EventBinding.Bind("FSClient", switch_event_types_t.SWITCH_EVENT_ALL, null, event_handler, true);

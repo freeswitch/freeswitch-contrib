@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,36 +22,59 @@ namespace FSClient {
 			gridAccounts.DataContext = Account.accounts;
 
 			this.Loaded += MainWindow_Loaded;
-
+			CurrentStatusInfo.DataContext = account_status;
 
 		}
 
 		private void ActiveCallChanged(object sender, Call.ActiveCallChangedArgs e) {
 			Dispatcher.BeginInvoke((Action)(() => {
 				CurrentCallInfo.DataContext = Call.active_call;
-				if (Call.active_call == null)
+				if (Call.active_call == null) {
 					CurrentCallInfo.Visibility = Visibility.Hidden;
-				else
+					CurrentStatusInfo.Visibility = Visibility.Visible;
+				}
+				else{
+					CurrentStatusInfo.Visibility = Visibility.Hidden;
 					CurrentCallInfo.Visibility = Visibility.Visible;
-			}));
+				}
+			                                }));
 		}
 		private void CallStateChanged(object sender, Call.CallPropertyEventArgs e) {
 			gridCalls.Items.SortDescriptions.Clear();
 			gridCalls.Items.SortDescriptions.Add(new SortDescription("sort_order", ListSortDirection.Descending));
 		}
 		void accounts_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
+			if (e.OldItems != null){
+				RefreshStatusDefaultAccount();
+				RefreshStatusAccountTotals();
+			}
 			if (e.NewItems == null)
 				return;
 			foreach (Account acct in e.NewItems) {
 				acct.PropertyChanged += acct_PropertyChanged;
 			}
+			RefreshStatusDefaultAccount();
+			RefreshStatusAccountTotals();
 		}
-
+		private void RefreshStatusAccountTotals(){
+			account_status.total_accounts = (from a in Account.accounts where a.enabled == true select a).Count();
+			account_status.active_accounts = (from a in Account.accounts where a.state == "REGED" select a).Count();
+		}
+		private void RefreshStatusDefaultAccount(){
+			Account primary = (from a in Account.accounts where a.is_default_account == true select a).FirstOrDefault();
+			account_status.primary_account = primary == null ? "" : primary.ToString();
+		}
 		void acct_PropertyChanged(object sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == "gateway_id") {
 				gridAccounts.Items.SortDescriptions.Clear();
 				gridAccounts.Items.SortDescriptions.Add(new SortDescription("gateway_id", ListSortDirection.Ascending));
 			}
+			else if (e.PropertyName == "is_default_account"){
+				RefreshStatusDefaultAccount();
+			}else if (e.PropertyName == "state" || e.PropertyName=="enabled"){
+				RefreshStatusAccountTotals();
+			}
+
 		}
 
 
@@ -244,6 +268,21 @@ namespace FSClient {
 			broker.SpeakerphoneActiveChanged += SpeakerActiveChanged;
 			CurrentCallInfo.Visibility = Visibility.Hidden;
 			Windows.systray_icon_setup();
+			switch (broker.GUIStartup){
+				case "Calls":
+					borderAccounts.Visibility = Visibility.Hidden;
+					break;
+				case "Accounts":
+					borderCalls.Visibility = Visibility.Hidden;
+					break;
+				case "Dialpad":
+					borderAccounts.Visibility = Visibility.Hidden;
+					borderCalls.Visibility = Visibility.Hidden;
+					break;
+			}
+			ResizeForm();
+			btnTransfer.ContextMenu = broker.XFERContextMenu();
+			borderTransfer.ContextMenu = broker.XFERContextMenu();
 		}
 
 		void MainWindow_MouseUp(object sender, MouseButtonEventArgs e) {
@@ -268,6 +307,7 @@ namespace FSClient {
 		private void FreeswitchLoaded(object sender, EventArgs e) {
 			Dispatcher.BeginInvoke((Action)(() => {
 				busyAnimation.Visibility = Visibility.Hidden;
+				Title = "FSClient " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 			}));
 		}
 
@@ -450,5 +490,82 @@ namespace FSClient {
 				e.Cancel = true;
 		}
 		#endregion
+		private bool border_calls_was_visible=true;
+		private void ResizeForm(){
+			int border_calls_width = 228;
+			int accounts_left = 237;
+			int total_width = 243;
+			int body_left = 3;
+			int new_left = 0;
+			if (borderAccounts.Visibility == Visibility.Visible)
+				total_width += 196;
+			if (borderCalls.Visibility == Visibility.Visible){
+				total_width += border_calls_width;
+				body_left += border_calls_width;
+				accounts_left += border_calls_width;
+				if (! border_calls_was_visible){
+					border_calls_was_visible = true;
+					Left -= border_calls_width;
+				}
+			} else if (border_calls_was_visible){
+				border_calls_was_visible = false;
+				Left += border_calls_width;
+			}
+			Canvas.SetLeft(canvasPhoneBody, body_left);
+			Canvas.SetLeft(borderAccounts, accounts_left);
+			Width = total_width;
+		}
+		private void btnCallsTab_Click(object sender, RoutedEventArgs e) {
+			if (borderCalls.Visibility == Visibility.Visible)
+				borderCalls.Visibility = Visibility.Hidden;
+			else
+				borderCalls.Visibility = Visibility.Visible;
+			ResizeForm();
+		}
+		private void btnAccountsTab_Click(object sender, RoutedEventArgs e) {
+			if (borderAccounts.Visibility == Visibility.Visible)
+				borderAccounts.Visibility = Visibility.Hidden;
+			else
+				borderAccounts.Visibility = Visibility.Visible;
+			ResizeForm();
+		}
+		AccountStatusInfo account_status = new AccountStatusInfo();
+		private class AccountStatusInfo : ObservableClass{
+			public string primary_account {
+				get { return _primary_account; }
+				set {
+					if (_primary_account == value)
+						return;
+					_primary_account = value;
+					RaisePropertyChanged("primary_account");
+				}
+			}
+			private string _primary_account;
+
+			public int active_accounts {
+				get { return _active_accounts; }
+				set {
+					if (_active_accounts == value)
+						return;
+					_active_accounts = value;
+					RaisePropertyChanged("active_accounts");
+				}
+			}
+			private int _active_accounts;
+
+			public int total_accounts {
+				get { return _total_accounts; }
+				set {
+					if (_total_accounts == value)
+						return;
+					_total_accounts = value;
+					RaisePropertyChanged("total_accounts");
+				}
+			}
+			private int _total_accounts;
+
+		}
+
+		
 	}
 }
