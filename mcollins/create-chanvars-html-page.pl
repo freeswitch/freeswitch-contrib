@@ -75,7 +75,7 @@ my $datafile   = $tmpdir . "/get-set-vars.txt";
 my $htmlfile   = $htmldir . "/chanvars.html";
 
 #my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
-my $site = 'http://fisheye.freeswitch.org/browse/freeswitch.git';
+my $site = 'http://fisheye.freeswitch.org/browse/freeswitch.git/src';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
 $obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|(const )?char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
