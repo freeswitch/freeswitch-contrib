@@ -12,8 +12,8 @@
 # MC 2009-04-02
 
 # Change these vars if your directories are different
-#SRCDIR=/usr/src/freeswitch/src
-SRCDIR=/Users/michaelcollins/workspace/fs/freeswitch/src
+SRCDIR=/usr/src/freeswitch/src
+#SRCDIR=/Users/michaelcollins/workspace/fs/freeswitch/src
 TMPDIR=/tmp
 HTMLDIR=/usr/local/freeswitch/htdocs
 
