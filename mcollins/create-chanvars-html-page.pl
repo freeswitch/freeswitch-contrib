@@ -65,7 +65,7 @@ my $htmldir = '/usr/local/freeswitch/htdocs';
 ## Use these as defaults unless command line args are supplied
 GetOptions( 'srcdir=s' => \$srcdir,
             'tmpdir=s' => \$tmpdir,
-	    'htmldir=s' => \$htmldir,
+            'htmldir=s' => \$htmldir,
 );
 
 my $srcdirlen = length $srcdir;  # calculate this once since it doesn't change
@@ -74,7 +74,8 @@ my $headerfile = $tmpdir . "/header-defs.txt";
 my $datafile   = $tmpdir . "/get-set-vars.txt";
 my $htmlfile   = $htmldir . "/chanvars.html";
 
-my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
+#my $site = 'http://fisheye.freeswitch.org/browse/FreeSWITCH.git';
+my $site = 'http://fisheye.freeswitch.org/browse/freeswitch.git/src';
 
 my $obvious_exceptions; # regex match for channel variable names we don't care about
 $obvious_exceptions = '^(|argv|v?var|var_?name|v?buf|(const )?char.*|inner_var_array.*|arg.*|string|tmp_name|[^_]*_var|\(char \*\) vvar)$';
@@ -148,7 +149,7 @@ while(<FILEIN>) {
 	$var_idx = $#temp;  # last array element contains the chan var name
         @temp = split /,\s+?/,$RECIN[3]; # / second elem is channel variable name
         $temp[$var_idx] =~ s/"//g;
-        $temp[$var_idx] =~ m/^([A-Za-z_]+)/;
+        $temp[$var_idx] =~ m/^([A-Za-z0-9_]+)/;
         $temp[$var_idx] = $1;
         #debug
         #print "$temp[1]\n";

@@ -266,6 +266,7 @@ class phttapi_dial extends phttapi_action {
 		if ( ! $text ) {
 			throw new NullDataException( "no data passed" );
 		}
+		$this->action_text = $text;
 	}
 }
 
@@ -449,7 +450,8 @@ class phttapi_speak extends phttapi_prompt {
 			'voice' => true,
 			'digit-timeout' => true,
 			'input-timeout' => true,
-			'loops' => true
+			'loops' => true,
+		'file' => true,
 	);
 }
 
@@ -505,14 +507,21 @@ class phttapi_voicemail extends phttapi_action {
  *
  */
 class phttapi_google_tts extends phttapi_playback {
+	private $lang = 'en';
 
 	public function __construct() {
 		$this->action_name = 'playback';
 	}
+	
+	public function lang($lang) {
+		$this->lang = $lang;
+	}
 
 	public function text( $text ) {
+		$lang = $this->lang;
 		$text = preg_replace( '/\s/', '+', $text );
-		$url = "http://(ext=mp3,user_agent='Mozilla/5.0 (X11; Linux x86_64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1')translate.google.com/translate_tts?q=$text";
+		
+		$url = "http://(ext=mp3,user_agent='Mozilla/5.0 (X11; Linux x86_64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1')translate.google.com/translate_tts?tl=$lang&q=$text";
 		$this->file( $url );
 	}
 }
