@@ -108,7 +108,7 @@ while (session:ready()) do
 		freeswitch.consoleLog("INFO","Calling playAndGetDigits with " .. already .. "\n")
 		digits = session:playAndGetDigits(1,1,3,9000,"#",already .. ":" .. wuc_epoch,invalid,"[0-9*#]")
 
-		if ( digits == '1' ) then
+		if ( digits ~= '1' ) then
 			api:execute("sched_del","wuc" .. caller)
 			api:execute("db","delete/wuc/" .. caller)
 			session:execute("playback", cancelled)
