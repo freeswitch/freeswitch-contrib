@@ -1,0 +1,80 @@
+<include>
+  <!-- Wake-up call phrases -->
+  <!-- Put this file in conf/lang/en/ivr/ directory -->
+<!--
+    Requires FreeSWITCH Callie sounds version 1.0.16 or later
+-->
+  <macro name="For_one_time_wakeup_call">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-for_one_time_wakeup_call.wav"/>
+      </match>
+    </input>
+  </macro>
+
+  <macro name="This_is_your_wakeup_call">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-this_is_your_wakeup_call.wav"/>
+		<action function="sleep" data="2000"/>
+		<action function="play-file" data="ivr/ivr-this_is_your_wakeup_call.wav"/>
+		<action function="sleep" data="2000"/>
+		<action function="play-file" data="ivr/ivr-wakey_wakey_sunshine.wav"/>
+		<action function="sleep" data="2000"/>
+      </match>
+    </input>
+  </macro>
+  
+  <macro name="Already_have_wakeup_call">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-requested_wakeup_call_for.wav"/>
+		<action function="sleep" data="100"/>
+		<action function="say" data="$1" method="pronounced" type="short_date_time"/>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-to_accept_press_one.wav"/>
+		<action function="sleep" data="600"/>
+      </match>
+    </input>
+  </macro>
+
+  <macro name="Wakeup_call_has_been_cancelled">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-wakeup_call_cancelled.wav"/>
+		<action function="sleep" data="500"/>
+		<action function="play-file" data="voicemail/vm-goodbye.wav"/>
+      </match>
+    </input>
+  </macro>
+
+  <macro name="No_wakeup_call">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-not_requested_wakeup_call.wav"/>
+		<action function="sleep" data="500"/>
+		<action function="play-file" data="voicemail/vm-goodbye.wav"/>
+      </match>
+    </input>
+  </macro>
+
+  <macro name="Wakeup_call_has_been_confirmed">
+    <input pattern="(.*)">
+      <match>
+		<action function="sleep" data="1000"/>
+		<action function="play-file" data="ivr/ivr-requested_wakeup_call_for.wav"/>
+		<action function="sleep" data="500"/>
+		<action function="say" data="$1" method="pronounced" type="short_date_time"/>
+		<action function="play-file" data="voicemail/vm-goodbye.wav"/>
+      </match>
+    </input>
+  </macro>
+
+
+</include>
+
