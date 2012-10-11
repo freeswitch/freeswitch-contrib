@@ -11,6 +11,7 @@ require "date"
 
 api = freeswitch.API()
 session:answer()
+session:sleep(1000)
 session:setAutoHangup(false)
 
 -- Sound files and phrases
@@ -39,9 +40,10 @@ my_wuc = api:execute("db","select/wuc/" .. caller)
 
 while (session:ready()) do
 	if ( my_wuc == '' ) then
-		wakeup_dialstring = "originate {ignore_early_media=true,origination_caller_id_number=*55}user/" .. caller .. " wake_up_sleepy_head"
+		wakeup_dialstring = "originate {ignore_early_media=true,origination_caller_id_number=9253,origination_caller_id_name='Wakeup Call'}user/" .. caller .. " wake_up_sleepy_head"
 		freeswitch.consoleLog("INFO","Setting wakeup dialstring to:\n" .. wakeup_dialstring .. "\n\n")
 		-- No wuc, ask caller to create one
+		session:streamFile("ivr/ivr-not_requested_wakeup_call.wav");
 		freeswitch.consoleLog("INFO", "No wakeup call for " .. caller .. ", let's create one\n")
 		digits = session:playAndGetDigits(4,4,3,9000,"#",get_time,invalid,"([012][0-9]|2[0123])[012345][0-9]")
 
@@ -52,13 +54,13 @@ while (session:ready()) do
 			-- Compare to time now to decide if we need today or tomorrow
 			-- Calculate now in minutes since 00:00
 			now_hr  = api:execute("strftime","%H")
-    		now_min = api:execute("strftime","%M")
-		    now_mod = (now_hr * 60) + now_min
+			now_min = api:execute("strftime","%M")
+		    	now_mod = (now_hr * 60) + now_min
 			freeswitch.consoleLog("INFO","Now hr/min/mod [" .. now_hr .. "/" ..  now_min .. "/" .. now_mod .. "]\n")
 	
 			-- Calculate wuc time in minutes since midnight
 			wuc_hr  = string.sub(digits, 1, 2)
-		    wuc_min = string.sub(digits, 3)
+		    	wuc_min = string.sub(digits, 3)
 			freeswitch.consoleLog("INFO","wuc_hr: " .. wuc_hr .."  wuc_min: " .. wuc_min .. "\n")
 			wuc_mod = (wuc_hr * 60) + wuc_min
 			freeswitch.consoleLog("INFO","Wuc hr min mod [" .. wuc_hr .. "/" .. wuc_min .. "/" .. wuc_mod .. "]\n")
