@@ -30,6 +30,7 @@ grep -rn "switch_event_get_header(var_event" $SRCDIR/* | grep -v Binary > $TMPDI
 
 echo "Getting header file definitions..."
 grep -n "_VARIABLE" $SRCDIR/include/*h > $TMPDIR/header-defs.txt
+grep -rn "_VARIABLE" $SRCDIR/mod/* >> $TMPDIR/header-defs.txt
 
 # launch perl script here
 echo "Creating HTML file in $TMPDIR directory"
