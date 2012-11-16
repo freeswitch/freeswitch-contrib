@@ -15,7 +15,7 @@
 SRCDIR=/usr/src/freeswitch/src
 #SRCDIR=/Users/michaelcollins/workspace/fs/freeswitch/src
 TMPDIR=/tmp
-HTMLDIR=/usr/local/freeswitch/htdocs
+HTMLFILE=/var/www/chanvars.html
 
 # Grep the variables, then grep the aliases in the header files
 echo "Searching source tree for channel variable set/get..."
@@ -25,6 +25,9 @@ grep -rn "[sg]et_variable_partner(" $SRCDIR/* | grep -v Binary | grep -v svn >> 
 echo "Searching source tree for switch_channel_execute_on statements..."
 grep -rn "switch_channel_execute_on(" $SRCDIR/* | grep -v Binary > $TMPDIR/execute-on-vars.txt 
 
+echo "Searching source tree for switch_channel_api_on statements..."
+grep -rn "switch_channel_api_on(" $SRCDIR/* | grep -v Binary > $TMPDIR/api-on-vars.txt
+
 echo "Searching source tree for event_get_header channel variables... "
 grep -rn "switch_event_get_header(var_event" $SRCDIR/* | grep -v Binary > $TMPDIR/event-vars.txt
 
@@ -33,5 +36,5 @@ grep -n "_VARIABLE" $SRCDIR/include/*h > $TMPDIR/header-defs.txt
 grep -rn "_VARIABLE" $SRCDIR/mod/* >> $TMPDIR/header-defs.txt
 
 # launch perl script here
-echo "Creating HTML file in $TMPDIR directory"
-./create-chanvars-html-page.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR --htmldir=$HTMLDIR
+echo "Creating HTML file in $HTMLFILE"
+#./create-chanvars-html-page.pl --srcdir=$SRCDIR --tmpdir=$TMPDIR --htmlfile=$HTMLFILE

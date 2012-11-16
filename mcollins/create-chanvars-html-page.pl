@@ -93,9 +93,11 @@ while(<FILEIN>) {
     my @RECIN = split /#define /,$_;
     # debug
     #print "$RECIN[1] \n";
+    no warnings;
     $RECIN[1] =~ s/"//g;  # strip quote chars
     my ($key, $val) = split /\s/,$RECIN[1];
     $switch_types{$key} = $val;
+    use warnings;
 }
 close(FILEIN);
 
@@ -263,6 +265,55 @@ while(<FILEIN>){
     #print "var: $channel_variable_name\n";
 }
 close(FILEIN);
+
+## Handle the switch_channel_api_on vars...
+$datafile   = $tmpdir . "/api-on-vars.txt";
+open(FILEIN,'<',$datafile) or die "$datafile - $!\n";
+while(<FILEIN>){
+    chomp;
+    next unless m/\.c(pp)?:/;    # only c and cpp files for now
+    my @RECIN = split /(\.c(pp)?)/,$_;  # split on file name.c or name.cpp
+    my ($filename,$dir,$ext) = fileparse($RECIN[0]);
+    $filename .= $RECIN[1];    # append .c or .cpp
+
+    # debug
+    #print "$filename\n";
+    # trim off the srcdir from beginning of string
+    my $reldir = substr $dir, $srcdirlen;
+    #print "$filename $dir $ext ($reldir)\n";
+    if ( ! exists( $source_files{$filename} ) ) {
+        $source_files{ $filename } = $site . $reldir . $filename . '?r=HEAD';
+    }
+
+    ## Extract line number for this occurrence in this source file
+    my $linenum = 0;
+    if ( $RECIN[3] =~ m/:(\d+):/ ) {
+        $linenum = $1;
+    }
+
+    my @temp = split /,\s*/,$_;
+    my $channel_variable_name = $temp[1];
+
+    ## Clean off quotes, parens, semicolons...
+    $channel_variable_name =~ s/"|;|\)//g;
+
+    if ( exists( $switch_types{$channel_variable_name} ) ) {
+        ## This isn't actually a channel variable name but rather a def from switch_types.h
+        $channel_variable_name = $switch_types{$channel_variable_name};
+    }
+
+    ## Skip obvious exceptions...
+    next if $channel_variable_name =~ m/$obvious_exceptions/;
+
+    ## populate the hash for this variable, filename and line num & set/get
+    push @{ $channel_vars{$channel_variable_name}{$filename} }, [$linenum, 'api_on'];
+    push @{ $source_idx{$filename}{$channel_variable_name} }, [$linenum, 'api_on'];
+
+    # Debug
+    #print "var: $channel_variable_name\n";
+}
+close(FILEIN);
+
 
 #debug
 #print dump(\%channel_vars);
