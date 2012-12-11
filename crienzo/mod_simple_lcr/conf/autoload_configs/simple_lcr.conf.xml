@@ -1,0 +1,21 @@
+<configuration name="simple_lcr.conf" description="fast and simple in-memory LCR">
+	<settings>
+		<!-- number of routes to reply with on queries -->
+		<param name="max-routes" value="3"/>
+
+		<!-- NPANXX to state mappings -->
+		<param name="areas" value="$${base_dir}/conf/ratedecks/areas.csv"/>
+		<param name="areas-cid-strip" value="0"/>
+		<param name="areas-cid-prefix" value=""/>
+		<param name="areas-dest-strip" value="0"/>
+		<param name="areas-dest-prefix" value=""/>
+	</settings>
+
+	<!-- routes -->
+	<carrier name="A" ratedeck="$${base_dir}/conf/ratedecks/ratedeck1.csv">
+		<gateway prefix="sip:" suffix="@127.0.0.1"/>
+	</carrier>
+	<carrier name="B" ratedeck="$${base_dir}/conf/ratedecks/ratedeck2.csv">
+		<gateway prefix="sip:" suffix="@127.0.0.2"/>
+	</carrier>
+</configuration>
