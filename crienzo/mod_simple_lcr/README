@@ -1,0 +1,29 @@
+mod_simple_lcr
+
+Simple in-memory LCR 300/302 redirect server.  No MySQL/PostgreSQL required!
+
+I use this module to perform LCR across 6 or so carriers.  Ratedecks are either flat rate or intra/interstate rated.  Some carriers
+treat toll-free caller ID as interstate calling while others do not, so this module handles either scenario. 
+
+This module probably isn't too useful if you are a telco, but for a predictive dialer / call center, it works fine.
+
+Features:
+	Hot reload of ratedecks without call interruption
+	Small memory footprint
+	Lookups only limited by mod_sofia performance
+
+Performance:
+	4 CPU VM w/ 4 GB memory
+	300 CPS @ 75% CPU utilization
+	120 MB memory
+	dialplan routing < 100 nanoseconds
+	call processing < 500 milliseconds
+
+Notes:
+	This performs best with FreeSWITCH from stable branch: version 94664868a8f5bb84b0873e87a5130e39163ccf2d
+	I noticed some performance degradation with newer stable/master builds of FreeSWITCH
+
+Testing:
+	SIPp load testing scenario is located in sipp
+	route_trie test tool is located in test
+

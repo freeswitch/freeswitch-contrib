@@ -1,3 +1,5 @@
+<!-- configuration for simple 300/302 LCR redirect server -->
+<!-- Use "simple_lcr_redirect" as the dialplan in your sip profile -->
 <configuration name="simple_lcr.conf" description="fast and simple in-memory LCR">
 	<settings>
 		<!-- number of routes to reply with on queries -->
@@ -11,11 +13,15 @@
 		<param name="areas-dest-prefix" value=""/>
 	</settings>
 
-	<!-- routes -->
-	<carrier name="A" ratedeck="$${base_dir}/conf/ratedecks/ratedeck1.csv">
-		<gateway prefix="sip:" suffix="@127.0.0.1"/>
+	<!-- treats US toll-free as interstate -->
+	<carrier name="A" ratedeck="$${base_dir}/conf/ratedecks/ratedeck1.csv" interAreas="800,855,866,877,888">
+		<gateway prefix="sip:1" suffix="@127.0.0.1"/>
+		<gateway prefix="sip:1" suffix="@127.0.0.2"/>
+		<gateway prefix="sip:1" suffix="@127.0.0.3"/>
 	</carrier>
+
+	<!-- treats US toll-free as intrastate -->
 	<carrier name="B" ratedeck="$${base_dir}/conf/ratedecks/ratedeck2.csv">
-		<gateway prefix="sip:" suffix="@127.0.0.2"/>
+		<gateway prefix="sip:99012" suffix="@127.0.1.1"/>
 	</carrier>
 </configuration>
