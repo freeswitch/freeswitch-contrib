@@ -634,7 +634,7 @@ static int to_route_cost(char *cost)
 			return costf * 10000;
 		}
 		if (costf >= 6.5535f) {
-			return 6.5535f;
+			return 65535;
 		}
 	}
 
