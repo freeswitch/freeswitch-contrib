@@ -267,6 +267,7 @@
 	 * @method void digit_timeout
 	 * @method void input_timeout
 	 * @method void error_file
+	 * @method void terminators
 	 */
 	class phttapi_prompt extends phttapi_action {
 
@@ -450,6 +451,7 @@
 	class phttapi_pause extends phttapi_prompt {
 
 		public $attributes = array(
+			'terminators' => TRUE,
 			'milliseconds'  => TRUE,
 			'error-file'    => TRUE,
 			'digit-timeout' => TRUE,
@@ -480,7 +482,8 @@
 			'loops'         => TRUE,
 			'name'          => TRUE,
 			'asr-engine'    => TRUE,
-			'asr-grammar'   => TRUE
+			'asr-grammar'   => TRUE,
+			'terminators' => TRUE,
 		);
 
 	}
@@ -505,6 +508,7 @@
 			'digit-timeout' => TRUE,
 			'input-timeout' => TRUE,
 			'limit'         => TRUE,
+			'terminators' => TRUE,
 		);
 
 	}
@@ -544,6 +548,7 @@
 			'error-file'    => TRUE,
 			'input-timeout' => TRUE,
 			'digit-timeout' => TRUE,
+			'terminators' => TRUE,
 		);
 
 		public $required_attributes = array(
@@ -580,6 +585,7 @@
 			'error-file'    => TRUE,
 			'loops'         => TRUE,
 			'text'          => TRUE,
+			'terminators' => TRUE,
 		);
 
 		public $required_attributes = array(
@@ -636,6 +642,7 @@
 			'digit-timeout' => TRUE,
 			'input-timeout' => TRUE,
 			'loops'         => TRUE,
+			'terminators' => TRUE,
 		);
 
 	}
