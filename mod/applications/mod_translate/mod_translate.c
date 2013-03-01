@@ -100,7 +100,8 @@ static switch_status_t load_config(void)
 				}
 			}
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Adding rules to profile [%s]\n", name);
-			switch_core_hash_insert(globals.translate_profiles, name, rules_list);
+
+			switch_core_hash_insert_wrlock(globals.translate_profiles, name, rules_list, globals.profile_hash_rwlock);
 		}
 	}
 
@@ -127,7 +128,7 @@ static void translate_number(char *number, char *profile, char **translated, swi
 
 	switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "translating [%s] against [%s] profile\n", number, profile);
 
-	hi = switch_core_hash_find(globals.translate_profiles, (const char *)profile);
+	hi = switch_core_hash_find_rdlock(globals.translate_profiles, (const char *)profile, globals.profile_hash_rwlock);
 	if (!hi) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_NOTICE, "can't find key for profile matching [%s]\n", profile);
 		return;
@@ -187,7 +188,7 @@ static void do_unload(void) {
 			switch_safe_free(rl);
 		}
 
-		switch_core_hash_delete(globals.translate_profiles, key);
+		switch_core_hash_delete_wrlock(globals.translate_profiles, key, globals.profile_hash_rwlock);
 	}
 
 	switch_thread_rwlock_destroy(globals.profile_hash_rwlock);
