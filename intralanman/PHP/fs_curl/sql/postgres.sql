@@ -4,19 +4,23 @@
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
-SET standard_conforming_strings = off;
+SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
-SET escape_string_warning = off;
 
 --
--- Name: plpgsql; Type: PROCEDURAL LANGUAGE; Schema: -; Owner: postgres
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
 --
 
-CREATE PROCEDURAL LANGUAGE plpgsql;
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
-ALTER PROCEDURAL LANGUAGE plpgsql OWNER TO postgres;
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
 
 SET search_path = public, pg_catalog;
 
@@ -44,8 +48,8 @@ ALTER TABLE public.accounts OWNER TO freeswitch;
 CREATE SEQUENCE accounts_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -78,8 +82,8 @@ ALTER TABLE public.acl_lists OWNER TO freeswitch;
 CREATE SEQUENCE acl_lists_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -113,8 +117,8 @@ ALTER TABLE public.acl_nodes OWNER TO freeswitch;
 CREATE SEQUENCE acl_nodes_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -150,8 +154,8 @@ ALTER TABLE public.carrier_gateway OWNER TO freeswitch;
 CREATE SEQUENCE carrier_gateway_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -184,8 +188,8 @@ ALTER TABLE public.carriers OWNER TO freeswitch;
 CREATE SEQUENCE carriers_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -198,31 +202,52 @@ ALTER TABLE public.carriers_id_seq OWNER TO freeswitch;
 ALTER SEQUENCE carriers_id_seq OWNED BY carriers.id;
 
 
--- Table: cdr
-
--- DROP TABLE cdr;
+--
+-- Name: cdr; Type: TABLE; Schema: public; Owner: freeswitch; Tablespace: 
+--
 
 CREATE TABLE cdr (
-   id serial NOT NULL,
-  caller_id_name character varying NOT NULL,
-  caller_id_number character varying NOT NULL,
-  destination_number character varying NOT NULL,
-  context character varying NOT NULL,
-  start_stamp character varying NOT NULL,
-  answer_stamp character varying NOT NULL,
-  end_stamp character varying NOT NULL,
-  duration character varying NOT NULL,
-  billsec character varying NOT NULL,
-  hangup_cause character(128) NOT NULL,
-  uuid character varying NOT NULL,
-  bleg_uuid character varying NOT NULL,
-  accountcode character(128) NOT NULL,
-  read_codec character varying NOT NULL,
-  write_codec character varying NOT NULL,
-  CONSTRAINT cdr_pkey PRIMARY KEY (id)
+    id integer NOT NULL,
+    caller_id_name character varying NOT NULL,
+    caller_id_number character varying NOT NULL,
+    destination_number character varying NOT NULL,
+    context character varying NOT NULL,
+    start_stamp character varying NOT NULL,
+    answer_stamp character varying NOT NULL,
+    end_stamp character varying NOT NULL,
+    duration character varying NOT NULL,
+    billsec character varying NOT NULL,
+    hangup_cause character(128) NOT NULL,
+    uuid character varying NOT NULL,
+    bleg_uuid character varying NOT NULL,
+    accountcode character(128) NOT NULL,
+    read_codec character varying NOT NULL,
+    write_codec character varying NOT NULL
 );
 
-ALTER TABLE cdr OWNER TO freeswitch;
+
+ALTER TABLE public.cdr OWNER TO freeswitch;
+
+--
+-- Name: cdr_id_seq; Type: SEQUENCE; Schema: public; Owner: freeswitch
+--
+
+CREATE SEQUENCE cdr_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cdr_id_seq OWNER TO freeswitch;
+
+--
+-- Name: cdr_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: freeswitch
+--
+
+ALTER SEQUENCE cdr_id_seq OWNED BY cdr.id;
+
 
 --
 -- Name: conference_advertise; Type: TABLE; Schema: public; Owner: freeswitch; Tablespace: 
@@ -244,8 +269,8 @@ ALTER TABLE public.conference_advertise OWNER TO freeswitch;
 CREATE SEQUENCE conference_advertise_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -279,8 +304,8 @@ ALTER TABLE public.conference_controls OWNER TO freeswitch;
 CREATE SEQUENCE conference_controls_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -314,8 +339,8 @@ ALTER TABLE public.conference_profiles OWNER TO freeswitch;
 CREATE SEQUENCE conference_profiles_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -364,8 +389,8 @@ ALTER TABLE public.dialplan_actions OWNER TO freeswitch;
 CREATE SEQUENCE dialplan_actions_action_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -400,8 +425,8 @@ ALTER TABLE public.dialplan_condition OWNER TO freeswitch;
 CREATE SEQUENCE dialplan_condition_condition_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -435,8 +460,8 @@ ALTER TABLE public.dialplan_context OWNER TO freeswitch;
 CREATE SEQUENCE dialplan_context_context_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -456,8 +481,8 @@ ALTER SEQUENCE dialplan_context_context_id_seq OWNED BY dialplan_context.context
 CREATE SEQUENCE dialplan_dialplan_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -492,8 +517,8 @@ ALTER TABLE public.dialplan_extension OWNER TO freeswitch;
 CREATE SEQUENCE dialplan_extension_extension_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -526,8 +551,8 @@ ALTER TABLE public.dialplan_special OWNER TO freeswitch;
 CREATE SEQUENCE dialplan_special_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -561,8 +586,8 @@ ALTER TABLE public.dingaling_profile_params OWNER TO freeswitch;
 CREATE SEQUENCE dingaling_profile_params_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -595,8 +620,8 @@ ALTER TABLE public.dingaling_profiles OWNER TO freeswitch;
 CREATE SEQUENCE dingaling_profiles_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -629,8 +654,8 @@ ALTER TABLE public.dingaling_settings OWNER TO freeswitch;
 CREATE SEQUENCE dingaling_settings_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -650,7 +675,8 @@ ALTER SEQUENCE dingaling_settings_id_seq OWNED BY dingaling_settings.id;
 CREATE TABLE directory (
     id integer NOT NULL,
     username character varying(256) NOT NULL,
-    domain character varying(256) NOT NULL
+    domain_id integer NOT NULL,
+    cache integer DEFAULT 0 NOT NULL
 );
 
 
@@ -675,8 +701,8 @@ ALTER TABLE public.directory_domains OWNER TO freeswitch;
 CREATE SEQUENCE directory_domains_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -710,8 +736,8 @@ ALTER TABLE public.directory_gateway_params OWNER TO freeswitch;
 CREATE SEQUENCE directory_gateway_params_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -744,8 +770,8 @@ ALTER TABLE public.directory_gateways OWNER TO freeswitch;
 CREATE SEQUENCE directory_gateways_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -779,8 +805,8 @@ ALTER TABLE public.directory_global_params OWNER TO freeswitch;
 CREATE SEQUENCE directory_global_params_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -814,8 +840,8 @@ ALTER TABLE public.directory_global_vars OWNER TO freeswitch;
 CREATE SEQUENCE directory_global_vars_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -848,8 +874,8 @@ ALTER TABLE public.directory_group_user_map OWNER TO freeswitch;
 CREATE SEQUENCE directory_group_user_map_map_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -881,8 +907,8 @@ ALTER TABLE public.directory_groups OWNER TO freeswitch;
 CREATE SEQUENCE directory_groups_group_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -902,8 +928,8 @@ ALTER SEQUENCE directory_groups_group_id_seq OWNED BY directory_groups.group_id;
 CREATE SEQUENCE directory_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -937,8 +963,8 @@ ALTER TABLE public.directory_params OWNER TO freeswitch;
 CREATE SEQUENCE directory_params_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -972,8 +998,8 @@ ALTER TABLE public.directory_vars OWNER TO freeswitch;
 CREATE SEQUENCE directory_vars_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1006,8 +1032,8 @@ ALTER TABLE public.easyroute_conf OWNER TO freeswitch;
 CREATE SEQUENCE easyroute_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1044,8 +1070,8 @@ ALTER TABLE public.easyroute_data OWNER TO freeswitch;
 CREATE SEQUENCE easyroute_data_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1077,8 +1103,8 @@ ALTER TABLE public.iax_conf OWNER TO freeswitch;
 CREATE SEQUENCE iax_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1112,8 +1138,8 @@ ALTER TABLE public.iax_settings OWNER TO freeswitch;
 CREATE SEQUENCE iax_settings_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1153,8 +1179,8 @@ ALTER TABLE public.ivr_conf OWNER TO freeswitch;
 CREATE SEQUENCE ivr_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1189,8 +1215,8 @@ ALTER TABLE public.ivr_entries OWNER TO freeswitch;
 CREATE SEQUENCE ivr_entries_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1224,7 +1250,8 @@ CREATE TABLE lcr (
     quality numeric(10,6) DEFAULT 0 NOT NULL,
     reliability numeric(10,6) DEFAULT 0 NOT NULL,
     cid character varying(32) DEFAULT ''::character varying NOT NULL,
-    enabled boolean DEFAULT true NOT NULL
+    enabled boolean DEFAULT true NOT NULL,
+    lrn boolean DEFAULT false NOT NULL
 );
 
 
@@ -1250,8 +1277,8 @@ ALTER TABLE public.lcr_conf OWNER TO freeswitch;
 CREATE SEQUENCE lcr_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1271,8 +1298,8 @@ ALTER SEQUENCE lcr_conf_id_seq OWNED BY lcr_conf.id;
 CREATE SEQUENCE lcr_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1304,8 +1331,8 @@ ALTER TABLE public.lcr_profiles OWNER TO freeswitch;
 CREATE SEQUENCE lcr_profiles_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1339,8 +1366,8 @@ ALTER TABLE public.lcr_settings OWNER TO freeswitch;
 CREATE SEQUENCE lcr_settings_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1373,8 +1400,8 @@ ALTER TABLE public.limit_conf OWNER TO freeswitch;
 CREATE SEQUENCE limit_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1423,8 +1450,8 @@ ALTER TABLE public.local_stream_conf OWNER TO freeswitch;
 CREATE SEQUENCE local_stream_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1456,8 +1483,8 @@ ALTER TABLE public.modless_conf OWNER TO freeswitch;
 CREATE SEQUENCE modless_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1509,8 +1536,8 @@ ALTER TABLE public.post_load_modules_conf OWNER TO freeswitch;
 CREATE SEQUENCE post_load_modules_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1546,8 +1573,8 @@ ALTER TABLE public.rss_conf OWNER TO freeswitch;
 CREATE SEQUENCE rss_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1727,8 +1754,8 @@ ALTER TABLE public.sofia_aliases OWNER TO freeswitch;
 CREATE SEQUENCE sofia_aliases_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1760,8 +1787,8 @@ ALTER TABLE public.sofia_conf OWNER TO freeswitch;
 CREATE SEQUENCE sofia_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1795,8 +1822,8 @@ ALTER TABLE public.sofia_domains OWNER TO freeswitch;
 CREATE SEQUENCE sofia_domains_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1831,8 +1858,8 @@ ALTER TABLE public.sofia_gateways OWNER TO freeswitch;
 CREATE SEQUENCE sofia_gateways_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1866,8 +1893,8 @@ ALTER TABLE public.sofia_settings OWNER TO freeswitch;
 CREATE SEQUENCE sofia_settings_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1899,8 +1926,8 @@ ALTER TABLE public.voicemail_conf OWNER TO freeswitch;
 CREATE SEQUENCE voicemail_conf_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -1934,8 +1961,8 @@ ALTER TABLE public.voicemail_email OWNER TO freeswitch;
 CREATE SEQUENCE voicemail_email_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -2006,8 +2033,8 @@ ALTER TABLE public.voicemail_settings OWNER TO freeswitch;
 CREATE SEQUENCE voicemail_settings_id_seq
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -2024,350 +2051,1241 @@ ALTER SEQUENCE voicemail_settings_id_seq OWNED BY voicemail_settings.id;
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE accounts ALTER COLUMN id SET DEFAULT nextval('accounts_id_seq'::regclass);
+ALTER TABLE ONLY accounts ALTER COLUMN id SET DEFAULT nextval('accounts_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE acl_lists ALTER COLUMN id SET DEFAULT nextval('acl_lists_id_seq'::regclass);
+ALTER TABLE ONLY acl_lists ALTER COLUMN id SET DEFAULT nextval('acl_lists_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE acl_nodes ALTER COLUMN id SET DEFAULT nextval('acl_nodes_id_seq'::regclass);
+ALTER TABLE ONLY acl_nodes ALTER COLUMN id SET DEFAULT nextval('acl_nodes_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE carrier_gateway ALTER COLUMN id SET DEFAULT nextval('carrier_gateway_id_seq'::regclass);
+ALTER TABLE ONLY carrier_gateway ALTER COLUMN id SET DEFAULT nextval('carrier_gateway_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE carriers ALTER COLUMN id SET DEFAULT nextval('carriers_id_seq'::regclass);
+ALTER TABLE ONLY carriers ALTER COLUMN id SET DEFAULT nextval('carriers_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE conference_advertise ALTER COLUMN id SET DEFAULT nextval('conference_advertise_id_seq'::regclass);
+ALTER TABLE ONLY cdr ALTER COLUMN id SET DEFAULT nextval('cdr_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE conference_controls ALTER COLUMN id SET DEFAULT nextval('conference_controls_id_seq'::regclass);
+ALTER TABLE ONLY conference_advertise ALTER COLUMN id SET DEFAULT nextval('conference_advertise_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE conference_profiles ALTER COLUMN id SET DEFAULT nextval('conference_profiles_id_seq'::regclass);
+ALTER TABLE ONLY conference_controls ALTER COLUMN id SET DEFAULT nextval('conference_controls_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
+--
+
+ALTER TABLE ONLY conference_profiles ALTER COLUMN id SET DEFAULT nextval('conference_profiles_id_seq'::regclass);
 
 
 --
 -- Name: dialplan_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan ALTER COLUMN dialplan_id SET DEFAULT nextval('dialplan_dialplan_id_seq'::regclass);
+ALTER TABLE ONLY dialplan ALTER COLUMN dialplan_id SET DEFAULT nextval('dialplan_dialplan_id_seq'::regclass);
 
 
 --
 -- Name: action_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan_actions ALTER COLUMN action_id SET DEFAULT nextval('dialplan_actions_action_id_seq'::regclass);
+ALTER TABLE ONLY dialplan_actions ALTER COLUMN action_id SET DEFAULT nextval('dialplan_actions_action_id_seq'::regclass);
 
 
 --
 -- Name: condition_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan_condition ALTER COLUMN condition_id SET DEFAULT nextval('dialplan_condition_condition_id_seq'::regclass);
+ALTER TABLE ONLY dialplan_condition ALTER COLUMN condition_id SET DEFAULT nextval('dialplan_condition_condition_id_seq'::regclass);
 
 
 --
 -- Name: context_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan_context ALTER COLUMN context_id SET DEFAULT nextval('dialplan_context_context_id_seq'::regclass);
+ALTER TABLE ONLY dialplan_context ALTER COLUMN context_id SET DEFAULT nextval('dialplan_context_context_id_seq'::regclass);
 
 
 --
 -- Name: extension_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan_extension ALTER COLUMN extension_id SET DEFAULT nextval('dialplan_extension_extension_id_seq'::regclass);
+ALTER TABLE ONLY dialplan_extension ALTER COLUMN extension_id SET DEFAULT nextval('dialplan_extension_extension_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dialplan_special ALTER COLUMN id SET DEFAULT nextval('dialplan_special_id_seq'::regclass);
+ALTER TABLE ONLY dialplan_special ALTER COLUMN id SET DEFAULT nextval('dialplan_special_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dingaling_profile_params ALTER COLUMN id SET DEFAULT nextval('dingaling_profile_params_id_seq'::regclass);
+ALTER TABLE ONLY dingaling_profile_params ALTER COLUMN id SET DEFAULT nextval('dingaling_profile_params_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dingaling_profiles ALTER COLUMN id SET DEFAULT nextval('dingaling_profiles_id_seq'::regclass);
+ALTER TABLE ONLY dingaling_profiles ALTER COLUMN id SET DEFAULT nextval('dingaling_profiles_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE dingaling_settings ALTER COLUMN id SET DEFAULT nextval('dingaling_settings_id_seq'::regclass);
+ALTER TABLE ONLY dingaling_settings ALTER COLUMN id SET DEFAULT nextval('dingaling_settings_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory ALTER COLUMN id SET DEFAULT nextval('directory_id_seq'::regclass);
+ALTER TABLE ONLY directory ALTER COLUMN id SET DEFAULT nextval('directory_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_domains ALTER COLUMN id SET DEFAULT nextval('directory_domains_id_seq'::regclass);
+ALTER TABLE ONLY directory_domains ALTER COLUMN id SET DEFAULT nextval('directory_domains_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_gateway_params ALTER COLUMN id SET DEFAULT nextval('directory_gateway_params_id_seq'::regclass);
+ALTER TABLE ONLY directory_gateway_params ALTER COLUMN id SET DEFAULT nextval('directory_gateway_params_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_gateways ALTER COLUMN id SET DEFAULT nextval('directory_gateways_id_seq'::regclass);
+ALTER TABLE ONLY directory_gateways ALTER COLUMN id SET DEFAULT nextval('directory_gateways_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_global_params ALTER COLUMN id SET DEFAULT nextval('directory_global_params_id_seq'::regclass);
+ALTER TABLE ONLY directory_global_params ALTER COLUMN id SET DEFAULT nextval('directory_global_params_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_global_vars ALTER COLUMN id SET DEFAULT nextval('directory_global_vars_id_seq'::regclass);
+ALTER TABLE ONLY directory_global_vars ALTER COLUMN id SET DEFAULT nextval('directory_global_vars_id_seq'::regclass);
 
 
 --
 -- Name: map_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_group_user_map ALTER COLUMN map_id SET DEFAULT nextval('directory_group_user_map_map_id_seq'::regclass);
+ALTER TABLE ONLY directory_group_user_map ALTER COLUMN map_id SET DEFAULT nextval('directory_group_user_map_map_id_seq'::regclass);
 
 
 --
 -- Name: group_id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_groups ALTER COLUMN group_id SET DEFAULT nextval('directory_groups_group_id_seq'::regclass);
+ALTER TABLE ONLY directory_groups ALTER COLUMN group_id SET DEFAULT nextval('directory_groups_group_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_params ALTER COLUMN id SET DEFAULT nextval('directory_params_id_seq'::regclass);
+ALTER TABLE ONLY directory_params ALTER COLUMN id SET DEFAULT nextval('directory_params_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE directory_vars ALTER COLUMN id SET DEFAULT nextval('directory_vars_id_seq'::regclass);
+ALTER TABLE ONLY directory_vars ALTER COLUMN id SET DEFAULT nextval('directory_vars_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE easyroute_conf ALTER COLUMN id SET DEFAULT nextval('easyroute_conf_id_seq'::regclass);
+ALTER TABLE ONLY easyroute_conf ALTER COLUMN id SET DEFAULT nextval('easyroute_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE easyroute_data ALTER COLUMN id SET DEFAULT nextval('easyroute_data_id_seq'::regclass);
+ALTER TABLE ONLY easyroute_data ALTER COLUMN id SET DEFAULT nextval('easyroute_data_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE iax_conf ALTER COLUMN id SET DEFAULT nextval('iax_conf_id_seq'::regclass);
+ALTER TABLE ONLY iax_conf ALTER COLUMN id SET DEFAULT nextval('iax_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE iax_settings ALTER COLUMN id SET DEFAULT nextval('iax_settings_id_seq'::regclass);
+ALTER TABLE ONLY iax_settings ALTER COLUMN id SET DEFAULT nextval('iax_settings_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE ivr_conf ALTER COLUMN id SET DEFAULT nextval('ivr_conf_id_seq'::regclass);
+ALTER TABLE ONLY ivr_conf ALTER COLUMN id SET DEFAULT nextval('ivr_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE ivr_entries ALTER COLUMN id SET DEFAULT nextval('ivr_entries_id_seq'::regclass);
+ALTER TABLE ONLY ivr_entries ALTER COLUMN id SET DEFAULT nextval('ivr_entries_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE lcr ALTER COLUMN id SET DEFAULT nextval('lcr_id_seq'::regclass);
+ALTER TABLE ONLY lcr ALTER COLUMN id SET DEFAULT nextval('lcr_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE lcr_conf ALTER COLUMN id SET DEFAULT nextval('lcr_conf_id_seq'::regclass);
+ALTER TABLE ONLY lcr_conf ALTER COLUMN id SET DEFAULT nextval('lcr_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE lcr_profiles ALTER COLUMN id SET DEFAULT nextval('lcr_profiles_id_seq'::regclass);
+ALTER TABLE ONLY lcr_profiles ALTER COLUMN id SET DEFAULT nextval('lcr_profiles_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE lcr_settings ALTER COLUMN id SET DEFAULT nextval('lcr_settings_id_seq'::regclass);
+ALTER TABLE ONLY lcr_settings ALTER COLUMN id SET DEFAULT nextval('lcr_settings_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE limit_conf ALTER COLUMN id SET DEFAULT nextval('limit_conf_id_seq'::regclass);
+ALTER TABLE ONLY limit_conf ALTER COLUMN id SET DEFAULT nextval('limit_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE local_stream_conf ALTER COLUMN id SET DEFAULT nextval('local_stream_conf_id_seq'::regclass);
+ALTER TABLE ONLY local_stream_conf ALTER COLUMN id SET DEFAULT nextval('local_stream_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE modless_conf ALTER COLUMN id SET DEFAULT nextval('modless_conf_id_seq'::regclass);
+ALTER TABLE ONLY modless_conf ALTER COLUMN id SET DEFAULT nextval('modless_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE post_load_modules_conf ALTER COLUMN id SET DEFAULT nextval('post_load_modules_conf_id_seq'::regclass);
+ALTER TABLE ONLY post_load_modules_conf ALTER COLUMN id SET DEFAULT nextval('post_load_modules_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE rss_conf ALTER COLUMN id SET DEFAULT nextval('rss_conf_id_seq'::regclass);
+ALTER TABLE ONLY rss_conf ALTER COLUMN id SET DEFAULT nextval('rss_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE sofia_aliases ALTER COLUMN id SET DEFAULT nextval('sofia_aliases_id_seq'::regclass);
+ALTER TABLE ONLY sofia_aliases ALTER COLUMN id SET DEFAULT nextval('sofia_aliases_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE sofia_conf ALTER COLUMN id SET DEFAULT nextval('sofia_conf_id_seq'::regclass);
+ALTER TABLE ONLY sofia_conf ALTER COLUMN id SET DEFAULT nextval('sofia_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE sofia_domains ALTER COLUMN id SET DEFAULT nextval('sofia_domains_id_seq'::regclass);
+ALTER TABLE ONLY sofia_domains ALTER COLUMN id SET DEFAULT nextval('sofia_domains_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE sofia_gateways ALTER COLUMN id SET DEFAULT nextval('sofia_gateways_id_seq'::regclass);
+ALTER TABLE ONLY sofia_gateways ALTER COLUMN id SET DEFAULT nextval('sofia_gateways_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE sofia_settings ALTER COLUMN id SET DEFAULT nextval('sofia_settings_id_seq'::regclass);
+ALTER TABLE ONLY sofia_settings ALTER COLUMN id SET DEFAULT nextval('sofia_settings_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE voicemail_conf ALTER COLUMN id SET DEFAULT nextval('voicemail_conf_id_seq'::regclass);
+ALTER TABLE ONLY voicemail_conf ALTER COLUMN id SET DEFAULT nextval('voicemail_conf_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE voicemail_email ALTER COLUMN id SET DEFAULT nextval('voicemail_email_id_seq'::regclass);
+ALTER TABLE ONLY voicemail_email ALTER COLUMN id SET DEFAULT nextval('voicemail_email_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: freeswitch
 --
 
-ALTER TABLE voicemail_settings ALTER COLUMN id SET DEFAULT nextval('voicemail_settings_id_seq'::regclass);
+ALTER TABLE ONLY voicemail_settings ALTER COLUMN id SET DEFAULT nextval('voicemail_settings_id_seq'::regclass);
+
+
+--
+-- Data for Name: accounts; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY accounts (id, name, cash) FROM stdin;
+\.
+
+
+--
+-- Name: accounts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('accounts_id_seq', 1, false);
+
+
+--
+-- Data for Name: acl_lists; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY acl_lists (id, acl_name, default_policy) FROM stdin;
+\.
+
+
+--
+-- Name: acl_lists_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('acl_lists_id_seq', 1, false);
+
+
+--
+-- Data for Name: acl_nodes; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY acl_nodes (id, cidr, type, list_id) FROM stdin;
+\.
+
+
+--
+-- Name: acl_nodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('acl_nodes_id_seq', 1, false);
+
+
+--
+-- Data for Name: carrier_gateway; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY carrier_gateway (id, carrier_id, prefix, suffix, codec, enabled) FROM stdin;
+1	1	sofia/internal/	@conference.freeswitch.org		t
+\.
+
+
+--
+-- Name: carrier_gateway_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('carrier_gateway_id_seq', 1, true);
+
+
+--
+-- Data for Name: carriers; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY carriers (id, carrier_name, enabled) FROM stdin;
+1	FreeSWITCH Conference	t
+\.
+
+
+--
+-- Name: carriers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('carriers_id_seq', 1, true);
+
+
+--
+-- Data for Name: cdr; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY cdr (id, caller_id_name, caller_id_number, destination_number, context, start_stamp, answer_stamp, end_stamp, duration, billsec, hangup_cause, uuid, bleg_uuid, accountcode, read_codec, write_codec) FROM stdin;
+\.
+
+
+--
+-- Name: cdr_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('cdr_id_seq', 1, false);
+
+
+--
+-- Data for Name: conference_advertise; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY conference_advertise (id, room, status) FROM stdin;
+\.
+
+
+--
+-- Name: conference_advertise_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('conference_advertise_id_seq', 1, false);
+
+
+--
+-- Data for Name: conference_controls; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY conference_controls (id, conf_group, action, digits) FROM stdin;
+\.
+
+
+--
+-- Name: conference_controls_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('conference_controls_id_seq', 1, false);
+
+
+--
+-- Data for Name: conference_profiles; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY conference_profiles (id, profile_name, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: conference_profiles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('conference_profiles_id_seq', 1, false);
+
+
+--
+-- Data for Name: dialplan; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan (dialplan_id, domain, ip_address) FROM stdin;
+2	192.168.86.198	192.168.86.198
+\.
+
+
+--
+-- Data for Name: dialplan_actions; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan_actions (action_id, condition_id, application, data, type, weight) FROM stdin;
+1	1	transfer	lcr $1	action	0
+\.
+
+
+--
+-- Name: dialplan_actions_action_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_actions_action_id_seq', 1, true);
+
+
+--
+-- Data for Name: dialplan_condition; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan_condition (condition_id, extension_id, field, expression, weight) FROM stdin;
+1	1	destination_number	^1[2-9]\\d{2}[2-9]\\d{6}$	0
+\.
+
+
+--
+-- Name: dialplan_condition_condition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_condition_condition_id_seq', 1, true);
+
+
+--
+-- Data for Name: dialplan_context; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan_context (context_id, dialplan_id, context, weight) FROM stdin;
+1	2	default	0
+\.
+
+
+--
+-- Name: dialplan_context_context_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_context_context_id_seq', 1, true);
+
+
+--
+-- Name: dialplan_dialplan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_dialplan_id_seq', 2, true);
+
+
+--
+-- Data for Name: dialplan_extension; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan_extension (extension_id, context_id, name, continue, weight) FROM stdin;
+1	1	lcr	false	0
+\.
+
+
+--
+-- Name: dialplan_extension_extension_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_extension_extension_id_seq', 1, true);
+
+
+--
+-- Data for Name: dialplan_special; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dialplan_special (id, context, class_file) FROM stdin;
+\.
+
+
+--
+-- Name: dialplan_special_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dialplan_special_id_seq', 1, false);
+
+
+--
+-- Data for Name: dingaling_profile_params; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dingaling_profile_params (id, dingaling_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: dingaling_profile_params_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dingaling_profile_params_id_seq', 1, false);
+
+
+--
+-- Data for Name: dingaling_profiles; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dingaling_profiles (id, profile_name, type) FROM stdin;
+\.
+
+
+--
+-- Name: dingaling_profiles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dingaling_profiles_id_seq', 1, false);
+
+
+--
+-- Data for Name: dingaling_settings; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY dingaling_settings (id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: dingaling_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('dingaling_settings_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory (id, username, domain_id, cache) FROM stdin;
+1	1010	1	300000
+2	1010	2	300000
+3	1010	3	300000
+\.
+
+
+--
+-- Data for Name: directory_domains; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_domains (id, domain_name) FROM stdin;
+1	rc-vaio.intralanman.com
+2	192.168.86.198
+3	10.66.29.101
+\.
+
+
+--
+-- Name: directory_domains_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_domains_id_seq', 3, true);
+
+
+--
+-- Data for Name: directory_gateway_params; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_gateway_params (id, d_gw_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: directory_gateway_params_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_gateway_params_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory_gateways; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_gateways (id, directory_id, gateway_name) FROM stdin;
+\.
+
+
+--
+-- Name: directory_gateways_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_gateways_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory_global_params; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_global_params (id, param_name, param_value, domain_id) FROM stdin;
+\.
+
+
+--
+-- Name: directory_global_params_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_global_params_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory_global_vars; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_global_vars (id, var_name, var_value, domain_id) FROM stdin;
+\.
+
+
+--
+-- Name: directory_global_vars_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_global_vars_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory_group_user_map; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_group_user_map (map_id, group_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: directory_group_user_map_map_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_group_user_map_map_id_seq', 1, false);
+
+
+--
+-- Data for Name: directory_groups; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_groups (group_id, group_name) FROM stdin;
+\.
+
+
+--
+-- Name: directory_groups_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_groups_group_id_seq', 1, false);
+
+
+--
+-- Name: directory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_id_seq', 3, true);
+
+
+--
+-- Data for Name: directory_params; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_params (id, directory_id, param_name, param_value) FROM stdin;
+1	1	password	1234
+2	2	password	1234
+3	3	password	1234
+\.
+
+
+--
+-- Name: directory_params_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_params_id_seq', 6, true);
+
+
+--
+-- Data for Name: directory_vars; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY directory_vars (id, directory_id, var_name, var_value) FROM stdin;
+\.
+
+
+--
+-- Name: directory_vars_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('directory_vars_id_seq', 1, false);
+
+
+--
+-- Data for Name: easyroute_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY easyroute_conf (id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: easyroute_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('easyroute_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: easyroute_data; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY easyroute_data (id, gateway, "group", call_limit, tech_prefix, acctcode, destination_number) FROM stdin;
+\.
+
+
+--
+-- Name: easyroute_data_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('easyroute_data_id_seq', 1, false);
+
+
+--
+-- Data for Name: iax_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY iax_conf (id, profile_name) FROM stdin;
+\.
+
+
+--
+-- Name: iax_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('iax_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: iax_settings; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY iax_settings (id, iax_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: iax_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('iax_settings_id_seq', 1, false);
+
+
+--
+-- Data for Name: ivr_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY ivr_conf (id, name, greet_long, greet_short, invalid_sound, exit_sound, max_failures, timeout, tts_engine, tts_voice) FROM stdin;
+\.
+
+
+--
+-- Name: ivr_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('ivr_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: ivr_entries; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY ivr_entries (id, ivr_id, action, digits, params) FROM stdin;
+\.
+
+
+--
+-- Name: ivr_entries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('ivr_entries_id_seq', 1, false);
+
+
+--
+-- Data for Name: lcr; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY lcr (id, digits, rate, intrastate_rate, intralata_rate, carrier_id, lead_strip, trail_strip, prefix, suffix, lcr_profile, date_start, date_end, quality, reliability, cid, enabled, lrn) FROM stdin;
+2	1	11.00000	11.00000	11.00000	1	11	0	888		1	1970-01-01 00:00:00-05	2030-12-31 00:00:00-05	0.000000	0.000000		t	f
+\.
+
+
+--
+-- Data for Name: lcr_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY lcr_conf (id, param_name, param_value) FROM stdin;
+1	odbc-dsn	pgsql://hostaddr=127.0.0.1 dbname=freeswitch user=freeswitch password=Fr33Sw1tch
+\.
+
+
+--
+-- Name: lcr_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('lcr_conf_id_seq', 1, true);
+
+
+--
+-- Name: lcr_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('lcr_id_seq', 2, true);
+
+
+--
+-- Data for Name: lcr_profiles; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY lcr_profiles (id, profile_name) FROM stdin;
+1	default
+\.
+
+
+--
+-- Name: lcr_profiles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('lcr_profiles_id_seq', 1, true);
+
+
+--
+-- Data for Name: lcr_settings; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY lcr_settings (id, lcr_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: lcr_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('lcr_settings_id_seq', 1, false);
+
+
+--
+-- Data for Name: limit_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY limit_conf (id, name, value) FROM stdin;
+\.
+
+
+--
+-- Name: limit_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('limit_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: limit_data; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY limit_data (hostname, realm, id, uuid) FROM stdin;
+\.
+
+
+--
+-- Data for Name: local_stream_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY local_stream_conf (id, directory_name, directory_path, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: local_stream_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('local_stream_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: modless_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY modless_conf (id, conf_name) FROM stdin;
+1	post_load_switch.conf
+2	console.conf
+\.
+
+
+--
+-- Name: modless_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('modless_conf_id_seq', 2, true);
+
+
+--
+-- Data for Name: npa_nxx_company_ocn; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY npa_nxx_company_ocn (npa, nxx, company_type, ocn, company_name, lata, ratecenter, state) FROM stdin;
+\.
+
+
+--
+-- Data for Name: post_load_modules_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY post_load_modules_conf (id, module_name, load_module, priority) FROM stdin;
+1	mod_commands	t	1000
+2	mod_sofia	t	1000
+3	mod_cdr_csv	t	1000
+4	mod_translate	t	1000
+5	mod_db	t	1000
+\.
+
+
+--
+-- Name: post_load_modules_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('post_load_modules_conf_id_seq', 5, true);
+
+
+--
+-- Data for Name: rss_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY rss_conf (id, directory_id, feed, local_file, description, priority) FROM stdin;
+\.
+
+
+--
+-- Name: rss_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('rss_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: sip_authentication; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_authentication (nonce, expires, profile_name, hostname) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_dialogs; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_dialogs (call_id, uuid, sip_to_user, sip_to_host, sip_from_user, sip_from_host, contact_user, contact_host, state, direction, user_agent, profile_name, hostname) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_presence; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_presence (sip_user, sip_host, status, rpid, expires, user_agent, profile_name, hostname, network_ip, network_port) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_registrations; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_registrations (call_id, sip_user, sip_host, presence_hosts, contact, status, rpid, expires, user_agent, server_user, server_host, profile_name, hostname, network_ip, network_port, sip_username, sip_realm, mwi_user, mwi_host) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_shared_appearance_dialogs; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_shared_appearance_dialogs (profile_name, hostname, contact_str, call_id, network_ip, expires) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_shared_appearance_subscriptions; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_shared_appearance_subscriptions (subscriber, call_id, aor, profile_name, hostname, contact_str, network_ip) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sip_subscriptions; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sip_subscriptions (proto, sip_user, sip_host, sub_to_user, sub_to_host, presence_hosts, event, contact, call_id, full_from, full_via, expires, user_agent, accept, profile_name, hostname, network_port, network_ip) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sofia_aliases; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sofia_aliases (id, sofia_id, alias_name) FROM stdin;
+\.
+
+
+--
+-- Name: sofia_aliases_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('sofia_aliases_id_seq', 1, false);
+
+
+--
+-- Data for Name: sofia_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sofia_conf (id, profile_name) FROM stdin;
+1	internal
+\.
+
+
+--
+-- Name: sofia_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('sofia_conf_id_seq', 1, true);
+
+
+--
+-- Data for Name: sofia_domains; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sofia_domains (id, sofia_id, domain_name, parse) FROM stdin;
+\.
+
+
+--
+-- Name: sofia_domains_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('sofia_domains_id_seq', 1, false);
+
+
+--
+-- Data for Name: sofia_gateways; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sofia_gateways (id, sofia_id, gateway_name, gateway_param, gateway_value) FROM stdin;
+\.
+
+
+--
+-- Name: sofia_gateways_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('sofia_gateways_id_seq', 1, false);
+
+
+--
+-- Data for Name: sofia_settings; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY sofia_settings (id, sofia_id, param_name, param_value) FROM stdin;
+1	1	dialplan	translate,XML
+2	1	inbound-codec-prefs	OPUS,G722.1,G722,PCMU,speex
+3	1	outbound-codec-prefs	OPUS,G722.1,G722,PCMU,speex
+4	1	sip-trace	yes
+\.
+
+
+--
+-- Name: sofia_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('sofia_settings_id_seq', 4, true);
+
+
+--
+-- Data for Name: voicemail_conf; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY voicemail_conf (id, vm_profile) FROM stdin;
+\.
+
+
+--
+-- Name: voicemail_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('voicemail_conf_id_seq', 1, false);
+
+
+--
+-- Data for Name: voicemail_email; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY voicemail_email (id, voicemail_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: voicemail_email_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('voicemail_email_id_seq', 1, false);
+
+
+--
+-- Data for Name: voicemail_msgs; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY voicemail_msgs (created_epoch, read_epoch, username, domain, uuid, cid_name, cid_number, in_folder, file_path, message_len, flags, read_flags) FROM stdin;
+\.
+
+
+--
+-- Data for Name: voicemail_prefs; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY voicemail_prefs (username, domain, name_path, greeting_path, password) FROM stdin;
+\.
+
+
+--
+-- Data for Name: voicemail_settings; Type: TABLE DATA; Schema: public; Owner: freeswitch
+--
+
+COPY voicemail_settings (id, voicemail_id, param_name, param_value) FROM stdin;
+\.
+
+
+--
+-- Name: voicemail_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freeswitch
+--
+
+SELECT pg_catalog.setval('voicemail_settings_id_seq', 1, false);
 
 
 --
@@ -2400,6 +3318,14 @@ ALTER TABLE ONLY carrier_gateway
 
 ALTER TABLE ONLY carriers
     ADD CONSTRAINT carriers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cdr_pkey; Type: CONSTRAINT; Schema: public; Owner: freeswitch; Tablespace: 
+--
+
+ALTER TABLE ONLY cdr
+    ADD CONSTRAINT cdr_pkey PRIMARY KEY (id);
 
 
 --
@@ -2679,7 +3605,7 @@ ALTER TABLE ONLY directory
 --
 
 ALTER TABLE ONLY directory
-    ADD CONSTRAINT directory_username_key UNIQUE (username, domain);
+    ADD CONSTRAINT directory_username_key UNIQUE (username, domain_id);
 
 
 --
