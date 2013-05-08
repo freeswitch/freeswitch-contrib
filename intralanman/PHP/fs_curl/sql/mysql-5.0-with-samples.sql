@@ -90,7 +90,6 @@ CREATE TABLE IF NOT EXISTS `cdr` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `conference_advertise`
@@ -677,7 +676,8 @@ INSERT INTO `dingaling_settings` (`id`, `param_name`, `param_value`) VALUES
 CREATE TABLE IF NOT EXISTS `directory` (
   `id` int(11) NOT NULL auto_increment,
   `username` varchar(255) NOT NULL,
-  `domain` varchar(255) NOT NULL,
+  `domain_id` int(10) NOT NULL,
+  `cache` int(10) NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
 
@@ -685,17 +685,17 @@ CREATE TABLE IF NOT EXISTS `directory` (
 -- Dumping data for table `directory`
 --
 
-INSERT INTO `directory` (`id`, `username`, `domain`) VALUES
-(1, '1000', 'example.com'),
-(2, '1001', 'example.org'),
-(3, '1002', 'example.net'),
-(5, '1003', 'example.info'),
-(6, '1004', 'example.com'),
-(7, '1005', 'example.org'),
-(8, '1006', 'example.net'),
-(9, '1007', 'example.info'),
-(10, '2000', 'default'),
-(11, '1009', '$${local_ip_v4}');
+INSERT INTO `directory` (`id`, `username`, `domain_id`) VALUES
+(1, '1000', 1),
+(2, '1001', 2),
+(3, '1002', 1),
+(5, '1003', 2),
+(6, '1004', 1),
+(7, '1005', 2),
+(8, '1006', 1),
+(9, '1007', 2),
+(10, '2000', 1),
+(11, '1009', 2);
 
 -- --------------------------------------------------------
 
