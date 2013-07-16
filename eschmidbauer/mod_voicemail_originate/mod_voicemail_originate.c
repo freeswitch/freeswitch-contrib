@@ -25,7 +25,6 @@
  *
  * Emmanuel Schmidbauer <e.schmidbauer@gmail.com>
  *
- *
  * mod_voicemail_originate.c -- Monitor MWI and originate call based on module profile parameters and voicemail user parameters
  *
  */
