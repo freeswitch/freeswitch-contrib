@@ -1,0 +1,16 @@
+<configuration name="csta.conf" description="CSTA Configuration">
+  <settings>
+  <!--
+     <param name="odbc-dsn" value="dsn:user:pass"/>
+	OR
+     <param name="odbc-dsn" value="pgsql://hostaddr=192.168.0.101 dbname=freeswitch user=freeswitch password='freeswitch' options='-c client_min_messages=NOTICE'"/>
+  -->
+  </settings>
+  <!-- profiles not implemented yet 
+  <profiles>
+     <profile name="default">
+        <param name="enabled" value="true"/>
+     </profile>
+  </profiles>
+  -->
+</configuration>
