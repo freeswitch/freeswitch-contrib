@@ -90,6 +90,12 @@ switch ($section) {
     case 'cdr':
         $conf = new fs_cdr();
         break;
+	case 'chatplan':
+		$conf = new fs_chatplan();
+		break;
+	case 'phrases':
+		$conf = new fs_phrases();
+		break;
 }
 
 $conf -> debug('---- Start _REQUEST ----');
