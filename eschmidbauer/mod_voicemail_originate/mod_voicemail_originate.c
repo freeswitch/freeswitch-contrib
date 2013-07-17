@@ -48,10 +48,9 @@ static const char *global_cf = "voicemail_originate.conf";
 
 static char create_sql[] =
 "CREATE TABLE voicemail_originate (\n"
-"   c_user           VARCHAR(255),\n"
-"   c_domain         VARCHAR(255),\n"
-"   c_state          VARCHAR(255) DEFAULT 'WAIT_FOR_NEXT_ATTEMPT',\n"
-"   mwi_status       VARCHAR(255),\n"
+"   vm_user          VARCHAR(255),\n"
+"   vm_domain        VARCHAR(255),\n"
+"   originate_state  VARCHAR(255) DEFAULT 'WAIT_FOR_NEXT_ATTEMPT',\n"
 "   created          INTEGER NOT NULL,\n"
 "   next_attempt     INTEGER NOT NULL DEFAULT 0,\n"
 "   attempt_count    INTEGER NOT NULL DEFAULT 0\n"
@@ -595,7 +594,7 @@ static switch_status_t state_handler(switch_core_session_t *session)
 		user_profile_t *profile = switch_channel_get_private(channel, "_vm_originate_profile_");
 
 		if(attempt_number >= profile->attempts) {
-			char *sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", user, domain);
+			char *sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Originate attempt limit reached, removing call from queue.\n");
 			if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
@@ -604,7 +603,7 @@ static switch_status_t state_handler(switch_core_session_t *session)
 			switch_core_event_hook_remove_state_change(session, state_handler);
 			free_user_profile(profile);
 		} else if (profile->confirm_status == SWITCH_STATUS_SUCCESS && profile->cause == SWITCH_CAUSE_SUCCESS) {
-			char *sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", user, domain);
+			char *sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Originate confirmed, removing call from queue.\n");
 			if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
@@ -613,7 +612,7 @@ static switch_status_t state_handler(switch_core_session_t *session)
 			switch_core_event_hook_remove_state_change(session, state_handler);
 			free_user_profile(profile);
 		} else if (state == CS_HANGUP) {
-			char *sql = switch_mprintf("UPDATE voicemail_originate SET c_state = 'WAIT_FOR_NEXT_ATTEMPT', next_attempt = '%" SWITCH_TIME_T_FMT "' WHERE c_user = '%q' and c_domain = '%q';", local_epoch_time_next(profile->wait), user, domain);
+			char *sql = switch_mprintf("UPDATE voicemail_originate SET originate_state = 'WAIT_FOR_NEXT_ATTEMPT', next_attempt = '%" SWITCH_TIME_T_FMT "' WHERE vm_user = '%q' and vm_domain = '%q';", local_epoch_time_next(profile->wait), user, domain);
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Originate failed, setting next attempt for %d seconds from now.\n", profile->wait);
 			if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
@@ -642,7 +641,7 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 
 	if (!(profile = set_user_profile(h->user, h->domain, ovars))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't find user [%s@%s]\n", h->user, h->domain);
-		sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+		sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 		if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 		}
@@ -662,7 +661,7 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 		switch_event_add_header(ovars, SWITCH_STACK_BOTTOM, "vm_originate_attempts", attempt_number);
 
 		if (profile->profile_enabled == SWITCH_FALSE) {
-			sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+			sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 			if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 			}
@@ -677,14 +676,14 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 			}
 			if(h->attempt_number >= profile->attempts) {
 				/* ATTEMPT LIMIT REACHED */
-				sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+				sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 				if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 				}
 				switch_safe_free(sql);
 			} else if (!zstr(profile->dial_string) && !zstr(profile->transfer)) {
 				char *sql;
-				sql = switch_mprintf("UPDATE voicemail_originate SET c_state = 'CALL_IN_PROGRESS', attempt_count = attempt_count + 1 WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+				sql = switch_mprintf("UPDATE voicemail_originate SET originate_state = 'CALL_IN_PROGRESS', attempt_count = attempt_count + 1 WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 				if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 				} else {
@@ -700,7 +699,7 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 							|| !caller_session) {
 						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "-ERR Cannot create outgoing channel! [%s] cause: %s\n", profile->dial_string, switch_channel_cause2str(profile->cause));
 						if (profile->cause == SWITCH_CAUSE_ORIGINATOR_CANCEL) {
-							sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+							sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 							if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 								switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 							}
@@ -709,14 +708,14 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 						if (profile->cause == SWITCH_CAUSE_NO_ANSWER) {
 							if ((h->attempt_number + 1) >= profile->attempts) {
 								switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Originate attempt limit reached, removing call from queue.\n");
-								sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", h->user, h->domain);
+								sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 								if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 									switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 								}
 								switch_safe_free(sql);
 							} else {
 								switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Originate failed, setting next attempt for %d seconds from now.\n", profile->wait);
-								sql = switch_mprintf("UPDATE voicemail_originate SET c_state = 'WAIT_FOR_NEXT_ATTEMPT', next_attempt = '%" SWITCH_TIME_T_FMT "' WHERE c_user = '%q' and c_domain = '%q';", local_epoch_time_next(profile->wait), h->user, h->domain);
+								sql = switch_mprintf("UPDATE voicemail_originate SET originate_state = 'WAIT_FOR_NEXT_ATTEMPT', next_attempt = '%" SWITCH_TIME_T_FMT "' WHERE vm_user = '%q' and vm_domain = '%q';", local_epoch_time_next(profile->wait), h->user, h->domain);
 								if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 									switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 								}
@@ -809,7 +808,7 @@ static void queue_originate_event(const char *account, const char *action, const
 				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't find user [%s@%s]\n", user, domain);
 			} else {
 				if (switch_false(status)) {
-					sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", user, domain);
+					sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 					if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 					}
@@ -817,16 +816,16 @@ static void queue_originate_event(const char *account, const char *action, const
 					switch_core_session_hupall_matching_var("mwi_page_account", account, SWITCH_CAUSE_ORIGINATOR_CANCEL);
 				} else if (!strcasecmp(action, "NEW")) {
 					char res[256];
-					sql = switch_mprintf("SELECT COUNT(*) FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", user, domain);
+					sql = switch_mprintf("SELECT COUNT(*) FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 					vm_originate_execute_sql2str(NULL, sql, res, sizeof(res));
 					if (atoi(res) > 0) {
 						/* if a new message is left while originate is happening, restart process */
-						sql = switch_mprintf("DELETE FROM voicemail_originate WHERE c_user = '%q' and c_domain = '%q';", user, domain);
+						sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 						if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 							switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
 						}
 					}
-					sql = switch_mprintf("INSERT INTO voicemail_originate (c_user, c_domain, created, next_attempt) VALUES ('%q', '%q', '%" SWITCH_TIME_T_FMT "', '%" SWITCH_TIME_T_FMT "');", user, domain, local_epoch_time_now(NULL), local_epoch_time_next(profile->first_wait));
+					sql = switch_mprintf("INSERT INTO voicemail_originate (vm_user, vm_domain, created, next_attempt) VALUES ('%q', '%q', '%" SWITCH_TIME_T_FMT "', '%" SWITCH_TIME_T_FMT "');", user, domain, local_epoch_time_now(NULL), local_epoch_time_next(profile->first_wait));
 					vm_originate_execute_sql(sql, NULL);
 					switch_safe_free(sql);
 				}
@@ -1078,9 +1077,8 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_voicemail_originate_shutdown)
 
 SWITCH_MODULE_RUNTIME_FUNCTION(mod_voicemail_originate_runtime)
 {
-	// TODO We need more control on the result
 	while(globals.running) {
-		char *sql = switch_mprintf("SELECT c_user, c_domain, attempt_count FROM voicemail_originate where next_attempt <= '%" SWITCH_TIME_T_FMT "' AND c_state='WAIT_FOR_NEXT_ATTEMPT'", local_epoch_time_now(NULL));
+		char *sql = switch_mprintf("SELECT vm_user, vm_domain, attempt_count FROM voicemail_originate where next_attempt <= '%" SWITCH_TIME_T_FMT "' AND originate_state='WAIT_FOR_NEXT_ATTEMPT'", local_epoch_time_now(NULL));
 		//switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "SQL %s\n", sql);
 		vm_originate_execute_sql_callback(NULL, sql, originate_callback);
 		switch_safe_free(sql);
