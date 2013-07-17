@@ -1,13 +1,12 @@
 <include>
-
-  <macro name="vm_originate_confirm">
-    <input pattern="(.*)">
-      <match>
-	<action function="play-file" data="voicemail/vm-press.wav"/>
-	<action function="say" data="$1" method="pronounced" type="name_spelled"/>
-        <action function="play-file" data="ivr/ivr-to_confirm.wav"/>
-      </match>
-    </input>
-  </macro>
-
+	<macro name="vm_originate_confirm">
+		<input pattern="(.*)">
+			<match>
+				<action function="sleep" data="500"/>
+				<action function="play-file" data="voicemail/vm-press.wav"/>
+				<action function="say" data="$1" method="pronounced" type="name_spelled"/>
+				<action function="play-file" data="ivr/ivr-to_confirm.wav"/>
+			</match>
+		</input>
+	</macro>
 </include>
