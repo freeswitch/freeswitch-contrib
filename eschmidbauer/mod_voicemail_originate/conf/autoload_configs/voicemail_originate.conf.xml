@@ -7,9 +7,9 @@
   -->
   </settings>
   <profiles>
-     <profile name="default">
-        <!-- define if profile is enabled. default is true -->
-        <param name="enabled" value="true"/>
+	<profile name="default">
+	<!-- define if profile is enabled. default is true -->
+	<param name="enabled" value="true"/>
 	<!-- time in seconds to wait before first originate. default is 1 -->
 	<param name="first-wait" value="8"/>
 	<!-- time in seconds to wait before originate. default is 30 -->
@@ -28,6 +28,8 @@
 	<param name="enable-confirm" value="true"/>
 	<!-- digit the called party must enter to confirm call. default is 0 -->
 	<param name="confirm-digits" value="5"/>
+	<!-- time in milliseconds to wait for DTMF. default is 5000 milliseconds -->
+	<param name="confirm-wait" value="5"/>	
 	<!-- confirm prompt to play before DTMF is entered -->
 	<param name="confirm-play-file" value="phrase:vm_originate_confirm:5"/>
 	<!-- comma seperated list of user variables to pass on to origination channel -->

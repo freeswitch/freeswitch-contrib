@@ -31,7 +31,7 @@
  */
 #include <switch.h>
 
-#define VM_ORIGINATE_EVENT "vm_originate_event"
+#define VM_ORIGINATE_INIT "vm_originate::init"
 #define VM_ORIGINATE_SQLITE_DB_NAME "voicemail_originate"
 
 /* Prototypes */
@@ -51,8 +51,8 @@ static char create_sql[] =
 "   vm_user          VARCHAR(255),\n"
 "   vm_domain        VARCHAR(255),\n"
 "   originate_state  VARCHAR(255) DEFAULT 'WAIT_FOR_NEXT_ATTEMPT',\n"
-"   created          INTEGER NOT NULL,\n"
-"   next_attempt     INTEGER NOT NULL DEFAULT 0,\n"
+"   created          INTEGER,\n"
+"   next_attempt     INTEGER,\n"
 "   attempt_count    INTEGER NOT NULL DEFAULT 0\n"
 "   );\n";
 
@@ -74,7 +74,7 @@ typedef enum {
 	PFLAG_DESTROY = 1 << 0
 } flags_t;
 
-#define PROFILE_CONFIGITEM_COUNT 14
+#define PROFILE_CONFIGITEM_COUNT 15
 
 struct user_profile {
 	switch_status_t confirm_status;
@@ -89,6 +89,7 @@ struct user_profile {
 	const char *caller_number;
 	switch_bool_t enable_confirm;
 	const char *confirm_digits;
+	int confirm_wait;
 	const char *confirm_play_file;
 	const char *user_variables;
 	const char *dial_string;
@@ -108,6 +109,7 @@ struct config_profile {
 	const char *caller_number;
 	switch_bool_t enable_confirm;
 	const char *confirm_digits;
+	int confirm_wait;
 	const char *confirm_play_file;
 	const char *user_variables;
 	const char *dial_string;
@@ -294,6 +296,7 @@ config_profile_t *profile_set_config(config_profile_t *profile)
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "caller-number", SWITCH_CONFIG_STRING, 0, &profile->caller_number, NULL, &profile->config_str_pool, NULL, NULL);
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "enable-confirm", SWITCH_CONFIG_BOOL, 0, &profile->enable_confirm, SWITCH_FALSE, NULL, NULL, NULL);
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "confirm-digits", SWITCH_CONFIG_STRING, 0, &profile->confirm_digits, NULL, &profile->config_str_pool, NULL, NULL);
+	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "confirm-wait", SWITCH_CONFIG_INT, 0, &profile->confirm_wait, 5000, &config_int_0_86400, NULL, NULL);
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "confirm-play-file", SWITCH_CONFIG_STRING, 0, &profile->confirm_play_file, NULL, &profile->config_str_pool, NULL, NULL);
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "user-variables", SWITCH_CONFIG_STRING, 0, &profile->user_variables, NULL, &profile->config_str_pool, NULL, NULL);
 	SWITCH_CONFIG_SET_ITEM(profile->config[i++], "dial-string", SWITCH_CONFIG_STRING, 0, &profile->dial_string, NULL, &profile->config_str_pool, NULL, NULL);
@@ -463,6 +466,7 @@ static user_profile_t * set_user_profile(const char *user, const char *domain, s
 		profile->wait = 30;
 		profile->first_wait = 1;
 		profile->confirm_digits = "0";
+		profile->confirm_wait = 5000;
 		profile->confirm_play_file = "";
 
 		x_params = switch_xml_child(x_user, "params");
@@ -477,15 +481,6 @@ static user_profile_t * set_user_profile(const char *user, const char *domain, s
 				} else {
 					profile->profile_enabled = config_profile->profile_enabled;
 					profile->enable_confirm = config_profile->enable_confirm;
-					if (config_profile->confirm_digits) {
-						profile->confirm_digits = config_profile->confirm_digits;
-					}
-					if (config_profile->confirm_play_file) {
-						profile->confirm_play_file = config_profile->confirm_play_file;
-					}
-					if (config_profile->dial_string) {
-						profile->dial_string = config_profile->dial_string;
-					}
 					if (config_profile->caller_name) {
 						profile->caller_name = config_profile->caller_name;
 					}
@@ -495,14 +490,26 @@ static user_profile_t * set_user_profile(const char *user, const char *domain, s
 					if (config_profile->timeout) {
 						profile->timeout = config_profile->timeout;
 					}
+					if (config_profile->attempts) {
+						profile->attempts = config_profile->attempts;
+					}
 					if (config_profile->wait) {
 						profile->wait = config_profile->wait;
 					}
 					if (config_profile->first_wait) {
 						profile->first_wait = config_profile->first_wait;
 					}
-					if (config_profile->attempts) {
-						profile->attempts = config_profile->attempts;
+					if (config_profile->confirm_digits) {
+						profile->confirm_digits = config_profile->confirm_digits;
+					}
+					if (config_profile->confirm_wait) {
+						profile->confirm_wait = config_profile->confirm_wait;
+					}
+					if (config_profile->confirm_play_file) {
+						profile->confirm_play_file = config_profile->confirm_play_file;
+					}
+					if (config_profile->dial_string) {
+						profile->dial_string = config_profile->dial_string;
 					}
 					if (config_profile->transfer) {
 						profile->transfer = config_profile->transfer;
@@ -550,6 +557,12 @@ static user_profile_t * set_user_profile(const char *user, const char *domain, s
 				user_variables = strdup(val);
 			} else if (!strcasecmp(var, "vm-originate-attempts")) {
 				profile->attempts = atoi(val);
+			} else if (!strcasecmp(var, "vm-originate-confirm-digits")) {
+				profile->confirm_digits = strdup(val);
+			} else if (!strcasecmp(var, "vm-originate-confirm-wait")) {
+				profile->confirm_wait = atoi(val);
+			} else if (!strcasecmp(var, "vm-originate-confirm-play-file")) {
+				profile->confirm_play_file = strdup(val);
 			}
 		}
 
@@ -729,12 +742,12 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 						if(profile->enable_confirm) {
 							char pin_buf[80] = "";
 							char *buf = pin_buf + strlen(pin_buf);
-							char term = '\0';
+							char term;
 							switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Confirming originate with DTMF %s\n", profile->confirm_digits);
 							if (!zstr(profile->confirm_play_file)) {
 								switch_ivr_play_file(caller_session, NULL, profile->confirm_play_file, NULL);
 							}
-							profile->confirm_status = switch_ivr_collect_digits_count(caller_session, buf, sizeof(pin_buf) - strlen(pin_buf), strlen(profile->confirm_digits), "#", &term, 10000, 0, 0);
+							profile->confirm_status = switch_ivr_collect_digits_count(caller_session, buf, sizeof(pin_buf) - strlen(pin_buf), strlen(profile->confirm_digits), "#", &term, profile->confirm_wait, 0, 0);
 							if (profile->confirm_status == SWITCH_STATUS_TIMEOUT) {
 								profile->confirm_status = SWITCH_STATUS_FALSE;
 							}
@@ -949,7 +962,7 @@ SWITCH_STANDARD_API(vm_originate_function)
 	account = argv[1];
 
 	if (action && !strcasecmp(action, "init")) {
-		if (switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_EVENT) == SWITCH_STATUS_SUCCESS) {
+		if (switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_INIT) == SWITCH_STATUS_SUCCESS) {
 			stream->write_function(stream, "%s", "+OK\n");
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Account", account);
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Action", "NEW");
@@ -1007,7 +1020,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_voicemail_originate_load)
 	if ((switch_event_bind_removable(modname, SWITCH_EVENT_MESSAGE_WAITING, NULL, message_waiting_event_handler, NULL, &globals.message_waiting_event_handler) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Couldn't bind our message waiting handler!\n");
 	}
-	if ((switch_event_bind_removable(modname, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_EVENT, originate_event_handler, NULL, &globals.originate_event_handler) != SWITCH_STATUS_SUCCESS)) {
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_INIT, originate_event_handler, NULL, &globals.originate_event_handler) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Couldn't bind our message waiting handler!\n");
 	}
 	switch_mutex_unlock(globals.mutex);
