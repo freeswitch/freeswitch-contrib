@@ -31,7 +31,7 @@
  */
 #include <switch.h>
 
-#define ORIGINATE_EVENT "cp::event"
+#define VM_ORIGINATE_EVENT "vm_originate_event"
 #define VM_ORIGINATE_SQLITE_DB_NAME "voicemail_originate"
 
 /* Prototypes */
@@ -587,8 +587,8 @@ end:
 
 static switch_status_t state_handler(switch_core_session_t *session)
 {
-        switch_channel_t *channel = switch_core_session_get_channel(session);
-        switch_channel_state_t state = switch_channel_get_state(channel);
+		switch_channel_t *channel = switch_core_session_get_channel(session);
+		switch_channel_state_t state = switch_channel_get_state(channel);
 		const char *user = switch_channel_get_variable(channel, "vm_originate_user");
 		const char *domain = switch_channel_get_variable(channel, "vm_originate_domain");
 		int attempt_number = atoi(switch_channel_get_variable(channel, "vm_originate_attempts")) + 1;
@@ -950,7 +950,7 @@ SWITCH_STANDARD_API(vm_originate_function)
 	account = argv[1];
 
 	if (action && !strcasecmp(action, "init")) {
-		if (switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, ORIGINATE_EVENT) == SWITCH_STATUS_SUCCESS) {
+		if (switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_EVENT) == SWITCH_STATUS_SUCCESS) {
 			stream->write_function(stream, "%s", "+OK\n");
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Account", account);
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Action", "NEW");
@@ -1008,7 +1008,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_voicemail_originate_load)
 	if ((switch_event_bind_removable(modname, SWITCH_EVENT_MESSAGE_WAITING, NULL, message_waiting_event_handler, NULL, &globals.message_waiting_event_handler) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Couldn't bind our message waiting handler!\n");
 	}
-	if ((switch_event_bind_removable(modname, SWITCH_EVENT_CUSTOM, ORIGINATE_EVENT, originate_event_handler, NULL, &globals.originate_event_handler) != SWITCH_STATUS_SUCCESS)) {
+	if ((switch_event_bind_removable(modname, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_EVENT, originate_event_handler, NULL, &globals.originate_event_handler) != SWITCH_STATUS_SUCCESS)) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Couldn't bind our message waiting handler!\n");
 	}
 	switch_mutex_unlock(globals.mutex);
