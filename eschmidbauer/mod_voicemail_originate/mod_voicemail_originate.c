@@ -740,14 +740,14 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 						switch_channel_set_private(channel, "_vm_originate_profile_", profile);
 						switch_core_event_hook_add_state_change(caller_session, state_handler);
 						if(profile->enable_confirm) {
-							char pin_buf[80] = "";
-							char *buf = pin_buf + strlen(pin_buf);
-							char term;
+							char buf[80] = "";
+							switch_size_t buflen = sizeof(buf);
+							char terminator;
 							switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "Confirming originate with DTMF %s\n", profile->confirm_digits);
 							if (!zstr(profile->confirm_play_file)) {
 								switch_ivr_play_file(caller_session, NULL, profile->confirm_play_file, NULL);
 							}
-							profile->confirm_status = switch_ivr_collect_digits_count(caller_session, buf, sizeof(pin_buf) - strlen(pin_buf), strlen(profile->confirm_digits), "#", &term, profile->confirm_wait, 0, 0);
+							profile->confirm_status = switch_ivr_collect_digits_count(caller_session, buf, buflen, strlen(profile->confirm_digits), "#", &terminator, profile->confirm_wait, 0, 0);
 							if (profile->confirm_status == SWITCH_STATUS_TIMEOUT) {
 								profile->confirm_status = SWITCH_STATUS_FALSE;
 							}
