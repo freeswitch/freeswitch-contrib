@@ -130,17 +130,12 @@ struct call_helper {
 };
 
 typedef enum {
-	VM_ORIGINATE_STATUS_SUCCESS,
-	VM_ORIGINATE_STATUS_FAIL,
-	VM_ORIGINATE_CANNOT_MODIFY,
-	VM_ORIGINATE_USER_NOT_EXIST,
-	VM_ORIGINATE_USER_EXISTS,
-	VM_ORIGINATE_INVALID_KEY,
-	VM_ORIGINATE_INVALID_VALUE_BOOL,
-	VM_ORIGINATE_INVALID_PROFILE,
-	VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND,
-	VM_ORIGINATE_PROFILE_INUSE
-} vm_originate_status_t;
+	PROFILE_STATUS_SUCCESS,
+	PROFILE_STATUS_FAIL,
+	PROFILE_STATUS_FAIL_INUSE,
+	PROFILE_STATUS_INVALID,
+	PROFILE_STATUS_INVALID_NOT_FOUND
+} vm_originate_profile_status_t;
 
 switch_time_t local_epoch_time_now(switch_time_t *t)
 {
@@ -403,10 +398,10 @@ static void profile_rwunlock(config_profile_t *profile)
 	}
 }
 
-vm_originate_status_t destroy_profile(const char *profile_name, switch_bool_t block)
+vm_originate_profile_status_t destroy_profile(const char *profile_name, switch_bool_t block)
 {
 	config_profile_t *profile = NULL;
-	vm_originate_status_t result = VM_ORIGINATE_STATUS_SUCCESS;
+	vm_originate_profile_status_t result = PROFILE_STATUS_SUCCESS;
 	switch_mutex_lock(globals.mutex);
 	if ((profile = switch_core_hash_find(globals.profile_hash, profile_name))) {
 		switch_core_hash_delete(globals.profile_hash, profile_name);
@@ -414,7 +409,7 @@ vm_originate_status_t destroy_profile(const char *profile_name, switch_bool_t bl
 	switch_mutex_unlock(globals.mutex);
 
 	if (!profile) {
-		result = VM_ORIGINATE_INVALID_PROFILE;
+		result = PROFILE_STATUS_INVALID;
 		return result;
 	}
 
@@ -424,7 +419,7 @@ vm_originate_status_t destroy_profile(const char *profile_name, switch_bool_t bl
 	} else {
 		if (switch_thread_rwlock_trywrlock(profile->rwlock) != SWITCH_STATUS_SUCCESS) {
 			switch_set_flag(profile, PFLAG_DESTROY);
-			result = VM_ORIGINATE_PROFILE_INUSE;
+			result = PROFILE_STATUS_FAIL_INUSE;
 			return result;
 		}
 	}
@@ -929,7 +924,7 @@ SWITCH_STANDARD_API(vm_originate_function)
 	char *mydata = NULL, *argv[2] = { 0 };
 	const char *action = NULL;
 	const char *account = NULL;
-	vm_originate_status_t api_result = VM_ORIGINATE_STATUS_SUCCESS;
+	vm_originate_profile_status_t profile_api_result = PROFILE_STATUS_SUCCESS;
 	int argc;
 
 	if (!globals.running) {
@@ -966,34 +961,34 @@ SWITCH_STANDARD_API(vm_originate_function)
 		if ((profile = get_profile(account))) {
 			profile_rwunlock(profile);
 		} else {
-			api_result = VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND;
+			profile_api_result = PROFILE_STATUS_INVALID_NOT_FOUND;
 		}
 	} else if (action && !strcasecmp(action, "unload")) {
-		api_result = destroy_profile(account, SWITCH_FALSE);
+		profile_api_result = destroy_profile(account, SWITCH_FALSE);
 	} else if (action && !strcasecmp(action, "reload")) {
 		config_profile_t *profile = NULL;
 		destroy_profile(account, SWITCH_FALSE);
 		if ((profile = get_profile(account))) {
 			profile_rwunlock(profile);
 		} else {
-			api_result = VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND;
+			profile_api_result = PROFILE_STATUS_INVALID_NOT_FOUND;
 		}
 	}
 
-	switch (api_result) {
-		case VM_ORIGINATE_STATUS_SUCCESS:
+	switch (profile_api_result) {
+		case PROFILE_STATUS_SUCCESS:
 			stream->write_function(stream, "%s", "+OK\n");
 			break;
-		case VM_ORIGINATE_STATUS_FAIL:
+		case PROFILE_STATUS_FAIL:
 			stream->write_function(stream, "%s", "-ERR Failed\n");
 			break;
-		case VM_ORIGINATE_INVALID_PROFILE:
+		case PROFILE_STATUS_INVALID:
 			stream->write_function(stream, "[%s] %s", account, "-ERR Invalid profile\n");
 			break;
-		case VM_ORIGINATE_PROFILE_INUSE:
+		case PROFILE_STATUS_FAIL_INUSE:
 			stream->write_function(stream, "[%s] %s", account, "-ERR Profile is in use, memory will be freed whenever its no longer in use\n");
 			break;
-		case VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND:
+		case PROFILE_STATUS_INVALID_NOT_FOUND:
 			stream->write_function(stream, "[%s] %s", account, "-ERR Invalid, profile not found!\n");
 			break;
 		default:
