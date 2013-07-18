@@ -130,13 +130,16 @@ struct call_helper {
 };
 
 typedef enum {
-	VM_ORIGINATE_SUCCESS,
-	VM_ORIGINATE_FAIL,
+	VM_ORIGINATE_STATUS_SUCCESS,
+	VM_ORIGINATE_STATUS_FAIL,
 	VM_ORIGINATE_CANNOT_MODIFY,
 	VM_ORIGINATE_USER_NOT_EXIST,
 	VM_ORIGINATE_USER_EXISTS,
 	VM_ORIGINATE_INVALID_KEY,
-	VM_ORIGINATE_INVALID_VALUE_BOOL
+	VM_ORIGINATE_INVALID_VALUE_BOOL,
+	VM_ORIGINATE_INVALID_PROFILE,
+	VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND,
+	VM_ORIGINATE_PROFILE_INUSE
 } vm_originate_status_t;
 
 switch_time_t local_epoch_time_now(switch_time_t *t)
@@ -400,9 +403,10 @@ static void profile_rwunlock(config_profile_t *profile)
 	}
 }
 
-static void destroy_profile(const char *profile_name, switch_bool_t block)
+vm_originate_status_t destroy_profile(const char *profile_name, switch_bool_t block)
 {
 	config_profile_t *profile = NULL;
+	vm_originate_status_t result = VM_ORIGINATE_STATUS_SUCCESS;
 	switch_mutex_lock(globals.mutex);
 	if ((profile = switch_core_hash_find(globals.profile_hash, profile_name))) {
 		switch_core_hash_delete(globals.profile_hash, profile_name);
@@ -410,8 +414,8 @@ static void destroy_profile(const char *profile_name, switch_bool_t block)
 	switch_mutex_unlock(globals.mutex);
 
 	if (!profile) {
-		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "[%s] Invalid profile\n", profile_name);
-		return;
+		result = VM_ORIGINATE_INVALID_PROFILE;
+		return result;
 	}
 
 	if (block) {
@@ -420,13 +424,13 @@ static void destroy_profile(const char *profile_name, switch_bool_t block)
 	} else {
 		if (switch_thread_rwlock_trywrlock(profile->rwlock) != SWITCH_STATUS_SUCCESS) {
 			switch_set_flag(profile, PFLAG_DESTROY);
-			switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "[%s] profile is in use, memory will be freed whenever its no longer in use\n",
-					profile->name);
-			return;
+			result = VM_ORIGINATE_PROFILE_INUSE;
+			return result;
 		}
 	}
 
 	free_profile(profile);
+	return result;
 }
 
 static user_profile_t * set_user_profile(const char *user, const char *domain, switch_event_t *event) {
@@ -695,7 +699,6 @@ static void *SWITCH_THREAD_FUNC originate_call_thread_run(switch_thread_t *threa
 				}
 				switch_safe_free(sql);
 			} else if (!zstr(profile->dial_string) && !zstr(profile->transfer)) {
-				char *sql;
 				sql = switch_mprintf("UPDATE voicemail_originate SET originate_state = 'CALL_IN_PROGRESS', attempt_count = attempt_count + 1 WHERE vm_user = '%q' and vm_domain = '%q';", h->user, h->domain);
 				if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
 					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
@@ -806,30 +809,21 @@ static int originate_callback(void *pArg, int argc, char **argv, char **columnNa
 static void queue_originate_event(const char *account, const char *action, const char *status)
 {
 	if(account && action && status) {
-		char *sql = NULL;
 		char *account_split = strdup(account);
 		int account_num = 0;
 		char *account_list[2] = { 0 };
 		const char *user = NULL, *domain = NULL;
 		if ((account_num = switch_separate_string(account_split, '@', account_list, (sizeof(account_list) / sizeof(account_list[0])))) && account_num == 2) {
 			user_profile_t *profile = NULL;
-
 			user = account_list[0];
 			domain = account_list[1];
-
-			if (!(profile = set_user_profile(user, domain, NULL))) {
-				switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "Can't find user [%s@%s]\n", user, domain);
-			} else {
+			if ((profile = set_user_profile(user, domain, NULL))) {
 				if (switch_false(status)) {
-					sql = switch_mprintf("DELETE FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
-					if(vm_originate_execute_sql(sql, NULL) == SWITCH_STATUS_FALSE) {
-						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error executing query %s\n", sql);
-					}
-					switch_safe_free(sql);
-					switch_core_session_hupall_matching_var("mwi_page_account", account, SWITCH_CAUSE_ORIGINATOR_CANCEL);
+					switch_core_session_hupall_matching_var("vm_originate_account", account, SWITCH_CAUSE_ORIGINATOR_CANCEL);
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_DEBUG, "New message deleted, originate cancelled\n");
 				} else if (!strcasecmp(action, "NEW")) {
 					char res[256];
-					sql = switch_mprintf("SELECT COUNT(*) FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
+					char *sql = switch_mprintf("SELECT COUNT(*) FROM voicemail_originate WHERE vm_user = '%q' and vm_domain = '%q';", user, domain);
 					vm_originate_execute_sql2str(NULL, sql, res, sizeof(res));
 					if (atoi(res) > 0) {
 						/* if a new message is left while originate is happening, restart process */
@@ -842,11 +836,9 @@ static void queue_originate_event(const char *account, const char *action, const
 					vm_originate_execute_sql(sql, NULL);
 					switch_safe_free(sql);
 				}
-
 			}
 		}
 		switch_safe_free(account_split);
-		switch_safe_free(sql);
 	}
 
 }
@@ -937,6 +929,7 @@ SWITCH_STANDARD_API(vm_originate_function)
 	char *mydata = NULL, *argv[2] = { 0 };
 	const char *action = NULL;
 	const char *account = NULL;
+	vm_originate_status_t api_result = VM_ORIGINATE_STATUS_SUCCESS;
 	int argc;
 
 	if (!globals.running) {
@@ -963,7 +956,6 @@ SWITCH_STANDARD_API(vm_originate_function)
 
 	if (action && !strcasecmp(action, "init")) {
 		if (switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, VM_ORIGINATE_INIT) == SWITCH_STATUS_SUCCESS) {
-			stream->write_function(stream, "%s", "+OK\n");
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Account", account);
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Action", "NEW");
 			switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Status", "1");
@@ -973,22 +965,40 @@ SWITCH_STANDARD_API(vm_originate_function)
 		config_profile_t *profile = NULL;
 		if ((profile = get_profile(account))) {
 			profile_rwunlock(profile);
-			stream->write_function(stream, "%s", "+OK\n");
 		} else {
-			stream->write_function(stream, "%s", "-ERR Invalid profile not found!\n");
+			api_result = VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND;
 		}
 	} else if (action && !strcasecmp(action, "unload")) {
-		destroy_profile(account, SWITCH_FALSE);
-		stream->write_function(stream, "%s", "+OK\n");
+		api_result = destroy_profile(account, SWITCH_FALSE);
 	} else if (action && !strcasecmp(action, "reload")) {
 		config_profile_t *profile = NULL;
 		destroy_profile(account, SWITCH_FALSE);
 		if ((profile = get_profile(account))) {
 			profile_rwunlock(profile);
-			stream->write_function(stream, "%s", "+OK\n");
 		} else {
-			stream->write_function(stream, "%s", "-ERR Invalid Profile not found!\n");
+			api_result = VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND;
 		}
+	}
+
+	switch (api_result) {
+		case VM_ORIGINATE_STATUS_SUCCESS:
+			stream->write_function(stream, "%s", "+OK\n");
+			break;
+		case VM_ORIGINATE_STATUS_FAIL:
+			stream->write_function(stream, "%s", "-ERR Failed\n");
+			break;
+		case VM_ORIGINATE_INVALID_PROFILE:
+			stream->write_function(stream, "[%s] %s", account, "-ERR Invalid profile\n");
+			break;
+		case VM_ORIGINATE_PROFILE_INUSE:
+			stream->write_function(stream, "[%s] %s", account, "-ERR Profile is in use, memory will be freed whenever its no longer in use\n");
+			break;
+		case VM_ORIGINATE_INVALID_PROFILE_NOT_FOUND:
+			stream->write_function(stream, "[%s] %s", account, "-ERR Invalid, profile not found!\n");
+			break;
+		default:
+			stream->write_function(stream, "%s", "+OK\n");
+			break;
 	}
 
 	goto done;
