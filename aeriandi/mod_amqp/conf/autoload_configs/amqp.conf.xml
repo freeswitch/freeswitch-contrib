@@ -1,0 +1,20 @@
+<configuration name="amqp.conf" description="mod_amqp">
+  <settings>
+    <param name="amqpHostname" value="localhost"/>
+    <param name="amqpVirtualHost" value="/"/>
+    <param name="amqpPort" value="5672"/>
+    <param name="amqpUsername" value="guest"/>
+    <param name="amqpPassword" value="guest"/>
+    <param name="amqpHeartbeatSeconds" value="0"/>
+
+    <param name="amqpExchange" value="TAP.Events"/>
+    <param name="amqpExchangetype" value="topic"/>
+
+	<!-- The routing key is made from the format string, using the header values in the event specified in the routingKeyFormatFields.-->
+    <param name="routingKeyFormat" value="%s.%s.%s.%s"/>
+    <param name="routingKeyFormatFields" value="FreeSWITCH-Hostname,Event-Name,Event-Subclass,Unique-ID"/>
+
+    <param name="eventFilter" value="SWITCH_EVENT_CHANNEL_CREATE,SWITCH_EVENT_CHANNEL_DESTROY,SWITCH_EVENT_HEARTBEAT,SWITCH_EVENT_DTMF"/>
+
+  </settings>
+</configuration>
