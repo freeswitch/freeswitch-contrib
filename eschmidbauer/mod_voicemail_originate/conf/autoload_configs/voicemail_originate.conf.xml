@@ -1,0 +1,53 @@
+<configuration name="voicemail_originate.conf" description="Voicemail Originate Configuration">
+  <settings>
+  <!--
+     <param name="odbc-dsn" value="dsn:user:pass"/>
+	OR
+     <param name="odbc-dsn" value="pgsql://hostaddr=192.168.0.101 dbname=freeswitch user=freeswitch password='freeswitch' options='-c client_min_messages=NOTICE'"/>
+  -->
+  </settings>
+  <profiles>
+	<profile name="default">
+	<!-- define if profile is enabled. default is true -->
+	<param name="enabled" value="true"/>
+	<!-- time in seconds to wait before first originate. default is 1 -->
+	<param name="first-wait" value="8"/>
+	<!-- time in seconds to wait before originate. default is 30 -->
+	<param name="wait" value="5"/>
+	<!-- time in seconds to wait before canceling originate. default is 20 -->
+	<param name="timeout" value="20"/>
+	<!-- number of originate tries. default is 1 -->
+	<param name="attempts" value="2"/>
+	<!-- transfer originate to this destination -->
+	<param name="transfer" value="5 XML route"/>
+	<!-- origination caller name. default is 0000000000 -->
+	<param name="caller-name" value="Voicemail Call Page"/>
+        <!-- origination caller number. default is 0000000000 -->
+	<param name="caller-number" value="0000000000"/>
+	<!-- if enabled, called party must enter digit to confirm call has been taken. default is false -->
+	<param name="enable-confirm" value="true"/>
+	<!-- digit the called party must enter to confirm call. default is 0 -->
+	<param name="confirm-digits" value="5"/>
+	<!-- time in milliseconds to wait for DTMF. default is 5000 milliseconds -->
+	<param name="confirm-wait" value="5"/>	
+	<!-- confirm prompt to play before DTMF is entered -->
+	<param name="confirm-play-file" value="phrase:vm_originate_confirm:5"/>
+	<!-- comma seperated list of user variables to pass on to origination channel -->
+	<param name="user-variables" value="outbound_caller_id_name,outbound_caller_id_number"/>
+	<!-- origination dial-string -->
+	<!-- <param name="dial-string" value="loopback/5350800/default"/> -->
+
+	<!--
+	You need to include this parameter in the user's directory in order for the module to function on their account:
+	<param name="vm-originate-profile" value="default"/>
+
+	Any of the profile parameters above can be overridden by a user's directory parameters.
+	When defining in a user's directory, prepend "vm-originate-" to the the parameter.
+	Example:
+	<param name="vm-originate-dial-string" value="{user_loopback=58}loopback/5350800/default"/>
+	<param name="vm-originate-transfer" value="5 XML route"/>
+	<param name="vm-originate-user-variables" value="outbound_caller_id_name,outbound_caller_id_number"/>
+	-->
+     </profile>
+  </profiles>
+</configuration>

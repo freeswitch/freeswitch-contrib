@@ -1,0 +1,169 @@
+diff --git a/src/mod/endpoints/mod_sofia/mod_sofia.c b/src/mod/endpoints/mod_sofia/mod_sofia.c
+index df4c880..b4fd683 100644
+--- a/src/mod/endpoints/mod_sofia/mod_sofia.c
++++ b/src/mod/endpoints/mod_sofia/mod_sofia.c
+@@ -4604,22 +4604,71 @@ static void general_event_handler(switch_event_t *event)
+ 			const char *to_uri = switch_event_get_header(event, "to-uri");
+ 			const char *from_uri = switch_event_get_header(event, "from-uri");
+ 			const char *extra_headers = switch_event_get_header(event, "extra-headers");
++			const char *contact_uri = switch_event_get_header(event, "contact-uri");
++			const char *no_sub_state = switch_event_get_header(event, "no-sub-state");
+ 
+ 			sofia_profile_t *profile;
+ 
++			if (contact_uri) {
+ 
+-			if (to_uri || from_uri) {
++				if (!es) {
++					es = "message-summary";
++				}
+ 
+-				if (!to_uri) {
+-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Missing To-URI header\n");
+-					return;
++				if (!ct) {
++					ct = "application/simple-message-summary";
++				}
++
++				if (!profile_name) {
++					profile_name = "default";
+ 				}
+ 
+-				if (!from_uri) {
+-					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Missing From-URI header\n");
++				if (!(profile = sofia_glue_find_profile(profile_name))) {
++					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Can't find profile %s\n", profile_name);
+ 					return;
+ 				}
+ 
++				if (to_uri && from_uri) {
++					sofia_destination_t *dst = NULL;
++					nua_handle_t *nh;
++					char *route_uri = NULL;
++					char *sip_sub_st = NULL;
++
++					dst = sofia_glue_get_destination((char *) contact_uri);
++
++					if (dst->route_uri) {
++						route_uri = sofia_glue_strip_uri(dst->route_uri);
++					}
++
++					nh = nua_handle(profile->nua,
++									NULL,
++									NUTAG_URL(dst->contact),
++									SIPTAG_FROM_STR(from_uri),
++									SIPTAG_TO_STR(to_uri),
++									SIPTAG_CONTACT_STR(profile->url),
++									TAG_END());
++
++					nua_handle_bind(nh, &mod_sofia_globals.destroy_private);
++
++					if (!switch_true(no_sub_state)) {
++						sip_sub_st = "terminated;reason=noresource";
++					}
++
++					nua_notify(nh,
++							   NUTAG_NEWSUB(1), TAG_IF(sip_sub_st, SIPTAG_SUBSCRIPTION_STATE_STR(sip_sub_st)),
++							   TAG_IF(dst->route_uri, NUTAG_PROXY(dst->route_uri)), TAG_IF(dst->route, SIPTAG_ROUTE_STR(dst->route)), TAG_IF(call_id, SIPTAG_CALL_ID_STR(call_id)),
++							   SIPTAG_EVENT_STR(es), TAG_IF(ct, SIPTAG_CONTENT_TYPE_STR(ct)), TAG_IF(!zstr(body), SIPTAG_PAYLOAD_STR(body)),
++							   TAG_IF(!zstr(extra_headers), SIPTAG_HEADER_STR(extra_headers)), TAG_END());
++
++					switch_safe_free(route_uri);
++					sofia_glue_free_destination(dst);
++
++					sofia_glue_release_profile(profile);
++				}
++
++				return;
++			} else if (to_uri || from_uri) {
++
+ 				if (!es) {
+ 					es = "message-summary";
+ 				}
+@@ -4643,12 +4692,12 @@ static void general_event_handler(switch_event_t *event)
+ 					char *route_uri = NULL;
+ 
+ 					dst = sofia_glue_get_destination((char *) to_uri);
+-					
++
+ 					if (dst->route_uri) {
+ 						route_uri = sofia_glue_strip_uri(dst->route_uri);
+ 					}
+-					
+-					
++
++
+ 					nh = nua_handle(profile->nua,
+ 									NULL,
+ 									NUTAG_URL(to_uri), 
+@@ -4658,17 +4707,17 @@ static void general_event_handler(switch_event_t *event)
+ 									TAG_END());
+ 
+ 					nua_handle_bind(nh, &mod_sofia_globals.destroy_private);
+-					
++
+ 					nua_notify(nh,
+ 							   NUTAG_NEWSUB(1), SIPTAG_SUBSCRIPTION_STATE_STR("terminated;reason=noresource"),
+ 							   TAG_IF(dst->route_uri, NUTAG_PROXY(dst->route_uri)), TAG_IF(dst->route, SIPTAG_ROUTE_STR(dst->route)),
+ 							   SIPTAG_EVENT_STR(es), TAG_IF(ct, SIPTAG_CONTENT_TYPE_STR(ct)), TAG_IF(!zstr(body), SIPTAG_PAYLOAD_STR(body)),
+ 							   TAG_IF(!zstr(extra_headers), SIPTAG_HEADER_STR(extra_headers)), TAG_END());
+-					
++
+ 
+ 					switch_safe_free(route_uri);
+ 					sofia_glue_free_destination(dst);
+-					
++
+ 					sofia_glue_release_profile(profile);
+ 				}
+ 
+diff --git a/src/mod/endpoints/mod_sofia/sofia.c b/src/mod/endpoints/mod_sofia/sofia.c
+index 8acae66..739117c 100644
+--- a/src/mod/endpoints/mod_sofia/sofia.c
++++ b/src/mod/endpoints/mod_sofia/sofia.c
+@@ -2537,6 +2537,7 @@ void *SWITCH_THREAD_FUNC sofia_profile_thread_run(switch_thread_t *thread, void
+ 				   TAG_IF(profile->pres_type, NUTAG_ALLOW("SUBSCRIBE")),
+ 				   TAG_IF(profile->pres_type, NUTAG_ENABLEMESSAGE(1)),
+ 				   TAG_IF(profile->pres_type, NUTAG_ALLOW_EVENTS("presence")),
++				   TAG_IF(profile->pres_type, NUTAG_ALLOW_EVENTS("as-feature-event")),
+ 				   TAG_IF((profile->pres_type || sofia_test_pflag(profile, PFLAG_MANAGE_SHARED_APPEARANCE)), NUTAG_ALLOW_EVENTS("dialog")),
+ 				   TAG_IF((profile->pres_type || sofia_test_pflag(profile, PFLAG_MANAGE_SHARED_APPEARANCE)), NUTAG_ALLOW_EVENTS("line-seize")),
+ 				   TAG_IF(profile->pres_type, NUTAG_ALLOW_EVENTS("call-info")),
+diff --git a/src/mod/endpoints/mod_sofia/sofia_presence.c b/src/mod/endpoints/mod_sofia/sofia_presence.c
+index 329c3aa..2f45a0f 100644
+--- a/src/mod/endpoints/mod_sofia/sofia_presence.c
++++ b/src/mod/endpoints/mod_sofia/sofia_presence.c
+@@ -28,6 +28,7 @@
+  * Paul D. Tinsley <pdt at jackhammer.org>
+  * Bret McDanel <trixter AT 0xdecafbad.com>
+  * Raymond Chandler <intralanman@freeswitch.org>
++ * Emmanuel Schmidbauer <e.schmidbauer@gmail.com>
+  *
+  *
+  * sofia_presence.c -- SOFIA SIP Endpoint (presence code)
+@@ -3957,7 +3958,24 @@ void sofia_presence_handle_sip_i_subscribe(int status,
+ 
+ 	switch_safe_free(sstr);
+ 
+-	if (!strcasecmp(event, "message-summary")) {
++	if (!strcasecmp(event, "as-feature-event")) {
++		switch_event_t *event;
++		char sip_cseq[40] = "";
++		switch_snprintf(sip_cseq, sizeof(sip_cseq), "%d", sip->sip_cseq->cs_seq);
++		switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, "csta::subscribe");
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "user", from_user);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "host", from_host);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "contact", contact_str);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "call-id", call_id);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "expires", exp_delta_str);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "cseq", sip_cseq);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "profile_name", profile->name);
++		switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "hostname", mod_sofia_globals.hostname);
++		if (sip->sip_payload) {
++				switch_event_add_body(event, "%s", sip->sip_payload->pl_data);
++		}
++		switch_event_fire(&event);
++	} else if (!strcasecmp(event, "message-summary")) {
+ 		if ((sql = switch_mprintf("select proto,sip_user,'%q',sub_to_user,sub_to_host,event,contact,call_id,full_from,"
+ 								  "full_via,expires,user_agent,accept,profile_name,network_ip"
+ 								  " from sip_subscriptions where hostname='%q' and profile_name='%q' and "
