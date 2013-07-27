@@ -380,7 +380,7 @@ print HTML $h->html(
       $h->head( $h->title( 'FreeSWITCH Source Files' ) ),
       $h->body(
         [
-	 $h->h1( { class => 'main' }, 'FreeSWITCH Channel Variables' ),
+	 $h->h1( { class => 'main' }, 'FreeSWITCH Channel Variables' . scalar localtime ),
          $table,
         ]
       )
