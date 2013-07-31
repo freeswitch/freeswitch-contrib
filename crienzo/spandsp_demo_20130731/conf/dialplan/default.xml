@@ -1,0 +1,51 @@
+<include>
+  <context name="default">
+
+    <extension name="unloop">
+      <condition field="${unroll_loops}" expression="^true$"/>
+      <condition field="${sip_looped_call}" expression="^true$">
+        <action application="deflect" data="${destination_number}"/>
+      </condition>
+    </extension>
+    <!--
+      Tag anything pass thru here as an outside_call so you can make sure not
+      to create any routing loops based on the conditions that it came from
+      the outside of the switch.
+    -->
+    <extension name="outside_call" continue="true">
+      <condition>
+        <action application="set" data="outside_call=true"/>
+        <action application="export" data="RFC2822_DATE=${strftime(%a, %d %b %Y %T %z)}"/>
+      </condition>
+    </extension>
+
+    <extension name="call_debug" continue="true">
+      <condition field="${call_debug}" expression="^true$" break="never">
+        <action application="info"/>
+      </condition>
+    </extension>
+
+    <extension name="detecttone">
+      <condition field="${destination_number}" expression="^detecttone$">
+        <action application="lua" data="detecttone.lua"/>
+      </condition>
+    </extension>
+
+    <extension name="gendtmf">
+      <condition field="${destination_number}" expression="^dtmf.*$">
+        <action application="answer"/>
+        <action application="lua" data="gentone.lua ${destination_number} 1"/>
+        <action application="hangup"/>
+      </condition>
+    </extension>
+
+    <extension name="gentone">
+      <condition>
+        <action application="sched_hangup" data="+10"/>
+        <action application="lua" data="gentone.lua ${destination_number} -1"/>
+      </condition>
+    </extension>
+
+  </context>
+</include>
+

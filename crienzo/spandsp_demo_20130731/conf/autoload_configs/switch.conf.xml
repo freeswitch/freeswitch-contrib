@@ -1,0 +1,92 @@
+<configuration name="switch.conf" description="Core Configuration">
+
+  <cli-keybindings>
+    <key name="1" value="help"/>
+    <key name="2" value="status"/>
+    <key name="3" value="show channels"/>
+    <key name="4" value="show calls"/>
+    <key name="5" value="sofia status"/>
+    <key name="6" value=""/>
+    <key name="7" value="console loglevel 0"/>
+    <key name="8" value="console loglevel 7"/>
+    <key name="9" value="sofia status profile external"/>
+    <key name="10" value="sofia profile external siptrace on"/>
+    <key name="11" value="sofia profile external siptrace off"/>
+    <key name="12" value="version"/>
+  </cli-keybindings> 
+  
+  <default-ptimes>
+    <!-- Set this to override the 20ms assumption of various codecs in the sdp with no ptime defined -->
+    <!-- <codec name="G729" ptime="40"/> -->
+  </default-ptimes>
+  
+  <settings>
+    <!-- Colorize the Console -->
+    <param name="colorize-console" value="true"/>
+
+    <!-- Run the timer at 20ms by default and drop down as needed unless you set 1m-timer=true which was previous default -->
+    <!-- <param name="1ms-timer" value="true"/> -->
+
+    <!-- Maximum number of simultaneous DB handles open -->
+    <param name="max-db-handles" value="50"/>
+    <!-- Maximum number of seconds to wait for a new DB handle before failing -->
+    <param name="db-handle-timeout" value="10"/>
+
+    <!-- Minimum idle CPU before refusing calls -->
+    <param name="min-idle-cpu" value="25"/>
+
+    <param name="max-sessions" value="2000"/>
+    <!--Most channels to create per second -->
+    <param name="sessions-per-second" value="300"/>
+    <!-- Default Global Log Level - value is one of debug,info,notice,warning,err,crit,alert -->
+    <param name="loglevel" value="debug"/>
+
+    <!-- Set the core DEBUG level (0-10) -->
+    <!-- <param name="debug-level" value="10"/> -->
+
+    <!-- 
+	 The min-dtmf-duration specifies the minimum DTMF duration to use on 
+	 outgoing events. Events shorter than this will be increased in duration
+	 to match min_dtmf_duration. You cannot configure a dtmf duration on a 
+	 profile that is less than this setting. You may increase this value,
+	 but cannot set it lower than 400. This value cannot exceed 
+	 max-dtmf-duration. -->
+    <!-- <param name="min-dtmf-duration" value="400"/> -->
+
+    <!-- 
+	 The max-dtmf-duration caps the playout of a DTMF event at the specified
+	 duration. Events exceeding this duration will be truncated to this
+	 duration. You cannot configure a duration on a profile that exceeds
+	 this setting. This setting can be lowered, but cannot exceed 192000. 
+	 This setting cannot be set lower than min_dtmf_duration. -->
+    <!-- <param name="max-dtmf-duration" value="192000"/> -->
+
+    <!-- 
+	 The default_dtmf_duration specifies the DTMF duration to use on
+	 originated DTMF events or on events that are received without a
+	 duration specified. This value can be increased or lowered. This
+	 value is lower-bounded by min_dtmf_duration and upper-bounded by
+	 max-dtmf-duration\. -->
+    <!-- <param name="default-dtmf-duration" value="2000"/> -->
+
+    <param name="dump-cores" value="yes"/>
+
+    <!-- Enable verbose channel events to include every detail about a channel on every event  -->
+    <!-- <param name="verbose-channel-events" value="no"/> -->
+
+    <!-- Enable clock nanosleep -->
+    <!-- <param name="enable-clock-nanosleep" value="true"/> -->
+
+    <!-- Enable monotonic timing -->
+    <!-- <param name="enable-monotonic-timing" value="true"/> -->
+
+    <!-- RTP port range -->
+    <param name="rtp-start-port" value="16384"/>
+    <param name="rtp-end-port" value="32768"/>
+
+    <param name="rtp-enable-zrtp" value="true"/>
+
+  </settings>
+
+</configuration>
+
