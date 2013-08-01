@@ -340,6 +340,7 @@
 
 	/**
 	 * @method void application
+     * @data void data
 	 *
 	 * @author Raymond Chandler (intralanman@gmail.com)
 	 *
