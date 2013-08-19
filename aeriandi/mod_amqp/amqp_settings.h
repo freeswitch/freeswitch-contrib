@@ -1,3 +1,4 @@
+#include "switch_version.h"
 
 #define CUSTOM_ATTR ""
-char *reposha = "v10.4.7";
+char *reposha = SWITCH_VERSION_MAJOR "." SWITCH_VERSION_MINOR "." SWITCH_VERSION_MICRO;

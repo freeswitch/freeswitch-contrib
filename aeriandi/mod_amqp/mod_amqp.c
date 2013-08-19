@@ -37,6 +37,7 @@
 #include <switch.h>
 #include <amqp.h>
 #include <amqp_framing.h>
+#include <amqp_tcp_socket.h>
 #include <apr_errno.h>
 #include <sys/types.h>
 #include <strings.h>
@@ -629,13 +630,12 @@ static int log_if_error(int x, char const *context)
 {
 	if (x < 0)
 	{
-		char *errstr = amqp_error_string(-x);
+		const char *errstr = amqp_error_string2(-x);
 
 		char logMessage[MAX_LOG_MESSAGE_SIZE];
 		snprintf(logMessage, MAX_LOG_MESSAGE_SIZE, "%s: %s\n", context, errstr);
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "%s", logMessage);
 
-		free(errstr);
 		return -1;
 	}
 	else
@@ -655,7 +655,7 @@ static int log_if_amqp_error(amqp_rpc_reply_t x, char const *context)
 		break;
 
 	case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-		snprintf(logMessage, MAX_LOG_MESSAGE_SIZE, "%s: %s\n", context, amqp_error_string(x.library_error));
+		snprintf(logMessage, MAX_LOG_MESSAGE_SIZE, "%s: %s\n", context, amqp_error_string2(x.library_error));
 		break;
 
 	case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -748,15 +748,23 @@ static switch_status_t openAmqpConnection()
 	do // Try..
 	{
 	    amqp_rpc_reply_t status;
-        int sockfd;
+	    int iStatus;
+        amqp_socket_t *socket = NULL;
 
 		amqp_connection_state_t conn = amqp_new_connection();
-
-        sockfd = amqp_open_socket(globals.amqpHostname, globals.amqpPort);
-        if (log_if_error(sockfd, "Opening socket"))
+        socket = amqp_tcp_socket_new(conn);
+        if (!socket)
+        {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not create TCP socket");
             break;
+        }
 
-		amqp_set_sockfd(conn, sockfd);
+        iStatus = amqp_socket_open(socket, globals.amqpHostname, globals.amqpPort);
+        if (iStatus)
+        {
+            switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_CRIT, "Could not connect to %s:%d", globals.amqpHostname, globals.amqpPort);
+            break;
+        }
 
         status = amqp_login_with_properties(conn, globals.amqpVirtualHost,
                     channel_max, frame_max, globals.amqpHeartbeatSeconds,

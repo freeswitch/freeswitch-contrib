@@ -15,6 +15,8 @@ Contents
 4.  Usage
 5.  Trouleshooting
 
+6.  Notes
+
 
 
 1. Features
@@ -111,3 +113,11 @@ Any errors or warnings will be reported using Freeswitch logging, so check for e
 Typically, messages not being received by the AMQP broker is due to network connectivity or failed authentication with the broker.
 
 If mod_amqp experiences back-pressure from the AMQP broker, its internal buffer of events to send fills up. When this buffer is half full, warning messages are logged, and when the queue is completely full the circuit breaker will be triggered, logging an error and dropping events for the predefined amount of time.
+
+
+
+6. Notes
+--------
+
+The SHA for the revision of librabbitmq-c1 that is included is 1c213703c9fdd747bc71ea4f64943c3b4269f8cf.
+ 
