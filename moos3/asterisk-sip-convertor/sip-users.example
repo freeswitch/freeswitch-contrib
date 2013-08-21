@@ -1,0 +1,10 @@
+[1000]
+type = friend
+context = localDevices
+secret = mypassword
+host = dynamic
+dtmfmode = rfc2833
+nat = 1
+callerid = "John Doe"
+mailbox = 1000
+canreinvite = no
