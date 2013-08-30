@@ -1,24 +1,24 @@
 <include>
-  <user id="[[[username]]]">
+  <user id="1000">
     <params>
-      <param name="password" value="[[[password]]]"/>
-      <param name="vm-password" value="[[[vm_pass]]]"/>
+      <param name="password" value="mypassword"/>
+      <param name="vm-password" value="5555"/>
       <param name="vm-email-all-messages" value="true"/>
-      <param name="vm-mailto" value="[[[email]]]"/>         <!-- or just notify -->
-      <param name="vm-notify-mailto" value="[[[email]]]"/>  <!-- don't need notify if you have the full voicemail -->
+      <param name="vm-mailto" value="john.doe@example.com"/>         <!-- or just notify -->
+      <param name="vm-notify-mailto" value="john.doe@example.com"/>  <!-- don't need notify if you have the full voicemail -->
       <param name="vm-attach-file" value="true" />                     <!-- You need this if you want the voicemail attached -->
       <param name="vm-message-ext" value="wav"/>                       <!-- Can be 'mp3' but needs mod_lame to be loaded. -->
-      [[[disable_directory]]]
+      
     </params>
     <variables>
       <variable name="toll_allow" value="domestic,international,local"/>
-      <variable name="accountcode" value="[[[extension]]]"/>
+      <variable name="accountcode" value="1000"/>
       <variable name="user_context" value="default"/>
-      <variable name="effective_caller_id_name" value="[[[callerid]]]"/>
-      <variable name="effective_caller_id_number" value="[[[extension]]]"/>
+      <variable name="effective_caller_id_name" value="John Doe"/>
+      <variable name="effective_caller_id_number" value="1000"/>
       <variable name="outbound_caller_id_name" value="$${outbound_caller_name}"/>
       <variable name="outbound_caller_id_number" value="$${outbound_caller_id}"/>
-      [[[full_name]]]
+      <variable name="directory_full_name" value="John Doe"/>
     </variables>
   </user>
 </include>

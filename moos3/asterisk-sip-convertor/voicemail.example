@@ -1,0 +1,2 @@
+[default]
+1000 => 5555,John Doe,john.doe@example.com,,hidefromdir=yes|tz=eastern|delete=yes
