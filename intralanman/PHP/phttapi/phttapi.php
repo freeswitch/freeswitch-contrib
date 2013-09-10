@@ -244,7 +244,7 @@
 		public $strip;
 
 		public function __construct( $text = NULL ) {
-			if ( !$text ) {
+			if ( !preg_match('/^[\da-dA-D]+$/', $text) ) {
 				throw new NullDataException( 'match digits must be passed' );
 			}
 
