@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Data::Dumper;
+use LWP::UserAgent;
+use Term::ANSIColor;
+
+sub usage {
+  my $msg = shift;
+
+  print "USAGE:\n\t$0 <file> [regex]\n";
+  print "$msg\n" if $msg;
+  exit;
+}
+
+my %colors = (
+	      CRIT    => 'red',
+	      ERR     => 'red',
+	      ALERT   => 'red',
+	      WARNING => 'magenta',
+	      NOTICE  => 'cyan',
+	      INFO    => 'green',
+	      DEBUG   => 'yellow',
+	      CONSOLE => 'white',
+	     );
+
+if ( !scalar(@ARGV) ) {
+  usage('you must pass a file');
+}
+
+my $file = shift(@ARGV);
+my $re   = shift(@ARGV);
+
+my @lines;
+if ( $file =~ m/^http/) {
+  my $ua       = LWP::UserAgent->new;
+  my $response = $ua->get( $file );
+  if ( $response->is_success) {
+    @lines = split("\n", $response->decoded_content);
+  } else {
+    usage($response->status_line);
+  }
+} elsif ( $file eq '-') {
+  while (<STDIN>) {
+    chomp;
+    push(@lines, $_);
+  }
+} else {
+  open(FILE, '<', $file) or usage($!);
+  while (<FILE>) {
+    chomp;
+    push(@lines, $_);
+  }
+  close FILE;
+}
+
+my $color;
+foreach my $line ( @lines ) {
+  if ( $re ) {
+    next unless $line =~ $re;
+  }
+  chomp($line);
+  if ( $line =~ m/^.*\[(DEBUG|INFO|NOTICE|WARNING|ERROR)].*$/ && defined $colors{$1} ) {
+    $color = $colors{$1};
+  } elsif ( $line =~ m/^([a-z\d-]{36})\s?(Dialplan|EXECUTE)/ ) {
+    $color = 'yellow';
+  } elsif ( $line =~ m/^(recv|send|nua|nta|soa|su|tport|nth|nea|su|url|sresolv|sdp)/ ) {
+    $color = 'white';
+  }
+
+  print colored ("$line\n", $color);
+}

@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+use DateTime;
+use DateTime::Format::DateParse;
+use Date::Calc qw( Delta_YMDHMS );
+
+sub usage {
+  my $msg = shift;
+  print "USAGE:\n\t$0 '<start timestamp>' '<end timestamp>' [log file]\n";
+  print "$msg\n" if $msg;
+  exit 1;
+}
+
+my $tmp;
+if ( scalar(@ARGV) < 2) {
+  usage('missing required args');
+}
+
+my $call_start_date_str = shift(@ARGV);
+my $call_end_date_str   = shift(@ARGV);
+my $log_file            = shift(@ARGV) || '/usr/local/freeswitch/log/freeswitch.log';
+usage('log file doesn\'t exist') unless -f $log_file;
+
+$call_start_date_str = DateTime->now if $call_start_date_str eq 'now';
+$call_end_date_str   = DateTime->now if $call_end_date_str   eq 'now';
+print "Call Was From: $call_start_date_str - $call_end_date_str\n";
+
+my $start_dt = DateTime::Format::DateParse->parse_datetime( $call_start_date_str );
+my $end_dt   = DateTime::Format::DateParse->parse_datetime( $call_end_date_str );
+
+$tmp = $start_dt->subtract( minutes => 2 );
+$tmp = $end_dt->add( minutes => 2 );
+
+print "find stuff between ";
+printf("%s-%02s-%02s %02s:%02s:%02s", $start_dt->year, $start_dt->month, $start_dt->day, $start_dt->hour, $start_dt->minute, $start_dt->second);
+print " and ";
+printf("%s-%02s-%02s %02s:%02s:%02s", $end_dt->year, $end_dt->month, $end_dt->day, $end_dt->hour, $end_dt->minute, $end_dt->second);
+print "\n";
+
+my $limit = 10;
+my $i = 0;
+open(LOG_FILE, '<', $log_file);
+my %times_seen;
+my $start_printing = 0;
+while (<LOG_FILE>) {
+  #print "LOG LINE: $_";
+  if ($_ =~ m/^(?:[a-z\d-]{36}\s)?(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/) {
+    if ( !$times_seen{$1} ) {
+      my $datetime    = $1;
+      $times_seen{$1} = 1;
+
+      my $current_dt = DateTime::Format::DateParse->parse_datetime($datetime);
+
+      my @delta;
+      if ( !$start_printing ) {
+	@delta = Delta_YMDHMS(
+			      $start_dt->year,   $start_dt->month,   $start_dt->day,   $start_dt->hour,   $start_dt->minute,   $start_dt->second,
+			      $current_dt->year, $current_dt->month, $current_dt->day, $current_dt->hour, $current_dt->minute, $current_dt->second,
+			     );
+      } else {
+	@delta = Delta_YMDHMS(
+			      $end_dt->year,   $end_dt->month,   $end_dt->day,   $end_dt->hour,   $end_dt->minute,   $end_dt->second,
+			      $current_dt->year, $current_dt->month, $current_dt->day, $current_dt->hour, $current_dt->minute, $current_dt->second,
+			     );
+      }
+
+      my $sum = unpack "l", pack( "l", unpack( "%32d*", pack( "d*", @delta)));
+      if ( $sum > 0 ) {
+	last if $start_printing;
+	$start_printing = 1;
+      }
+    }
+  }
+
+  print $_ if $start_printing;
+
+  #exit if $i == $limit;
+  $i++;
+}
