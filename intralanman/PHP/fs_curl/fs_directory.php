@@ -425,6 +425,7 @@
 				$this->write_gateways( $directory[$i]['id'] );
 				$this->xmlw->endElement();
 			}
+            $this->xmlw->endElement(); // </users>
 			$this->xmlw->endElement(); // </group>
 			$this->xmlw->endElement(); // </groups>
 			$this->xmlw->endElement(); // </domain>
