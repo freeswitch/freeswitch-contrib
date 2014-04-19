@@ -1,0 +1,8 @@
+*.o
+*.so
+debian/files
+debian/*.debhelper.log
+debian/*.substvars
+debian/freeswitch-mod-skel-dbg/
+debian/freeswitch-mod-skel/
+debian/tmp/
