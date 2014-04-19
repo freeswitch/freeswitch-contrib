@@ -28,6 +28,7 @@ Update these files:
   * src/Makefile
   * src/mod_skel.c (use your own module name for the filename,
                     this must match src/Makefile)
+  * .gitignore (only if using .git)
 
 
 Dependancies
