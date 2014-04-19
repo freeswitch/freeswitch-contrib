@@ -17,7 +17,8 @@
 #
 
 # Configuration
-BRANCH=v1.2.stable
+#BRANCH=v1.2.stable
+BRANCH=master
 DCH_DISTRO=UNRELEASED
 # SIGN_KEY= (Optional)
 
