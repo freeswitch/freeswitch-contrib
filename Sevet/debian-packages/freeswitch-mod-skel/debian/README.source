@@ -1,0 +1,103 @@
+Purpose
+=======
+
+This buildsystem allows you to build your own modules and distribute them as
+FreeSWITCH modules.
+
+This can make installation / updates simpler and easier to manage:
+ * You can distribute your modules via your own APT repository, using
+   apt-get to install.
+ * Package dependancies mean apt will automatically install any
+   required dependancies.
+ * All production servers can easily use the same tested version.
+ * Servers can notify you if an update is available (apticron)
+ * Files are installed to standard paths and known about by the dpkg/apt
+   system - letting you use standard tools to inspect, verify and remove files.
+ * Module can be built separately to FreeSWITCH. This can significantly reduce
+   build time. This is done by building against libfreeswitch-dev.
+
+
+Naming your module
+==================
+
+Update these files:
+
+  * debian/control
+  * debian/changelog (use dch after the initial edit)
+  * debian/rules
+  * src/Makefile
+  * src/mod_skel.c (use your own module name for the filename,
+                    this must match src/Makefile)
+
+
+Dependancies
+============
+
+Library package compile-time dependancies are defined in debian/control in
+the Build-Depends field (these should be the -dev packages).
+
+You do not need to depend on the runtime library itself - ${shlibs:Depends}
+will expand to add these automatically.
+
+To build the module against the library edit src/Makefile to set the
+MODCFLAGS and MODLDFLAGS variables... pkg-config can be useful for this.
+
+
+Makefile options
+================
+
+src/Makefile controls the build
+
+Required:
+ MODNAME - the name of the module to build
+ MODOBJ - the list of .o object files to build (space separated)
+
+If your code is spread across multiple .c files list all their equivalent
+module files in MODOBJ - for example use 'mod_skel.o common.o util.o db.o'
+if your code files are 'mod_skel.c common.c util.c db.c'
+
+Optional:
+ MODCFLAGS
+ MODLDFLAGS
+
+This example buildsystem assumes C as the development language.
+
+
+New versions
+============
+
+Update debian/changelog to reflect the new version number and the changes
+in that release. This is needed each time you release a version, to
+differentiate it from those before.
+
+The 'dch' tool in the 'devscripts' package is useful for editing this file.
+
+
+Building your module
+====================
+
+$ dpkg-buildpackage -b
+
+This will give you three files in the parent directory:
+
+ * ../freeswitch-mod-skel_$version.changes
+        * Used to upload to a repository 
+ * ../freeswitch-mod-skel_$version.deb
+        * The module
+ * ../freeswitch-mod-skel-dbg_$version.deb
+        * Debug symbols, used for debugging in gdb
+
+You may also choose to sign the package with a PGP key - see 'man dpkg-buildpackage'
+
+
+More complex modules
+====================
+
+This is only a simple buildsystem. You may want to install many more files,
+or build multiple modules from a single codebase.
+
+Both of these are easily achievable, but outside of the scope of this example.
+
+For further information read the Debian Policy Manual:
+ * http://www.debian.org/doc/debian-policy/
+

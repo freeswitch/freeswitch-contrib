@@ -1,0 +1,36 @@
+
+CC = gcc
+CFLAGS = -fPIC -g -ggdb -I../common `pkg-config --cflags freeswitch`
+LDFLAGS = `pkg-config --libs freeswitch`
+
+.PHONY: all
+all: $(MODNAME)
+
+$(MODNAME): $(MODOBJ)
+	$(CC) -shared -o $@ $(MODOBJ) $(LDFLAGS) $(MODLDFLAGS)
+
+.c.o: $<
+	$(CC) $(CFLAGS) $(MODCFLAGS) -o $@ -c $<
+
+.PHONY: test
+
+test:
+	# Unimplemented
+	/bin/true
+
+.PHONY: clean distclean
+
+clean:
+	rm -f $(MODNAME) $(MODOBJ)
+
+distclean: clean
+
+.PHONY: install uninstall
+
+install: $(MODNAME)
+	install -d -m755 -o0 -g0 $(DESTDIR)/usr/lib/freeswitch/mod
+	install -m644 -o0 -g0 $(MODNAME) $(DESTDIR)/usr/lib/freeswitch/mod
+
+uninstall:
+	rm -f $(DESTDIR)/usr/lib/freeswitch/mod/$(MODNAME)
+

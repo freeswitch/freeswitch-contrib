@@ -1,0 +1,23 @@
+Source: freeswitch-mod-skel
+Section: comm
+Priority: optional
+Maintainer: The Maintainer <yourname@example.com>
+Build-Depends: debhelper (>= 9), build-essential, pkg-config, libfreeswitch-dev (>= 1.2)
+Standards-Version: 3.9.3
+
+Package: freeswitch-mod-skel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, freeswitch
+Description: FreeSWITCH XYZ module
+ XYZ module for FreeSWITCH.
+ .
+ This module provides X, Y & Z.
+
+Package: freeswitch-mod-skel-dbg
+Architecture: any
+Depends: freeswitch-mod-skel (= ${binary:Version}), ${misc:Depends}
+Description: FreeSWITCH XYZ module
+ XYZ module for FreeSWITCH.
+ .
+ This module provides debugging symbols for freeswitch-mod-skel
+

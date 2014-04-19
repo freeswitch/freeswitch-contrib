@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+
+TMP:=$(CURDIR)/debian/tmp/
+
+%:
+	dh $@
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip -pfreeswitch-mod-skel --dbg-package=freeswitch-mod-skel-dbg --keep-debug
+

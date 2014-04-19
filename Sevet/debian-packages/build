@@ -1,0 +1,6 @@
+#!/bin/sh
+
+MODULE=$1
+
+cd $MODULE && dpkg-buildpackage -b -uc
+

@@ -1,0 +1,6 @@
+freeswitch-mod-skel (1.0) wheezy; urgency=low
+
+  * Initial release.
+  * You should update this file with the 'dch' tool for each release.
+
+ -- The Maintainer <yourname@example.com>  Mon, 01 Jan 2014 00:00:00 +0000
