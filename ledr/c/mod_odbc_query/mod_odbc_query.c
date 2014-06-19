@@ -117,10 +117,10 @@ static switch_status_t do_config(switch_bool_t reload)
   }
 
   /* empty the globals.queries hash */
-  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
-    switch_hash_this(hi, &key, NULL, &val);
+  for (hi = switch_core_hash_first(globals.queries); hi;) {
+    switch_core_hash_this(hi, &key, NULL, &val);
     query = (char *) val;
-    hi = switch_hash_next(hi);
+    hi = switch_core_hash_next(&hi);
     switch_safe_free(query);
     switch_core_hash_delete(globals.queries, (char *) key);
   }
@@ -466,7 +466,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_odbc_query_load)
   switch_mutex_init(&globals.mutex, SWITCH_MUTEX_NESTED, globals.pool);
 
   /* allocate the queries hash */
-  if (switch_core_hash_init(&globals.queries, globals.pool) != SWITCH_STATUS_SUCCESS) {
+  if (switch_core_hash_init(&globals.queries) != SWITCH_STATUS_SUCCESS) {
     switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Error initializing the queries hash\n");
     return SWITCH_STATUS_GENERR;
   }
@@ -512,10 +512,10 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_odbc_query_shutdown)
   switch_event_unbind_callback(reload_event_handler);
 
   switch_mutex_lock(globals.mutex);
-  for (hi = switch_hash_first(NULL, globals.queries); hi;) {
-    switch_hash_this(hi, &key, NULL, &val);
+  for (hi = switch_core_hash_first(globals.queries); hi;) {
+    switch_core_hash_this(hi, &key, NULL, &val);
     query = (char *) val;
-    hi = switch_hash_next(hi);
+    hi = switch_core_hash_next(&hi);
     switch_safe_free(query);
     switch_core_hash_delete(globals.queries, (char *) key);
   }
