@@ -60,36 +60,39 @@ The file is of the format:
 
 Available parameters are as follows:
 
-    +---------------------------+-----------------------------------+
-    | name                      | default value             (units) |
-    |---------------------------+-----------------------------------|
-    | amqpHostname              | localhost                         |
-    | amqpVirtualHost           | /                                 |
-    | amqpPort                  | 5672                              |
-    | amqpUsername              | guest                             |
-    | amqpPassword              | guest                             |
-    | amqpHeartbeatSeconds      | 0                             (s) |
-    | amqpExchange              | TAP.Events                        |
-    | amqpExchangetype          | topic                             |
-    | routingKeyFormat          | %s.%s.%s.%s                       | 
-    | routingKeyFormatFields    | FreeSWITCH-Hostname,Event-Name,   |
-    |                           |     Event-Subclass,Unique-ID      |
-    | eventFilter               | SWITCH_EVENT_CHANNEL_CREATE,      |
-    |                           |     SWITCH_EVENT_CHANNEL_DESTROY, |
-    |                           |     SWITCH_EVENT_HEARTBEAT,       |
-    |                           |     SWITCH_EVENT_DTMF             |
-    | amqpSendQueueSize         | 500                      (events) |
-    | amqpCircuitBreakerTimeout | 10000                        (ms) |
-    | amqpReconnectInterval     | 1000                         (ms) |
-    +---------------------------+-----------------------------------+
+    +------------------------------+-----------------------------------+
+    | name                         | default value             (units) |
+    |------------------------------+-----------------------------------|
+    | amqpHostnames                | localhost                         |
+    | amqpVirtualHost              | /                                 |
+    | amqpPort                     | 5672                              |
+    | amqpUsername                 | guest                             |
+    | amqpPassword                 | guest                             |
+    | amqpHeartbeatSeconds         | 0                             (s) |
+    | eventExchange                | TAP.Events                        |
+    | eventExchangetype            | topic                             |
+    | eventRoutingKeyFormat        | %s.%s.%s.%s                       | 
+    | eventRoutingKeyFormatFields  | FreeSWITCH-Hostname,Event-Name,   |
+    |                              |     Event-Subclass,Unique-ID      |
+    | eventFilter                  | SWITCH_EVENT_CHANNEL_CREATE,      |
+    |                              |     SWITCH_EVENT_CHANNEL_DESTROY, |
+    |                              |     SWITCH_EVENT_HEARTBEAT,       |
+    |                              |     SWITCH_EVENT_DTMF             |
+    | commandExchange              | TAP.Commands                      |
+    | commandExchangeType          | topic                             |
+    | commandBindingKey            | TapCommands                       |
+    | amqpSendQueueSize            | 500                      (events) |
+    | amqpCircuitBreakerTimeout    | 10000                        (ms) |
+    | amqpReconnectInterval        | 1000                         (ms) |
+    +------------------------------+-----------------------------------+
 
 Set the amqpHostname and amqpPort to point to the AMQP broker, and set valid login credentials using amqpUsername and amqpPassword.
 
-The routing key is made from the routingKeyFormat format string using the freeswitch event header values specified in the routingKeyFormatFields. See the manpage printf(1) for more information about format strings. The numer of percent marks in the format string must match the number of comma-separated header names in the format fields string.
+The routing key is made from the eventRoutingKeyFormat format string using the freeswitch event header values specified in the eventRoutingKeyFormatFields. See the manpage printf(1) for more information about format strings. The numer of percent marks in the format string must match the number of comma-separated header names in the format fields string.
 
 mod_amqp has an internal buffer for events so that it can send them asynchronously and also cope with the connection going down for a short amount of time. The size of this buffer is set by amqpSendQueueSize. If this buffer ever becomes full, then mod_amqp will drop event messages for the period of time specified by amqpCircuitBreakerTimeout (in milliseconds).
 
-If the connection to the AMQP broker is severed, mod_amqp will attempt to reconnect regularly according to the amqpReconnectInterval (in milliseconds).
+If the connection to the AMQP broker is severed, mod_amqp will attempt to reconnect regularly according to the amqpReconnectInterval (in milliseconds). It will cycle through the hostnames provided in amqpHostnames.
 
 The eventFilter parameter specifies which events will be sent to the AMQP broker, a full list of available options can be found in src/include/switch_types.h. The special event name SWITCH_EVENT_ALL causes all events to be sent, effectively disabling the filter.
 
